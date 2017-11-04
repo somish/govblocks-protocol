@@ -23,28 +23,63 @@ contract governanceData {
         string shortDesc;
         string longDesc;
         uint date_add;
+        uint date_upd;
+        uint versionNum;
+    }
+    struct proposalVersionData{
+        uint versionNum;
+        string shortDesc;
+        string longDesc;
+        uint date_add;
     }
     proposal[] allProposal;
+    mapping(uint=>proposalVersionData[]) proposalVersions;
 
     /// @dev Creates a new proposal 
     function addNewProposal(string _shortDesc,string _longDesc) public
     {
-        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now));
+        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0));
     }
 
-    /// @dev Fetch details of proposal
-    function getProposalDetails(uint _id) public constant returns (address owner,string shortDesc,string longDesc,uint date_add)
+    /// @dev Fetch details of proposal by giving proposal Id
+    function getProposalDetailsById(uint _id) public constant returns (address owner,string shortDesc,string longDesc,uint date_add,uint date_upd,uint versionNum)
     {
-        return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add);
+        return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add,allProposal[_id].date_upd,allProposal[_id].versionNum);
     }
       
+    /// @dev Edits a proposal and Only owner of a proposal can edit it.
+    function editProposal(uint _id , string _shortDesc, string _longDesc) public
+    {
+        if(msg.sender == allProposal[_id].owner)
+        {
+            storeProposalVersion(_id);
+            updateProposal(_id,_shortDesc,_longDesc);
+        }
+        else
+            throw;
+    }
+
+    /// @dev Stores the information of a given version number of a given proposal. Maintains the record of all the versions of a proposal.
+    function storeProposalVersion(uint _id) public 
+    {
+        uint versionNum = allProposal[_id].versionNum;
+        proposalVersions[_id].push(proposalVersionData(versionNum,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_upd));            
+    }
+
+    /// @dev Edits the details of an existing proposal and creates new version.
+    function updateProposal(uint _id,string _shortDesc,string _longDesc) public
+    {
+        allProposal[_id].shortDesc = _shortDesc;
+        allProposal[_id].longDesc = _longDesc;
+        allProposal[_id].date_upd = now;
+        allProposal[_id].versionNum += 1;
+    }
+
+    /// @dev Gets version details of a given proposal id.
+    function getProposalDetailsByIdAndVersion(uint _proposalId,uint _versionNum) public constant returns( uint versionNum,string shortDesc,string longDesc,uint date_add)
+    {
+       return (proposalVersions[_proposalId][_versionNum].versionNum,proposalVersions[_proposalId][_versionNum].shortDesc,proposalVersions[_proposalId][_versionNum].longDesc,proposalVersions[_proposalId][_versionNum].date_add);
+    }
+
 }
-
-
-
-        
-
-
-
-        
 
