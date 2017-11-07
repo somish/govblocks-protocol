@@ -16,7 +16,7 @@
 
 pragma solidity ^0.4.8;
 
-contract testData {
+contract governanceData {
 
     struct proposal{
         address owner;
@@ -30,7 +30,7 @@ contract testData {
     }
     struct proposalCategory{
         address categorizedBy;
-        uint[] paramInt;
+        uint8[] paramInt;
         bytes32[] paramBytes32;
         address[] paramAddress;
     }
@@ -68,6 +68,13 @@ contract testData {
         uint acceptMemberVote;
         uint denyMemberVote;
     } 
+    address public owner;
+    function governanceData () 
+    {
+        owner = msg.sender;
+        addCategory();
+        addStatus();
+    }
 
     mapping(uint=>proposalCategory) allProposalCategory;
     category[] public allCategory;
@@ -76,8 +83,6 @@ contract testData {
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping (uint=>Status[]) proposalStatus;
     mapping (address=>uint8) public advisoryBoardMembers;
-
-    // NEW
     mapping (address=>uint[])  userAdvisoryBoardVote; /// Maps the given vote Id against the given Advisory board member's address
     mapping (address=>uint[])  userMemberVote; /// Maps the given vote Id against the given member's address.
     mapping (uint=>uint[])  proposalAdvisoryBoardVote;  /// Adds the given voter Id(AB) against the given Proposal's Id
@@ -87,6 +92,19 @@ contract testData {
     mapping (uint=>VoteCount)  proposalVoteCount;
     proposalVote[] allVotes;
     uint public totalVotes;
+
+    function isOwner(address _memberAddress) constant returns(uint checkOwner)
+    {
+        checkOwner=0;
+        if(owner == _memberAddress)
+            checkOwner=1;
+    }
+
+    function changeOwner(address _memberAddress) public
+    {
+        if(owner == msg.sender)
+            owner = _memberAddress;
+    }
 
     /// @dev Gets the total number of categories.
     function getCategoriesLength() constant returns (uint length){
@@ -184,10 +202,6 @@ contract testData {
         return(proposalVoteCount[_proposalid].acceptABvote,proposalVoteCount[_proposalid].denyABvote,proposalVoteCount[_proposalid].acceptMemberVote,proposalVoteCount[_proposalid].denyMemberVote);
     }
 
-
-    ///NEW
-
-
     /// @dev Creates a new proposal 
     function addNewProposal(string _shortDesc,string _longDesc) public
     {
@@ -199,16 +213,28 @@ contract testData {
     {
         return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add,allProposal[_id].date_upd,allProposal[_id].versionNum,allProposal[_id].status);
     }
-      
+     
+    function getProposalCategory (uint _proposalid) public constant returns(uint category) 
+    {
+        category = allProposal[_proposalid].category; 
+    }
+        
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
     function editProposal(uint _id , string _shortDesc, string _longDesc) public
     {
+        uint8[] paramInt; bytes32 paramBytes32; address[] paramAddress;
         require(msg.sender == allProposal[_id].owner);
         {
             storeProposalVersion(_id);
             updateProposal(_id,_shortDesc,_longDesc);
+            allProposal[_id].category = 0;
+            allProposalCategory[_id].paramInt.push(0);
+            allProposalCategory[_id].paramBytes32.push("");
+            allProposalCategory[_id].paramAddress.push(0);
         }
     }
+
+
 
     /// @dev Stores the information of a given version number of a given proposal. Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _id) internal 
@@ -217,12 +243,11 @@ contract testData {
     }
 
     /// @dev Edits the details of an existing proposal and creates new version.
-    function updateProposal(uint _id,string _shortDesc,string _longDesc) private
+    function updateProposal(uint _id,string _shortDesc,string _longDesc) internal
     {
         allProposal[_id].shortDesc = _shortDesc;
         allProposal[_id].longDesc = _longDesc;
         allProposal[_id].date_upd = now;
-        allProposal[_id].date_add = now;
         allProposal[_id].versionNum += 1;
     }
 
@@ -233,14 +258,15 @@ contract testData {
     }
 
     /// @dev Changes the status of a given proposal.
-    function changeProposalStatus(uint _id,uint _status) internal
+    function changeProposalStatus(uint _id,uint _status) public
     {
+        require(allProposal[_id].category != 0);
         pushInProposalStatus(_id,_status);
         updateProposalStatus(_id,_status);
     }
 
     /// @dev Adds status names in array - Not generic right now
-    function addStatus() public
+    function addStatus() internal
     {   
         status.push("Draft for discussion, multiple versions.");
         status.push("Pending-Advisory Board Vote");
@@ -252,7 +278,30 @@ contract testData {
         status.push("Final-Advisory Board Vote Accepted, Member Vote Quorum not Achieved");
         status.push("Proposal Accepted, Insufficient Funds");
     }
-   
+
+    /// @dev Adds category names -
+    function addCategory() internal
+    {   
+        allCategory.push(category("Uncategorised",0,0,"",0,0,0,0));
+        allCategory.push(category("Filter member proposals as necessary(which are put to a member vote)",0,60,"",0,1,2,1));
+        allCategory.push(category("Implement run-off and close new business",1,80,"",0,0,0,0));
+        allCategory.push(category("Burn fraudulent claim assessor tokens",0,80,"",0,0,0,0));
+        allCategory.push(category("Pause Claim Assessors ability to assess claims for 3 days.Can only be done once a month",0,60,"",0,0,0,0));
+        allCategory.push(category("Changes to Capital Model",1,60,"",0,0,0,0));
+        allCategory.push(category("Changes to Pricing",1,60,"",0,0,0,0));
+        allCategory.push(category("Engage in external services up to the greater of $50,000USD or 2% of MCR",0,80,"",0,0,0,0));
+        allCategory.push(category("Engage in external services over the greater of $50,000USD or 2% of MCR",1,60,"",0,0,0,0));
+        allCategory.push(category("Changes to remuneration and/or membership of Advisory Board",1,60,"",0,0,0,0));
+        allCategory.push(category("Release new smart contract code as necessary to fix bugs/weaknesses or deliver enhancements/new products",1,60,"",0,0,0,0));
+        allCategory.push(category("Any change to authorities",1,80,"",0,0,0,0));
+        allCategory.push(category("Any other item specifically described",1,80,"",0,0,0,0));
+    }
+
+    function updateCategory_memberVote(uint _categoryId,uint8 _memberVoteRequired) public
+    {
+        allCategory[_categoryId].memberVoteRequired = _memberVoteRequired;
+    }
+    
 
     /// @dev Updates  status of an existing proposal.
     function updateProposalStatus(uint _id ,uint _status) internal
@@ -274,7 +323,7 @@ contract testData {
     }
 
     /// @dev Gets category details by category id.
-    function getCategoryDetails(uint _categoryId) public constant returns (string categoryName,uint64 memberVoteRequired,uint16 majorityVote,string functionName,address contractAt,uint16 paramInt,uint16 paramBytes32,uint16 paramAddress)
+    function getCategoryDetails(uint _categoryId) public constant returns (string categoryName,uint8 memberVoteRequired,uint8 majorityVote,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress)
     {    
         categoryName = allCategory[_categoryId].categoryName;
         memberVoteRequired = allCategory[_categoryId].memberVoteRequired;
@@ -296,11 +345,12 @@ contract testData {
         allCategory[_categoryId].paramAddress = _paramAddress; 
     }
 
-    function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) public
+    function categorizeProposal(uint _id , uint _categoryId,uint8[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) public
     {
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_id].status == 0);
-        uint16 paramInt; uint16 paramBytes32; uint16 paramAddress;
+        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
         (,,,,,paramInt,paramBytes32,paramAddress) = getCategoryDetails(_categoryId);
+
         if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
         {
             allProposal[_id].category = _categoryId;
@@ -311,14 +361,14 @@ contract testData {
     /// @dev Adds a given address as an advisory board member.
     function joinAdvisoryBoard(address _memberAddress) public
     {
-        require(advisoryBoardMembers[_memberAddress]==0);
+        require(advisoryBoardMembers[_memberAddress]==0 && isOwner(msg.sender) == 1);
         advisoryBoardMembers[_memberAddress] = 1;
     }
 
     /// @dev Removes a given address from the advisory board.
     function removeAdvisoryBoard(address _memberAddress) public
     {
-        require(advisoryBoardMembers[_memberAddress]==1);
+        require(advisoryBoardMembers[_memberAddress]==1 && isOwner(msg.sender) == 1);
         advisoryBoardMembers[_memberAddress] = 0;
     }
 
