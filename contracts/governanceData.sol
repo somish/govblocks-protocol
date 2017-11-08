@@ -73,22 +73,16 @@ contract governanceData {
     function governanceData () 
     {
         owner = msg.sender;
-        addCategory();
-        addStatus();
-        //new
         proposalVoteClosingTime = 60;
         pendingProposalStart=0;
         quorumPercentage=25;
-        //new
+        addStatusAndCategory();
     }
 
-    //new
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
     uint public memberCounter;
-    //new
-
     mapping(uint=>proposalCategory) allProposalCategory;
     category[] public allCategory;
     string[] public status;
@@ -106,7 +100,13 @@ contract governanceData {
     proposalVote[] allVotes;
     uint public totalVotes;
 
-    //new
+    function addStatusAndCategory () 
+    {
+        addCategory();
+        addStatus();
+    }
+    
+
     /// @dev Increases the count of NXM Members by 1 (called whenever a new Member is added).
     function incMemberCounter() internal
     {
@@ -145,29 +145,6 @@ contract governanceData {
         proposalVoteClosingTime = _closingTime;   
     }
 
-    // function changeClosingTime(uint _closingTime) public
-    // {
-    //     uint proposalLength = allProposal.length;
-    //     uint pendingProposalStart = getPendingProposalStart();
-    //     for(uint i=pendingProposalStart; i<len ;i++)
-    //     {
-    //         require(allProposal[i].date_upd + _closingTime <= now);
-    //         closeProposalVote(i);
-    //         // }
-    //         // else
-    //         // {
-    //         //     uint64 timeleft = uint64(gd1.getProposalDateUpd(i)+_time -now);
-    //         //     p1=pool(poolAd);
-    //         //     p1.closeProposalOraclise(i,timeleft);
-    //         // }
-    //     }
-    // }   
-
-    function getPendingProposalStart() returns(uint pendingPS) 
-    {
-        pendingPS = pendingProposalStart;
-    }
-    
     /// @dev Checks if voting time of a given proposal should be closed or not. 
     function checkProposalVoteClosing(uint _proposalId) constant returns(uint8 closeValue)
     {
@@ -211,7 +188,6 @@ contract governanceData {
                 {
                     changeProposalStatus(_proposalId,3);
                     allProposal[_proposalId].finalVerdict = -1;
-                    actionAfterProposalPass(_proposalId , category); // TEMPORARY 
                 }
             }
             else if(allProposal[_proposalId].status==2) /// pending member vote
@@ -273,10 +249,6 @@ contract governanceData {
     {
         allCategory[_categoryId].memberVoteRequired = 1;
     }
-    //new
-
-
-
 
     /// @dev Check if the member who wants to change in contracts, is owner.
     function isOwner(address _memberAddress) constant returns(uint checkOwner)
@@ -298,11 +270,19 @@ contract governanceData {
         length = allCategory.length;
     }
 
-    /// @dev Gets the total number of votes given till date.
-    function getTotalVotes() public constant returns(uint voteLength)
-    {
-        voteLength = totalVotes;
-    }
+    /// @dev Gets category details by category id.
+    function getCategoryDetails(uint _categoryId) public constant returns (string categoryName,uint8 memberVoteRequired,uint8 majorityVote,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress)
+    {    
+        categoryName = allCategory[_categoryId].categoryName;
+        memberVoteRequired = allCategory[_categoryId].memberVoteRequired;
+        majorityVote = allCategory[_categoryId].majorityVote;
+        functionName = allCategory[_categoryId].functionName;
+        contractAt = allCategory[_categoryId].contractAt;
+        paramInt = allCategory[_categoryId].paramInt;
+        paramBytes32 = allCategory[_categoryId].paramBytes32;
+        paramAddress = allCategory[_categoryId].paramAddress;
+    } 
+
 
     /// @dev Increases the number of votes by 1.
     function increaseTotalVotes() internal
@@ -313,8 +293,8 @@ contract governanceData {
     /// @dev Registers an Advisroy Board Member's vote for Proposal. _id is proposal id..
     function proposalVoteByABmember(uint _proposalId , int8 _verdict) public
     {
-        require(advisoryBoardMembers[msg.sender]==1 && allProposal[_proposalId].status == 1);
-        uint votelength = getTotalVotes();
+        require(advisoryBoardMembers[msg.sender]==1 && allProposal[_proposalId].status == 1 && userProposalAdvisoryBoardVote[msg.sender][_proposalId]==0);
+        uint votelength = totalVotes;
         increaseTotalVotes();
         allVotes.push(proposalVote(msg.sender,_proposalId,_verdict,now)); 
         userAdvisoryBoardVote[msg.sender].push(votelength); 
@@ -330,8 +310,8 @@ contract governanceData {
     /// @dev Registers an User Member's vote for Proposal. _id is proposal id...
     function proposalVoteByMember(uint _proposalId , int8 _verdict) public
     {
-        require(advisoryBoardMembers[msg.sender]==0 && allProposal[_proposalId].status == 1);  
-        uint votelength = getTotalVotes();
+        require(advisoryBoardMembers[msg.sender]==0 && allProposal[_proposalId].status == 1 && userProposalMemberVote[msg.sender][_proposalId]==0);
+        uint votelength = totalVotes;
         increaseTotalVotes();
         allVotes.push(proposalVote(msg.sender,_proposalId,_verdict,now)); 
         userMemberVote[msg.sender].push(votelength); 
@@ -459,17 +439,6 @@ contract governanceData {
     {   
         allCategory.push(category("Uncategorised",0,0,"",0,0,0,0));
         allCategory.push(category("Filter member proposals as necessary(which are put to a member vote)",0,60,"",0,0,0,0));
-        allCategory.push(category("Implement run-off and close new business",1,80,"",0,0,0,0));
-        allCategory.push(category("Burn fraudulent claim assessor tokens",0,80,"",0,0,0,0));
-        allCategory.push(category("Pause Claim Assessors ability to assess claims for 3 days.Can only be done once a month",0,60,"",0,0,0,0));
-        allCategory.push(category("Changes to Capital Model",1,60,"",0,0,0,0));
-        allCategory.push(category("Changes to Pricing",1,60,"",0,0,0,0));
-        allCategory.push(category("Engage in external services up to the greater of $50,000USD or 2% of MCR",0,80,"",0,0,0,0));
-        allCategory.push(category("Engage in external services over the greater of $50,000USD or 2% of MCR",1,60,"",0,0,0,0));
-        allCategory.push(category("Changes to remuneration and/or membership of Advisory Board",1,60,"",0,0,0,0));
-        allCategory.push(category("Release new smart contract code as necessary to fix bugs/weaknesses or deliver enhancements/new products",1,60,"",0,0,0,0));
-        allCategory.push(category("Any change to authorities",1,80,"",0,0,0,0));
-        allCategory.push(category("Any other item specifically described",1,80,"",0,0,0,0));
     }
 
     /// @dev Updates  status of an existing proposal.
@@ -491,18 +460,18 @@ contract governanceData {
         allCategory.push(category(_categoryName,_memberVoteRequired,_majorityVote,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress));
     }
 
-    /// @dev Gets category details by category id.
-    function getCategoryDetails(uint _categoryId) public constant returns (string categoryName,uint8 memberVoteRequired,uint8 majorityVote,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress)
-    {    
-        categoryName = allCategory[_categoryId].categoryName;
-        memberVoteRequired = allCategory[_categoryId].memberVoteRequired;
-        majorityVote = allCategory[_categoryId].majorityVote;
-        functionName = allCategory[_categoryId].functionName;
-        contractAt = allCategory[_categoryId].contractAt;
-        paramInt = allCategory[_categoryId].paramInt;
-        paramBytes32 = allCategory[_categoryId].paramBytes32;
-        paramAddress = allCategory[_categoryId].paramAddress;
-    } 
+    // /// @dev Gets category details by category id.
+    // function allCategory(uint _categoryId) public constant returns (string categoryName,uint8 memberVoteRequired,uint8 majorityVote,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress)
+    // {    
+    //     categoryName = allCategory[_categoryId].categoryName;
+    //     memberVoteRequired = allCategory[_categoryId].memberVoteRequired;
+    //     majorityVote = allCategory[_categoryId].majorityVote;
+    //     functionName = allCategory[_categoryId].functionName;
+    //     contractAt = allCategory[_categoryId].contractAt;
+    //     paramInt = allCategory[_categoryId].paramInt;
+    //     paramBytes32 = allCategory[_categoryId].paramBytes32;
+    //     paramAddress = allCategory[_categoryId].paramAddress;
+    // } 
 
     function updateCategory(uint _categoryId,string _categoryName,uint64 _memberVoteRequired,uint16 _majorityVote,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress) public
     {
