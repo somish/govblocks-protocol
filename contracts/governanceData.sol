@@ -97,16 +97,23 @@ contract governanceData {
     mapping (address=>mapping(uint=>int))  userProposalAdvisoryBoardVote; /// Records a members vote on a given proposal id as an AB member.
     mapping (address=>mapping(uint=>int))  userProposalMemberVote; /// Records a members vote on a given proposal id.
     mapping (uint=>VoteCount)  proposalVoteCount;
+    mapping (address=>Status[])  memberAsABmember;
     proposalVote[] allVotes;
     uint public totalVotes;
 
+    /// @dev Stores the AB joining date against a AB member's address.
+    function memberAsABmemberStatus(address _memberAddress ,uint status) internal
+    {
+        memberAsABmember[_memberAddress].push(Status(status,now));
+    }
+
+    /// @dev add status and category.
     function addStatusAndCategory () 
     {
         addCategory();
         addStatus();
     }
     
-
     /// @dev Increases the count of NXM Members by 1 (called whenever a new Member is added).
     function incMemberCounter() internal
     {
@@ -409,7 +416,10 @@ contract governanceData {
     /// @dev Gets version details of a given proposal id.
     function getProposalDetailsByIdAndVersion(uint _id,uint _versionNum) public constant returns( uint versionNum,string shortDesc,string longDesc,uint date_add)
     {
-       return (proposalVersions[_id][_versionNum].versionNum,proposalVersions[_id][_versionNum].shortDesc,proposalVersions[_id][_versionNum].longDesc,proposalVersions[_id][_versionNum].date_add);
+        if(_versionNum == 0)
+            getProposalDetailsById(_id);
+        else
+            return (proposalVersions[_id][_versionNum].versionNum,proposalVersions[_id][_versionNum].shortDesc,proposalVersions[_id][_versionNum].longDesc,proposalVersions[_id][_versionNum].date_add);
     }
 
     /// @dev Changes the status of a given proposal.
@@ -460,18 +470,6 @@ contract governanceData {
         allCategory.push(category(_categoryName,_memberVoteRequired,_majorityVote,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress));
     }
 
-    // /// @dev Gets category details by category id.
-    // function allCategory(uint _categoryId) public constant returns (string categoryName,uint8 memberVoteRequired,uint8 majorityVote,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress)
-    // {    
-    //     categoryName = allCategory[_categoryId].categoryName;
-    //     memberVoteRequired = allCategory[_categoryId].memberVoteRequired;
-    //     majorityVote = allCategory[_categoryId].majorityVote;
-    //     functionName = allCategory[_categoryId].functionName;
-    //     contractAt = allCategory[_categoryId].contractAt;
-    //     paramInt = allCategory[_categoryId].paramInt;
-    //     paramBytes32 = allCategory[_categoryId].paramBytes32;
-    //     paramAddress = allCategory[_categoryId].paramAddress;
-    // } 
 
     function updateCategory(uint _categoryId,string _categoryName,uint64 _memberVoteRequired,uint16 _majorityVote,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress) public
     {
@@ -501,6 +499,7 @@ contract governanceData {
     {
         require(advisoryBoardMembers[_memberAddress]==0 && isOwner(msg.sender) == 1);
         advisoryBoardMembers[_memberAddress] = 1;
+        memberAsABmemberStatus(_memberAddress,1);
     }
 
     /// @dev Removes a given address from the advisory board.
@@ -508,6 +507,7 @@ contract governanceData {
     {
         require(advisoryBoardMembers[_memberAddress]==1 && isOwner(msg.sender) == 1);
         advisoryBoardMembers[_memberAddress] = 0;
+        memberAsABmemberStatus(_memberAddress,0);
     }
 
 }  
