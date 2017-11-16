@@ -15,9 +15,9 @@
 
 
 pragma solidity ^0.4.8;
+// import "./oraclizeAPI.sol";
 
-contract governanceData {
-
+contract governanceData{
     struct proposal{
         address owner;
         string shortDesc;
@@ -27,13 +27,14 @@ contract governanceData {
         uint versionNum;
         uint status;  
         uint category;
-        int finalVerdict;
+        uint finalVerdict; // depends on options
     }
     struct proposalCategory{
         address categorizedBy;
-        uint8[] paramInt;
+        uint[] paramInt;
         bytes32[] paramBytes32;
         address[] paramAddress;
+        uint8 verdictOptions;
     }
     struct proposalVersionData{
         uint versionNum;
@@ -54,21 +55,23 @@ contract governanceData {
         address contractAt;
         uint8 paramInt;
         uint8 paramBytes32;
-        uint8 paramAddress;      
+        uint8 paramAddress;
     }
      struct proposalVote {
         address voter;
         uint proposalId;
-        int verdict;
+        int verdictChoosen;
         uint dateSubmit;
     }
 
-    struct VoteCount {
-        uint acceptABvote;
-        uint denyABvote;
-        uint acceptMemberVote;
-        uint denyMemberVote;
-    } 
+    // struct VoteCount {
+
+    //     uint acceptABvote;
+    //     uint denyABvote;
+    //     uint acceptMemberVote;
+    //     uint denyMemberVote;
+    // } 
+    
     address public owner;
     function governanceData () 
     {
@@ -78,6 +81,13 @@ contract governanceData {
         quorumPercentage=25;
         addStatusAndCategory();
     }
+    // function changeaddress(address _add)
+    // {
+    //     oraclizeapiaddress = _add;
+    //     oraclize = oraclizeAPI(oraclizeapiaddress);
+    // }
+    mapping (uint=>mapping(uint=>uint)) proposalABvoteCount; 
+    mapping (uint=>mapping(uint=>uint)) proposalMemberVoteCount;
 
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
@@ -96,10 +106,13 @@ contract governanceData {
     mapping (uint=>uint[])  proposalMemberVote; /// Adds the given voter Id(Member) against the given Proposal's Id
     mapping (address=>mapping(uint=>int))  userProposalAdvisoryBoardVote; /// Records a members vote on a given proposal id as an AB member.
     mapping (address=>mapping(uint=>int))  userProposalMemberVote; /// Records a members vote on a given proposal id.
-    mapping (uint=>VoteCount)  proposalVoteCount;
+    // mapping (uint=>VoteCount)  proposalVoteCount;
     mapping (address=>Status[])  memberAsABmember;
     proposalVote[] allVotes;
     uint public totalVotes;
+
+
+  
 
     /// @dev Stores the AB joining date against a AB member's address.
     function memberAsABmemberStatus(address _memberAddress ,uint status) internal
@@ -159,26 +172,45 @@ contract governanceData {
         closeValue=1;
     }
 
+    function getProposalFinalVerdictDetails(uint _proposalId) public constant returns(uint paramint, bytes32 parambytes32,address paramaddress)
+    {
+        uint category = allProposal[_proposalId].category;
+        uint verdictChoosen = allProposal[_proposalId].finalVerdict;
+        paramint = allProposalCategory[_proposalId].paramInt[verdictChoosen];
+        parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChoosen];
+        paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChoosen];
+    }
+
+
     /// @dev proposal should gets closed.
     function closeProposalVote(uint _proposalId)
     {
         if(checkProposalVoteClosing(_proposalId)==1) /// either status == 1 or status == 2 thats why Closing ==1
         {
-            uint acceptABvote;
-            uint denyABvote;
-            uint acceptMemberVote;
-            uint denyMemberVote;
             uint8 majorityVote;
             uint8 memberVoteRequired;
             uint category = allProposal[_proposalId].category;
+            uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
             uint totalMember = memberCounter; 
-
+            uint sum;
+            uint max;
+            uint i;
+            uint val;
             (,memberVoteRequired,majorityVote,,,,,) = getCategoryDetails(category);
             if(allProposal[_proposalId].status==1)  // // pending advisory board vote
             {
-                (acceptABvote,denyABvote,,) = getProposalVoteCount(_proposalId);
-                
-                if(acceptABvote*100/(acceptABvote+denyABvote)>=majorityVote) /// if proposal accepted% >=majority % (by Advisory board)
+                max=0;  
+                sum=0;
+                for(i = 1; i < verdictOptions; i++)
+                {
+                    sum = sum + proposalABvoteCount[_proposalId][i];
+                    if(proposalABvoteCount[_proposalId][max] < proposalABvoteCount[_proposalId][i])
+                    {  
+                        max = i;
+                    }
+                }
+                val = proposalABvoteCount[_proposalId][max];
+                if(val*100/sum>=majorityVote)
                 {    
                     if(memberVoteRequired==1) /// Member vote required 
                     {
@@ -188,37 +220,47 @@ contract governanceData {
                     else /// Member vote not required
                     {
                         changeProposalStatus(_proposalId,4);
-                        actionAfterProposalPass(_proposalId , category);
+                        actionAfterProposalPass(_proposalId ,category); //neww
                     }
                 } // when AB votes are not enough . /// if proposal is denied
                 else
                 {
                     changeProposalStatus(_proposalId,3);
-                    allProposal[_proposalId].finalVerdict = -1;
+                    allProposal[_proposalId].finalVerdict = max;
                 }
             }
             else if(allProposal[_proposalId].status==2) /// pending member vote
             {
-                (,,acceptMemberVote,denyMemberVote) = getProposalVoteCount(_proposalId);
-                /// when Member Vote Quorum not Achieved
-                if((acceptMemberVote+denyMemberVote)*100/totalMember < getQuorumPerc()) 
+                // when Member Vote Quorum not Achieved
+                max=0;  
+                sum=0;
+                for(i = 1; i < verdictOptions; i++)
+                {
+                    sum = sum + proposalABvoteCount[_proposalId][i];
+                    if(proposalABvoteCount[_proposalId][max] < proposalABvoteCount[_proposalId][i])
+                    {  
+                        max = i;
+                    }
+                }
+                val = proposalABvoteCount[_proposalId][max];
+                if(sum*100/totalMember < getQuorumPerc()) 
                 {
                     changeProposalStatus(_proposalId,7);
-                    allProposal[_proposalId].finalVerdict = 1;
+                    allProposal[_proposalId].finalVerdict = max;
                     actionAfterProposalPass(_proposalId , category);
                 }
                 /// if proposal accepted% >=majority % (by Members)
-                else if(acceptMemberVote*100/(acceptMemberVote+denyMemberVote)>=majorityVote)
+                else if(val*100/sum>=majorityVote)
                 {
                     changeProposalStatus(_proposalId,5);
-                    allProposal[_proposalId].finalVerdict = 1;
+                    allProposal[_proposalId].finalVerdict = max;
                     actionAfterProposalPass(_proposalId , category);
                 }
                 /// if proposal is denied
                 else
                 {
                     changeProposalStatus(_proposalId,6);
-                    allProposal[_proposalId].finalVerdict = -1;    
+                    allProposal[_proposalId].finalVerdict = max;    
                 }
             }
         } 
@@ -244,11 +286,9 @@ contract governanceData {
         pendingProposalStart = _pendingPS;
     }
 
-    function actionAfterProposalPass(uint256 _proposalId,uint _categoryId) public
+    function actionAfterProposalPass(uint256 _proposalId,uint _categoryId) public //NEWW
     {
-        address contractAt = allCategory[_categoryId].contractAt;
-        // string  functionName = allCategory[_categoryId].functionName;
-        // string functionName = "updateCategory_memberVote(uint)";
+        address contractAt = allCategory[_categoryId].contractAt; // then function name:
         contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
     }
 
@@ -298,74 +338,48 @@ contract governanceData {
     }
 
     /// @dev Registers an Advisroy Board Member's vote for Proposal. _id is proposal id..
-    function proposalVoteByABmember(uint _proposalId , int8 _verdict) public
+    function proposalVoteByABmember(uint _proposalId , uint8 _verdictChoosen) public
     {
+        require(_verdictChoosen == allProposalCategory[_proposalId].verdictOptions);
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_proposalId].status == 1 && userProposalAdvisoryBoardVote[msg.sender][_proposalId]==0);
         uint votelength = totalVotes;
         increaseTotalVotes();
-        allVotes.push(proposalVote(msg.sender,_proposalId,_verdict,now)); 
+        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now)); 
         userAdvisoryBoardVote[msg.sender].push(votelength); 
         proposalAdvisoryBoardVote[_proposalId].push(votelength);
-        userProposalAdvisoryBoardVote[msg.sender][_proposalId]=_verdict;
+        userProposalAdvisoryBoardVote[msg.sender][_proposalId]=_verdictChoosen;
 
-        if(_verdict==1)
-            proposalABacceptVote(_proposalId);
-        else if(_verdict==-1)
-            proposalABdenyVote(_proposalId);
+        proposalABvoteCount[_proposalId][_verdictChoosen] +=1;
+       
     }
 
     /// @dev Registers an User Member's vote for Proposal. _id is proposal id...
-    function proposalVoteByMember(uint _proposalId , int8 _verdict) public
+    function proposalVoteByMember(uint _proposalId , uint8 _verdictChoosen) public
     {
+        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions);
         require(advisoryBoardMembers[msg.sender]==0 && allProposal[_proposalId].status == 1 && userProposalMemberVote[msg.sender][_proposalId]==0);
         uint votelength = totalVotes;
         increaseTotalVotes();
-        allVotes.push(proposalVote(msg.sender,_proposalId,_verdict,now)); 
+        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now)); 
         userMemberVote[msg.sender].push(votelength); 
         proposalMemberVote[_proposalId].push(votelength);
-        userProposalMemberVote[msg.sender][_proposalId]=_verdict;
+        userProposalMemberVote[msg.sender][_proposalId]=_verdictChoosen;
 
-        if(_verdict==1)
-            proposalMemberAcceptVote(_proposalId);
-        else if(_verdict==-1)
-            proposalMemberDenyVote(_proposalId);
-    }
+        proposalMemberVoteCount[_proposalId][_verdictChoosen] +=1;
 
-    /// @dev Increases the proposal's accept vote count, called when proposal is accepted by an Advisory board member.
-    function proposalABacceptVote(uint _proposalId) internal
-    {
-        proposalVoteCount[_proposalId].acceptABvote +=1;
-    }
-
-    /// @dev Increases the proposal's deny vote count, called when proposal is denied by an Advisory board member.
-    function proposalABdenyVote(uint _proposalId) internal
-    {
-        proposalVoteCount[_proposalId].denyABvote +=1;
-    }
-
-    /// @dev Increases the proposal's accept vote count, called when proposal is accepted by a member.
-    function proposalMemberAcceptVote(uint _proposalId) internal
-    {
-        proposalVoteCount[_proposalId].acceptMemberVote +=1;
-    }
-
-    /// @dev Increases the proposal's deny vote count, called when proposal is denied by a member.   
-    function proposalMemberDenyVote(uint _proposalId) internal
-    {
-        proposalVoteCount[_proposalId].denyMemberVote +=1;
     }
 
     /// @dev Provides Vote details of a given vote id. 
-    function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,int verdict,uint dateSubmit)
+    function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,int verdictChoosen,uint dateSubmit)
     {
-        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdict,allVotes[_voteid].dateSubmit);
+        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChoosen,allVotes[_voteid].dateSubmit);
     }
 
     /// @dev Gets the number of votes received against a given proposal.
-    function getProposalVoteCount(uint _proposalid) constant returns(uint acceptABvote,uint denyABvote,uint MemberAccept,uint MemberDeny)
-    {
-        return(proposalVoteCount[_proposalid].acceptABvote,proposalVoteCount[_proposalid].denyABvote,proposalVoteCount[_proposalid].acceptMemberVote,proposalVoteCount[_proposalid].denyMemberVote);
-    }
+    // function getProposalVoteCount(uint _proposalid) constant returns(uint acceptABvote,uint denyABvote,uint MemberAccept,uint MemberDeny)
+    // {
+    //     return(proposalVoteCount[_proposalid].acceptABvote,proposalVoteCount[_proposalid].denyABvote,proposalVoteCount[_proposalid].acceptMemberVote,proposalVoteCount[_proposalid].denyMemberVote);
+    // }
 
     /// @dev Creates a new proposal 
     function addNewProposal(string _shortDesc,string _longDesc) public
@@ -416,9 +430,12 @@ contract governanceData {
     /// @dev Gets version details of a given proposal id.
     function getProposalDetailsByIdAndVersion(uint _id,uint _versionNum) public constant returns( uint versionNum,string shortDesc,string longDesc,uint date_add)
     {
-        if(_versionNum == 0)
-            getProposalDetailsById(_id);
-        else
+        // if(_versionNum == 0)
+        // {
+        //   (,shortDesc,longDesc,date_add) = getProposalDetailsById(_id);
+        //   versionNum = _versionNum ;
+        // }
+        // else
             return (proposalVersions[_id][_versionNum].versionNum,proposalVersions[_id][_versionNum].shortDesc,proposalVersions[_id][_versionNum].longDesc,proposalVersions[_id][_versionNum].date_add);
     }
 
@@ -481,16 +498,16 @@ contract governanceData {
         allCategory[_categoryId].paramAddress = _paramAddress; 
     }
 
-    function categorizeProposal(uint _id , uint _categoryId,uint8[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) public
+    function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) public
     {
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_id].status == 0);
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
         (,,,,,paramInt,paramBytes32,paramAddress) = getCategoryDetails(_categoryId);
 
-        if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
+        if(paramInt*_verdictOptions == _paramInt.length && paramBytes32*_verdictOptions == _paramBytes32.length && paramAddress*_verdictOptions == _paramAddress.length)
         {
             allProposal[_id].category = _categoryId;
-            allProposalCategory[_id]=proposalCategory(msg.sender,_paramInt,_paramBytes32,_paramAddress);
+            allProposalCategory[_id]=proposalCategory(msg.sender,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
         } 
     }
 
@@ -509,6 +526,7 @@ contract governanceData {
         advisoryBoardMembers[_memberAddress] = 0;
         memberAsABmemberStatus(_memberAddress,0);
     }
+
 
 }  
 
