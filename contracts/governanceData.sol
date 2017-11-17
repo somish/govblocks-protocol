@@ -1,3 +1,4 @@
+                if(sum*100/totalMember < getQuorumPerc()) 
 /* Copyright (C) 2017 NexusMutual.io
 
   This program is free software: you can redistribute it and/or modify
@@ -50,7 +51,7 @@ contract governanceData{
     struct category{
         string categoryName;
         uint8 memberVoteRequired;
-        uint8 majorityVote;
+        uint majorityVote;
         string functionName;
         address contractAt;
         uint8 paramInt;
@@ -64,14 +65,6 @@ contract governanceData{
         uint dateSubmit;
     }
 
-    // struct VoteCount {
-
-    //     uint acceptABvote;
-    //     uint denyABvote;
-    //     uint acceptMemberVote;
-    //     uint denyMemberVote;
-    // } 
-    
     address public owner;
     function governanceData () 
     {
@@ -81,11 +74,7 @@ contract governanceData{
         quorumPercentage=25;
         addStatusAndCategory();
     }
-    // function changeaddress(address _add)
-    // {
-    //     oraclizeapiaddress = _add;
-    //     oraclize = oraclizeAPI(oraclizeapiaddress);
-    // }
+
     mapping (uint=>mapping(uint=>uint)) proposalABvoteCount; 
     mapping (uint=>mapping(uint=>uint)) proposalMemberVoteCount;
 
@@ -111,8 +100,17 @@ contract governanceData{
     proposalVote[] allVotes;
     uint public totalVotes;
 
-
-  
+    /// @dev Get the vote count(voting done by AB) for options of proposal when giving Proposal id and Option index.
+    function getproposalABVoteCount(uint _proposalId,uint index) constant returns(uint result)
+    {
+        result = proposalABvoteCount[_proposalId][index]; 
+    }
+    
+    /// @dev Get the vote count(voting done by Member) for options of proposal when giving Proposal id and Option index.
+    function getproposalMemberVoteCount(uint _proposalId,uint index) constant returns(uint result)
+    {
+        result = proposalMemberVoteCount[_proposalId][index]; 
+    }  
 
     /// @dev Stores the AB joining date against a AB member's address.
     function memberAsABmemberStatus(address _memberAddress ,uint status) internal
@@ -155,8 +153,8 @@ contract governanceData{
     function openProposalForVoting(uint _proposalId) public
     {
         require(allProposal[_proposalId].owner == msg.sender || allProposal[_proposalId].status ==0);
-        allProposal[_proposalId].status = 1;
-        // closeProposalOraclise(id,gd1.getClosingTime());
+        pushInProposalStatus(_id,1);
+        updateProposalStatus(_id,1);
     }
 
     /// @dev Changes the time(in seconds) after which proposal voting is closed.
@@ -172,8 +170,10 @@ contract governanceData{
         closeValue=1;
     }
 
+    /// @dev fetch the parameter details for the final verdict (Option having maximum votes)
     function getProposalFinalVerdictDetails(uint _proposalId) public constant returns(uint paramint, bytes32 parambytes32,address paramaddress)
     {
+        require(allProposal[_proposalId].finalVerdict != -1);
         uint category = allProposal[_proposalId].category;
         uint verdictChoosen = allProposal[_proposalId].finalVerdict;
         paramint = allProposalCategory[_proposalId].paramInt[verdictChoosen];
@@ -181,37 +181,36 @@ contract governanceData{
         paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChoosen];
     }
 
-
     /// @dev proposal should gets closed.
     function closeProposalVote(uint _proposalId)
     {
         if(checkProposalVoteClosing(_proposalId)==1) /// either status == 1 or status == 2 thats why Closing ==1
         {
-            uint8 majorityVote;
+            uint majorityVote;
             uint8 memberVoteRequired;
             uint category = allProposal[_proposalId].category;
             uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
             uint totalMember = memberCounter; 
-            uint sum;
-            uint max;
+            sum;
+            max;
             uint i;
-            uint val;
+            verdictVal;
             (,memberVoteRequired,majorityVote,,,,,) = getCategoryDetails(category);
             if(allProposal[_proposalId].status==1)  // // pending advisory board vote
             {
                 max=0;  
                 sum=0;
-                for(i = 1; i < verdictOptions; i++)
+                for(i = 0; i < verdictOptions; i++)
                 {
-                    sum = sum + proposalABvoteCount[_proposalId][i];
+                    sum = sum + allProposalCategory[_proposalId].paramInt[i];
                     if(proposalABvoteCount[_proposalId][max] < proposalABvoteCount[_proposalId][i])
                     {  
                         max = i;
                     }
                 }
-                val = proposalABvoteCount[_proposalId][max];
-                if(val*100/sum>=majorityVote)
-                {    
+                verdictVal = allProposalCategory[_proposalId].paramInt[max];
+                if(verdictVal*100/sum>=majorityVote)
+                {   
                     if(memberVoteRequired==1) /// Member vote required 
                     {
                         changeProposalStatus(_proposalId,2);
@@ -219,7 +218,9 @@ contract governanceData{
                     }
                     else /// Member vote not required
                     {
-                        changeProposalStatus(_proposalId,4);
+                        pushInProposalStatus(_proposalId,4);
+                        updateProposalStatus(_proposalId,4);
+                        allProposal[_proposalId].finalVerdict = max;
                         actionAfterProposalPass(_proposalId ,category); //neww
                     }
                 } // when AB votes are not enough . /// if proposal is denied
@@ -227,40 +228,43 @@ contract governanceData{
                 {
                     changeProposalStatus(_proposalId,3);
                     allProposal[_proposalId].finalVerdict = max;
-                }
+                } 
             }
             else if(allProposal[_proposalId].status==2) /// pending member vote
             {
                 // when Member Vote Quorum not Achieved
                 max=0;  
                 sum=0;
-                for(i = 1; i < verdictOptions; i++)
+                for(i = 0; i < verdictOptions; i++)
                 {
-                    sum = sum + proposalABvoteCount[_proposalId][i];
-                    if(proposalABvoteCount[_proposalId][max] < proposalABvoteCount[_proposalId][i])
+                    sum = sum + allProposalCategory[_proposalId].paramInt[i];
+                    if(proposalMemberVoteCount[_proposalId][max] < proposalMemberVoteCount[_proposalId][i])
                     {  
                         max = i;
                     }
                 }
-                val = proposalABvoteCount[_proposalId][max];
+                verdictVal = allProposalCategory[_proposalId].paramInt[max];
                 if(sum*100/totalMember < getQuorumPerc()) 
                 {
-                    changeProposalStatus(_proposalId,7);
-                    allProposal[_proposalId].finalVerdict = max;
+                    pushInProposalStatus(_proposalId,7);
+                    updateProposalStatus(_proposalId,7);
+                    allProposal[_proposalId].finalVerdict = -1;
                     actionAfterProposalPass(_proposalId , category);
                 }
                 /// if proposal accepted% >=majority % (by Members)
-                else if(val*100/sum>=majorityVote)
+                else if(verdictVal*100/sum>=majorityVote)
                 {
-                    changeProposalStatus(_proposalId,5);
+                    pushInProposalStatus(_proposalId,5);
+                    updateProposalStatus(_proposalId,5);
                     allProposal[_proposalId].finalVerdict = max;
                     actionAfterProposalPass(_proposalId , category);
                 }
                 /// if proposal is denied
                 else
                 {
-                    changeProposalStatus(_proposalId,6);
-                    allProposal[_proposalId].finalVerdict = max;    
+                    pushInProposalStatus(_proposalId,5);
+                    updateProposalStatus(_proposalId,5);
+                    allProposal[_proposalId].finalVerdict = -1;    
                 }
             }
         } 
@@ -318,7 +322,7 @@ contract governanceData{
     }
 
     /// @dev Gets category details by category id.
-    function getCategoryDetails(uint _categoryId) public constant returns (string categoryName,uint8 memberVoteRequired,uint8 majorityVote,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress)
+    function getCategoryDetails(uint _categoryId) public constant returns (string categoryName,uint8 memberVoteRequired,uint majorityVote,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress)
     {    
         categoryName = allCategory[_categoryId].categoryName;
         memberVoteRequired = allCategory[_categoryId].memberVoteRequired;
@@ -340,7 +344,7 @@ contract governanceData{
     /// @dev Registers an Advisroy Board Member's vote for Proposal. _id is proposal id..
     function proposalVoteByABmember(uint _proposalId , uint8 _verdictChoosen) public
     {
-        require(_verdictChoosen == allProposalCategory[_proposalId].verdictOptions);
+        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions);
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_proposalId].status == 1 && userProposalAdvisoryBoardVote[msg.sender][_proposalId]==0);
         uint votelength = totalVotes;
         increaseTotalVotes();
@@ -348,7 +352,6 @@ contract governanceData{
         userAdvisoryBoardVote[msg.sender].push(votelength); 
         proposalAdvisoryBoardVote[_proposalId].push(votelength);
         userProposalAdvisoryBoardVote[msg.sender][_proposalId]=_verdictChoosen;
-
         proposalABvoteCount[_proposalId][_verdictChoosen] +=1;
        
     }
@@ -364,7 +367,6 @@ contract governanceData{
         userMemberVote[msg.sender].push(votelength); 
         proposalMemberVote[_proposalId].push(votelength);
         userProposalMemberVote[msg.sender][_proposalId]=_verdictChoosen;
-
         proposalMemberVoteCount[_proposalId][_verdictChoosen] +=1;
 
     }
@@ -375,16 +377,10 @@ contract governanceData{
         return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChoosen,allVotes[_voteid].dateSubmit);
     }
 
-    /// @dev Gets the number of votes received against a given proposal.
-    // function getProposalVoteCount(uint _proposalid) constant returns(uint acceptABvote,uint denyABvote,uint MemberAccept,uint MemberDeny)
-    // {
-    //     return(proposalVoteCount[_proposalid].acceptABvote,proposalVoteCount[_proposalid].denyABvote,proposalVoteCount[_proposalid].acceptMemberVote,proposalVoteCount[_proposalid].denyMemberVote);
-    // }
-
     /// @dev Creates a new proposal 
     function addNewProposal(string _shortDesc,string _longDesc) public
     {
-        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0));
+        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,-1));
     }
 
     /// @dev Fetch details of proposal by giving proposal Id
@@ -430,17 +426,11 @@ contract governanceData{
     /// @dev Gets version details of a given proposal id.
     function getProposalDetailsByIdAndVersion(uint _id,uint _versionNum) public constant returns( uint versionNum,string shortDesc,string longDesc,uint date_add)
     {
-        // if(_versionNum == 0)
-        // {
-        //   (,shortDesc,longDesc,date_add) = getProposalDetailsById(_id);
-        //   versionNum = _versionNum ;
-        // }
-        // else
-            return (proposalVersions[_id][_versionNum].versionNum,proposalVersions[_id][_versionNum].shortDesc,proposalVersions[_id][_versionNum].longDesc,proposalVersions[_id][_versionNum].date_add);
+        return (proposalVersions[_id][_versionNum].versionNum,proposalVersions[_id][_versionNum].shortDesc,proposalVersions[_id][_versionNum].longDesc,proposalVersions[_id][_versionNum].date_add);
     }
 
     /// @dev Changes the status of a given proposal.
-    function changeProposalStatus(uint _id,uint _status) public
+    function changeProposalStatus(uint _id,uint _status) 
     {
         require(allProposal[_id].category != 0);
         pushInProposalStatus(_id,_status);
@@ -469,14 +459,14 @@ contract governanceData{
     }
 
     /// @dev Updates  status of an existing proposal.
-    function updateProposalStatus(uint _id ,uint _status) internal
+    function updateProposalStatus(uint _id ,uint _status) 
     {
         allProposal[_id].status = _status;
         allProposal[_id].date_upd =now;
     }
 
     /// @dev Stores the status information of a given proposal.
-    function pushInProposalStatus(uint _id , uint _status) internal
+    function pushInProposalStatus(uint _id , uint _status) 
     {
         proposalStatus[_id].push(Status(_status,now));
     }
@@ -488,14 +478,16 @@ contract governanceData{
     }
 
 
-    function updateCategory(uint _categoryId,string _categoryName,uint64 _memberVoteRequired,uint16 _majorityVote,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress) public
+    function updateCategory(uint _categoryId,string _categoryName,uint8 _memberVoteRequired,uint8 _majorityVote,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress) public
     {
         allCategory[_categoryId].categoryName = _categoryName;
         allCategory[_categoryId].functionName = _functionName;
         allCategory[_categoryId].contractAt = _contractAt;
         allCategory[_categoryId].paramInt = _paramInt;
         allCategory[_categoryId].paramBytes32 = _paramBytes32; 
-        allCategory[_categoryId].paramAddress = _paramAddress; 
+        allCategory[_categoryId].paramAddress = _paramAddress;
+        allCategory[_categoryId].memberVoteRequired = _memberVoteRequired;
+        allCategory[_categoryId].majorityVote = _majorityVote;
     }
 
     function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) public
