@@ -1,4 +1,3 @@
-                if(sum*100/totalMember < getQuorumPerc()) 
 /* Copyright (C) 2017 NexusMutual.io
 
   This program is free software: you can redistribute it and/or modify
@@ -153,8 +152,8 @@ contract governanceData{
     function openProposalForVoting(uint _proposalId) public
     {
         require(allProposal[_proposalId].owner == msg.sender || allProposal[_proposalId].status ==0);
-        pushInProposalStatus(_id,1);
-        updateProposalStatus(_id,1);
+        pushInProposalStatus(_proposalId,1);
+        updateProposalStatus(_proposalId,1);
     }
 
     /// @dev Changes the time(in seconds) after which proposal voting is closed.
@@ -173,13 +172,19 @@ contract governanceData{
     /// @dev fetch the parameter details for the final verdict (Option having maximum votes)
     function getProposalFinalVerdictDetails(uint _proposalId) public constant returns(uint paramint, bytes32 parambytes32,address paramaddress)
     {
-        require(allProposal[_proposalId].finalVerdict != -1);
         uint category = allProposal[_proposalId].category;
         uint verdictChoosen = allProposal[_proposalId].finalVerdict;
         paramint = allProposalCategory[_proposalId].paramInt[verdictChoosen];
         parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChoosen];
         paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChoosen];
     }
+    
+    /// @dev Get final verdict of proposal after CloseproposalVote function.
+    function getProposalFinalVerdict (uint _proposalId) returns(uint verdict) 
+    {
+        verdict = allProposal[_proposalId].finalVerdict;
+    }
+    
 
     /// @dev proposal should gets closed.
     function closeProposalVote(uint _proposalId)
@@ -191,10 +196,10 @@ contract governanceData{
             uint category = allProposal[_proposalId].category;
             uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
             uint totalMember = memberCounter; 
-            sum;
-            max;
+            uint sum;
+            uint max;
             uint i;
-            verdictVal;
+            uint verdictVal;
             (,memberVoteRequired,majorityVote,,,,,) = getCategoryDetails(category);
             if(allProposal[_proposalId].status==1)  // // pending advisory board vote
             {
@@ -218,10 +223,19 @@ contract governanceData{
                     }
                     else /// Member vote not required
                     {
-                        pushInProposalStatus(_proposalId,4);
-                        updateProposalStatus(_proposalId,4);
-                        allProposal[_proposalId].finalVerdict = max;
-                        actionAfterProposalPass(_proposalId ,category); //neww
+                        if(max > 0)
+                        {
+                            pushInProposalStatus(_proposalId,4);
+                            updateProposalStatus(_proposalId,4);
+                            allProposal[_proposalId].finalVerdict = max;
+                            actionAfterProposalPass(_proposalId ,category); 
+                        }
+                        else
+                        {   
+                            pushInProposalStatus(_proposalId,3);
+                            updateProposalStatus(_proposalId,3);
+                            allProposal[_proposalId].finalVerdict = max;
+                        }
                     }
                 } // when AB votes are not enough . /// if proposal is denied
                 else
@@ -248,23 +262,25 @@ contract governanceData{
                 {
                     pushInProposalStatus(_proposalId,7);
                     updateProposalStatus(_proposalId,7);
-                    allProposal[_proposalId].finalVerdict = -1;
+                    allProposal[_proposalId].finalVerdict = 0;
                     actionAfterProposalPass(_proposalId , category);
                 }
                 /// if proposal accepted% >=majority % (by Members)
                 else if(verdictVal*100/sum>=majorityVote)
                 {
-                    pushInProposalStatus(_proposalId,5);
-                    updateProposalStatus(_proposalId,5);
-                    allProposal[_proposalId].finalVerdict = max;
-                    actionAfterProposalPass(_proposalId , category);
-                }
-                /// if proposal is denied
-                else
-                {
-                    pushInProposalStatus(_proposalId,5);
-                    updateProposalStatus(_proposalId,5);
-                    allProposal[_proposalId].finalVerdict = -1;    
+                    if(max > 0)
+                    {
+                        pushInProposalStatus(_proposalId,5);
+                        updateProposalStatus(_proposalId,5);
+                        allProposal[_proposalId].finalVerdict = max;
+                        actionAfterProposalPass(_proposalId , category);
+                    }
+                    else
+                    {
+                        pushInProposalStatus(_proposalId,6);
+                        updateProposalStatus(_proposalId,6);
+                        allProposal[_proposalId].finalVerdict = 0;  
+                    }
                 }
             }
         } 
@@ -380,7 +396,7 @@ contract governanceData{
     /// @dev Creates a new proposal 
     function addNewProposal(string _shortDesc,string _longDesc) public
     {
-        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,-1));
+        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0));
     }
 
     /// @dev Fetch details of proposal by giving proposal Id
@@ -494,14 +510,27 @@ contract governanceData{
     {
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_id].status == 0);
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+        allProposalCategory[_id].paramInt.push(0);
+        allProposalCategory[_id].paramBytes32.push("");
+        allProposalCategory[_id].paramAddress.push(0);
         (,,,,,paramInt,paramBytes32,paramAddress) = getCategoryDetails(_categoryId);
 
         if(paramInt*_verdictOptions == _paramInt.length && paramBytes32*_verdictOptions == _paramBytes32.length && paramAddress*_verdictOptions == _paramAddress.length)
         {
+            allProposalCategory[_id].verdictOptions = _verdictOptions+1;
             allProposal[_id].category = _categoryId;
-            allProposalCategory[_id]=proposalCategory(msg.sender,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
+            allProposalCategory[_id].categorizedBy = msg.sender;
+            for(uint i=0;i<_verdictOptions;i++)
+            {
+                allProposalCategory[_id].paramInt.push(_paramInt[i]);
+                allProposalCategory[_id].paramBytes32.push(_paramBytes32[i]);
+                allProposalCategory[_id].paramAddress.push(_paramAddress[i]);
+            }
+            // allProposalCategory[_id]=proposalCategory(msg.sender,_paramInt,_paramBytes32,_paramAddress,_verdictOptions+1);
         } 
     }
+
+    
 
     /// @dev Adds a given address as an advisory board member.
     function joinAdvisoryBoard(address _memberAddress) public
