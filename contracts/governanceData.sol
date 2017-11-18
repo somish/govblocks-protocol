@@ -15,8 +15,9 @@
 
 
 pragma solidity ^0.4.8;
-import "zeppelin-solidity/contracts/token/BasicToken.sol";
 // import "./oraclizeAPI.sol";
+import "zeppelin-solidity/contracts/token/BasicToken.sol";
+// import "./BasicToken.sol";
 
 contract governanceData{
     struct proposal{
@@ -61,7 +62,7 @@ contract governanceData{
      struct proposalVote {
         address voter;
         uint proposalId;
-        int verdictChoosen;
+        uint verdictChoosen;
         uint dateSubmit;
     }
 
@@ -75,8 +76,15 @@ contract governanceData{
         addStatusAndCategory();
     }
 
-    mapping (uint=>mapping(uint=>uint)) proposalABvoteCount; 
-    mapping (uint=>mapping(uint=>uint)) proposalMemberVoteCount;
+    struct proposalVoteCount 
+    {
+        uint[] ABVoteCount;
+        uint[] MemberVoteCount;
+    }
+    
+    mapping (uint => proposalVoteCount) allProposalVoteCount;
+    // mapping (uint=>mapping(uint=>uint)) proposalABvoteCount; 
+    // mapping (uint=>mapping(uint=>uint)) proposalMemberVoteCount;
 
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
@@ -93,23 +101,23 @@ contract governanceData{
     mapping (address=>uint[])  userMemberVote; /// Maps the given vote Id against the given member's address.
     mapping (uint=>uint[])  proposalAdvisoryBoardVote;  /// Adds the given voter Id(AB) against the given Proposal's Id
     mapping (uint=>uint[])  proposalMemberVote; /// Adds the given voter Id(Member) against the given Proposal's Id
-    mapping (address=>mapping(uint=>int))  userProposalAdvisoryBoardVote; /// Records a members vote on a given proposal id as an AB member.
-    mapping (address=>mapping(uint=>int))  userProposalMemberVote; /// Records a members vote on a given proposal id.
+    mapping (address=>mapping(uint=>uint))  userProposalAdvisoryBoardVote; /// Records a members vote on a given proposal id as an AB member.
+    mapping (address=>mapping(uint=>uint))  userProposalMemberVote; /// Records a members vote on a given proposal id.
     // mapping (uint=>VoteCount)  proposalVoteCount;
     mapping (address=>Status[])  memberAsABmember;
     proposalVote[] allVotes;
     uint public totalVotes;
 
     /// @dev Get the vote count(voting done by AB) for options of proposal when giving Proposal id and Option index.
-    function getproposalABVoteCount(uint _proposalId,uint index) constant returns(uint result)
+    function getproposalABVoteCount(uint _proposalId,uint _index) constant returns(uint result)
     {
-        result = proposalABvoteCount[_proposalId][index]; 
+        result = allProposalVoteCount[_proposalId].ABVoteCount[_index]; 
     }
     
     /// @dev Get the vote count(voting done by Member) for options of proposal when giving Proposal id and Option index.
-    function getproposalMemberVoteCount(uint _proposalId,uint index) constant returns(uint result)
+    function getproposalMemberVoteCount(uint _proposalId,uint _index) constant returns(uint result)
     {
-        result = proposalMemberVoteCount[_proposalId][index]; 
+        result = allProposalVoteCount[_proposalId].MemberVoteCount[_index]; 
     }  
 
     /// @dev Stores the AB joining date against a AB member's address.
@@ -196,7 +204,7 @@ contract governanceData{
     /// @dev proposal should gets closed.
     function closeProposalVote(uint _proposalId)
     {
-        if(checkProposalVoteClosing(_proposalId)==1) /// either status == 1 OR status == 2 thats why Closing ==1
+        if(checkProposalVoteClosing(_proposalId)==1) /// either status == 1 or status == 2 thats why Closing ==1
         {
             uint majorityVote;
             uint8 memberVoteRequired;
@@ -209,18 +217,18 @@ contract governanceData{
             uint verdictVal;
             (,memberVoteRequired,majorityVote,,,,,) = getCategoryDetails(category);
             if(allProposal[_proposalId].status==1)  // // pending advisory board vote
-            {
+            {  
                 max=0;  
                 totalVotes=0;
                 for(i = 0; i < verdictOptions; i++)
                 {
-                    totalVotes = totalVotes + proposalABvoteCount[_proposalId][i];
-                    if(proposalABvoteCount[_proposalId][max] < proposalABvoteCount[_proposalId][i])
+                    totalVotes = totalVotes + allProposalVoteCount[_proposalId].ABVoteCount[i]; 
+                    if(allProposalVoteCount[_proposalId].ABVoteCount[max] < allProposalVoteCount[_proposalId].ABVoteCount[i])
                     {  
                         max = i;
                     }
                 }
-                verdictVal = proposalABvoteCount[_proposalId][max];
+                verdictVal = allProposalVoteCount[_proposalId].ABVoteCount[max];
                 if(verdictVal*100/totalVotes>=majorityVote)
                 {   
                     if(memberVoteRequired==1) /// Member vote required 
@@ -258,13 +266,13 @@ contract governanceData{
                 totalVotes=0;
                 for(i = 0; i < verdictOptions; i++)
                 {
-                    totalVotes = totalVotes + proposalMemberVoteCount[_proposalId][i];
-                    if(proposalMemberVoteCount[_proposalId][max] < proposalMemberVoteCount[_proposalId][i])
+                    totalVotes = totalVotes + allProposalVoteCount[_proposalId].ABVoteCount[i];
+                    if(allProposalVoteCount[_proposalId].ABVoteCount[max] < allProposalVoteCount[_proposalId].ABVoteCount[i])
                     {  
                         max = i;
                     }
                 }
-                verdictVal = proposalMemberVoteCount[_proposalId][max];
+                verdictVal = allProposalVoteCount[_proposalId].ABVoteCount[max];
                 if(totalVotes*100/totalMember < getQuorumPerc()) 
                 {
                     pushInProposalStatus(_proposalId,7);
@@ -365,7 +373,7 @@ contract governanceData{
     }
 
     /// @dev Registers an Advisroy Board Member's vote for Proposal. _id is proposal id..
-    function proposalVoteByABmember(uint _proposalId , uint8 _verdictChoosen) public
+    function proposalVoteByABmember(uint _proposalId , uint _verdictChoosen) public
     {
         require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions);
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_proposalId].status == 1 && userProposalAdvisoryBoardVote[msg.sender][_proposalId]==0);
@@ -375,12 +383,12 @@ contract governanceData{
         userAdvisoryBoardVote[msg.sender].push(votelength); 
         proposalAdvisoryBoardVote[_proposalId].push(votelength);
         userProposalAdvisoryBoardVote[msg.sender][_proposalId]=_verdictChoosen;
-        proposalABvoteCount[_proposalId][_verdictChoosen] +=1;
+        allProposalVoteCount[_proposalId].ABVoteCount[_verdictChoosen] +=1;
        
     }
 
     /// @dev Registers an User Member's vote for Proposal. _id is proposal id...
-    function proposalVoteByMember(uint _proposalId , uint8 _verdictChoosen) public
+    function proposalVoteByMember(uint _proposalId , uint _verdictChoosen) public
     {
         require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions);
         require(advisoryBoardMembers[msg.sender]==0 && allProposal[_proposalId].status == 1 && userProposalMemberVote[msg.sender][_proposalId]==0);
@@ -390,12 +398,12 @@ contract governanceData{
         userMemberVote[msg.sender].push(votelength); 
         proposalMemberVote[_proposalId].push(votelength);
         userProposalMemberVote[msg.sender][_proposalId]=_verdictChoosen;
-        proposalMemberVoteCount[_proposalId][_verdictChoosen] +=1;
+        allProposalVoteCount[_proposalId].ABVoteCount[_verdictChoosen] +=1;
 
     }
 
     /// @dev Provides Vote details of a given vote id. 
-    function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,int verdictChoosen,uint dateSubmit)
+    function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit)
     {
         return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChoosen,allVotes[_voteid].dateSubmit);
     }
