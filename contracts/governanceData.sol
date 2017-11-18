@@ -15,7 +15,7 @@
 
 
 pragma solidity ^0.4.8;
-
+import "zeppelin-solidity/contracts/token/BasicToken.sol";
 // import "./oraclizeAPI.sol";
 
 contract governanceData{
@@ -100,7 +100,7 @@ contract governanceData{
     proposalVote[] allVotes;
     uint public totalVotes;
 
-    /// @dev Get the vote count (voting done by AB) for options of proposal when giving Proposal id and Option index.
+    /// @dev Get the vote count(voting done by AB) for options of proposal when giving Proposal id and Option index.
     function getproposalABVoteCount(uint _proposalId,uint index) constant returns(uint result)
     {
         result = proposalABvoteCount[_proposalId][index]; 
@@ -196,7 +196,7 @@ contract governanceData{
     /// @dev proposal should gets closed.
     function closeProposalVote(uint _proposalId)
     {
-        if(checkProposalVoteClosing(_proposalId)==1) /// either status == 1 or status == 2 thats why Closing ==1
+        if(checkProposalVoteClosing(_proposalId)==1) /// either status == 1 OR status == 2 thats why Closing ==1
         {
             uint majorityVote;
             uint8 memberVoteRequired;
