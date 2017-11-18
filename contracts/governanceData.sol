@@ -15,6 +15,7 @@
 
 
 pragma solidity ^0.4.8;
+
 // import "./oraclizeAPI.sol";
 
 contract governanceData{
@@ -99,7 +100,7 @@ contract governanceData{
     proposalVote[] allVotes;
     uint public totalVotes;
 
-    /// @dev Get the vote count(voting done by AB) for options of proposal when giving Proposal id and Option index.
+    /// @dev Get the vote count (voting done by AB) for options of proposal when giving Proposal id and Option index.
     function getproposalABVoteCount(uint _proposalId,uint index) constant returns(uint result)
     {
         result = proposalABvoteCount[_proposalId][index]; 
