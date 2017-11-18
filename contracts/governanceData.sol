@@ -185,7 +185,13 @@ contract governanceData{
         verdict = allProposal[_proposalId].finalVerdict;
     }
     
-
+    ///@dev Gets total number of members from another contract
+    function getTotalMembers (address contractAt, string _functionName) constant returns(uint totalMembers) 
+    {
+        contractAt.call(bytes4(sha3("getTotalMember")));
+    }
+    
+    
     /// @dev proposal should gets closed.
     function closeProposalVote(uint _proposalId)
     {
@@ -196,7 +202,7 @@ contract governanceData{
             uint category = allProposal[_proposalId].category;
             uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
             uint totalMember = memberCounter; 
-            uint sum;
+            uint totalVotes;
             uint max;
             uint i;
             uint verdictVal;
@@ -204,17 +210,17 @@ contract governanceData{
             if(allProposal[_proposalId].status==1)  // // pending advisory board vote
             {
                 max=0;  
-                sum=0;
+                totalVotes=0;
                 for(i = 0; i < verdictOptions; i++)
                 {
-                    sum = sum + allProposalCategory[_proposalId].paramInt[i];
+                    totalVotes = totalVotes + proposalABvoteCount[_proposalId][i];
                     if(proposalABvoteCount[_proposalId][max] < proposalABvoteCount[_proposalId][i])
                     {  
                         max = i;
                     }
                 }
-                verdictVal = allProposalCategory[_proposalId].paramInt[max];
-                if(verdictVal*100/sum>=majorityVote)
+                verdictVal = proposalABvoteCount[_proposalId][max];
+                if(verdictVal*100/totalVotes>=majorityVote)
                 {   
                     if(memberVoteRequired==1) /// Member vote required 
                     {
@@ -248,17 +254,17 @@ contract governanceData{
             {
                 // when Member Vote Quorum not Achieved
                 max=0;  
-                sum=0;
+                totalVotes=0;
                 for(i = 0; i < verdictOptions; i++)
                 {
-                    sum = sum + allProposalCategory[_proposalId].paramInt[i];
+                    totalVotes = totalVotes + proposalMemberVoteCount[_proposalId][i];
                     if(proposalMemberVoteCount[_proposalId][max] < proposalMemberVoteCount[_proposalId][i])
                     {  
                         max = i;
                     }
                 }
-                verdictVal = allProposalCategory[_proposalId].paramInt[max];
-                if(sum*100/totalMember < getQuorumPerc()) 
+                verdictVal = proposalMemberVoteCount[_proposalId][max];
+                if(totalVotes*100/totalMember < getQuorumPerc()) 
                 {
                     pushInProposalStatus(_proposalId,7);
                     updateProposalStatus(_proposalId,7);
@@ -266,7 +272,7 @@ contract governanceData{
                     actionAfterProposalPass(_proposalId , category);
                 }
                 /// if proposal accepted% >=majority % (by Members)
-                else if(verdictVal*100/sum>=majorityVote)
+                else if(verdictVal*100/totalVotes>=majorityVote)
                 {
                     if(max > 0)
                     {
@@ -475,14 +481,14 @@ contract governanceData{
     }
 
     /// @dev Updates  status of an existing proposal.
-    function updateProposalStatus(uint _id ,uint _status) 
+    function updateProposalStatus(uint _id ,uint _status) internal
     {
         allProposal[_id].status = _status;
         allProposal[_id].date_upd =now;
     }
 
     /// @dev Stores the status information of a given proposal.
-    function pushInProposalStatus(uint _id , uint _status) 
+    function pushInProposalStatus(uint _id , uint _status) internal
     {
         proposalStatus[_id].push(Status(_status,now));
     }
@@ -530,8 +536,6 @@ contract governanceData{
         } 
     }
 
-    
-
     /// @dev Adds a given address as an advisory board member.
     function joinAdvisoryBoard(address _memberAddress) public
     {
@@ -547,13 +551,11 @@ contract governanceData{
         advisoryBoardMembers[_memberAddress] = 0;
         memberAsABmemberStatus(_memberAddress,0);
     }
-
-
 }  
 
 contract governance 
 {
-   address governanceDataAddress;
+    address governanceDataAddress;
     governanceData gd1;
     function changeGovernanceDataAddress(address _contractAddress) public
     {
@@ -565,8 +567,14 @@ contract governance
     {
         gd1=governanceData(governanceDataAddress);
         uint _categoryId = gd1.getProposalCategory(_proposalId);
+        uint paramint;
+        bytes32 parambytes32;
+        address paramaddress;
+        (paramint,parambytes32,paramaddress) = gd1.getProposalFinalVerdictDetails(_proposalId);
+        // add your functionality here;
         gd1.updateCategoryMVR(_categoryId);
     }
+
     
 }
 
