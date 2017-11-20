@@ -16,7 +16,7 @@
 
 pragma solidity ^0.4.8;
 // import "./oraclizeAPI.sol";
-import "zeppelin-solidity/contracts/token/BasicToken.sol";
+import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 // import "./BasicToken.sol";
 
 contract governanceData{
@@ -64,6 +64,7 @@ contract governanceData{
         uint proposalId;
         uint verdictChoosen;
         uint dateSubmit;
+        uint voterTokens;
     }
 
     address public owner;
@@ -85,8 +86,6 @@ contract governanceData{
     }
     
     mapping (uint => proposalVoteCount) allProposalVoteCount;
-    // mapping (uint=>mapping(uint=>uint)) proposalABvoteCount; 
-    // mapping (uint=>mapping(uint=>uint)) proposalMemberVoteCount;
 
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
@@ -105,7 +104,6 @@ contract governanceData{
     mapping (uint=>uint[])  proposalMemberVote; /// Adds the given voter Id(Member) against the given Proposal's Id
     mapping (address=>mapping(uint=>uint))  userProposalAdvisoryBoardVote; /// Records a members vote on a given proposal id as an AB member.
     mapping (address=>mapping(uint=>uint))  userProposalMemberVote; /// Records a members vote on a given proposal id.
-    // mapping (uint=>VoteCount)  proposalVoteCount;
     mapping (address=>Status[])  memberAsABmember;
     proposalVote[] allVotes;
     uint public totalVotes;
@@ -123,13 +121,13 @@ contract governanceData{
     {
         basicToken=BasicToken(basicTokenAddress);
         totalToken = basicToken.balanceOf(_memberAddress);
-        if(advisoryBoardMembers[_memberAddress]==1)
-            allProposalVoteCount.totalTokenAB +=1;
-        else
-            allProposalVoteCount.totalTokenMember+=1;
     }
 
-    
+    function getTotalSupply() public constant returns(uint totalsup)
+    {
+        basicToken=BasicToken(basicTokenAddress);
+        totalsup = basicToken.totalSupply();
+    }
 
     /// @dev Get the vote count(voting done by AB) for options of proposal when giving Proposal id and Option index.
     function getproposalABVoteCount(uint _proposalId,uint _index) constant returns(uint result)
@@ -234,7 +232,7 @@ contract governanceData{
             uint category = allProposal[_proposalId].category;
             uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
             uint totalMember = memberCounter; 
-            uint totalVotes;
+            uint totaltokens;
             uint max;
             uint i;
             uint verdictVal;
@@ -242,17 +240,17 @@ contract governanceData{
             if(allProposal[_proposalId].status==1)  // // pending advisory board vote
             {  
                 max=0;  
-                totalVotes=0;
+                totaltokens = allProposalVoteCount[_proposalId].totalTokenAB;
                 for(i = 0; i < verdictOptions; i++)
                 {
-                    totalVotes = totalVotes + allProposalVoteCount[_proposalId].ABVoteCount[i]; 
+                    // totalVotes = totalVotes + allProposalVoteCount[_proposalId].ABVoteCount[i]; 
                     if(allProposalVoteCount[_proposalId].ABVoteCount[max] < allProposalVoteCount[_proposalId].ABVoteCount[i])
                     {  
                         max = i;
                     }
                 }
                 verdictVal = allProposalVoteCount[_proposalId].ABVoteCount[max];
-                if(verdictVal*100/totalVotes>=majorityVote)
+                if(verdictVal*100/totaltokens>=majorityVote)
                 {   
                     if(memberVoteRequired==1) /// Member vote required 
                     {
@@ -286,17 +284,16 @@ contract governanceData{
             {
                 // when Member Vote Quorum not Achieved
                 max=0;  
-                totalVotes=0;
+                totaltokens = allProposalVoteCount[_proposalId].totalTokenAB;
                 for(i = 0; i < verdictOptions; i++)
                 {
-                    totalVotes = totalVotes + allProposalVoteCount[_proposalId].ABVoteCount[i];
                     if(allProposalVoteCount[_proposalId].ABVoteCount[max] < allProposalVoteCount[_proposalId].ABVoteCount[i])
                     {  
                         max = i;
                     }
                 }
                 verdictVal = allProposalVoteCount[_proposalId].ABVoteCount[max];
-                if(totalVotes*100/totalMember < getQuorumPerc()) 
+                if(totaltokens*100/getTotalSupply() < getQuorumPerc()) 
                 {
                     pushInProposalStatus(_proposalId,7);
                     updateProposalStatus(_proposalId,7);
@@ -304,7 +301,7 @@ contract governanceData{
                     actionAfterProposalPass(_proposalId , category);
                 }
                 /// if proposal accepted% >=majority % (by Members)
-                else if(verdictVal*100/totalVotes>=majorityVote)
+                else if(verdictVal*100/totaltokens>=majorityVote)
                 {
                     if(max > 0)
                     {
@@ -398,37 +395,39 @@ contract governanceData{
     /// @dev Registers an Advisroy Board Member's vote for Proposal. _id is proposal id..
     function proposalVoteByABmember(uint _proposalId , uint _verdictChoosen) public
     {
-        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions);
+        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0);
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_proposalId].status == 1 && userProposalAdvisoryBoardVote[msg.sender][_proposalId]==0);
         uint votelength = totalVotes;
         increaseTotalVotes();
-        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now)); 
+        uint _voterTokens = getBalanceOfMember(msg.sender);
+        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens)); 
         userAdvisoryBoardVote[msg.sender].push(votelength); 
         proposalAdvisoryBoardVote[_proposalId].push(votelength);
         userProposalAdvisoryBoardVote[msg.sender][_proposalId]=_verdictChoosen;
         allProposalVoteCount[_proposalId].ABVoteCount[_verdictChoosen] +=1;
-       
+        allProposalVoteCount[_proposalId].totalTokenAB+=_voterTokens;
     }
 
     /// @dev Registers an User Member's vote for Proposal. _id is proposal id...
     function proposalVoteByMember(uint _proposalId , uint _verdictChoosen) public
     {
-        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions);
+        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0);
         require(advisoryBoardMembers[msg.sender]==0 && allProposal[_proposalId].status == 1 && userProposalMemberVote[msg.sender][_proposalId]==0);
         uint votelength = totalVotes;
         increaseTotalVotes();
-        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now)); 
+        uint _voterTokens = getBalanceOfMember(msg.sender);
+        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens)); 
         userMemberVote[msg.sender].push(votelength); 
         proposalMemberVote[_proposalId].push(votelength);
         userProposalMemberVote[msg.sender][_proposalId]=_verdictChoosen;
         allProposalVoteCount[_proposalId].ABVoteCount[_verdictChoosen] +=1;
-
+        allProposalVoteCount[_proposalId].totalTokenMember+=_voterTokens;
     }
 
     /// @dev Provides Vote details of a given vote id. 
-    function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit)
+    function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit,uint voterTokens)
     {
-        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChoosen,allVotes[_voteid].dateSubmit);
+        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChoosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens);
     }
 
     /// @dev Creates a new proposal 
