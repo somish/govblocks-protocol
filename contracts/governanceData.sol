@@ -80,8 +80,10 @@ contract governanceData{
 
     struct proposalVoteCount 
     {
-        uint[] ABVoteCount;
-        uint[] MemberVoteCount;
+        // uint[] ABVoteCount;
+        // uint[] MemberVoteCount;
+        mapping(uint=>uint) ABVoteCount;
+        mapping(uint=>uint) MemberVoteCount;
         uint totalTokenAB;
         uint totalTokenMember;
     }
@@ -126,10 +128,10 @@ contract governanceData{
         mintableToken = MintableToken(mintableTokenAddress);
     }
 
-    function getBalanceOfMember(address _memberAddress) public constant returns (uint totalToken)
+    function getBalanceOfMember(address _memberAddress) public constant returns (uint totalBalance)
     {
-        basicToken=BasicToken(basicTokenAddress);
-        totalToken = basicToken.balanceOf(_memberAddress);
+        mintableToken = MintableToken(mintableTokenAddress);
+        totalBalance = mintableToken.balanceOf(_memberAddress);
     }
     function getTotalSupply() public constant returns(uint totalSupplyTokens) 
     {
