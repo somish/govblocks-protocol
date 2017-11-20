@@ -15,8 +15,9 @@
 
 
 pragma solidity ^0.4.8;
-// import "./oraclizeAPI.sol";
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+import "./zeppelin-solidity/contracts/token/MintableToken.sol";
+// import "./MintableToken.sol";
 // import "./BasicToken.sol";
 
 contract governanceData{

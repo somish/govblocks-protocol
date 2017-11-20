@@ -3,7 +3,7 @@ pragma solidity ^0.4.11;
 
 import './ERC20Basic.sol';
 import '../math/SafeMath.sol';
-
+// import './SafeMath.sol';
 
 /**
  * @title Basic token
@@ -13,7 +13,6 @@ contract BasicToken is ERC20Basic {
   using SafeMath for uint256;
 
   mapping(address => uint256) balances;
-
   /**
   * @dev transfer token for a specified address
   * @param _to The address to transfer to.
