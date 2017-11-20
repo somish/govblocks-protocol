@@ -110,6 +110,8 @@ contract governanceData{
     uint public totalVotes;
     address basicTokenAddress;
     BasicToken basicToken;
+    address mintableTokenAddress;
+    MintableToken mintableToken;
 
     /// @dev Change basic token contract's address
     function changeBasicTokenAddress(address _contractAddress) public
@@ -118,26 +120,31 @@ contract governanceData{
         basicToken=BasicToken(basicTokenAddress);
     }
 
+    function changeMintableTokenAddress(address _contractAddress) public
+    {
+        mintableTokenAddress = _contractAddress;
+        mintableToken = MintableToken(mintableTokenAddress);
+    }
+
     function getBalanceOfMember(address _memberAddress) public constant returns (uint totalToken)
     {
         basicToken=BasicToken(basicTokenAddress);
         totalToken = basicToken.balanceOf(_memberAddress);
     }
-
-    function getTotalSupply() public constant returns(uint totalsup)
+    function getTotalSupply() public constant returns(uint totalSupplyTokens) 
     {
-        basicToken=BasicToken(basicTokenAddress);
-        totalsup = basicToken.totalSupply();
+        mintableToken = MintableToken(mintableTokenAddress);
+        totalSupplyTokens = mintableToken.totalSupply();
     }
-
+    
     /// @dev Get the vote count(voting done by AB) for options of proposal when giving Proposal id and Option index.
-    function getproposalABVoteCount(uint _proposalId,uint _index) constant returns(uint result)
+    function getProposalABVoteCount(uint _proposalId,uint _index) constant returns(uint result)
     {
         result = allProposalVoteCount[_proposalId].ABVoteCount[_index]; 
     }
     
     /// @dev Get the vote count(voting done by Member) for options of proposal when giving Proposal id and Option index.
-    function getproposalMemberVoteCount(uint _proposalId,uint _index) constant returns(uint result)
+    function getProposalMemberVoteCount(uint _proposalId,uint _index) constant returns(uint result)
     {
         result = allProposalVoteCount[_proposalId].MemberVoteCount[_index]; 
     }  
