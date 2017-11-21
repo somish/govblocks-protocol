@@ -153,7 +153,13 @@ contract governanceData{
     function getProposalMemberVoteCount(uint _proposalId,uint _index) constant returns(uint result)
     {
         result = allProposalVoteCount[_proposalId].MemberVoteCount[_index]; 
-    }  
+    } 
+
+    function getProposalTotalToken(uint _proposalId) constant returns(uint totalTokenAB, uint totalTokenMember)
+    {
+        totalTokenAB = allProposalVoteCount[_proposalId].totalTokenAB;
+        totalTokenMember = allProposalVoteCount[_proposalId].totalTokenMember;
+    } 
 
     /// @dev Stores the AB joining date against a AB member's address.
     function memberAsABmemberStatus(address _memberAddress ,uint status) internal
@@ -544,6 +550,7 @@ contract governanceData{
         allCategory.push(category(_categoryName,_memberVoteRequired,_majorityVote,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress));
     }
 
+
     function updateCategory(uint _categoryId,string _categoryName,uint8 _memberVoteRequired,uint8 _majorityVote,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress) public
     {
         allCategory[_categoryId].categoryName = _categoryName;
@@ -556,11 +563,18 @@ contract governanceData{
         allCategory[_categoryId].majorityVote = _majorityVote;
     }
     
+    function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress)
+    {
+        paramsInt = allProposalCategory[_proposalId].paramInt;
+        paramsBytes = allProposalCategory[_proposalId].paramBytes32;
+        paramsAddress = allProposalCategory[_proposalId].paramAddress;
+    }
+
     function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) public
     {
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_id].status == 0);
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-        
+
         if(_paramInt.length != 0  )
         {
             allProposalCategory[_id].paramInt.push(0);
