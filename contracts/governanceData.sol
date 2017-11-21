@@ -544,7 +544,6 @@ contract governanceData{
         allCategory.push(category(_categoryName,_memberVoteRequired,_majorityVote,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress));
     }
 
-
     function updateCategory(uint _categoryId,string _categoryName,uint8 _memberVoteRequired,uint8 _majorityVote,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress) public
     {
         allCategory[_categoryId].categoryName = _categoryName;
@@ -556,28 +555,52 @@ contract governanceData{
         allCategory[_categoryId].memberVoteRequired = _memberVoteRequired;
         allCategory[_categoryId].majorityVote = _majorityVote;
     }
-
+    
     function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) public
     {
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_id].status == 0);
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-        allProposalCategory[_id].paramInt.push(0);
-        allProposalCategory[_id].paramBytes32.push("");
-        allProposalCategory[_id].paramAddress.push(0);
+        
+        if(_paramInt.length != 0  )
+        {
+            allProposalCategory[_id].paramInt.push(0);
+        }
+
+        if(_paramBytes32.length != 0  )
+        {
+            allProposalCategory[_id].paramBytes32.push("");
+        }
+
+        if(_paramAddress.length != 0  )
+        {
+            allProposalCategory[_id].paramAddress.push(0x00);
+        }
+    
         (,,,,,paramInt,paramBytes32,paramAddress) = getCategoryDetails(_categoryId);
 
         if(paramInt*_verdictOptions == _paramInt.length && paramBytes32*_verdictOptions == _paramBytes32.length && paramAddress*_verdictOptions == _paramAddress.length)
         {
             allProposalCategory[_id].verdictOptions = _verdictOptions+1;
-            allProposal[_id].category = _categoryId;
             allProposalCategory[_id].categorizedBy = msg.sender;
+            allProposal[_id].category = _categoryId;
             for(uint i=0;i<_verdictOptions;i++)
             {
-                allProposalCategory[_id].paramInt.push(_paramInt[i]);
-                allProposalCategory[_id].paramBytes32.push(_paramBytes32[i]);
-                allProposalCategory[_id].paramAddress.push(_paramAddress[i]);
+                if(_paramInt.length != 0  )
+                {
+                    allProposalCategory[_id].paramInt.push(_paramInt[i]);
+                }
+        
+                if(_paramBytes32.length != 0  )
+                {
+                    allProposalCategory[_id].paramBytes32.push(_paramBytes32[i]);
+                }
+        
+                if(_paramAddress.length != 0  )
+                {
+                    allProposalCategory[_id].paramAddress.push(_paramAddress[i]);
+                }
             }
-            // allProposalCategory[_id]=proposalCategory(msg.sender,_paramInt,_paramBytes32,_paramAddress,_verdictOptions+1);
+            
         } 
     }
 
