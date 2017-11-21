@@ -144,21 +144,12 @@ contract governanceData{
     }
     
     /// @dev Get the vote count(voting done by AB) for options of proposal when giving Proposal id and Option index.
-    function getProposalABVoteCount(uint _proposalId,uint _index) constant returns(uint result)
+    function getProposalVoteCountAndToken(uint _proposalId,uint _optionIndex) constant returns(uint totalVotesAB,uint totalVotesMember,uint totalTokenAB,uint totalTokenMember)
     {
-        result = allProposalVoteCount[_proposalId].ABVoteCount[_index]; 
-    }
-    
-    /// @dev Get the vote count(voting done by Member) for options of proposal when giving Proposal id and Option index.
-    function getProposalMemberVoteCount(uint _proposalId,uint _index) constant returns(uint result)
-    {
-        result = allProposalVoteCount[_proposalId].MemberVoteCount[_index]; 
-    }
-
-    function getProposalTotalToken(uint _proposalId) constant returns(uint totalTokenAB, uint totalTokenMember)
-    {
+        totalVotesAB = allProposalVoteCount[_proposalId].ABVoteCount[_optionIndex];
+        totalVotesMember = allProposalVoteCount[_proposalId].MemberVoteCount[_optionIndex];
         totalTokenAB = allProposalVoteCount[_proposalId].totalTokenAB;
-        totalTokenMember = allProposalVoteCount[_proposalId].totalTokenMember;
+        totalTokenMember = allProposalVoteCount[_proposalId].totalTokenMember; 
     }
 
     /// @dev Stores the AB joining date against a AB member's address.
@@ -364,15 +355,11 @@ contract governanceData{
         pendingProposalStart = _pendingPS;
     }
 
+    /// @dev Function to be called after Closed proposal voting and Proposal is accepted.
     function actionAfterProposalPass(uint256 _proposalId,uint _categoryId) public //NEWW
     {
         address contractAt = allCategory[_categoryId].contractAt; // then function name:
         contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
-    }
-
-    function updateCategoryMVR(uint _categoryId) 
-    {
-        allCategory[_categoryId].memberVoteRequired = 1;
     }
 
     /// @dev Check if the member who wants to change in contracts, is owner.
@@ -443,7 +430,7 @@ contract governanceData{
         userMemberVote[msg.sender].push(votelength); 
         proposalMemberVote[_proposalId].push(votelength);
         userProposalMemberVote[msg.sender][_proposalId]=_verdictChoosen;
-        allProposalVoteCount[_proposalId].ABVoteCount[_verdictChoosen] +=1;
+        allProposalVoteCount[_proposalId].MemberVoteCount[_verdictChoosen] +=1;
         allProposalVoteCount[_proposalId].totalTokenMember+=_voterTokens;
     }
 
@@ -553,7 +540,7 @@ contract governanceData{
         allCategory.push(category(_categoryName,_memberVoteRequired,_majorityVote,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress));
     }
 
-
+    /// @dev Updates a category details
     function updateCategory(uint _categoryId,string _categoryName,uint8 _memberVoteRequired,uint8 _majorityVote,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress) public
     {
         allCategory[_categoryId].categoryName = _categoryName;
@@ -566,6 +553,13 @@ contract governanceData{
         allCategory[_categoryId].majorityVote = _majorityVote;
     }
     
+    /// @dev Updates a category MVR value (Will get called after action after proposal pass)
+    function updateCategoryMVR(uint _categoryId) 
+    {
+        allCategory[_categoryId].memberVoteRequired = 1;
+    }
+
+    /// @dev Get the category paramets given against a proposal after categorizing the proposal.
     function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress)
     {
         paramsInt = allProposalCategory[_proposalId].paramInt;
@@ -573,6 +567,7 @@ contract governanceData{
         paramsAddress = allProposalCategory[_proposalId].paramAddress;
     }
 
+    /// @dev categorizing proposal to proceed further.
     function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) public
     {
         require(advisoryBoardMembers[msg.sender]==1 && allProposal[_id].status == 0);
@@ -642,12 +637,14 @@ contract governance
 {
     address governanceDataAddress;
     governanceData gd1;
+    
     function changeGovernanceDataAddress(address _contractAddress) public
     {
         governanceDataAddress = _contractAddress;
         gd1=governanceData(governanceDataAddress);
     }
     
+    /// @dev function to get called after Proposal Pass
     function updateCategory_memberVote(uint256 _proposalId) 
     {
         gd1=governanceData(governanceDataAddress);
