@@ -122,17 +122,21 @@ contract governanceData{
         basicToken=BasicToken(basicTokenAddress);
     }
 
+    /// @dev Creating object for mintable contract to mint tokens.
     function changeMintableTokenAddress(address _contractAddress) public
     {
         mintableTokenAddress = _contractAddress;
         mintableToken = MintableToken(mintableTokenAddress);
     }
 
+    /// @dev Fetch user balance when giving member address.
     function getBalanceOfMember(address _memberAddress) public constant returns (uint totalBalance)
     {
         mintableToken = MintableToken(mintableTokenAddress);
         totalBalance = mintableToken.balanceOf(_memberAddress);
     }
+
+    /// @dev get total supply tokens available for voting.
     function getTotalSupply() public constant returns(uint totalSupplyTokens) 
     {
         mintableToken = MintableToken(mintableTokenAddress);
