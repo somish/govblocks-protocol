@@ -153,13 +153,13 @@ contract governanceData{
     function getProposalMemberVoteCount(uint _proposalId,uint _index) constant returns(uint result)
     {
         result = allProposalVoteCount[_proposalId].MemberVoteCount[_index]; 
-    } 
+    }
 
     function getProposalTotalToken(uint _proposalId) constant returns(uint totalTokenAB, uint totalTokenMember)
     {
         totalTokenAB = allProposalVoteCount[_proposalId].totalTokenAB;
         totalTokenMember = allProposalVoteCount[_proposalId].totalTokenMember;
-    } 
+    }
 
     /// @dev Stores the AB joining date against a AB member's address.
     function memberAsABmemberStatus(address _memberAddress ,uint status) internal
@@ -224,13 +224,24 @@ contract governanceData{
     {
         uint category = allProposal[_proposalId].category;
         uint verdictChoosen = allProposal[_proposalId].finalVerdict;
-        paramint = allProposalCategory[_proposalId].paramInt[verdictChoosen];
-        parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChoosen];
-        paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChoosen];
+        if(allProposalCategory[_proposalId].paramInt.length != 0)
+        {
+             paramint = allProposalCategory[_proposalId].paramInt[verdictChoosen];
+        }
+
+        if(allProposalCategory[_proposalId].paramBytes32.length != 0)
+        {
+            parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChoosen];
+        }
+
+        if(allProposalCategory[_proposalId].paramAddress.length != 0)
+        {
+            paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChoosen];
+        }  
     }
     
     /// @dev Get final verdict of proposal after CloseproposalVote function.
-    function getProposalFinalVerdict (uint _proposalId) returns(uint verdict) 
+    function getProposalFinalVerdict(uint _proposalId) constant returns(uint verdict) 
     {
         verdict = allProposal[_proposalId].finalVerdict;
     }
@@ -462,11 +473,11 @@ contract governanceData{
         return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add,allProposal[_id].date_upd,allProposal[_id].versionNum,allProposal[_id].status);
     }
      
-    function getProposalCategory (uint _proposalid) public constant returns(uint category) 
+    function getProposalCategory(uint _proposalId) public constant returns(uint category) 
     {
-        category = allProposal[_proposalid].category; 
+        category = allProposal[_proposalId].category; 
     }
-        
+    
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
     function editProposal(uint _id , string _shortDesc, string _longDesc) public
     {
