@@ -30,7 +30,7 @@ contract governanceData{
         uint versionNum;
         uint status;  
         uint category;
-        uint finalVerdict; // depends on options
+        uint finalVerdict; 
     }
     struct proposalCategory{
         address categorizedBy;
