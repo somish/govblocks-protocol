@@ -30,7 +30,7 @@ contract governanceData{
         uint versionNum;
         uint status;  
         uint category;
-        uint finalVerdict; 
+        uint finalVerdict; // depends on options
     }
     struct proposalCategory{
         address categorizedBy;
@@ -244,14 +244,7 @@ contract governanceData{
     function getProposalFinalVerdict(uint _proposalId) constant returns(uint verdict) 
     {
         verdict = allProposal[_proposalId].finalVerdict;
-    }
-    
-    ///@dev Gets total number of members from another contract
-    function getTotalMembers (address contractAt, string _functionName) constant returns(uint totalMembers) 
-    {
-        contractAt.call(bytes4(sha3("getTotalMember")));
-    }
-    
+    }    
     
     /// @dev proposal should gets closed.
     function closeProposalVote(uint _proposalId)
@@ -262,31 +255,29 @@ contract governanceData{
             uint8 memberVoteRequired;
             uint category = allProposal[_proposalId].category;
             uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
-            uint totalMember = memberCounter; 
             uint totaltokens;
+            uint totalVotes;
             uint max;
             uint i;
             uint verdictVal;
+
             (,memberVoteRequired,majorityVote,,,,,) = getCategoryDetails(category);
             if(allProposal[_proposalId].status==1)  // // pending advisory board vote
             {  
                 max=0;  
-                totaltokens = allProposalVoteCount[_proposalId].totalTokenAB;
                 for(i = 0; i < verdictOptions; i++)
                 {
-                    // totalVotes = totalVotes + allProposalVoteCount[_proposalId].ABVoteCount[i]; 
+                    totalVotes = totalVotes + allProposalVoteCount[_proposalId].ABVoteCount[i]; 
                     if(allProposalVoteCount[_proposalId].ABVoteCount[max] < allProposalVoteCount[_proposalId].ABVoteCount[i])
                     {  
-                        max = i;
-                    }
+                        max = i; }
                 }
                 verdictVal = allProposalVoteCount[_proposalId].ABVoteCount[max];
-                if(verdictVal*100/totaltokens>=majorityVote)
+                if(verdictVal*100/totalVotes>=majorityVote)
                 {   
                     if(memberVoteRequired==1) /// Member vote required 
                     {
                         changeProposalStatus(_proposalId,2);
-                        // p1.closeProposalOraclise(id,gd1.getClosingTime());
                     }
                     else /// Member vote not required
                     {
@@ -315,15 +306,16 @@ contract governanceData{
             {
                 // when Member Vote Quorum not Achieved
                 max=0;  
-                totaltokens = allProposalVoteCount[_proposalId].totalTokenAB;
+                totaltokens = allProposalVoteCount[_proposalId].totalTokenMember;
                 for(i = 0; i < verdictOptions; i++)
-                {
-                    if(allProposalVoteCount[_proposalId].ABVoteCount[max] < allProposalVoteCount[_proposalId].ABVoteCount[i])
+                {   
+                    totalVotes = totalVotes + allProposalVoteCount[_proposalId].MemberVoteCount[i]; 
+                    if(allProposalVoteCount[_proposalId].MemberVoteCount[max] < allProposalVoteCount[_proposalId].MemberVoteCount[i])
                     {  
                         max = i;
                     }
                 }
-                verdictVal = allProposalVoteCount[_proposalId].ABVoteCount[max];
+                verdictVal = allProposalVoteCount[_proposalId].MemberVoteCount[max];
                 if(totaltokens*100/getTotalSupply() < getQuorumPerc()) 
                 {
                     pushInProposalStatus(_proposalId,7);
@@ -332,7 +324,7 @@ contract governanceData{
                     actionAfterProposalPass(_proposalId , category);
                 }
                 /// if proposal accepted% >=majority % (by Members)
-                else if(verdictVal*100/totaltokens>=majorityVote)
+                else if(verdictVal*100/totalVotes>=majorityVote)
                 {
                     if(max > 0)
                     {
