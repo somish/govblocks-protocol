@@ -47,6 +47,4 @@ contract  memberRoles{
       memberAddressToMemberRole[_memberAddress] = 1;
       memberRoleToMemberAddress[_memberTypeId] = _memberAddress;
   }
-  
-
 }
