@@ -29,10 +29,12 @@ contract governanceData{
         uint date_add;
         uint date_upd;
         uint versionNum;
-        uint status;  
+        uint roleStatus;
+        uint propStatus;  
         uint category;
-        uint finalVerdict; // depends on options
+        uint finalVerdict;
     }
+
     struct proposalCategory{
         address categorizedBy;
         uint[] paramInt;
@@ -85,8 +87,8 @@ contract governanceData{
     }
 
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;
-    mapping(uint=>mapping(uint=>uint)) ProposalRoleVote;
-    mapping(address=>mapping(uint=>uint)) AddressRoleVote;
+    mapping(uint=>mapping(uint=>uint)) getProposalRoleVote;
+    mapping(address=>mapping(uint=>uint)) getAddressRoleVote;
 
     mapping(uint=>proposalCategory) allProposalCategory;
     mapping(uint=>proposalVersionData[]) proposalVersions;
@@ -194,9 +196,9 @@ contract governanceData{
     /// @dev Changes the status of a given proposal to open it for voting. // wil get called when we submit the proposal on submit button
     function openProposalForVoting(uint _proposalId) public
     {
-        require(allProposal[_proposalId].owner == msg.sender || allProposal[_proposalId].status == 111);
-        pushInProposalStatus(_proposalId,0);
-        updateProposalStatus(_proposalId,0);
+        require(allProposal[_proposalId].owner == msg.sender || allProposal[_proposalId].propStatus == 0);
+        pushInProposalStatus(_proposalId,1);
+        updateProposalStatus(_proposalId,1);
     }
 
     /// @dev Changes the time(in seconds) after which proposal voting is closed.
@@ -208,7 +210,7 @@ contract governanceData{
     /// @dev Checks if voting time of a given proposal should be closed or not. 
     function checkProposalVoteClosing(uint _proposalId) constant returns(uint8 closeValue)
     {
-        require((allProposal[_proposalId].date_upd + proposalVoteClosingTime <= now && allProposal[_proposalId].status == 1)|| allProposal[_proposalId].status == 2);
+        require((allProposal[_proposalId].date_upd + proposalVoteClosingTime <= now));
         closeValue=1;
     }
 
@@ -237,12 +239,84 @@ contract governanceData{
     function getProposalFinalVerdict(uint _proposalId) constant returns(uint verdict) 
     {
         verdict = allProposal[_proposalId].finalVerdict;
-    }    
+    }  
+
+    function closeProposalVote(uint _proposalId)
+    {
+        if(checkProposalVoteClosing(_proposalId)==1)
+        {
+            mRoles = memberRoles(memberRolesAddress);
+            uint category = allProposal[_proposalId].category;
+            uint max;
+            uint totalVotes;
+            uint verdictVal;
+            uint majorityVote;
+            uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
+            uint index = allProposal[_proposalId].roleStatus;
+            uint roleId = mRoles.getMemberRoleByAddress(msg.sender);
+
+            max=0;  
+            for(uint i = 0; i < verdictOptions; i++)
+            {
+                totalVotes = totalVotes + allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i]; 
+                if(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max] < allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i])
+                {  
+                    max = i; 
+                }
+            }
+            verdictVal = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max];
+            majorityVote = allCategory[_proposalId].memberRoleMajorityVote[index];
+
+            if(verdictVal*100/totalVotes>=majorityVote)
+            {   
+                index++;
+                if(index < allCategory[_proposalId].memberRoleSequence.length)
+                {
+                    changeProposalStatus(_proposalId,allCategory[_proposalId].memberRoleSequence[index]);
+                }
+                else
+                {
+                    if(max > 0)
+                    {
+                        pushInProposalStatus(_proposalId,2);
+                        updateProposalStatus(_proposalId,2);
+                        allProposal[_proposalId].finalVerdict = max;
+                        actionAfterProposalPass(_proposalId ,category); 
+                    }
+                    else
+                    {   
+                        pushInProposalStatus(_proposalId,3);
+                        updateProposalStatus(_proposalId,3);
+                        allProposal[_proposalId].finalVerdict = max;
+                        changePendingProposalStart();
+                    }
+                }
+            } 
+            else
+            {
+                changeProposalStatus(_proposalId,4);
+                allProposal[_proposalId].finalVerdict = max;
+                changePendingProposalStart();
+            } 
+        }
+    }
 
     /// @dev Change pending proposal start variable
-    function changePendingProposalStart(uint _pendingPS) internal
+    function changePendingProposalStart() public
     {
-        pendingProposalStart = _pendingPS;
+        uint pendingPS = pendingProposalStart;
+        uint proposalLength = allProposal.length;
+        for(uint j=pendingPS; j<proposalLength; j++)
+        {
+            if(allProposal[j].propStatus > 2)
+                pendingPS += 1;
+            else
+                break;
+        }
+        if(j!=pendingPS)
+        {
+            pendingProposalStart = j;
+        }
     }
 
     /// @dev Function to be called after Closed proposal voting and Proposal is accepted.
@@ -294,9 +368,9 @@ contract governanceData{
 
     function proposalVoting(uint _proposalId,uint _verdictChoosen) public // 
     {
-        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0);
+        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 1);
         mRoles = memberRoles(memberRolesAddress);
-        uint index = allProposal[_proposalId].status;
+        uint index = allProposal[_proposalId].roleStatus;
         uint roleId = mRoles.getMemberRoleByAddress(msg.sender);
         require(roleId ==  allCategory[_proposalId].memberRoleSequence[index]);
         uint votelength = totalVotes;
@@ -304,8 +378,8 @@ contract governanceData{
         allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens));
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen] +=1;
         allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] +=_voterTokens;
-        AddressRoleVote[msg.sender][roleId] = votelength;
-        ProposalRoleVote[_proposalId][roleId] = votelength;
+        getAddressRoleVote[msg.sender][roleId] = votelength;
+        getProposalRoleVote[_proposalId][roleId] = votelength;
     }
     
     /// @dev Provides Vote details of a given vote id. 
@@ -317,13 +391,13 @@ contract governanceData{
     /// @dev Creates a new proposal 
     function addNewProposal(string _shortDesc,string _longDesc) public
     {
-        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,111,0,0));
+        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0));
     }
 
     /// @dev Fetch details of proposal by giving proposal Id
-    function getProposalDetailsById(uint _id) public constant returns (address owner,string shortDesc,string longDesc,uint date_add,uint date_upd,uint versionNum,uint status)
+    function getProposalDetailsById(uint _id) public constant returns (address owner,string shortDesc,string longDesc,uint date_add,uint date_upd,uint versionNum,uint propStatus)
     {
-        return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add,allProposal[_id].date_upd,allProposal[_id].versionNum,allProposal[_id].status);
+        return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add,allProposal[_id].date_upd,allProposal[_id].versionNum,allProposal[_id].propStatus);
     }
      
     function getProposalCategory(uint _proposalId) public constant returns(uint category) 
@@ -377,28 +451,17 @@ contract governanceData{
     /// @dev Adds status names in array - Not generic right now
     function addStatus() internal
     {   
-        status.push("Draft for discussion, multiple versions.");
-        status.push("Pending-Advisory Board Vote");
-        status.push("Pending-Advisory Board Vote Accepted, pending Member Vote");
-        status.push("Final-Advisory Board Vote Declined");
-        status.push("Final-Advisory Board Vote Accepted, Member Vote not required");
-        status.push("Final-Advisory Board Vote Accepted, Member Vote Accepted");
-        status.push("Final-Advisory Board Vote Accepted, Member Vote Declined");
-        status.push("Final-Advisory Board Vote Accepted, Member Vote Quorum not Achieved");
-        status.push("Proposal Accepted, Insufficient Funds");
+        status.push("Draft for discussion, Voting is not yet started"); 
+        status.push("Voting started"); 
+        status.push("Proposal Decision - Accepted by Majority Voting"); 
+        status.push("Proposal Decision - Rejected by Majority voting"); 
+        status.push("Proposal Denied, Threshold not reached"); 
     }
-
-    // /// @dev Adds category names -
-    // function addCategory() internal
-    // {   
-    //     allCategory.push(category("Uncategorised",0,0,"",0,0,0,0));
-    //     allCategory.push(category("Filter member proposals as necessary(which are put to a member vote)",0,60,"",0,0,0,0));
-    // }
 
     /// @dev Updates  status of an existing proposal.
     function updateProposalStatus(uint _id ,uint _status) internal
     {
-        allProposal[_id].status = _status;
+        allProposal[_id].propStatus = _status;
         allProposal[_id].date_upd =now;
     }
 
@@ -443,7 +506,7 @@ contract governanceData{
     /// @dev categorizing proposal to proceed further.
     function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) public
     {
-        require(advisoryBoardMembers[msg.sender]==1 && allProposal[_id].status == 0);
+        require(advisoryBoardMembers[msg.sender]==1 && allProposal[_id].propStatus == 0);
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
 
         if(_paramInt.length != 0  )
