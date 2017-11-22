@@ -69,7 +69,6 @@ contract governanceData{
         uint voterTokens;
     }
 
-    address public owner;
     function governanceData () 
     {
         owner = msg.sender;
@@ -79,36 +78,34 @@ contract governanceData{
         addStatusAndCategory();
     }
 
-    struct proposalVoteCount 
+    struct proposalVoteAndTokenCount 
     {
-        mapping(uint=>uint) ABVoteCount;
-        mapping(uint=>uint) MemberVoteCount;
-        uint totalTokenAB;
-        uint totalTokenMember;
+        mapping(uint=>mapping(uint=>uint)) totalVoteCount; //first uin is role id and 2nd is Option id 3rd is . vote to that options
+        mapping(uint=>uint) totalTokenCount; // same here
     }
-    
-    mapping (uint => proposalVoteCount) allProposalVoteCount;
+
+    mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;
+    mapping(uint=>mapping(uint=>uint)) ProposalRoleVote;
+    mapping(address=>mapping(uint=>uint)) AddressRoleVote;
+
+    mapping(uint=>proposalCategory) allProposalCategory;
+    mapping(uint=>proposalVersionData[]) proposalVersions;
+    mapping(uint=>Status[]) proposalStatus;
+    mapping(address=>uint8) public advisoryBoardMembers;
+    mapping(address=>Status[])  memberAsABmember;
 
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
     uint public memberCounter;
-    mapping(uint=>proposalCategory) allProposalCategory;
+    uint public totalVotes;
+    address public owner;
+
     category[] public allCategory;
     string[] public status;
     proposal[] allProposal;
-    mapping(uint=>proposalVersionData[]) proposalVersions;
-    mapping (uint=>Status[]) proposalStatus;
-    mapping (address=>uint8) public advisoryBoardMembers;
-    mapping (address=>uint[])  userAdvisoryBoardVote; /// Maps the given vote Id against the given Advisory board member's address
-    mapping (address=>uint[])  userMemberVote; /// Maps the given vote Id against the given member's address.
-    mapping (uint=>uint[])  proposalAdvisoryBoardVote;  /// Adds the given voter Id(AB) against the given Proposal's Id
-    mapping (uint=>uint[])  proposalMemberVote; /// Adds the given voter Id(Member) against the given Proposal's Id
-    mapping (address=>mapping(uint=>uint))  userProposalAdvisoryBoardVote; /// Records a members vote on a given proposal id as an AB member.
-    mapping (address=>mapping(uint=>uint))  userProposalMemberVote; /// Records a members vote on a given proposal id.
-    mapping (address=>Status[])  memberAsABmember;
     proposalVote[] allVotes;
-    uint public totalVotes;
+    
     address basicTokenAddress;
     BasicToken basicToken;
     address mintableTokenAddress;
@@ -149,14 +146,12 @@ contract governanceData{
         mintableToken = MintableToken(mintableTokenAddress);
         totalSupplyTokens = mintableToken.totalSupply();
     }
-    
+
     /// @dev Get the vote count(voting done by AB) for options of proposal when giving Proposal id and Option index.
-    function getProposalVoteCountAndToken(uint _proposalId,uint _optionIndex) constant returns(uint totalVotesAB,uint totalVotesMember,uint totalTokenAB,uint totalTokenMember)
+    function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken)
     {
-        totalVotesAB = allProposalVoteCount[_proposalId].ABVoteCount[_optionIndex];
-        totalVotesMember = allProposalVoteCount[_proposalId].MemberVoteCount[_optionIndex];
-        totalTokenAB = allProposalVoteCount[_proposalId].totalTokenAB;
-        totalTokenMember = allProposalVoteCount[_proposalId].totalTokenMember; 
+        totalVotes = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[_roleId][_optionIndex];
+        totalToken = allProposalVoteAndTokenCount[_proposalId].totalTokenCount[_roleId];
     }
 
     /// @dev Stores the AB joining date against a AB member's address.
@@ -243,118 +238,6 @@ contract governanceData{
     {
         verdict = allProposal[_proposalId].finalVerdict;
     }    
-    
-    /// @dev proposal should gets closed.
-    // function closeProposalVote(uint _proposalId)
-    // {
-    //     if(checkProposalVoteClosing(_proposalId)==1) /// either status == 1 or status == 2 thats why Closing ==1
-    //     {
-    //         uint majorityVote;
-    //         uint8 memberVoteRequired;
-    //         uint category = allProposal[_proposalId].category;
-    //         uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
-    //         uint totaltokens;
-    //         uint totalVotes;
-    //         uint max;
-    //         uint i;
-    //         uint verdictVal;
-
-    //         (,memberVoteRequired,majorityVote,,,,,) = getCategoryDetails(category);
-    //         if(allProposal[_proposalId].status==1)  // // pending advisory board vote
-    //         {  
-    //             max=0;  
-    //             for(i = 0; i < verdictOptions; i++)
-    //             {
-    //                 totalVotes = totalVotes + allProposalVoteCount[_proposalId].ABVoteCount[i]; 
-    //                 if(allProposalVoteCount[_proposalId].ABVoteCount[max] < allProposalVoteCount[_proposalId].ABVoteCount[i])
-    //                 {  
-    //                     max = i; }
-    //             }
-    //             verdictVal = allProposalVoteCount[_proposalId].ABVoteCount[max];
-    //             if(verdictVal*100/totalVotes>=majorityVote)
-    //             {   
-    //                 if(memberVoteRequired==1) /// Member vote required 
-    //                 {
-    //                     changeProposalStatus(_proposalId,2);
-    //                 }
-    //                 else /// Member vote not required
-    //                 {
-    //                     if(max > 0)
-    //                     {
-    //                         pushInProposalStatus(_proposalId,4);
-    //                         updateProposalStatus(_proposalId,4);
-    //                         allProposal[_proposalId].finalVerdict = max;
-    //                         actionAfterProposalPass(_proposalId ,category); 
-    //                     }
-    //                     else
-    //                     {   
-    //                         pushInProposalStatus(_proposalId,3);
-    //                         updateProposalStatus(_proposalId,3);
-    //                         allProposal[_proposalId].finalVerdict = max;
-    //                     }
-    //                 }
-    //             } // when AB votes are not enough . /// if proposal is denied
-    //             else
-    //             {
-    //                 changeProposalStatus(_proposalId,3);
-    //                 allProposal[_proposalId].finalVerdict = max;
-    //             } 
-    //         }
-    //         else if(allProposal[_proposalId].status==2) /// pending member vote
-    //         {
-    //             // when Member Vote Quorum not Achieved
-    //             max=0;  
-    //             totaltokens = allProposalVoteCount[_proposalId].totalTokenMember;
-    //             for(i = 0; i < verdictOptions; i++)
-    //             {   
-    //                 totalVotes = totalVotes + allProposalVoteCount[_proposalId].MemberVoteCount[i]; 
-    //                 if(allProposalVoteCount[_proposalId].MemberVoteCount[max] < allProposalVoteCount[_proposalId].MemberVoteCount[i])
-    //                 {  
-    //                     max = i;
-    //                 }
-    //             }
-    //             verdictVal = allProposalVoteCount[_proposalId].MemberVoteCount[max];
-    //             if(totaltokens*100/getTotalSupply() < getQuorumPerc()) 
-    //             {
-    //                 pushInProposalStatus(_proposalId,7);
-    //                 updateProposalStatus(_proposalId,7);
-    //                 allProposal[_proposalId].finalVerdict = 0;
-    //                 actionAfterProposalPass(_proposalId , category);
-    //             }
-    //             /// if proposal accepted% >=majority % (by Members)
-    //             else if(verdictVal*100/totalVotes>=majorityVote)
-    //             {
-    //                 if(max > 0)
-    //                 {
-    //                     pushInProposalStatus(_proposalId,5);
-    //                     updateProposalStatus(_proposalId,5);
-    //                     allProposal[_proposalId].finalVerdict = max;
-    //                     actionAfterProposalPass(_proposalId , category);
-    //                 }
-    //                 else
-    //                 {
-    //                     pushInProposalStatus(_proposalId,6);
-    //                     updateProposalStatus(_proposalId,6);
-    //                     allProposal[_proposalId].finalVerdict = 0;  
-    //                 }
-    //             }
-    //         }
-    //     } 
-    //     uint pendingPS = pendingProposalStart;
-    //     uint proposalLength = allProposal.length;
-    //     for(uint j=pendingPS; j<proposalLength; j++)
-    //     {
-    //         if(allProposal[j].status > 2)
-    //             pendingPS += 1;
-    //         else
-    //             break;
-    //     }
-    //     if(j!=pendingPS)
-    //     {
-    //         changePendingProposalStart(j);
-    //     }
-        
-    // }
 
     /// @dev Change pending proposal start variable
     function changePendingProposalStart(uint _pendingPS) internal
@@ -409,18 +292,22 @@ contract governanceData{
         totalVotes++;
     }
 
-    function proposalVoting(uint _proposalId,uint _verdictChoosen) public 
+    function proposalVoting(uint _proposalId,uint _verdictChoosen) public // 
     {
+        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0);
         mRoles = memberRoles(memberRolesAddress);
         uint index = allProposal[_proposalId].status;
-        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0);
-        require(mRoles.getMemberRoleByAddress(msg.sender) ==  allCategory[_proposalId].memberRoleSequence[index]);
+        uint roleId = mRoles.getMemberRoleByAddress(msg.sender);
+        require(roleId ==  allCategory[_proposalId].memberRoleSequence[index]);
         uint votelength = totalVotes;
         uint _voterTokens = getBalanceOfMember(msg.sender);
-        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens)); 
+        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens));
+        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen] +=1;
+        allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] +=_voterTokens;
+        AddressRoleVote[msg.sender][roleId] = votelength;
+        ProposalRoleVote[_proposalId][roleId] = votelength;
     }
     
-   
     /// @dev Provides Vote details of a given vote id. 
     function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit,uint voterTokens)
     {
@@ -501,6 +388,12 @@ contract governanceData{
         status.push("Proposal Accepted, Insufficient Funds");
     }
 
+    // /// @dev Adds category names -
+    // function addCategory() internal
+    // {   
+    //     allCategory.push(category("Uncategorised",0,0,"",0,0,0,0));
+    //     allCategory.push(category("Filter member proposals as necessary(which are put to a member vote)",0,60,"",0,0,0,0));
+    // }
 
     /// @dev Updates  status of an existing proposal.
     function updateProposalStatus(uint _id ,uint _status) internal
@@ -532,6 +425,12 @@ contract governanceData{
         allCategory[_categoryId].paramBytes32 = _paramBytes32; 
         allCategory[_categoryId].paramAddress = _paramAddress;
     }
+    
+    /// @dev Updates a category MVR value (Will get called after action after proposal pass)
+    // function updateCategoryMVR(uint _categoryId) 
+    // {
+    //     allCategory[_categoryId].memberVoteRequired = 1;
+    // }
 
     /// @dev Get the category paramets given against a proposal after categorizing the proposal.
     function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress)
