@@ -113,12 +113,12 @@ contract governanceData{
     address mintableTokenAddress;
     MintableToken mintableToken;
     address memberRolesAddress;
-    memberRoles mRoles;
+    memberRoles MR;
 
     function changeMemberRoleAddress(address _contractAddress)
     {
         memberRolesAddress = _contractAddress;
-        mRoles = memberRoles(memberRolesAddress);
+        MR = memberRoles(memberRolesAddress);
     }
 
     /// @dev Change basic token contract's address
@@ -240,7 +240,7 @@ contract governanceData{
     {
         if(checkProposalVoteClosing(_proposalId)==1)
         {
-            mRoles = memberRoles(memberRolesAddress);
+            MR = memberRoles(memberRolesAddress);
             uint category = allProposal[_proposalId].category;
             uint max;
             uint totalVotes;
@@ -248,7 +248,7 @@ contract governanceData{
             uint majorityVote;
             uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
             uint index = allProposal[_proposalId].roleStatus;
-            uint roleId = mRoles.getMemberRoleByAddress(msg.sender);
+            uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
 
             max=0;  
             for(uint i = 0; i < verdictOptions; i++)
@@ -364,9 +364,9 @@ contract governanceData{
     function proposalVoting(uint _proposalId,uint _verdictChoosen) public // 
     {
         require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 1);
-        mRoles = memberRoles(memberRolesAddress);
+        MR = memberRoles(memberRolesAddress);
         uint index = allProposal[_proposalId].roleStatus;
-        uint roleId = mRoles.getMemberRoleByAddress(msg.sender);
+        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         require(roleId ==  allCategory[_proposalId].memberRoleSequence[index]);
         uint votelength = totalVotes;
         uint _voterTokens = getBalanceOfMember(msg.sender);
@@ -501,7 +501,8 @@ contract governanceData{
     /// @dev categorizing proposal to proceed further.
     function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) public
     {
-        require(advisoryBoardMembers[msg.sender]==1 && allProposal[_id].propStatus == 0);
+        MR = memberRoles(memberRolesAddress);
+        require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId() && allProposal[_id].propStatus == 0);
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
 
         if(_paramInt.length != 0  )
