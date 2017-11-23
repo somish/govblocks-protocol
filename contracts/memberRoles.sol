@@ -18,9 +18,19 @@ pragma solidity ^0.4.8;
 
 contract  memberRoles{
 
-  string[] memberRoles;
+  string[] memberRole;
+  uint categorize_auth_roleid;
+
   mapping (address=>uint) memberAddressToMemberRole;
   mapping (uint=>address) memberRoleToMemberAddress;
+
+ function memberRoles()
+ {
+  memberRole.push("Member");
+  memberRole.push("Advisory Board");
+  memberRole.push("Expert");
+  categorize_auth_roleid=1;
+ }
 
   function getMemberRoleByAddress(address _memberAddress) public constant returns(uint memberRoleId)
   {
@@ -34,17 +44,20 @@ contract  memberRoles{
 
   function addNewMemberRole(string _newRoleName)
   {
-      memberRoles.push(_newRoleName);  
+      memberRole.push(_newRoleName);  
   }
   
   function getMemberRoleNameById(uint _memberRoleId) public constant returns(string memberRoleName)
   {
-      memberRoleName = memberRoles[_memberRoleId];
+      memberRoleName = memberRole[_memberRoleId];
   }
   
-  function assignMemberRole(address _memberAddress,uint _memberTypeId)
+  function assignMemberRole(address _memberAddress,uint _memberRoleId)
   {
       memberAddressToMemberRole[_memberAddress] = 1;
-      memberRoleToMemberAddress[_memberTypeId] = _memberAddress;
+      memberRoleToMemberAddress[_memberRoleId] = _memberAddress;
   }
+
+
+
 }

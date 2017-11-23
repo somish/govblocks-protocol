@@ -49,7 +49,7 @@ contract governanceData{
         uint date_add;
     }
     struct Status{
-        uint movedTo;
+        uint statusId;
         uint date;
     }
 
@@ -82,19 +82,19 @@ contract governanceData{
 
     struct proposalVoteAndTokenCount 
     {
-        mapping(uint=>mapping(uint=>uint)) totalVoteCount; //first uin is role id and 2nd is Option id 3rd is . vote to that options
-        mapping(uint=>uint) totalTokenCount; // same here
+        mapping(uint=>mapping(uint=>uint)) totalVoteCount; 
+        mapping(uint=>uint) totalTokenCount; 
     }
 
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;
     mapping(uint=>mapping(uint=>uint)) getProposalRoleVote;
-    mapping(address=>mapping(uint=>uint)) getAddressRoleVote;
+    mapping(address=>mapping(uint=>uint)) getAddressRoleVote;   
+    mapping(address=>uint8) public advisoryBoardMembers;
+
 
     mapping(uint=>proposalCategory) allProposalCategory;
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping(uint=>Status[]) proposalStatus;
-    mapping(address=>uint8) public advisoryBoardMembers;
-    mapping(address=>Status[])  memberAsABmember;
 
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
@@ -156,11 +156,6 @@ contract governanceData{
         totalToken = allProposalVoteAndTokenCount[_proposalId].totalTokenCount[_roleId];
     }
 
-    /// @dev Stores the AB joining date against a AB member's address.
-    function memberAsABmemberStatus(address _memberAddress ,uint status) internal
-    {
-        memberAsABmember[_memberAddress].push(Status(status,now));
-    }
 
     /// @dev add status and category.
     function addStatusAndCategory () 
@@ -550,22 +545,6 @@ contract governanceData{
             }
             
         } 
-    }
-
-    /// @dev Adds a given address as an advisory board member.
-    function joinAdvisoryBoard(address _memberAddress) public
-    {
-        require(advisoryBoardMembers[_memberAddress]==0 && isOwner(msg.sender) == 1);
-        advisoryBoardMembers[_memberAddress] = 1;
-        memberAsABmemberStatus(_memberAddress,1);
-    }
-
-    /// @dev Removes a given address from the advisory board.
-    function removeAdvisoryBoard(address _memberAddress) public
-    {
-        require(advisoryBoardMembers[_memberAddress]==1 && isOwner(msg.sender) == 1);
-        advisoryBoardMembers[_memberAddress] = 0;
-        memberAsABmemberStatus(_memberAddress,0);
     }
 }  
 
