@@ -113,6 +113,7 @@ contract governanceData is Ownable{
     address memberRolesAddress;
     memberRoles MR;
 
+    /// @dev Change MintableToken contract's Address.
     function changeMemberRoleAddress(address _contractAddress)
     {
         memberRolesAddress = _contractAddress;
@@ -158,7 +159,6 @@ contract governanceData is Ownable{
     /// @dev add status and category.
     function addStatusAndCategory () 
     {
-        // addCategory();
         addStatus();
     }
     
@@ -234,6 +234,7 @@ contract governanceData is Ownable{
         verdict = allProposal[_proposalId].finalVerdict;
     }  
 
+    /// @dev Closes the voting of a given proposal.Changes the status and verdict of the proposal by calculating the votes
     function closeProposalVote(uint _proposalId)
     {
         if(checkProposalVoteClosing(_proposalId)==1)
@@ -357,6 +358,7 @@ contract governanceData is Ownable{
         totalVotes++;
     }
 
+    /// @dev Register's vote of members - generic function (i.e. for different roles)
     function proposalVoting(uint _proposalId,uint _verdictChoosen) public // 
     {
         require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 1);
@@ -390,7 +392,8 @@ contract governanceData is Ownable{
     {
         return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add,allProposal[_id].date_upd,allProposal[_id].versionNum,allProposal[_id].propStatus);
     }
-     
+    
+    /// @dev Get the category of given proposal. 
     function getProposalCategory(uint _proposalId) public constant returns(uint category) 
     {
         category = allProposal[_proposalId].category; 
@@ -477,12 +480,6 @@ contract governanceData is Ownable{
         allCategory[_categoryId].paramAddress = _paramAddress;
     }
     
-    /// @dev Updates a category MVR value (Will get called after action after proposal pass)
-    // function updateCategoryMVR(uint _categoryId) 
-    // {
-    //     allCategory[_categoryId].memberVoteRequired = 1;
-    // }
-
     /// @dev Get the category paramets given against a proposal after categorizing the proposal.
     function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress)
     {

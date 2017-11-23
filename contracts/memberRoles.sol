@@ -15,11 +15,14 @@
 
 
 pragma solidity ^0.4.8;
+// import "./Ownable.sol";
+import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract  memberRoles{
+
+contract  memberRoles is Ownable{
 
   string[] memberRole;
-  uint public categorize_auth_roleid;
+  uint public categorizeAuthRoleid;
 
   mapping (address=>uint) memberAddressToMemberRole;
   mapping (uint=>address) memberRoleToMemberAddress;
@@ -29,40 +32,51 @@ contract  memberRoles{
     memberRole.push("Member");
     memberRole.push("Advisory Board");
     memberRole.push("Expert");
-    categorize_auth_roleid=1;
+    categorizeAuthRoleid=1;
   }
 
+  /// @dev Get the role id assigned to a member when giving memberAddress
   function getMemberRoleIdByAddress(address _memberAddress) public constant returns(uint memberRoleId)
   {
      memberRoleId = memberAddressToMemberRole[_memberAddress];
   }
 
+  /// @dev Get that member address assigned as a specific role when giving member role Id.
   function getMemberAddressByRoleId(uint _memberRoleId) public constant returns(address memberAddress)
   {
       memberAddress = memberRoleToMemberAddress[_memberRoleId];
   }
 
-  function addNewMemberRole(string _newRoleName)
+  /// @dev Add new member role for governance.
+  function addNewMemberRole(string _newRoleName) onlyOwner
   {
       memberRole.push(_newRoleName);  
   }
   
+  /// @dev Get the role name whem giving role Id.
   function getMemberRoleNameById(uint _memberRoleId) public constant returns(string memberRoleName)
   {
       memberRoleName = memberRole[_memberRoleId];
   }
   
-  function assignMemberRole(address _memberAddress,uint _memberRoleId)
+  /// @dev Assign role to a member when giving member address and role id
+  function assignMemberRole(address _memberAddress,uint _memberRoleId) onlyOwner
   {
       memberAddressToMemberRole[_memberAddress] = 1;
       memberRoleToMemberAddress[_memberRoleId] = _memberAddress;
   }
 
- function getAuthorizedMemberId() public constant returns(uint roleId)
- {
-     roleId = categorize_auth_roleid;
- }
- 
+  /// @dev Get the role id which is authorized to categorize a proposal.
+  function getAuthorizedMemberId() public constant returns(uint roleId)
+  {
+       roleId = categorizeAuthRoleid;
+  }
+
+  /// @dev Change the role id that is authorized to categorize the proposal. (Only owner can do that)
+  function changeAuthorizedMemberId(uint _roleId) onlyOwner public
+  {
+     categorizeAuthRoleid = _roleId;
+  }
 
 
 }
