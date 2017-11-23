@@ -22,6 +22,7 @@ import "./memberRoles.sol";
 // import "./BasicToken.sol";
 
 contract governanceData is Ownable{
+    using SafeMath for uint;
     struct proposal{
         address owner;
         string shortDesc;
@@ -203,7 +204,7 @@ contract governanceData is Ownable{
     /// @dev Checks if voting time of a given proposal should be closed or not. 
     function checkProposalVoteClosing(uint _proposalId) constant returns(uint8 closeValue)
     {
-        require((allProposal[_proposalId].date_upd + proposalVoteClosingTime <= now));
+        require(SafeMath.add(allProposal[_proposalId].date_upd,proposalVoteClosingTime) <= now);
         closeValue=1;
     }
 
@@ -261,7 +262,7 @@ contract governanceData is Ownable{
             verdictVal = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max];
             majorityVote = allCategory[_proposalId].memberRoleMajorityVote[index];
 
-            if(verdictVal*100/totalVotes>=majorityVote)
+            if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=majorityVote)
             {   
                 index++;
                 if(index < allCategory[_proposalId].memberRoleSequence.length)
