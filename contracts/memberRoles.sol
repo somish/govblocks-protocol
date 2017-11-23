@@ -62,6 +62,7 @@ contract  memberRoles{
  {
      roleId = categorize_auth_roleid;
  }
+ 
 
 
 }

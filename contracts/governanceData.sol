@@ -21,7 +21,7 @@ import "./memberRoles.sol";
 // import "./MintableToken.sol";
 // import "./BasicToken.sol";
 
-contract governanceData{
+contract governanceData is Ownable{
     struct proposal{
         address owner;
         string shortDesc;
@@ -73,7 +73,6 @@ contract governanceData{
 
     function governanceData () 
     {
-        owner = msg.sender;
         proposalVoteClosingTime = 60;
         pendingProposalStart=0;
         quorumPercentage=25;
@@ -101,7 +100,6 @@ contract governanceData{
     uint public pendingProposalStart;
     uint public memberCounter;
     uint public totalVotes;
-    address public owner;
 
     category[] public allCategory;
     string[] public status;
@@ -189,9 +187,9 @@ contract governanceData{
     }
 
     /// @dev Changes the status of a given proposal to open it for voting. // wil get called when we submit the proposal on submit button
-    function openProposalForVoting(uint _proposalId) public
+    function openProposalForVoting(uint _proposalId) onlyOwner public
     {
-        require(allProposal[_proposalId].owner == msg.sender || allProposal[_proposalId].propStatus == 0);
+        require(allProposal[_proposalId].propStatus == 0);
         pushInProposalStatus(_proposalId,1);
         updateProposalStatus(_proposalId,1);
     }
@@ -322,18 +320,16 @@ contract governanceData{
     }
 
     /// @dev Check if the member who wants to change in contracts, is owner.
-    function isOwner(address _memberAddress) constant returns(uint checkOwner)
+    function isOwner(address _memberAddress) returns(uint checkOwner)
     {
-        checkOwner=0;
-        if(owner == _memberAddress)
+        require(owner == _memberAddress);
             checkOwner=1;
     }
 
     /// @dev Change current owner
-    function changeOwner(address _memberAddress) public
+    function changeOwner(address _memberAddress) onlyOwner public
     {
-        if(owner == msg.sender)
-            owner = _memberAddress;
+        transferOwnership(_memberAddress);
     }
 
     /// @dev Gets the total number of categories.
@@ -401,17 +397,14 @@ contract governanceData{
     }
     
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
-    function editProposal(uint _id , string _shortDesc, string _longDesc) public
+    function editProposal(uint _id , string _shortDesc, string _longDesc) onlyOwner public
     {
-        require(msg.sender == allProposal[_id].owner);
-        {
-            storeProposalVersion(_id);
-            updateProposal(_id,_shortDesc,_longDesc);
-            allProposal[_id].category = 0;
-            allProposalCategory[_id].paramInt.push(0);
-            allProposalCategory[_id].paramBytes32.push("");
-            allProposalCategory[_id].paramAddress.push(0);
-        }
+        storeProposalVersion(_id);
+        updateProposal(_id,_shortDesc,_longDesc);
+        allProposal[_id].category = 0;
+        allProposalCategory[_id].paramInt.push(0);
+        allProposalCategory[_id].paramBytes32.push("");
+        allProposalCategory[_id].paramAddress.push(0);
     }
 
     /// @dev Stores the information of a given version number of a given proposal. Maintains the record of all the versions of a proposal.
