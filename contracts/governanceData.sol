@@ -30,7 +30,7 @@ contract governanceData is Ownable{
         uint date_add;
         uint date_upd;
         uint versionNum;
-        uint roleStatus;
+        uint currVotingStatus;
         uint propStatus;  
         uint category;
         uint finalVerdict;
@@ -89,9 +89,6 @@ contract governanceData is Ownable{
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;
     mapping(uint=>mapping(uint=>uint)) ProposalRoleVote;
     mapping(address=>mapping(uint=>uint)) AddressRoleVote;   
-    mapping(address=>uint8) public advisoryBoardMembers;
-
-
     mapping(uint=>proposalCategory) allProposalCategory;
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping(uint=>Status[]) proposalStatus;
@@ -190,7 +187,7 @@ contract governanceData is Ownable{
     /// @dev Changes the status of a given proposal to open it for voting. // wil get called when we submit the proposal on submit button
     function openProposalForVoting(uint _proposalId) onlyOwner public
     {
-        require(allProposal[_proposalId].propStatus == 0);
+        require(allProposal[_proposalId].propStatus == 0 && (allProposal[_proposalId].category != 0));
         pushInProposalStatus(_proposalId,1);
         updateProposalStatus(_proposalId,1);
     }
@@ -247,7 +244,7 @@ contract governanceData is Ownable{
             uint verdictVal;
             uint majorityVote;
             uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
-            uint index = allProposal[_proposalId].roleStatus;
+            uint index = allProposal[_proposalId].currVotingStatus;
             uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
 
             max=0;  
@@ -260,14 +257,14 @@ contract governanceData is Ownable{
                 }
             }
             verdictVal = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max];
-            majorityVote = allCategory[_proposalId].memberRoleMajorityVote[index];
+            majorityVote = allCategory[category].memberRoleMajorityVote[index];
 
             if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=majorityVote)
             {   
-                index++;
-                if(index < allCategory[_proposalId].memberRoleSequence.length)
+                index+=1;
+                if(index < allCategory[category].memberRoleSequence.length)
                 {
-                    allProposal[_proposalId].roleStatus = index;
+                    allProposal[_proposalId].currVotingStatus = index;
                 }
                 else
                 {
@@ -335,7 +332,8 @@ contract governanceData is Ownable{
     }
 
     /// @dev Gets the total number of categories.
-    function getCategoriesLength() constant returns (uint length){
+    function getCategoriesLength() constant returns (uint length)
+    {
         length = allCategory.length;
     }
 
@@ -352,23 +350,19 @@ contract governanceData is Ownable{
         memberRoleMajorityVote = allCategory[_categoryId].memberRoleMajorityVote;
     } 
 
-
-    /// @dev Increases the number of votes by 1.
-    function increaseTotalVotes() internal
-    {
-        totalVotes++;
-    }
-
     /// @dev Register's vote of members - generic function (i.e. for different roles)
-    function proposalVoting(uint _proposalId,uint _verdictChoosen) public // 
+    function proposalVoting(uint _proposalId,uint _verdictChoosen) public returns(uint index,uint roleId,uint voteSequence) 
     {
         require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 1);
         MR = memberRoles(memberRolesAddress);
-        uint index = allProposal[_proposalId].roleStatus;
-        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        require(roleId ==  allCategory[_proposalId].memberRoleSequence[index]);
+        index = allProposal[_proposalId].currVotingStatus;
+        uint category;
+        (category,) = getProposalCategoryAndCurrentVotingStatus(_proposalId);
+        voteSequence = allCategory[category].memberRoleSequence[index];
+        roleId = MR.getMemberRoleIdByAddress(msg.sender);
+        require(roleId == voteSequence);
         uint votelength = totalVotes;
-        increaseTotalVotes();
+        totalVotes++;
         uint _voterTokens = getBalanceOfMember(msg.sender);
         allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens));
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen] +=1;
@@ -376,20 +370,6 @@ contract governanceData is Ownable{
         AddressRoleVote[msg.sender][roleId] = votelength;
         ProposalRoleVote[_proposalId][roleId] = votelength;
     }
-    
-    function getAddressRoleVote(address _memberAddress) public constant returns (uint roleId,uint voteId)
-    {
-        MR = memberRoles(memberRolesAddress);
-        roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        voteId = AddressRoleVote[_memberAddress][roleId];   
-    }
-
-    function getProposalRoleVote(uint _proposalId,uint _roleId) public constant returns(uint voteId) 
-    {
-        voteId = ProposalRoleVote[_proposalId][_roleId];
-    }
-    
-    
 
     /// @dev Provides Vote details of a given vote id. 
     function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit,uint voterTokens)
@@ -410,9 +390,10 @@ contract governanceData is Ownable{
     }
     
     /// @dev Get the category of given proposal. 
-    function getProposalCategory(uint _proposalId) public constant returns(uint category) 
+    function getProposalCategoryAndCurrentVotingStatus(uint _proposalId) public constant returns(uint category,uint roleId) 
     {
-        category = allProposal[_proposalId].category; 
+        category = allProposal[_proposalId].category;
+        roleId = allProposal[_proposalId].currVotingStatus;    
     }
     
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
@@ -497,11 +478,12 @@ contract governanceData is Ownable{
     }
     
     /// @dev Get the category paramets given against a proposal after categorizing the proposal.
-    function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress)
+    function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
     {
         paramsInt = allProposalCategory[_proposalId].paramInt;
         paramsBytes = allProposalCategory[_proposalId].paramBytes32;
         paramsAddress = allProposalCategory[_proposalId].paramAddress;
+        verdictOptions = allProposalCategory[_proposalId].verdictOptions;
     }
 
     /// @dev categorizing proposal to proceed further.
@@ -570,7 +552,8 @@ contract governance
     function updateCategory_memberVote(uint256 _proposalId) 
     {
         gd1=governanceData(governanceDataAddress);
-        uint _categoryId = gd1.getProposalCategory(_proposalId);
+        uint _categoryId;
+        (_categoryId,)= gd1.getProposalCategoryAndCurrentVotingStatus(_proposalId);
         uint paramint;
         bytes32 parambytes32;
         address paramaddress;
