@@ -18,7 +18,6 @@ pragma solidity ^0.4.8;
 // import "./Ownable.sol";
 import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-
 contract  memberRoles is Ownable{
 
   string[] memberRole;
@@ -62,7 +61,7 @@ contract  memberRoles is Ownable{
   /// @dev Assign role to a member when giving member address and role id
   function assignMemberRole(address _memberAddress,uint _memberRoleId) onlyOwner
   {
-      memberAddressToMemberRole[_memberAddress] = 1;
+      memberAddressToMemberRole[_memberAddress] = _memberRoleId;
       memberRoleToMemberAddress[_memberRoleId] = _memberAddress;
   }
 

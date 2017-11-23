@@ -87,8 +87,8 @@ contract governanceData is Ownable{
     }
 
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;
-    mapping(uint=>mapping(uint=>uint)) getProposalRoleVote;
-    mapping(address=>mapping(uint=>uint)) getAddressRoleVote;   
+    mapping(uint=>mapping(uint=>uint)) ProposalRoleVote;
+    mapping(address=>mapping(uint=>uint)) AddressRoleVote;   
     mapping(address=>uint8) public advisoryBoardMembers;
 
 
@@ -267,7 +267,7 @@ contract governanceData is Ownable{
                 index++;
                 if(index < allCategory[_proposalId].memberRoleSequence.length)
                 {
-                    changeProposalStatus(_proposalId,allCategory[_proposalId].memberRoleSequence[index]);
+                    allProposal[_proposalId].roleStatus = index;
                 }
                 else
                 {
@@ -368,14 +368,29 @@ contract governanceData is Ownable{
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         require(roleId ==  allCategory[_proposalId].memberRoleSequence[index]);
         uint votelength = totalVotes;
+        increaseTotalVotes();
         uint _voterTokens = getBalanceOfMember(msg.sender);
         allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens));
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen] +=1;
         allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] +=_voterTokens;
-        getAddressRoleVote[msg.sender][roleId] = votelength;
-        getProposalRoleVote[_proposalId][roleId] = votelength;
+        AddressRoleVote[msg.sender][roleId] = votelength;
+        ProposalRoleVote[_proposalId][roleId] = votelength;
     }
     
+    function getAddressRoleVote(address _memberAddress) public constant returns (uint roleId,uint voteId)
+    {
+        MR = memberRoles(memberRolesAddress);
+        roleId = MR.getMemberRoleIdByAddress(msg.sender);
+        voteId = AddressRoleVote[_memberAddress][roleId];   
+    }
+
+    function getProposalRoleVote(uint _proposalId,uint _roleId) public constant returns(uint voteId) 
+    {
+        voteId = ProposalRoleVote[_proposalId][_roleId];
+    }
+    
+    
+
     /// @dev Provides Vote details of a given vote id. 
     function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit,uint voterTokens)
     {
