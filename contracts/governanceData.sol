@@ -41,7 +41,7 @@ contract governanceData is Ownable{
         uint[] paramInt;
         bytes32[] paramBytes32;
         address[] paramAddress;
-        uint8 verdictOptions;
+        uint verdictOptions;
     }
     struct proposalVersionData{
         uint versionNum;
@@ -231,14 +231,14 @@ contract governanceData is Ownable{
             uint totalVotes;
             uint verdictVal;
             uint majorityVote;
-            uint8 verdictOptions = allProposalCategory[_proposalId].verdictOptions;
+            uint verdictOptions = allProposalCategory[_proposalId].verdictOptions;
             uint index = allProposal[_proposalId].currVotingStatus;
             uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
 
             max=0;  
             for(uint i = 0; i < verdictOptions; i++)
             {
-                totalVotes = totalVotes + allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i]; 
+                totalVotes = SafeMath.add(totalVotes,allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i]); 
                 if(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max] < allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i])
                 {  
                     max = i; 
@@ -249,7 +249,7 @@ contract governanceData is Ownable{
 
             if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=majorityVote)
             {   
-                index+=1;
+                index = SafeMath.add(index,1);
                 if(index < allCategory[category].memberRoleSequence.length)
                 {
                     allProposal[_proposalId].currVotingStatus = index;
@@ -289,7 +289,7 @@ contract governanceData is Ownable{
         for(uint j=pendingPS; j<proposalLength; j++)
         {
             if(allProposal[j].propStatus > 2)
-                pendingPS += 1;
+                pendingPS = SafeMath.add(pendingPS,1);
             else
                 break;
         }
@@ -352,8 +352,8 @@ contract governanceData is Ownable{
         uint votelength = SafeMath.add(totalVotes,1);                                            
         uint _voterTokens = getBalanceOfMember(msg.sender);
         allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens));
-        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen] +=1;
-        allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] +=_voterTokens;
+        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen],1);
+        allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],_voterTokens);
         AddressRoleVote[msg.sender][roleId] = votelength;
         ProposalRoleVote[_proposalId][roleId] = votelength;
     }
@@ -406,7 +406,7 @@ contract governanceData is Ownable{
         allProposal[_id].shortDesc = _shortDesc;
         allProposal[_id].longDesc = _longDesc;
         allProposal[_id].date_upd = now;
-        allProposal[_id].versionNum += 1;
+        allProposal[_id].versionNum = SafeMath.add(allProposal[_id].versionNum,1);
     }
 
     /// @dev Gets version details of a given proposal id.
@@ -437,13 +437,13 @@ contract governanceData is Ownable{
     function updateProposalStatus(uint _id ,uint _status) internal
     {
         allProposal[_id].propStatus = _status;
-        allProposal[_id].date_upd =now;
+        allProposal[_id].date_upd = now;
     }
 
     /// @dev Stores the status information of a given proposal.
-    function pushInProposalStatus(uint _id , uint _status) internal
+    function pushInProposalStatus(uint _proposalId , uint _status) internal
     {
-        proposalStatus[_id].push(Status(_status,now));
+        proposalStatus[_proposalId].push(Status(_status,now));
     }
 
     /// @dev Adds a new category.
@@ -465,7 +465,7 @@ contract governanceData is Ownable{
     }
     
     /// @dev Get the category paramets given against a proposal after categorizing the proposal.
-    function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
+    function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint verdictOptions)
     {
         paramsInt = allProposalCategory[_proposalId].paramInt;
         paramsBytes = allProposalCategory[_proposalId].paramBytes32;
@@ -474,7 +474,7 @@ contract governanceData is Ownable{
     }
 
     /// @dev categorizing proposal to proceed further.
-    function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) public
+    function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) public
     {
         MR = memberRoles(memberRolesAddress);
         require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId() && allProposal[_id].propStatus == 0);
@@ -499,7 +499,7 @@ contract governanceData is Ownable{
 
         if(paramInt*_verdictOptions == _paramInt.length && paramBytes32*_verdictOptions == _paramBytes32.length && paramAddress*_verdictOptions == _paramAddress.length)
         {
-            allProposalCategory[_id].verdictOptions = _verdictOptions+1;
+            allProposalCategory[_id].verdictOptions = SafeMath.add(_verdictOptions,1);
             allProposalCategory[_id].categorizedBy = msg.sender;
             allProposal[_id].category = _categoryId;
             for(uint i=0;i<_verdictOptions;i++)
