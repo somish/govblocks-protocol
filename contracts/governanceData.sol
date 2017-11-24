@@ -107,18 +107,11 @@ contract governanceData is Ownable{
     address MRAddress;
     memberRoles MR;
 
-    /// @dev Change memberRoles contract's Address.
-    function changeMemberRoleAddress(address _MRcontractAddress)
-    {
-        MRAddress = _MRcontractAddress;
-        MR = memberRoles(MRAddress);
-    }
-
-    /// @dev Change basic token contract's address
-    function changeBasicTokenAddress(address _BTcontractAddress) public
+    /// @dev change all contract's addresses.
+    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress) public
     {
         BTAddress = _BTcontractAddress;
-        BT=BasicToken(BTAddress);
+        MRAddress = _MRcontractAddress;
     }
 
     /// @dev Fetch user balance when giving member address.
@@ -328,15 +321,27 @@ contract governanceData is Ownable{
         uint category;
         (category,) = getProposalCategoryAndCurrentVotingStatus(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-
+        
         require(roleId == allCategory[category].memberRoleSequence[index] && AddressRoleVote[msg.sender][roleId] == 0 );
-        uint votelength = SafeMath.add(totalVotes,1);                                            
+        uint votelength = getTotalVotes();
+        increaseTotalVotes();
         uint _voterTokens = getBalanceOfMember(msg.sender);
         allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens));
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen],1);
         allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],_voterTokens);
         AddressRoleVote[msg.sender][roleId] = votelength;
         ProposalRoleVote[_proposalId][roleId] = votelength;
+    }
+    
+    function getTotalVotes() public constant returns (uint votesTotal)
+    {
+        return(allVotes.length);
+    }
+    
+    function increaseTotalVotes() public returns (uint _totalVotes)
+    {
+        _totalVotes = SafeMath.add(totalVotes,1);  
+        totalVotes=_totalVotes;
     }
         
     /// @dev Get voteid against given member.
@@ -449,14 +454,21 @@ contract governanceData is Ownable{
     }
 
     /// @dev Updates a category details
-    function updateCategory(uint _categoryId,string _categoryName,uint8 _memberVoteRequired,uint8 _majorityVote,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress) public
+    function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
     {
-        allCategory[_categoryId].categoryName = _categoryName;
+        require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
         allCategory[_categoryId].functionName = _functionName;
         allCategory[_categoryId].contractAt = _contractAt;
         allCategory[_categoryId].paramInt = _paramInt;
         allCategory[_categoryId].paramBytes32 = _paramBytes32; 
         allCategory[_categoryId].paramAddress = _paramAddress;
+
+        for(uint i=0; i<_memberRoleSequence.length; i++)
+        {
+            allCategory[_categoryId].memberRoleSequence.push(_memberRoleSequence[i]);
+            allCategory[_categoryId].memberRoleMajorityVote.push(_memberRoleMajorityVote[i]);
+        }
+        
     }
     
     /// @dev Get the category paramets given against a proposal after categorizing the proposal.
