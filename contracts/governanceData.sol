@@ -97,7 +97,6 @@ contract governanceData is Ownable{
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
-    uint public memberCounter;
     uint public totalVotes;
 
     category[] public allCategory;
@@ -126,12 +125,6 @@ contract governanceData is Ownable{
         basicToken=BasicToken(basicTokenAddress);
     }
     
-    /// @dev Get total number of votes till now.
-    function getTotalvotes() public returns(uint totalVotes)
-    {
-        totalVotes = totalVotes-1;
-    }
-
     /// @dev Creating object for mintable contract to mint tokens.
     function changeMintableTokenAddress(address _contractAddress) public
     {
@@ -165,18 +158,6 @@ contract governanceData is Ownable{
     function addStatusAndCategory () 
     {
         addStatus();
-    }
-    
-    /// @dev Increases the count of NXM Members by 1 (called whenever a new Member is added).
-    function incMemberCounter() internal
-    {
-        memberCounter++;
-    }
-
-    /// @dev Decreases the count of NXM Members by 1 (called when a member is removed i.e. NXM tokens of a member is 0).
-    function decMemberCounter() internal
-    {
-        memberCounter--;
     }
 
     /// @dev Gets the Quorum Percentage.
