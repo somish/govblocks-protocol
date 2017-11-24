@@ -135,8 +135,8 @@ contract governanceData is Ownable{
     /// @dev Fetch user balance when giving member address.
     function getBalanceOfMember(address _memberAddress) public constant returns (uint totalBalance)
     {
-        mintableToken = MintableToken(mintableTokenAddress);
-        totalBalance = mintableToken.balanceOf(_memberAddress);
+        basicToken=BasicToken(basicTokenAddress);
+        totalBalance = basicToken.balanceOf(_memberAddress);
     }
 
     /// @dev get total supply tokens available for voting.
@@ -357,7 +357,21 @@ contract governanceData is Ownable{
         AddressRoleVote[msg.sender][roleId] = votelength;
         ProposalRoleVote[_proposalId][roleId] = votelength;
     }
-    
+        
+    /// @dev Get voteid against given member.
+    function getAddressRoleVote(address _memberAddress) public constant returns (uint roleId,uint voteId)
+    {
+        MR = memberRoles(memberRolesAddress);
+        roleId = MR.getMemberRoleIdByAddress(_memberAddress);
+        voteId = AddressRoleVote[_memberAddress][roleId];   
+    }
+
+    /// @dev Get Vote id of a _roleId against given proposal.
+    function getProposalRoleVote(uint _proposalId,uint _roleId) public constant returns(uint voteId) 
+    {
+        voteId = ProposalRoleVote[_proposalId][_roleId];
+    }
+
     /// @dev Provides Vote details of a given vote id. 
     function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit,uint voterTokens)
     {
