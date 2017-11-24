@@ -16,9 +16,7 @@
 
 pragma solidity ^0.4.8;
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-import "./zeppelin-solidity/contracts/token/MintableToken.sol";
 import "./memberRoles.sol";
-// import "./MintableToken.sol";
 // import "./BasicToken.sol";
 
 contract governanceData is Ownable{
@@ -104,46 +102,30 @@ contract governanceData is Ownable{
     proposal[] allProposal;
     proposalVote[] allVotes;
     
-    address basicTokenAddress;
-    BasicToken basicToken;
-    address mintableTokenAddress;
-    MintableToken mintableToken;
-    address memberRolesAddress;
+    address BTAddress;
+    BasicToken BT;
+    address MRAddress;
     memberRoles MR;
 
-    /// @dev Change MintableToken contract's Address.
-    function changeMemberRoleAddress(address _contractAddress)
+    /// @dev Change memberRoles contract's Address.
+    function changeMemberRoleAddress(address _MRcontractAddress)
     {
-        memberRolesAddress = _contractAddress;
-        MR = memberRoles(memberRolesAddress);
+        MRAddress = _MRcontractAddress;
+        MR = memberRoles(MRAddress);
     }
 
     /// @dev Change basic token contract's address
-    function changeBasicTokenAddress(address _contractAddress) public
+    function changeBasicTokenAddress(address _BTcontractAddress) public
     {
-        basicTokenAddress = _contractAddress;
-        basicToken=BasicToken(basicTokenAddress);
-    }
-    
-    /// @dev Creating object for mintable contract to mint tokens.
-    function changeMintableTokenAddress(address _contractAddress) public
-    {
-        mintableTokenAddress = _contractAddress;
-        mintableToken = MintableToken(mintableTokenAddress);
+        BTAddress = _BTcontractAddress;
+        BT=BasicToken(BTAddress);
     }
 
     /// @dev Fetch user balance when giving member address.
     function getBalanceOfMember(address _memberAddress) public constant returns (uint totalBalance)
     {
-        basicToken=BasicToken(basicTokenAddress);
-        totalBalance = basicToken.balanceOf(_memberAddress);
-    }
-
-    /// @dev get total supply tokens available for voting.
-    function getTotalSupply() public constant returns(uint totalSupplyTokens) 
-    {
-        mintableToken = MintableToken(mintableTokenAddress);
-        totalSupplyTokens = mintableToken.totalSupply();
+        BT=BasicToken(BTAddress);
+        totalBalance = BT.balanceOf(_memberAddress);
     }
 
     /// @dev Get the vote count(voting done by AB) for options of proposal when giving Proposal id and Option index.
@@ -152,7 +134,6 @@ contract governanceData is Ownable{
         totalVotes = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[_roleId][_optionIndex];
         totalToken = allProposalVoteAndTokenCount[_proposalId].totalTokenCount[_roleId];
     }
-
 
     /// @dev add status and category.
     function addStatusAndCategory () 
@@ -225,7 +206,7 @@ contract governanceData is Ownable{
     {
         if(checkProposalVoteClosing(_proposalId)==1)
         {
-            MR = memberRoles(memberRolesAddress);
+            MR = memberRoles(MRAddress);
             uint category = allProposal[_proposalId].category;
             uint max;
             uint totalVotes;
@@ -342,7 +323,7 @@ contract governanceData is Ownable{
     function proposalVoting(uint _proposalId,uint _verdictChoosen) public
     {
         require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 1);
-        MR = memberRoles(memberRolesAddress);
+        MR = memberRoles(MRAddress);
         uint index = allProposal[_proposalId].currVotingStatus;
         uint category;
         (category,) = getProposalCategoryAndCurrentVotingStatus(_proposalId); 
@@ -361,7 +342,7 @@ contract governanceData is Ownable{
     /// @dev Get voteid against given member.
     function getAddressRoleVote(address _memberAddress) public constant returns (uint roleId,uint voteId)
     {
-        MR = memberRoles(memberRolesAddress);
+        MR = memberRoles(MRAddress);
         roleId = MR.getMemberRoleIdByAddress(_memberAddress);
         voteId = AddressRoleVote[_memberAddress][roleId];   
     }
@@ -371,7 +352,7 @@ contract governanceData is Ownable{
     {
         voteId = ProposalRoleVote[_proposalId][_roleId];
     }
-
+    
     /// @dev Provides Vote details of a given vote id. 
     function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit,uint voterTokens)
     {
@@ -490,7 +471,7 @@ contract governanceData is Ownable{
     /// @dev categorizing proposal to proceed further.
     function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) public
     {
-        MR = memberRoles(memberRolesAddress);
+        MR = memberRoles(MRAddress);
         require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId() && allProposal[_id].propStatus == 0);
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
 
