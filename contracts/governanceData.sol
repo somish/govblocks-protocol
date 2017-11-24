@@ -78,6 +78,7 @@ contract governanceData is Ownable{
         pendingProposalStart=0;
         quorumPercentage=25;
         addStatusAndCategory();
+        allVotes.push(proposalVote(0x00,0,0,now,0));
     }
 
     struct proposalVoteAndTokenCount 
@@ -123,6 +124,12 @@ contract governanceData is Ownable{
     {
         basicTokenAddress = _contractAddress;
         basicToken=BasicToken(basicTokenAddress);
+    }
+    
+    /// @dev Get total number of votes till now.
+    function getTotalvotes() public returns(uint totalVotes)
+    {
+        totalVotes = totalVotes-1;
     }
 
     /// @dev Creating object for mintable contract to mint tokens.
@@ -351,18 +358,17 @@ contract governanceData is Ownable{
     } 
 
     /// @dev Register's vote of members - generic function (i.e. for different roles)
-    function proposalVoting(uint _proposalId,uint _verdictChoosen) public returns(uint index,uint roleId,uint voteSequence) 
+    function proposalVoting(uint _proposalId,uint _verdictChoosen) public
     {
         require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 1);
         MR = memberRoles(memberRolesAddress);
-        index = allProposal[_proposalId].currVotingStatus;
+        uint index = allProposal[_proposalId].currVotingStatus;
         uint category;
-        (category,) = getProposalCategoryAndCurrentVotingStatus(_proposalId);
-        voteSequence = allCategory[category].memberRoleSequence[index];
-        roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        require(roleId == voteSequence);
-        uint votelength = totalVotes;
-        totalVotes++;
+        (category,) = getProposalCategoryAndCurrentVotingStatus(_proposalId); 
+        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
+
+        require(roleId == allCategory[category].memberRoleSequence[index] && AddressRoleVote[msg.sender][roleId] == 0 );
+        uint votelength = SafeMath.add(totalVotes,1);                                            
         uint _voterTokens = getBalanceOfMember(msg.sender);
         allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens));
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen] +=1;
@@ -370,7 +376,7 @@ contract governanceData is Ownable{
         AddressRoleVote[msg.sender][roleId] = votelength;
         ProposalRoleVote[_proposalId][roleId] = votelength;
     }
-
+    
     /// @dev Provides Vote details of a given vote id. 
     function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit,uint voterTokens)
     {
