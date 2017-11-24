@@ -32,6 +32,7 @@ contract governanceData is Ownable{
         uint propStatus;  
         uint category;
         uint finalVerdict;
+        uint currentVerdict;
     }
 
     struct proposalCategory{
@@ -72,7 +73,7 @@ contract governanceData is Ownable{
 
     function governanceData () 
     {
-        proposalVoteClosingTime = 60;
+        proposalVoteClosingTime = 20;
         pendingProposalStart=0;
         quorumPercentage=25;
         addStatusAndCategory();
@@ -319,7 +320,7 @@ contract governanceData is Ownable{
         MR = memberRoles(MRAddress);
         uint index = allProposal[_proposalId].currVotingStatus;
         uint category;
-        (category,) = getProposalCategoryAndCurrentVotingStatus(_proposalId); 
+        (category,,) = getProposalDetailsById2(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         
         require(roleId == allCategory[category].memberRoleSequence[index] && AddressRoleVote[msg.sender][roleId] == 0 );
@@ -367,20 +368,21 @@ contract governanceData is Ownable{
     /// @dev Creates a new proposal 
     function addNewProposal(string _shortDesc,string _longDesc) public
     {
-        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0));
+        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0));
     }
 
     /// @dev Fetch details of proposal by giving proposal Id
-    function getProposalDetailsById(uint _id) public constant returns (address owner,string shortDesc,string longDesc,uint date_add,uint date_upd,uint versionNum,uint propStatus)
+    function getProposalDetailsById1(uint _id) public constant returns (address owner,string shortDesc,string longDesc,uint date_add,uint date_upd,uint versionNum,uint propStatus)
     {
         return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add,allProposal[_id].date_upd,allProposal[_id].versionNum,allProposal[_id].propStatus);
     }
     
-    /// @dev Get the category of given proposal. 
-    function getProposalCategoryAndCurrentVotingStatus(uint _proposalId) public constant returns(uint category,uint roleId) 
+    /// @dev Get the category, of given proposal. 
+    function getProposalDetailsById2(uint _proposalId) public constant returns(uint category,uint roleId,uint intermediateVerdict) 
     {
         category = allProposal[_proposalId].category;
-        roleId = allProposal[_proposalId].currVotingStatus;    
+        roleId = allProposal[_proposalId].currVotingStatus;
+        intermediateVerdict = allProposal[_proposalId].currentVerdict;    
     }
     
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
@@ -547,7 +549,7 @@ contract governance
     {
         gd1=governanceData(governanceDataAddress);
         uint _categoryId;
-        (_categoryId,)= gd1.getProposalCategoryAndCurrentVotingStatus(_proposalId);
+        (_categoryId,,)= gd1.getProposalDetailsById2(_proposalId);
         uint paramint;
         bytes32 parambytes32;
         address paramaddress;
