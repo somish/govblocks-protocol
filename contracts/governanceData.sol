@@ -73,6 +73,11 @@ contract governanceData is Ownable{
         uint voterTokens;
     }
 
+    struct proposalPriority {
+        uint8 complexityLevel;
+        uint levelReward;
+    }
+
     function governanceData () 
     {
         proposalVoteClosingTime = 20;
@@ -94,6 +99,7 @@ contract governanceData is Ownable{
     mapping(uint=>proposalCategory) allProposalCategory;
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping(uint=>Status[]) proposalStatus;
+    mapping(uint=>proposalPriority) allProposalPriority;
 
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
@@ -265,7 +271,7 @@ contract governanceData is Ownable{
             } 
         }
     }
-
+    
     /// @dev Change pending proposal start variable
     function changePendingProposalStart() public
     {
@@ -386,6 +392,7 @@ contract governanceData is Ownable{
     function addNewProposal(string _shortDesc,string _longDesc) public
     {
         allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0));
+        
     }
 
     /// @dev Fetch details of proposal by giving proposal Id
@@ -521,7 +528,7 @@ contract governanceData is Ownable{
     }
 
     /// @dev categorizing proposal to proceed further.
-    function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) public
+    function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions,uint8 _proposalComplexityLevel,uint _levelReward) public
     {
         MR = memberRoles(MRAddress);
         require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId() && allProposal[_proposalId].propStatus == 1);
@@ -552,6 +559,8 @@ contract governanceData is Ownable{
             allProposalCategory[_proposalId].verdictOptions = SafeMath.add(_verdictOptions,1);
             allProposalCategory[_proposalId].categorizedBy = msg.sender;
             allProposal[_proposalId].category = _categoryId;
+            allProposalPriority[_proposalId].complexityLevel = _proposalComplexityLevel;
+            allProposalPriority[_proposalId].levelReward = _levelReward;
             for(uint i=0;i<_verdictOptions;i++)
             {
                 if(_paramInt.length != 0  )
