@@ -16,8 +16,10 @@
 
 pragma solidity ^0.4.8;
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+import "./zeppelin-solidity/contracts/token/MintableToken.sol";
 import "./memberRoles.sol";
 // import "./BasicToken.sol";
+// import "./MintableToken.sol";
 
 contract governanceData is Ownable{
     using SafeMath for uint;
@@ -517,19 +519,19 @@ contract governanceData is Ownable{
 
         if(_paramInt.length != 0  )
         {
-            allProposalCategory[_proposalId].paramInt=new uint[](_verdictOptions);
+            allProposalCategory[_proposalId].paramInt=new uint[](_verdictOptions+1);
             allProposalCategory[_proposalId].paramInt[0]=0;
         }
 
         if(_paramBytes32.length != 0  )
         {
-            allProposalCategory[_proposalId].paramBytes32=new bytes32[](_verdictOptions);   
+            allProposalCategory[_proposalId].paramBytes32=new bytes32[](_verdictOptions+1);   
             allProposalCategory[_proposalId].paramBytes32[0]="";
         }
 
         if(_paramAddress.length != 0  )
         {
-            allProposalCategory[_proposalId].paramAddress=new address[](_verdictOptions);        
+            allProposalCategory[_proposalId].paramAddress=new address[](_verdictOptions+1);        
             allProposalCategory[_proposalId].paramAddress[0]=0x00;
         }
     
@@ -544,17 +546,17 @@ contract governanceData is Ownable{
             {
                 if(_paramInt.length != 0  )
                 {
-                    allProposalCategory[_proposalId].paramInt[i]=_paramInt[i];
+                    allProposalCategory[_proposalId].paramInt[i+1]=_paramInt[i];
                 }
         
                 if(_paramBytes32.length != 0  )
                 {
-                    allProposalCategory[_proposalId].paramBytes32[i]=_paramBytes32[i];
+                    allProposalCategory[_proposalId].paramBytes32[i+1]=_paramBytes32[i];
                 }
         
                 if(_paramAddress.length != 0  )
                 {
-                    allProposalCategory[_proposalId].paramAddress[i]=_paramAddress[i];
+                    allProposalCategory[_proposalId].paramAddress[i+1]=_paramAddress[i];
                 }
             }
             
