@@ -73,7 +73,7 @@ contract governanceData is Ownable{
 
     function governanceData () 
     {
-        proposalVoteClosingTime = 60;
+        proposalVoteClosingTime = 20;
         pendingProposalStart=0;
         quorumPercentage=25;
         addStatusAndCategory();
@@ -228,14 +228,6 @@ contract governanceData is Ownable{
                 if(index < allCategory[category].memberRoleSequence.length)
                 {
                     allProposal[_proposalId].currVotingStatus = index;
-                    if (max > 0)
-                    {
-                        allProposal[_proposalId].currentVerdict = max;
-                    }
-                    else 
-                    {
-                        changeProposalStatus(_proposalId,3);
-                    }
                 }
                 else
                 {
@@ -346,6 +338,7 @@ contract governanceData is Ownable{
         ProposalRoleVote[_proposalId][roleId] = votelength;
     }
     
+
     /// @dev Get total number of votes.
     function getTotalVotes() internal constant returns (uint votesTotal)
     {
@@ -358,7 +351,7 @@ contract governanceData is Ownable{
         _totalVotes = SafeMath.add(totalVotes,1);  
         totalVotes=_totalVotes;
     }
-    
+        
     /// @dev Get voteid against given member.
     function getAddressRoleVote(address _memberAddress) public constant returns (uint roleId,uint voteId)
     {
@@ -400,14 +393,33 @@ contract governanceData is Ownable{
     }
     
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
-    function editProposal(uint _id , string _shortDesc, string _longDesc) onlyOwner public
+    function editProposal(uint _proposalId , string _shortDesc, string _longDesc) onlyOwner public
     {
-        storeProposalVersion(_id);
-        updateProposal(_id,_shortDesc,_longDesc);
-        allProposal[_id].category = 0;
-        allProposalCategory[_id].paramInt.push(0);
-        allProposalCategory[_id].paramBytes32.push("");
-        allProposalCategory[_id].paramAddress.push(0);
+        storeProposalVersion(_proposalId);
+        updateProposal(_proposalId,_shortDesc,_longDesc);
+        
+        require(allProposal[_proposalId].category > 0);
+            uint category;
+            (category,,) = getProposalDetailsById2(_proposalId); 
+            uint verdictOptions = allProposalCategory[_proposalId].verdictOptions;
+            uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+            (,,,paramInt,paramBytes32,paramAddress,,) = getCategoryDetails(category);
+            if(SafeMath.mul(verdictOptions,paramInt) != 0  )
+            {
+                allProposalCategory[_proposalId].paramInt=new uint[](verdictOptions);     
+            }
+    
+            if(SafeMath.mul(verdictOptions,paramBytes32) != 0  )
+            {
+                allProposalCategory[_proposalId].paramBytes32=new bytes32[](verdictOptions);   
+            }
+    
+            if(SafeMath.mul(verdictOptions,paramAddress) != 0  )
+            {
+                allProposalCategory[_proposalId].paramAddress=new address[](verdictOptions);        
+            }
+
+            allProposal[_proposalId].category = 0;
     }
 
     /// @dev Stores the information of a given version number of a given proposal. Maintains the record of all the versions of a proposal.
@@ -442,7 +454,7 @@ contract governanceData is Ownable{
     /// @dev Adds status names in array - Not generic right now
     function addStatus() internal
     {   
-        status.push("Draft for discussion, Voting is not yet started"); 
+        status.push("Draft for discussion"); 
         status.push("Voting started"); 
         status.push("Proposal Decision - Accepted by Majority Voting"); 
         status.push("Proposal Decision - Rejected by Majority voting"); 
@@ -497,49 +509,52 @@ contract governanceData is Ownable{
     }
 
     /// @dev categorizing proposal to proceed further.
-    function categorizeProposal(uint _id , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) public
+    function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) public
     {
         MR = memberRoles(MRAddress);
-        require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId() && allProposal[_id].propStatus == 0);
+        require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId() && allProposal[_proposalId].propStatus == 0);
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
 
         if(_paramInt.length != 0  )
         {
-            allProposalCategory[_id].paramInt.push(0);
+            allProposalCategory[_proposalId].paramInt=new uint[](_verdictOptions);
+            allProposalCategory[_proposalId].paramInt[0]=0;
         }
 
         if(_paramBytes32.length != 0  )
         {
-            allProposalCategory[_id].paramBytes32.push("");
+            allProposalCategory[_proposalId].paramBytes32=new bytes32[](_verdictOptions);   
+            allProposalCategory[_proposalId].paramBytes32[0]="";
         }
 
         if(_paramAddress.length != 0  )
         {
-            allProposalCategory[_id].paramAddress.push(0x00);
+            allProposalCategory[_proposalId].paramAddress=new address[](_verdictOptions);        
+            allProposalCategory[_proposalId].paramAddress[0]=0x00;
         }
     
         (,,,paramInt,paramBytes32,paramAddress,,) = getCategoryDetails(_categoryId);
 
         if(paramInt*_verdictOptions == _paramInt.length && paramBytes32*_verdictOptions == _paramBytes32.length && paramAddress*_verdictOptions == _paramAddress.length)
         {
-            allProposalCategory[_id].verdictOptions = SafeMath.add(_verdictOptions,1);
-            allProposalCategory[_id].categorizedBy = msg.sender;
-            allProposal[_id].category = _categoryId;
+            allProposalCategory[_proposalId].verdictOptions = SafeMath.add(_verdictOptions,1);
+            allProposalCategory[_proposalId].categorizedBy = msg.sender;
+            allProposal[_proposalId].category = _categoryId;
             for(uint i=0;i<_verdictOptions;i++)
             {
                 if(_paramInt.length != 0  )
                 {
-                    allProposalCategory[_id].paramInt.push(_paramInt[i]);
+                    allProposalCategory[_proposalId].paramInt[i]=_paramInt[i];
                 }
         
                 if(_paramBytes32.length != 0  )
                 {
-                    allProposalCategory[_id].paramBytes32.push(_paramBytes32[i]);
+                    allProposalCategory[_proposalId].paramBytes32[i]=_paramBytes32[i];
                 }
         
                 if(_paramAddress.length != 0  )
                 {
-                    allProposalCategory[_id].paramAddress.push(_paramAddress[i]);
+                    allProposalCategory[_proposalId].paramAddress[i]=_paramAddress[i];
                 }
             }
             
