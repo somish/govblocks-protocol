@@ -334,12 +334,15 @@ contract governanceData is Ownable{
         ProposalRoleVote[_proposalId][roleId] = votelength;
     }
     
-    function getTotalVotes() public constant returns (uint votesTotal)
+
+    /// @dev Get total number of votes.
+    function getTotalVotes() internal constant returns (uint votesTotal)
     {
         return(allVotes.length);
     }
     
-    function increaseTotalVotes() public returns (uint _totalVotes)
+    /// @dev Increase total number of votes by 1.
+    function increaseTotalVotes() internal returns (uint _totalVotes)
     {
         _totalVotes = SafeMath.add(totalVotes,1);  
         totalVotes=_totalVotes;
