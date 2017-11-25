@@ -152,7 +152,7 @@ contract governanceData is Ownable{
     /// @dev Changes the status of a given proposal to open it for voting. // wil get called when we submit the proposal on submit button
     function openProposalForVoting(uint _proposalId) onlyOwner public
     {
-        require(allProposal[_proposalId].propStatus == 0 && (allProposal[_proposalId].category != 0));
+        require(allProposal[_proposalId].propStatus == 1 && (allProposal[_proposalId].category != 0));
         pushInProposalStatus(_proposalId,1);
         updateProposalStatus(_proposalId,1);
     }
@@ -230,20 +230,28 @@ contract governanceData is Ownable{
                 if(index < allCategory[category].memberRoleSequence.length)
                 {
                     allProposal[_proposalId].currVotingStatus = index;
+                    if (max > 0)
+                    {
+                        allProposal[_proposalId].currentVerdict = max;
+                    }
+                    else 
+                    {
+                        changeProposalStatus(_proposalId,4);
+                    }
                 }
                 else
                 {
                     if(max > 0)
                     {
-                        pushInProposalStatus(_proposalId,2);
-                        updateProposalStatus(_proposalId,2);
+                        pushInProposalStatus(_proposalId,3);
+                        updateProposalStatus(_proposalId,3);
                         allProposal[_proposalId].finalVerdict = max;
                         actionAfterProposalPass(_proposalId ,category); 
                     }
                     else
                     {   
-                        pushInProposalStatus(_proposalId,3);
-                        updateProposalStatus(_proposalId,3);
+                        pushInProposalStatus(_proposalId,4);
+                        updateProposalStatus(_proposalId,4);
                         allProposal[_proposalId].finalVerdict = max;
                         changePendingProposalStart();
                     }
@@ -251,7 +259,7 @@ contract governanceData is Ownable{
             } 
             else
             {
-                changeProposalStatus(_proposalId,4);
+                changeProposalStatus(_proposalId,5);
                 allProposal[_proposalId].finalVerdict = max;
                 changePendingProposalStart();
             } 
@@ -265,7 +273,7 @@ contract governanceData is Ownable{
         uint proposalLength = allProposal.length;
         for(uint j=pendingPS; j<proposalLength; j++)
         {
-            if(allProposal[j].propStatus > 2)
+            if(allProposal[j].propStatus > 3)
                 pendingPS = SafeMath.add(pendingPS,1);
             else
                 break;
@@ -399,6 +407,7 @@ contract governanceData is Ownable{
     {
         storeProposalVersion(_proposalId);
         updateProposal(_proposalId,_shortDesc,_longDesc);
+        changeProposalStatus(_proposalId,1);
         
         require(allProposal[_proposalId].category > 0);
             uint category;
@@ -457,6 +466,7 @@ contract governanceData is Ownable{
     function addStatus() internal
     {   
         status.push("Draft for discussion"); 
+        status.push("Draft Ready for submission");
         status.push("Voting started"); 
         status.push("Proposal Decision - Accepted by Majority Voting"); 
         status.push("Proposal Decision - Rejected by Majority voting"); 
@@ -514,7 +524,7 @@ contract governanceData is Ownable{
     function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) public
     {
         MR = memberRoles(MRAddress);
-        require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId() && allProposal[_proposalId].propStatus == 0);
+        require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId() && allProposal[_proposalId].propStatus == 1);
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
 
         if(_paramInt.length != 0  )
