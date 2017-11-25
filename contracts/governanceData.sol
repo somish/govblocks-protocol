@@ -20,6 +20,7 @@ import "./zeppelin-solidity/contracts/token/MintableToken.sol";
 import "./memberRoles.sol";
 // import "./BasicToken.sol";
 // import "./MintableToken.sol";
+import "./ProposalCategory.sol";
 
 contract governanceData is Ownable{
     using SafeMath for uint;
@@ -55,16 +56,7 @@ contract governanceData is Ownable{
         uint date;
     }
 
-    struct category{
-        string categoryName;
-        string functionName;
-        address contractAt;
-        uint8 paramInt;
-        uint8 paramBytes32;
-        uint8 paramAddress;
-        uint8[] memberRoleSequence;
-        uint[] memberRoleMajorityVote;
-    }
+   
      struct proposalVote {
         address voter;
         uint proposalId;
@@ -106,7 +98,7 @@ contract governanceData is Ownable{
     uint public pendingProposalStart;
     uint public totalVotes;
 
-    category[] public allCategory;
+    
     string[] public status;
     proposal[] allProposal;
     proposalVote[] allVotes;
@@ -114,13 +106,16 @@ contract governanceData is Ownable{
     address BTAddress;
     BasicToken BT;
     address MRAddress;
+    address PCAddress;
     memberRoles MR;
+    ProposalCategory Pcategory;
 
     /// @dev change all contract's addresses.
-    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress) public
+    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
     {
         BTAddress = _BTcontractAddress;
         MRAddress = _MRcontractAddress;
+        PCAddress = _PCcontractAddress;
     }
 
     /// @dev Fetch user balance when giving member address.
@@ -208,6 +203,7 @@ contract governanceData is Ownable{
     {
         require(checkProposalVoteClosing(_proposalId)==1);
         MR = memberRoles(MRAddress);
+        Pcategory=ProposalCategory(PCAddress);
         uint category = allProposal[_proposalId].category;
         uint max; uint totalVotes; uint verdictVal; uint majorityVote;
         uint verdictOptions = allProposalCategory[_proposalId].verdictOptions;
@@ -224,13 +220,15 @@ contract governanceData is Ownable{
             }
         }
         verdictVal = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max];
-        majorityVote = allCategory[category].memberRoleMajorityVote[index];
+        // majorityVote = allCategory[category].memberRoleMajorityVote[index];
+        majorityVote=Pcategory.getRoleMajorityVote(category,index);
+       
         if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=majorityVote)
         {   
             index = SafeMath.add(index,1);
             if(max > 0 )
             {
-                if(index < allCategory[category].memberRoleSequence.length)
+                if(index < Pcategory.getRoleSequencLength(category))
                 {
                     allProposal[_proposalId].currVotingStatus = index;
                     allProposal[_proposalId].currentVerdict = max;
@@ -278,8 +276,12 @@ contract governanceData is Ownable{
     /// @dev Function to be called after Closed proposal voting and Proposal is accepted.
     function actionAfterProposalPass(uint256 _proposalId,uint _categoryId) public //NEWW
     {
-        address contractAt = allCategory[_categoryId].contractAt; // then function name:
-        contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
+        Pcategory=ProposalCategory(PCAddress);
+        string functionName;
+        address contractAt;
+        (,,contractAt,,,,,) = Pcategory.getCategoryDetails(_categoryId);
+        // address contractAt = allCategory[_categoryId].contractAt; // then function name:
+        contractAt.call(bytes4(sha3(Pcategory.getCategoryExecutionFunction(_categoryId))),_proposalId);
     }
 
     /// @dev Check if the member who wants to change in contracts, is owner.
@@ -295,24 +297,7 @@ contract governanceData is Ownable{
         transferOwnership(_memberAddress);
     }
 
-    /// @dev Gets the total number of categories.
-    function getCategoriesLength() constant returns (uint length)
-    {
-        length = allCategory.length;
-    }
-
-    /// @dev Gets category details by category id.
-    function getCategoryDetails(uint _categoryId) public constant returns (string categoryName,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress,uint8[] memberRoleSequence,uint[] memberRoleMajorityVote)
-    {    
-        categoryName = allCategory[_categoryId].categoryName;
-        functionName = allCategory[_categoryId].functionName;
-        contractAt = allCategory[_categoryId].contractAt;
-        paramInt = allCategory[_categoryId].paramInt;
-        paramBytes32 = allCategory[_categoryId].paramBytes32;
-        paramAddress = allCategory[_categoryId].paramAddress;
-        memberRoleSequence = allCategory[_categoryId].memberRoleSequence;
-        memberRoleMajorityVote = allCategory[_categoryId].memberRoleMajorityVote;
-    } 
+  
 
     /// @dev Register's vote of members - generic function (i.e. for different roles)
     function proposalVoting(uint _proposalId,uint _verdictChosen) public
@@ -326,9 +311,10 @@ contract governanceData is Ownable{
             require(_verdictChosen==allProposal[_proposalId].currentVerdict || _verdictChosen==0);
 
         uint category;
+         Pcategory=ProposalCategory(PCAddress);
         (category,,) = getProposalDetailsById2(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        require(roleId == allCategory[category].memberRoleSequence[index] && AddressRoleVote[msg.sender][roleId] == 0 );
+        require(roleId == Pcategory.getRoleSequencAtIndex(category,index) && AddressRoleVote[msg.sender][roleId] == 0 );
         uint votelength = getTotalVotes();
         increaseTotalVotes();
         uint _voterTokens = getBalanceOfMember(msg.sender);
@@ -406,7 +392,8 @@ contract governanceData is Ownable{
             (category,,) = getProposalDetailsById2(_proposalId); 
             uint verdictOptions = allProposalCategory[_proposalId].verdictOptions;
             uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-            (,,,paramInt,paramBytes32,paramAddress,,) = getCategoryDetails(category);
+            Pcategory=ProposalCategory(PCAddress);
+            (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(category);
             if(SafeMath.mul(verdictOptions,paramInt) != 0  )
             {
                 allProposalCategory[_proposalId].paramInt=new uint[](verdictOptions);     
@@ -478,30 +465,7 @@ contract governanceData is Ownable{
         proposalStatus[_proposalId].push(Status(_status,now));
     }
 
-    /// @dev Adds a new category.
-    function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
-    {
-        require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
-        allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote));
-    }
-
-    /// @dev Updates a category details
-    function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
-    {
-        require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
-        allCategory[_categoryId].functionName = _functionName;
-        allCategory[_categoryId].contractAt = _contractAt;
-        allCategory[_categoryId].paramInt = _paramInt;
-        allCategory[_categoryId].paramBytes32 = _paramBytes32; 
-        allCategory[_categoryId].paramAddress = _paramAddress;
-
-        for(uint i=0; i<_memberRoleSequence.length; i++)
-        {
-            allCategory[_categoryId].memberRoleSequence.push(_memberRoleSequence[i]);
-            allCategory[_categoryId].memberRoleMajorityVote.push(_memberRoleMajorityVote[i]);
-        }
-        
-    }
+   
     
     /// @dev Get the category paramets given against a proposal after categorizing the proposal.
     function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint verdictOptions)
@@ -536,8 +500,8 @@ contract governanceData is Ownable{
             allProposalCategory[_proposalId].paramAddress=new address[](_verdictOptions+1);        
             allProposalCategory[_proposalId].paramAddress[0]=0x00;
         }
-    
-        (,,,paramInt,paramBytes32,paramAddress,,) = getCategoryDetails(_categoryId);
+        Pcategory=ProposalCategory(PCAddress);
+        (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_categoryId);
 
         if(paramInt*_verdictOptions == _paramInt.length && paramBytes32*_verdictOptions == _paramBytes32.length && paramAddress*_verdictOptions == _paramAddress.length)
         {
@@ -595,5 +559,7 @@ contract governance
 
     
 }
+
+
 
 
