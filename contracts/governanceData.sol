@@ -206,70 +206,55 @@ contract governanceData is Ownable{
     /// @dev Closes the voting of a given proposal.Changes the status and verdict of the proposal by calculating the votes
     function closeProposalVote(uint _proposalId)
     {
-        if(checkProposalVoteClosing(_proposalId)==1)
+        require(checkProposalVoteClosing(_proposalId)==1);
+        MR = memberRoles(MRAddress);
+        uint category = allProposal[_proposalId].category;
+        uint max; uint totalVotes; uint verdictVal; uint majorityVote;
+        uint verdictOptions = allProposalCategory[_proposalId].verdictOptions;
+        uint index = allProposal[_proposalId].currVotingStatus;
+        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
+
+        max=0;  
+        for(uint i = 0; i < verdictOptions; i++)
         {
-            MR = memberRoles(MRAddress);
-            uint category = allProposal[_proposalId].category;
-            uint max;
-            uint totalVotes;
-            uint verdictVal;
-            uint majorityVote;
-            uint verdictOptions = allProposalCategory[_proposalId].verdictOptions;
-            uint index = allProposal[_proposalId].currVotingStatus;
-            uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-
-            max=0;  
-            for(uint i = 0; i < verdictOptions; i++)
-            {
-                totalVotes = SafeMath.add(totalVotes,allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i]); 
-                if(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max] < allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i])
-                {  
-                    max = i; 
-                }
+            totalVotes = SafeMath.add(totalVotes,allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i]); 
+            if(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max] < allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i])
+            {  
+                max = i; 
             }
-            verdictVal = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max];
-            majorityVote = allCategory[category].memberRoleMajorityVote[index];
-
-            if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=majorityVote)
-            {   
-                index = SafeMath.add(index,1);
+        }
+        verdictVal = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max];
+        majorityVote = allCategory[category].memberRoleMajorityVote[index];
+        if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=majorityVote)
+        {   
+            index = SafeMath.add(index,1);
+            if(max > 0 )
+            {
                 if(index < allCategory[category].memberRoleSequence.length)
                 {
                     allProposal[_proposalId].currVotingStatus = index;
-                    if (max > 0)
-                    {
-                        allProposal[_proposalId].currentVerdict = max;
-                    }
-                    else 
-                    {
-                        changeProposalStatus(_proposalId,4);
-                    }
-                }
+                    allProposal[_proposalId].currentVerdict = max;
+                } 
                 else
                 {
-                    if(max > 0)
-                    {
-                        pushInProposalStatus(_proposalId,3);
-                        updateProposalStatus(_proposalId,3);
-                        allProposal[_proposalId].finalVerdict = max;
-                        actionAfterProposalPass(_proposalId ,category); 
-                    }
-                    else
-                    {   
-                        pushInProposalStatus(_proposalId,4);
-                        updateProposalStatus(_proposalId,4);
-                        allProposal[_proposalId].finalVerdict = max;
-                        changePendingProposalStart();
-                    }
+                    allProposal[_proposalId].finalVerdict = max;
+                    changeProposalStatus(_proposalId,3);
+                    actionAfterProposalPass(_proposalId ,category);
                 }
-            } 
+            }
             else
             {
-                changeProposalStatus(_proposalId,5);
                 allProposal[_proposalId].finalVerdict = max;
+                changeProposalStatus(_proposalId,4);
                 changePendingProposalStart();
-            } 
-        }
+            }      
+        } 
+        else
+        {
+            allProposal[_proposalId].finalVerdict = max;
+            changeProposalStatus(_proposalId,5);
+            changePendingProposalStart();
+        } 
     }
     
     /// @dev Change pending proposal start variable
