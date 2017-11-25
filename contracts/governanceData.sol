@@ -66,14 +66,14 @@ contract governanceData is Ownable{
      struct proposalVote {
         address voter;
         uint proposalId;
-        uint verdictChoosen;
+        uint verdictChosen;
         uint dateSubmit;
         uint voterTokens;
     }
 
     function governanceData () 
     {
-        proposalVoteClosingTime = 20;
+        proposalVoteClosingTime = 60;
         pendingProposalStart=0;
         quorumPercentage=25;
         addStatusAndCategory();
@@ -172,20 +172,20 @@ contract governanceData is Ownable{
     function getProposalFinalVerdictDetails(uint _proposalId) public constant returns(uint paramint, bytes32 parambytes32,address paramaddress)
     {
         uint category = allProposal[_proposalId].category;
-        uint verdictChoosen = allProposal[_proposalId].finalVerdict;
+        uint verdictChosen = allProposal[_proposalId].finalVerdict;
         if(allProposalCategory[_proposalId].paramInt.length != 0)
         {
-             paramint = allProposalCategory[_proposalId].paramInt[verdictChoosen];
+             paramint = allProposalCategory[_proposalId].paramInt[verdictChosen];
         }
 
         if(allProposalCategory[_proposalId].paramBytes32.length != 0)
         {
-            parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChoosen];
+            parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChosen];
         }
 
         if(allProposalCategory[_proposalId].paramAddress.length != 0)
         {
-            paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChoosen];
+            paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
         }  
     }
     
@@ -228,6 +228,14 @@ contract governanceData is Ownable{
                 if(index < allCategory[category].memberRoleSequence.length)
                 {
                     allProposal[_proposalId].currVotingStatus = index;
+                    if (max > 0)
+                    {
+                        allProposal[_proposalId].currentVerdict = max;
+                    }
+                    else 
+                    {
+                        changeProposalStatus(_proposalId,3);
+                    }
                 }
                 else
                 {
@@ -314,27 +322,30 @@ contract governanceData is Ownable{
     } 
 
     /// @dev Register's vote of members - generic function (i.e. for different roles)
-    function proposalVoting(uint _proposalId,uint _verdictChoosen) public
+    function proposalVoting(uint _proposalId,uint _verdictChosen) public
     {
-        require(_verdictChoosen <= allProposalCategory[_proposalId].verdictOptions && getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 1);
-        MR = memberRoles(MRAddress);
+        require(getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 1);
         uint index = allProposal[_proposalId].currVotingStatus;
+        MR = memberRoles(MRAddress);
+        if(index == 0)
+            require(_verdictChosen <= allProposalCategory[_proposalId].verdictOptions);
+        else
+            require(_verdictChosen==allProposal[_proposalId].currentVerdict || _verdictChosen==0);
+
         uint category;
         (category,,) = getProposalDetailsById2(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        
         require(roleId == allCategory[category].memberRoleSequence[index] && AddressRoleVote[msg.sender][roleId] == 0 );
         uint votelength = getTotalVotes();
         increaseTotalVotes();
         uint _voterTokens = getBalanceOfMember(msg.sender);
-        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChoosen,now,_voterTokens));
-        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChoosen],1);
+        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChosen,now,_voterTokens));
+        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen],1);
         allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],_voterTokens);
         AddressRoleVote[msg.sender][roleId] = votelength;
         ProposalRoleVote[_proposalId][roleId] = votelength;
     }
     
-
     /// @dev Get total number of votes.
     function getTotalVotes() internal constant returns (uint votesTotal)
     {
@@ -347,7 +358,7 @@ contract governanceData is Ownable{
         _totalVotes = SafeMath.add(totalVotes,1);  
         totalVotes=_totalVotes;
     }
-        
+    
     /// @dev Get voteid against given member.
     function getAddressRoleVote(address _memberAddress) public constant returns (uint roleId,uint voteId)
     {
@@ -363,9 +374,9 @@ contract governanceData is Ownable{
     }
     
     /// @dev Provides Vote details of a given vote id. 
-    function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChoosen,uint dateSubmit,uint voterTokens)
+    function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChosen,uint dateSubmit,uint voterTokens)
     {
-        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChoosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens);
+        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens);
     }
 
     /// @dev Creates a new proposal 
