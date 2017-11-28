@@ -15,16 +15,12 @@
 
 
 pragma solidity ^0.4.8;
-// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-// import "./zeppelin-solidity/contracts/token/MintableToken.sol";
+import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+import "./zeppelin-solidity/contracts/token/MintableToken.sol";
 import "./memberRoles.sol";
-<<<<<<< HEAD
-import "./BasicToken.sol";
-import "./MintableToken.sol";
+import "./ProposalCategory.sol";
 // import "./BasicToken.sol";
 // import "./MintableToken.sol";
-import "./ProposalCategory.sol";
-
 
 contract governanceData is Ownable{
     using SafeMath for uint;
@@ -69,9 +65,10 @@ contract governanceData is Ownable{
         uint voterTokens;
     }
 
-    struct proposalPriority {
+    struct proposalPriority 
+    {
         uint8 complexityLevel;
-        uint levelReward;
+        uint[] levelReward;
     }
 
     function governanceData () 
@@ -141,8 +138,7 @@ contract governanceData is Ownable{
     {
         addStatus();
     }
-
-
+    
     /// @dev Changes the status of a given proposal to open it for voting. // wil get called when we submit the proposal on submit button
     function openProposalForVoting(uint _proposalId) onlyOwner public
     {
@@ -230,9 +226,7 @@ contract governanceData is Ownable{
                 {
                     allProposal[_proposalId].finalVerdict = max;
                     changeProposalStatus(_proposalId,3);
-                    actionAfterProposalPass(_proposalId ,category);
-                    // finalRewardAfterProposalDecision(_proposalId);
-
+                    // actionAfterProposalPass(_proposalId ,category);
                 }
             }
             else
@@ -240,7 +234,6 @@ contract governanceData is Ownable{
                 allProposal[_proposalId].finalVerdict = max;
                 changeProposalStatus(_proposalId,4);
                 changePendingProposalStart();
-                // finalRewardAfterProposalDecision(_proposalId);
             }      
         } 
         else
@@ -251,24 +244,10 @@ contract governanceData is Ownable{
         } 
     }
 
-    function finalRewardAfterProposalDecision(uint _proposalId) public
+    function transferTokenAgainsgReward(address _memberAddress,uint _value) public
     {
-        uint roleId; uint currVotingStatus; uint[] voteid;address voter; uint8 verdictChosen; uint voterTokens;
-
-        for(uint index=0; index<allCategory[category].memberRoleSequence.length ; index++)
-        {
-            roleId = allCategory[category].memberRoleSequence[index];
-            voteid = ProposalRoleVote[_proposalId][roleId];
-        }
-        
-        for(i=0; i<voteid.length; i++)
-        {
-            (voter,_proposalId,verdictChosen,,voterTokens) = getVoteDetailByid(voteid[0]);
-            require(verdictChosen == allProposal[_proposalId].finalVerdict);
-                transfer(voter,allProposalPriority[_proposalId].levelReward)  
-        }
-        
-
+        BT=BasicToken(BTAddress);
+        BT.transfer(_memberAddress,_value);
     }
     
     /// @dev Change pending proposal start variable
@@ -290,15 +269,14 @@ contract governanceData is Ownable{
     }
 
     /// @dev Function to be called after Closed proposal voting and Proposal is accepted.
-    function actionAfterProposalPass(uint256 _proposalId,uint _categoryId) public //NEWW
-    {
-        Pcategory=ProposalCategory(PCAddress);
-        string functionName;
-        address contractAt;
-        (,,contractAt,,,,,) = Pcategory.getCategoryDetails(_categoryId);
-        // address contractAt = allCategory[_categoryId].contractAt; // then function name:
-        contractAt.call(bytes4(sha3(Pcategory.getCategoryExecutionFunction(_categoryId))),_proposalId);
-    }
+    // function actionAfterProposalPass(uint256 _proposalId,uint _categoryId) public 
+    // {
+    //     Pcategory=ProposalCategory(PCAddress);
+    //     address contractAt;
+    //     (,,contractAt,,,,,) = Pcategory.getCategoryDetails(_categoryId);
+    //     // address contractAt = allCategory[_categoryId].contractAt; // then function name:
+    //     contractAt.call(bytes4(sha3(Pcategory.getCategoryExecutionFunction(_categoryId))),_proposalId);
+    // }
 
     /// @dev Check if the member who wants to change in contracts, is owner.
     function isOwner(address _memberAddress) returns(uint checkOwner)
@@ -312,8 +290,6 @@ contract governanceData is Ownable{
     {
         transferOwnership(_memberAddress);
     }
-
-  
 
     /// @dev Register's vote of members - generic function (i.e. for different roles)
     function proposalVoting(uint _proposalId,uint _verdictChosen) public
@@ -343,7 +319,6 @@ contract governanceData is Ownable{
         ProposalRoleVote[_proposalId][roleId].push(votelength);
     }
     
-
     /// @dev Get total number of votes.
     function getTotalVotes() internal constant returns (uint votesTotal)
     {
@@ -357,7 +332,6 @@ contract governanceData is Ownable{
         totalVotes=_totalVotes;
     }
         
-
     /// @dev Get Vote id of a _roleId against given proposal.
     function getProposalRoleVote(uint _proposalId,uint _roleId) public constant returns(uint[] voteId) 
     {
@@ -487,12 +461,28 @@ contract governanceData is Ownable{
         verdictOptions = allProposalCategory[_proposalId].verdictOptions;
     }
 
+    function addComplexityLevelAndReward(uint _proposalId,uint _category,uint8 _proposalComplexityLevel,uint[] _levelReward) internal
+    {
+        Pcategory=ProposalCategory(PCAddress);
+        uint votingLength = Pcategory.getRoleSequencLength(_category);
+        require(votingLength == _levelReward.length);
+        allProposalPriority[_proposalId].complexityLevel = _proposalComplexityLevel;
+        for(uint i=0; i<_levelReward.length; i++)
+        {
+            allProposalPriority[_proposalId].levelReward.push(_levelReward[i]);
+        }
+           
+    }
+
     /// @dev categorizing proposal to proceed further.
-    function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions,uint8 _proposalComplexityLevel,uint _levelReward) public
+    function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions,uint8 _proposalComplexityLevel,uint[] _levelReward) public
     {
         MR = memberRoles(MRAddress);
+        Pcategory=ProposalCategory(PCAddress);
         require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
         require(allProposal[_proposalId].propStatus == 1 || allProposal[_proposalId].propStatus == 0);
+        addComplexityLevelAndReward(_proposalId,_categoryId,_proposalComplexityLevel,_levelReward);
+        
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
 
         if(_paramInt.length != 0  )
@@ -512,7 +502,6 @@ contract governanceData is Ownable{
             allProposalCategory[_proposalId].paramAddress=new address[](_verdictOptions+1);        
             allProposalCategory[_proposalId].paramAddress[0]=0x00;
         }
-        Pcategory=ProposalCategory(PCAddress);
         (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_categoryId);
 
         if(paramInt*_verdictOptions == _paramInt.length && paramBytes32*_verdictOptions == _paramBytes32.length && paramAddress*_verdictOptions == _paramAddress.length)
@@ -520,8 +509,7 @@ contract governanceData is Ownable{
             allProposalCategory[_proposalId].verdictOptions = SafeMath.add(_verdictOptions,1);
             allProposalCategory[_proposalId].categorizedBy = msg.sender;
             allProposal[_proposalId].category = _categoryId;
-            allProposalPriority[_proposalId].complexityLevel = _proposalComplexityLevel;
-            allProposalPriority[_proposalId].levelReward = _levelReward;
+           
             for(uint i=0;i<_verdictOptions;i++)
             {
                 if(_paramInt.length != 0  )
