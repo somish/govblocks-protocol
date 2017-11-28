@@ -15,11 +15,11 @@
 
 
 pragma solidity ^0.4.8;
-import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-import "./zeppelin-solidity/contracts/token/MintableToken.sol";
+// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+// import "./zeppelin-solidity/contracts/token/MintableToken.sol";
 import "./memberRoles.sol";
-// import "./BasicToken.sol";
-// import "./MintableToken.sol";
+import "./BasicToken.sol";
+import "./MintableToken.sol";
 
 contract governanceData is Ownable{
     using SafeMath for uint;
@@ -143,17 +143,6 @@ contract governanceData is Ownable{
         addStatus();
     }
 
-    /// @dev Gets the Quorum Percentage.
-    function getQuorumPerc() public constant returns(uint percentage) 
-    {
-        percentage = quorumPercentage;
-    }
-
-    /// @dev Changes the Quorum Percentage.
-    function changeQuorumPercentage(uint _percentage) public  
-    {
-        quorumPercentage = _percentage;
-    }
 
     /// @dev Changes the status of a given proposal to open it for voting. // wil get called when we submit the proposal on submit button
     function openProposalForVoting(uint _proposalId) onlyOwner public
@@ -164,7 +153,7 @@ contract governanceData is Ownable{
     }
 
     /// @dev Changes the time(in seconds) after which proposal voting is closed.
-    function changeProposalVoteClosingTime(uint _closingTime) public
+    function changeProposalVoteClosingTime(uint _closingTime) onlyOwner public
     {
         proposalVoteClosingTime = _closingTime;   
     }
@@ -240,6 +229,8 @@ contract governanceData is Ownable{
                     allProposal[_proposalId].finalVerdict = max;
                     changeProposalStatus(_proposalId,3);
                     actionAfterProposalPass(_proposalId ,category);
+                    // finalRewardAfterProposalDecision(_proposalId);
+
                 }
             }
             else
@@ -247,6 +238,7 @@ contract governanceData is Ownable{
                 allProposal[_proposalId].finalVerdict = max;
                 changeProposalStatus(_proposalId,4);
                 changePendingProposalStart();
+                // finalRewardAfterProposalDecision(_proposalId);
             }      
         } 
         else
@@ -255,6 +247,26 @@ contract governanceData is Ownable{
             changeProposalStatus(_proposalId,5);
             changePendingProposalStart();
         } 
+    }
+
+    function finalRewardAfterProposalDecision(uint _proposalId) public
+    {
+        uint roleId; uint currVotingStatus; uint[] voteid;address voter; uint8 verdictChosen; uint voterTokens;
+
+        for(uint index=0; index<allCategory[category].memberRoleSequence.length ; index++)
+        {
+            roleId = allCategory[category].memberRoleSequence[index];
+            voteid = ProposalRoleVote[_proposalId][roleId];
+        }
+        
+        for(i=0; i<voteid.length; i++)
+        {
+            (voter,_proposalId,verdictChosen,,voterTokens) = getVoteDetailByid(voteid[0]);
+            require(verdictChosen == allProposal[_proposalId].finalVerdict);
+                transfer(voter,allProposalPriority[_proposalId].levelReward)  
+        }
+        
+
     }
     
     /// @dev Change pending proposal start variable
@@ -361,7 +373,7 @@ contract governanceData is Ownable{
     }
     
     /// @dev Provides Vote details of a given vote id. 
-    function getVoteDetailByid(uint _voteid) public constant returns( address voter,uint proposalId,uint verdictChosen,uint dateSubmit,uint voterTokens)
+    function getVoteDetailByid(uint _voteid) public constant returns(address voter,uint proposalId,uint verdictChosen,uint dateSubmit,uint voterTokens)
     {
         return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens);
     }
