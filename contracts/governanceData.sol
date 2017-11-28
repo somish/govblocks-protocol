@@ -304,11 +304,11 @@ contract governanceData is Ownable{
     //     Pcategory=ProposalCategory(PCAddress);
     //     address contractAt;
     //     (,,contractAt,,,,,) = Pcategory.getCategoryDetails(_categoryId);
-    //     // address contractAt = allCategory[_categoryId].contractAt; // then function name:
-    //     // string functionName = Pcategory.getCategoryExecutionFunction(_categoryId);
+    //     // string Fname = bytes32ToString(Pcategory.getCategoryExecutionFunction(_categoryId));
     //     // contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
-    //     contractAt.call(bytes4(sha3(Pcategory.getCategoryExecutionFunction(_categoryId))),_proposalId);
+    //     // contractAt.call(bytes4(sha3(bytes32ToString(Pcategory.getCategoryExecutionFunction(_categoryId)))),_proposalId);
     // }
+
 
     /// @dev Check if the member who wants to change in contracts, is owner.
     function isOwner(address _memberAddress) returns(uint checkOwner)

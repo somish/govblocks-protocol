@@ -66,9 +66,12 @@ contract ProposalCategory
         
     }
     /// @dev Get the function name to call after proposal pass.
-    function getCategoryExecutionFunction(uint _categoryId) constant returns(string )
+    function getCategoryExecutionFunction(uint _categoryId) constant returns(bytes)
     {
-        return allCategory[_categoryId].functionName;
+        string FuncName = allCategory[_categoryId].functionName;
+        bytes memory functionName = bytes(FuncName);
+        return functionName;
+        
     }
 
     /// @dev Adds a new category.
