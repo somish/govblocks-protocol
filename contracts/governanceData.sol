@@ -55,8 +55,7 @@ contract governanceData is Ownable{
         uint statusId;
         uint date;
     }
-
-   
+    
      struct proposalVote {
         address voter;
         uint proposalId;
@@ -244,33 +243,43 @@ contract governanceData is Ownable{
         } 
     }
 
-    function finalRewardAfterProposalDecision(uint _proposalId) public
-    {
-        uint roleId; uint[] voteid;
-        Pcategory=ProposalCategory(PCAddress); 
-        uint category = allProposal[_proposalId].category;
-        uint votingLength = Pcategory.getRoleSequencLength(category);
-
-        for(uint index=0; index<votingLength ; index++)
-        {
-            roleId = Pcategory.getRoleSequencAtIndex(_proposalId,index);
-            voteid = ProposalRoleVote[_proposalId][roleId];
-            finalReward2(voteid,_proposalId,index);
-        }  
-    }
-
-    function finalReward2(uint[] voteid,uint _proposalId,uint index)
+    function finalRewardAfterProposalDecision(uint _proposalId) public returns(uint votingLength,uint roleId,uint category,uint reward)
     {
         address voter; uint verdictChosen; uint voterTokens;
         BT=BasicToken(BTAddress);
-        for(uint i=0; i<voteid.length; i++)
+        Pcategory=ProposalCategory(PCAddress); 
+        category = allProposal[_proposalId].category;
+        votingLength = Pcategory.getRoleSequencLength(category);
+        
+        for(uint index=0; index<votingLength ; index++)
         {
-            (voter,,verdictChosen,,) = getVoteDetailByid(voteid[i]);
-            require(verdictChosen == allProposal[_proposalId].finalVerdict);
-            bool result = BT.transfer(voter,allProposalPriority[_proposalId].levelReward[index]);  
+            roleId = Pcategory.getRoleSequencAtIndex(category,index);
+            uint length = getProposalRoleVoteLength(_proposalId,roleId);
+            reward = allProposalPriority[_proposalId].levelReward[index];
+    
+            for(uint i=0; i<length; i++)
+            {
+                uint voteid = getProposalRoleVote(_proposalId,roleId,i);
+                (voter,,verdictChosen,,) = getVoteDetailByid(voteid);
+                require(verdictChosen == allProposal[_proposalId].finalVerdict);
+                bool result = BT.transfer(voter,reward);  
+            }
         }
+        
     }
-
+    
+    /// @dev Get length of total votes against each role for given Proposal.
+    function getProposalRoleVoteLength(uint _proposalId,uint _roleId) public constant returns(uint length)
+    {
+         length = ProposalRoleVote[_proposalId][_roleId].length;
+    }
+    
+    /// @dev Get Vote id of a _roleId against given proposal.
+    function getProposalRoleVote(uint _proposalId,uint _roleId,uint _index) public constant returns(uint voteId) 
+    {
+        voteId = ProposalRoleVote[_proposalId][_roleId][_index];
+    }
+    
     /// @dev Change pending proposal start variable
     function changePendingProposalStart() public
     {
@@ -296,6 +305,8 @@ contract governanceData is Ownable{
     //     address contractAt;
     //     (,,contractAt,,,,,) = Pcategory.getCategoryDetails(_categoryId);
     //     // address contractAt = allCategory[_categoryId].contractAt; // then function name:
+    //     // string functionName = Pcategory.getCategoryExecutionFunction(_categoryId);
+    //     // contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
     //     contractAt.call(bytes4(sha3(Pcategory.getCategoryExecutionFunction(_categoryId))),_proposalId);
     // }
 
@@ -353,7 +364,7 @@ contract governanceData is Ownable{
     }
         
     /// @dev Get Vote id of a _roleId against given proposal.
-    function getProposalRoleVote(uint _proposalId,uint _roleId) public constant returns(uint[] voteId) 
+    function getProposalRoleVoteArr(uint _proposalId,uint _roleId) public constant returns(uint[] voteId) 
     {
         voteId = ProposalRoleVote[_proposalId][_roleId];
     }
