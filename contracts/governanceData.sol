@@ -244,12 +244,33 @@ contract governanceData is Ownable{
         } 
     }
 
-    function transferTokenAgainsgReward(address _memberAddress,uint _value) public
+    function finalRewardAfterProposalDecision(uint _proposalId) public
     {
-        BT=BasicToken(BTAddress);
-        BT.transfer(_memberAddress,_value);
+        uint roleId; uint[] voteid;
+        Pcategory=ProposalCategory(PCAddress); 
+        uint category = allProposal[_proposalId].category;
+        uint votingLength = Pcategory.getRoleSequencLength(category);
+
+        for(uint index=0; index<votingLength ; index++)
+        {
+            roleId = Pcategory.getRoleSequencAtIndex(_proposalId,index);
+            voteid = ProposalRoleVote[_proposalId][roleId];
+            finalReward2(voteid,_proposalId,index);
+        }  
     }
-    
+
+    function finalReward2(uint[] voteid,uint _proposalId,uint index)
+    {
+        address voter; uint verdictChosen; uint voterTokens;
+        BT=BasicToken(BTAddress);
+        for(uint i=0; i<voteid.length; i++)
+        {
+            (voter,,verdictChosen,,) = getVoteDetailByid(voteid[i]);
+            require(verdictChosen == allProposal[_proposalId].finalVerdict);
+            bool result = BT.transfer(voter,allProposalPriority[_proposalId].levelReward[index]);  
+        }
+    }
+
     /// @dev Change pending proposal start variable
     function changePendingProposalStart() public
     {
@@ -308,7 +329,6 @@ contract governanceData is Ownable{
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
 
         require(roleId == Pcategory.getRoleSequencAtIndex(category,index) && AddressProposalVote[msg.sender][_proposalId] == 0 );
-
         uint votelength = getTotalVotes();
         increaseTotalVotes();
         uint _voterTokens = getBalanceOfMember(msg.sender);
