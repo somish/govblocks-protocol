@@ -13,8 +13,8 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
     pragma solidity ^0.4.8;
-    contract ProposalCategory
-    {
+contract ProposalCategory
+{
         struct category{
         string categoryName;
         string functionName;
@@ -46,22 +46,26 @@
         memberRoleMajorityVote = allCategory[_categoryId].memberRoleMajorityVote;
     } 
     
+    /// @dev Get majority vote value for each voting level.
     function getRoleMajorityVote(uint _categoryId,uint _index) constant returns(uint majorityVote)
     {
         return allCategory[_categoryId].memberRoleMajorityVote[_index];
         
     }
     
+    /// @dev Get the length of voting levels against given proposal.
     function getRoleSequencLength(uint _categoryId) constant returns(uint roleLength)
     {
         return allCategory[_categoryId].memberRoleSequence.length;
         
     }
+    /// @dev Get the next Roleid to cast vote against proposal, according to the sequence defined.
     function getRoleSequencAtIndex(uint _categoryId,uint _index) constant returns(uint roleId)
     {
         return allCategory[_categoryId].memberRoleSequence[_index];
         
     }
+    /// @dev Get the function name to call after proposal pass.
     function getCategoryExecutionFunction(uint _categoryId) constant returns(string )
     {
         return allCategory[_categoryId].functionName;
@@ -91,4 +95,4 @@
         }
         
     }
-    }
+}
