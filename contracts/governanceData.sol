@@ -349,8 +349,8 @@ contract governanceData is Ownable{
     /// @dev At the time of proposal voting, user can add own verdict option.
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _memberVerdictOption) public
     {
-        uint index = allProposal[_proposalId].currVotingStatus;
-        require(getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 2 && index == 0);
+        uint index = allProposal[_proposalId].currVotingStatus; uint i;
+        require(getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 2 && index == 0 && _memberVerdictOption == 1);
         MR = memberRoles(MRAddress);
         Pcategory=ProposalCategory(PCAddress);
         uint _categoryId;
@@ -366,25 +366,21 @@ contract governanceData is Ownable{
             allProposalCategory[_proposalId].verdictOptions = SafeMath.add(allProposalCategory[_proposalId].verdictOptions,_memberVerdictOption);
             allProposalCategory[_proposalId].categorizedBy = msg.sender;
             allProposal[_proposalId].category = _categoryId;
-           
-            for(uint i=0;i<_memberVerdictOption;i++)
+
+            for(i=0;i<_paramInt.length;i++)
             {
-                if(_paramInt.length != 0  )
-                {
-                    allProposalCategory[_proposalId].paramInt.push(_paramInt[i]);
-                }
-        
-                if(_paramBytes32.length != 0  )
-                {
-                    allProposalCategory[_proposalId].paramBytes32.push(_paramBytes32[i]);
-                }
-        
-                if(_paramAddress.length != 0  )
-                {
-                    allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
-                }
+                allProposalCategory[_proposalId].paramInt.push(_paramInt[i]);
             }
-            
+    
+            for(i=0;i<_paramBytes32.length;i++)
+            {
+                allProposalCategory[_proposalId].paramBytes32.push(_paramBytes32[i]);
+            }
+    
+            for(i=0;i<_paramAddress.length;i++)
+            {
+                allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
+            }   
         } 
     }
 
@@ -544,7 +540,7 @@ contract governanceData is Ownable{
     /// @dev categorizing proposal to proceed further.
     function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions,uint8 _proposalComplexityLevel,uint[] _levelReward) public
     {
-        MR = memberRoles(MRAddress);
+        MR = memberRoles(MRAddress); uint i;
         Pcategory=ProposalCategory(PCAddress);
         require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
         require(allProposal[_proposalId].propStatus == 1 || allProposal[_proposalId].propStatus == 0);
@@ -577,26 +573,24 @@ contract governanceData is Ownable{
             allProposalCategory[_proposalId].categorizedBy = msg.sender;
             allProposal[_proposalId].category = _categoryId;
            
-            for(uint i=0;i<_verdictOptions;i++)
-            {
-                if(_paramInt.length != 0  )
+                for(i=0; i<_paramInt.length; i++)
                 {
                     allProposalCategory[_proposalId].paramInt[i+1]=_paramInt[i];
                 }
         
-                if(_paramBytes32.length != 0  )
+                for(i=0; i<_paramBytes32.length; i++)
                 {
                     allProposalCategory[_proposalId].paramBytes32[i+1]=_paramBytes32[i];
                 }
         
-                if(_paramAddress.length != 0  )
+                for(i=0; i<_paramAddress.length; i++)
                 {
                     allProposalCategory[_proposalId].paramAddress[i+1]=_paramAddress[i];
                 }
-            }
             
         } 
     }
+    
     /// @dev function to get called after Proposal Pass
     function categoryFunction(uint256 _proposalId) public
     {
