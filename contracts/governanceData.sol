@@ -243,6 +243,15 @@ contract governanceData is Ownable{
         } 
     }
 
+    /// @dev Function to be called after Closed proposal voting and Proposal is accepted.
+    function actionAfterProposalPass(uint _proposalId,uint _categoryId) public returns(bool)
+    {
+        Pcategory=ProposalCategory(PCAddress);
+        address contractAt;
+        (,,contractAt,,,,,) = Pcategory.getCategoryDetails(_categoryId);
+        contractAt.call(bytes4(sha3(bytes32ToString(Pcategory.getCategoryExecutionFunction(_categoryId)))),_proposalId);
+    }
+
     function finalRewardAfterProposalDecision(uint _proposalId) public returns(uint votingLength,uint roleId,uint category,uint reward)
     {
         address voter; uint verdictChosen; uint voterTokens;
@@ -298,17 +307,27 @@ contract governanceData is Ownable{
         }
     }
 
-    /// @dev Function to be called after Closed proposal voting and Proposal is accepted.
-    // function actionAfterProposalPass(uint256 _proposalId,uint _categoryId) public 
-    // {
-    //     Pcategory=ProposalCategory(PCAddress);
-    //     address contractAt;
-    //     (,,contractAt,,,,,) = Pcategory.getCategoryDetails(_categoryId);
-    //     // string Fname = bytes32ToString(Pcategory.getCategoryExecutionFunction(_categoryId));
-    //     // contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
-    //     // contractAt.call(bytes4(sha3(bytes32ToString(Pcategory.getCategoryExecutionFunction(_categoryId)))),_proposalId);
-    // }
+   
 
+   function bytes32ToString(bytes32 x) constant returns (string) 
+   {
+        bytes memory bytesString = new bytes(32);
+        uint charCount = 0;
+        for (uint j = 0; j < 32; j++) {
+            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+            if (char != 0) {
+                bytesString[charCount] = char;
+                charCount++;
+            }
+        }
+        bytes memory bytesStringTrimmed = new bytes(charCount);
+        for (j = 0; j < charCount; j++) {
+            bytesStringTrimmed[j] = bytesString[j];
+        }
+        return string(bytesStringTrimmed);
+    }
+    
+    
 
     /// @dev Check if the member who wants to change in contracts, is owner.
     function isOwner(address _memberAddress) returns(uint checkOwner)
@@ -561,13 +580,16 @@ contract governanceData is Ownable{
             
         } 
     }
+    
+
 }  
 
 contract governance 
 {
     address governanceDataAddress;
     governanceData gd1;
-
+    uint256 public i;
+     
     function changeGovernanceDataAddress(address _contractAddress) public
     {
         governanceDataAddress = _contractAddress;
@@ -575,7 +597,7 @@ contract governance
     }
     
     /// @dev function to get called after Proposal Pass
-    function updateCategory_memberVote(uint256 _proposalId) 
+    function categoryFunction(uint256 _proposalId) public
     {
         gd1=governanceData(governanceDataAddress);
         uint _categoryId;
@@ -586,9 +608,8 @@ contract governance
         (paramint,parambytes32,paramaddress) = gd1.getProposalFinalVerdictDetails(_proposalId);
         // add your functionality here;
         // gd1.updateCategoryMVR(_categoryId);
-    }
-
-    
+        i=1;
+    }    
 }
 
 

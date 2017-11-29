@@ -12,7 +12,7 @@
 
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
-    pragma solidity ^0.4.8;
+pragma solidity ^0.4.8;
 contract ProposalCategory
 {
         struct category{
@@ -50,28 +50,37 @@ contract ProposalCategory
     function getRoleMajorityVote(uint _categoryId,uint _index) constant returns(uint majorityVote)
     {
         return allCategory[_categoryId].memberRoleMajorityVote[_index];
-        
     }
     
     /// @dev Get the length of voting levels against given proposal.
     function getRoleSequencLength(uint _categoryId) constant returns(uint roleLength)
     {
         return allCategory[_categoryId].memberRoleSequence.length;
-        
     }
     /// @dev Get the next Roleid to cast vote against proposal, according to the sequence defined.
     function getRoleSequencAtIndex(uint _categoryId,uint _index) constant returns(uint roleId)
     {
         return allCategory[_categoryId].memberRoleSequence[_index];
-        
     }
     /// @dev Get the function name to call after proposal pass.
-    function getCategoryExecutionFunction(uint _categoryId) constant returns(bytes)
+    function getCategoryExecutionFunction(uint _categoryId) constant returns(bytes32)
     {
         string FuncName = allCategory[_categoryId].functionName;
-        bytes memory functionName = bytes(FuncName);
-        return functionName;
+        return stringToBytes32(FuncName);
         
+    }
+    /// @dev Convert string to bytes
+    function stringToBytes32(string memory source) returns (bytes32 result) 
+    {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) 
+        {
+            return 0x0;
+        }
+    
+        assembly {
+            result := mload(add(source, 32))
+         }
     }
 
     /// @dev Adds a new category.
