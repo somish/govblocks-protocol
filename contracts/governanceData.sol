@@ -391,24 +391,15 @@ contract governanceData is Ownable{
     /// @dev Change vote of a member
     function changeMemberVote(uint _proposalId,uint _verdictChosen) 
     {
-        uint index = allProposal[_proposalId].currVotingStatus;
         MR = memberRoles(MRAddress);
-        uint category;
-        Pcategory=ProposalCategory(PCAddress);
-        (category,,) = getProposalDetailsById2(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         uint voteId = AddressProposalVote[msg.sender][_proposalId];
-        uint _voterTokens = getBalanceOfMember(msg.sender);
         uint verdictChosen; uint voterTokens;
         (,,verdictChosen,,voterTokens) = getVoteDetailByid(voteId);
 
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdictChosen] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdictChosen],1);
-        allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],voterTokens);
-
-        allVotes[voteId].verdictChosen = _verdictChosen;
-
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen],1);
-        allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],_voterTokens);
+        allVotes[voteId].verdictChosen = _verdictChosen;
     }
     
     /// @dev Get total number of votes.
