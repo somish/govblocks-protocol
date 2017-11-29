@@ -225,7 +225,7 @@ contract governanceData is Ownable{
                 {
                     allProposal[_proposalId].finalVerdict = max;
                     changeProposalStatus(_proposalId,3);
-                    // actionAfterProposalPass(_proposalId ,category);
+                    Pcategory.actionAfterProposalPass(_proposalId ,category);
                 }
             }
             else
@@ -241,15 +241,6 @@ contract governanceData is Ownable{
             changeProposalStatus(_proposalId,5);
             changePendingProposalStart();
         } 
-    }
-
-    /// @dev Function to be called after Closed proposal voting and Proposal is accepted.
-    function actionAfterProposalPass(uint _proposalId,uint _categoryId) public returns(bool)
-    {
-        Pcategory=ProposalCategory(PCAddress);
-        address contractAt;
-        (,,contractAt,,,,,) = Pcategory.getCategoryDetails(_categoryId);
-        contractAt.call(bytes4(sha3(bytes32ToString(Pcategory.getCategoryExecutionFunction(_categoryId)))),_proposalId);
     }
 
     function finalRewardAfterProposalDecision(uint _proposalId) public returns(uint votingLength,uint roleId,uint category,uint reward)
@@ -306,28 +297,6 @@ contract governanceData is Ownable{
             pendingProposalStart = j;
         }
     }
-
-   
-
-   function bytes32ToString(bytes32 x) constant returns (string) 
-   {
-        bytes memory bytesString = new bytes(32);
-        uint charCount = 0;
-        for (uint j = 0; j < 32; j++) {
-            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
-            if (char != 0) {
-                bytesString[charCount] = char;
-                charCount++;
-            }
-        }
-        bytes memory bytesStringTrimmed = new bytes(charCount);
-        for (j = 0; j < charCount; j++) {
-            bytesStringTrimmed[j] = bytesString[j];
-        }
-        return string(bytesStringTrimmed);
-    }
-    
-    
 
     /// @dev Check if the member who wants to change in contracts, is owner.
     function isOwner(address _memberAddress) returns(uint checkOwner)
