@@ -12,7 +12,7 @@
 
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
-pragma solidity ^0.4.8;
+    pragma solidity ^0.4.8;
 contract ProposalCategory
 {
         struct category{
@@ -63,33 +63,16 @@ contract ProposalCategory
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
     /// @dev Get the function name to call after proposal pass.
-    function getCategoryExecutionFunction(uint _categoryId) constant returns(bytes32)
+    function getCategoryExecutionFunction(uint _categoryId) constant returns(string)
     {
-        string FuncName = allCategory[_categoryId].functionName;
-        return stringToBytes32(FuncName);
-        
+        return allCategory[_categoryId].functionName;   
     }
-    /// @dev Convert string to bytes
-    function stringToBytes32(string memory source) returns (bytes32 result) 
-    {
-        bytes memory tempEmptyStringTest = bytes(source);
-        if (tempEmptyStringTest.length == 0) 
-        {
-            return 0x0;
-        }
-    
-        assembly {
-            result := mload(add(source, 32))
-         }
-    }
-
     /// @dev Adds a new category.
     function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
         allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote));
     }
-
     /// @dev Updates a category details
     function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
     {
@@ -107,4 +90,12 @@ contract ProposalCategory
         }
         
     }
+    /// @dev function to be called after proposal pass
+    function actionAfterProposalPass(uint _proposalId,uint _categoryId) public returns(bool)
+    {
+        address contractAt;
+        (,,contractAt,,,,,) = getCategoryDetails(_categoryId);
+        contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
+    }
+
 }
