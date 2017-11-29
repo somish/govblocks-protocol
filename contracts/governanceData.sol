@@ -340,6 +340,48 @@ contract governanceData is Ownable{
         AddressProposalVote[msg.sender][_proposalId] = votelength;
         ProposalRoleVote[_proposalId][roleId].push(votelength);
     }
+
+    /// @dev At the time of proposal voting, user can add own verdict option.
+    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _memberVerdictOption) public
+    {
+        uint index = allProposal[_proposalId].currVotingStatus;
+        require(getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 2 && index == 0);
+        MR = memberRoles(MRAddress);
+        Pcategory=ProposalCategory(PCAddress);
+        uint _categoryId;
+        (_categoryId,,) = getProposalDetailsById2(_proposalId); 
+        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
+        require(roleId == Pcategory.getRoleSequencAtIndex(_categoryId,index) && AddressProposalVote[msg.sender][_proposalId] == 0 );
+        
+        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+        (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_categoryId);
+
+        if(paramInt*_memberVerdictOption == _paramInt.length && paramBytes32*_memberVerdictOption == _paramBytes32.length && paramAddress*_memberVerdictOption == _paramAddress.length)
+        {
+            allProposalCategory[_proposalId].verdictOptions = SafeMath.add(allProposalCategory[_proposalId].verdictOptions,_memberVerdictOption);
+            allProposalCategory[_proposalId].categorizedBy = msg.sender;
+            allProposal[_proposalId].category = _categoryId;
+           
+            for(uint i=0;i<_memberVerdictOption;i++)
+            {
+                if(_paramInt.length != 0  )
+                {
+                    allProposalCategory[_proposalId].paramInt.push(_paramInt[i]);
+                }
+        
+                if(_paramBytes32.length != 0  )
+                {
+                    allProposalCategory[_proposalId].paramBytes32.push(_paramBytes32[i]);
+                }
+        
+                if(_paramAddress.length != 0  )
+                {
+                    allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
+                }
+            }
+            
+        } 
+    }
     
     /// @dev Get total number of votes.
     function getTotalVotes() internal constant returns (uint votesTotal)
