@@ -75,7 +75,7 @@ contract governanceData is Ownable{
         proposalVoteClosingTime = 20;
         pendingProposalStart=0;
         quorumPercentage=25;
-        addStatusAndCategory();
+        addStatus();
         allVotes.push(proposalVote(0x00,0,0,now,0));
     }
 
@@ -133,9 +133,14 @@ contract governanceData is Ownable{
     }
 
     /// @dev add status and category.
-    function addStatusAndCategory () 
+    function addStatus() 
     {
-        addStatus();
+        status.push("Draft for discussion"); 
+        status.push("Draft Ready for submission");
+        status.push("Voting started"); 
+        status.push("Proposal Decision - Accepted by Majority Voting"); 
+        status.push("Proposal Decision - Rejected by Majority voting"); 
+        status.push("Proposal Denied, Threshold not reached"); 
     }
     
     /// @dev Changes the status of a given proposal to open it for voting. // wil get called when we submit the proposal on submit button
@@ -208,7 +213,6 @@ contract governanceData is Ownable{
             }
         }
         verdictVal = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max];
-        // majorityVote = allCategory[category].memberRoleMajorityVote[index];
         majorityVote=Pcategory.getRoleMajorityVote(category,index);
        
         if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=majorityVote)
@@ -242,7 +246,7 @@ contract governanceData is Ownable{
             changePendingProposalStart();
         } 
     }
-
+    /// @dev Final rewards to distribute to sender according to proposal decision.
     function finalRewardAfterProposalDecision(uint _proposalId) public returns(uint votingLength,uint roleId,uint category,uint reward)
     {
         address voter; uint verdictChosen; uint voterTokens;
@@ -256,7 +260,6 @@ contract governanceData is Ownable{
             roleId = Pcategory.getRoleSequencAtIndex(category,index);
             uint length = getProposalRoleVoteLength(_proposalId,roleId);
             reward = allProposalPriority[_proposalId].levelReward[index];
-    
             for(uint i=0; i<length; i++)
             {
                 uint voteid = getProposalRoleVote(_proposalId,roleId,i);
@@ -444,33 +447,17 @@ contract governanceData is Ownable{
         pushInProposalStatus(_id,_status);
         updateProposalStatus(_id,_status);
     }
-
-    /// @dev Adds status names in array - Not generic right now
-    function addStatus() internal
-    {   
-        status.push("Draft for discussion"); 
-        status.push("Draft Ready for submission");
-        status.push("Voting started"); 
-        status.push("Proposal Decision - Accepted by Majority Voting"); 
-        status.push("Proposal Decision - Rejected by Majority voting"); 
-        status.push("Proposal Denied, Threshold not reached"); 
-    }
-
     /// @dev Updates  status of an existing proposal.
     function updateProposalStatus(uint _id ,uint _status) internal
     {
         allProposal[_id].propStatus = _status;
         allProposal[_id].date_upd = now;
     }
-
     /// @dev Stores the status information of a given proposal.
     function pushInProposalStatus(uint _proposalId , uint _status) internal
     {
         proposalStatus[_proposalId].push(Status(_status,now));
     }
-
-   
-    
     /// @dev Get the category paramets given against a proposal after categorizing the proposal.
     function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint verdictOptions)
     {
@@ -479,7 +466,7 @@ contract governanceData is Ownable{
         paramsAddress = allProposalCategory[_proposalId].paramAddress;
         verdictOptions = allProposalCategory[_proposalId].verdictOptions;
     }
-
+    /// @dev Proposal's complexity level and reward is added 
     function addComplexityLevelAndReward(uint _proposalId,uint _category,uint8 _proposalComplexityLevel,uint[] _levelReward) internal
     {
         Pcategory=ProposalCategory(PCAddress);
@@ -549,37 +536,7 @@ contract governanceData is Ownable{
             
         } 
     }
-    
-
 }  
-
-contract governance 
-{
-    address governanceDataAddress;
-    governanceData gd1;
-    uint256 public i;
-     
-    function changeGovernanceDataAddress(address _contractAddress) public
-    {
-        governanceDataAddress = _contractAddress;
-        gd1=governanceData(governanceDataAddress);
-    }
-    
-    /// @dev function to get called after Proposal Pass
-    function categoryFunction(uint256 _proposalId) public
-    {
-        gd1=governanceData(governanceDataAddress);
-        uint _categoryId;
-        (_categoryId,,)= gd1.getProposalDetailsById2(_proposalId);
-        uint paramint;
-        bytes32 parambytes32;
-        address paramaddress;
-        (paramint,parambytes32,paramaddress) = gd1.getProposalFinalVerdictDetails(_proposalId);
-        // add your functionality here;
-        // gd1.updateCategoryMVR(_categoryId);
-        i=1;
-    }    
-}
 
 
 
