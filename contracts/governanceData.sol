@@ -317,6 +317,7 @@ contract governanceData is Ownable{
     /// @dev Register's vote of members - generic function (i.e. for different roles)
     function proposalVoting(uint _proposalId,uint _verdictChosen) public
     {
+
         require(getBalanceOfMember(msg.sender) != 0 && allProposal[_proposalId].propStatus == 2);
         uint index = allProposal[_proposalId].currVotingStatus;
         MR = memberRoles(MRAddress);
@@ -326,19 +327,23 @@ contract governanceData is Ownable{
             require(_verdictChosen==allProposal[_proposalId].currentVerdict || _verdictChosen==0);
 
         uint category;
-         Pcategory=ProposalCategory(PCAddress);
+        Pcategory=ProposalCategory(PCAddress);
         (category,,) = getProposalDetailsById2(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-
-        require(roleId == Pcategory.getRoleSequencAtIndex(category,index) && AddressProposalVote[msg.sender][_proposalId] == 0 );
-        uint votelength = getTotalVotes();
-        increaseTotalVotes();
-        uint _voterTokens = getBalanceOfMember(msg.sender);
-        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChosen,now,_voterTokens));
-        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen],1);
-        allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],_voterTokens);
-        AddressProposalVote[msg.sender][_proposalId] = votelength;
-        ProposalRoleVote[_proposalId][roleId].push(votelength);
+        require(roleId == Pcategory.getRoleSequencAtIndex(category,index));
+        if(AddressProposalVote[msg.sender][_proposalId] == 0)
+        {
+            uint votelength = getTotalVotes();
+            increaseTotalVotes();
+            uint _voterTokens = getBalanceOfMember(msg.sender);
+            allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChosen,now,_voterTokens));
+            allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen],1);
+            allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],_voterTokens);
+            AddressProposalVote[msg.sender][_proposalId] = votelength;
+            ProposalRoleVote[_proposalId][roleId].push(votelength);
+        }
+        else 
+            changeMemberVote(_proposalId,_verdictChosen);
     }
 
     /// @dev At the time of proposal voting, user can add own verdict option.
@@ -381,6 +386,29 @@ contract governanceData is Ownable{
             }
             
         } 
+    }
+
+    /// @dev Change vote of a member
+    function changeMemberVote(uint _proposalId,uint _verdictChosen) 
+    {
+        uint index = allProposal[_proposalId].currVotingStatus;
+        MR = memberRoles(MRAddress);
+        uint category;
+        Pcategory=ProposalCategory(PCAddress);
+        (category,,) = getProposalDetailsById2(_proposalId); 
+        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
+        uint voteId = AddressProposalVote[msg.sender][_proposalId];
+        uint _voterTokens = getBalanceOfMember(msg.sender);
+        uint verdictChosen; uint voterTokens;
+        (,,verdictChosen,,voterTokens) = getVoteDetailByid(voteId);
+
+        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdictChosen] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdictChosen],1);
+        allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],voterTokens);
+
+        allVotes[voteId].verdictChosen = _verdictChosen;
+
+        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen],1);
+        allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],_voterTokens);
     }
     
     /// @dev Get total number of votes.
