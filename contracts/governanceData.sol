@@ -536,6 +536,18 @@ contract governanceData is Ownable{
             
         } 
     }
+    /// @dev function to get called after Proposal Pass
+    function categoryFunction(uint256 _proposalId) public
+    {
+        uint _categoryId;
+        (_categoryId,,)= getProposalDetailsById2(_proposalId);
+        uint paramint;
+        bytes32 parambytes32;
+        address paramaddress;
+        (paramint,parambytes32,paramaddress) = getProposalFinalVerdictDetails(_proposalId);
+        // add your functionality here;
+        // gd1.updateCategoryMVR(_categoryId);
+    }  
 }  
 
 
