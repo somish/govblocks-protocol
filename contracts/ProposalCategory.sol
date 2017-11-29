@@ -62,11 +62,6 @@ contract ProposalCategory
     {
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
-    /// @dev Get the function name to call after proposal pass.
-    function getCategoryExecutionFunction(uint _categoryId) constant returns(string)
-    {
-        return allCategory[_categoryId].functionName;   
-    }
     /// @dev Adds a new category.
     function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
     {
@@ -88,7 +83,6 @@ contract ProposalCategory
             allCategory[_categoryId].memberRoleSequence.push(_memberRoleSequence[i]);
             allCategory[_categoryId].memberRoleMajorityVote.push(_memberRoleMajorityVote[i]);
         }
-        
     }
     /// @dev function to be called after proposal pass
     function actionAfterProposalPass(uint _proposalId,uint _categoryId) public returns(bool)
