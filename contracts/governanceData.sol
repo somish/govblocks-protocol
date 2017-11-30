@@ -36,6 +36,7 @@ contract governanceData is Ownable{
         uint category;
         uint finalVerdict;
         uint currentVerdict;
+        address votingTypeAddress;
     }
 
     struct proposalCategory{
@@ -308,7 +309,7 @@ contract governanceData is Ownable{
 
         uint category;
         Pcategory=ProposalCategory(PCAddress);
-        (category,,,) = getProposalDetailsById2(_proposalId); 
+        (category,,,,) = getProposalDetailsById2(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         require(roleId == Pcategory.getRoleSequencAtIndex(category,index));
         if(AddressProposalVote[msg.sender][_proposalId] == 0)
@@ -333,7 +334,7 @@ contract governanceData is Ownable{
         MR = memberRoles(MRAddress);
         Pcategory=ProposalCategory(PCAddress);
         uint _categoryId;
-        (_categoryId,,,) = getProposalDetailsById2(_proposalId); 
+        (_categoryId,,,,) = getProposalDetailsById2(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         require(roleId == Pcategory.getRoleSequencAtIndex(_categoryId,index) && AddressProposalVote[msg.sender][_proposalId] == 0 );
         
@@ -397,9 +398,9 @@ contract governanceData is Ownable{
         return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens);
     }
     /// @dev Creates a new proposal 
-    function addNewProposal(string _shortDesc,string _longDesc) public
+    function addNewProposal(string _shortDesc,string _longDesc,address _votingTypeAddress) public
     {
-        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0));   
+        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0,_votingTypeAddress));   
     }
     /// @dev Fetch details of proposal by giving proposal Id
     function getProposalDetailsById1(uint _id) public constant returns (address owner,string shortDesc,string longDesc,uint date_add,uint date_upd,uint versionNum,uint propStatus)
@@ -407,12 +408,13 @@ contract governanceData is Ownable{
         return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add,allProposal[_id].date_upd,allProposal[_id].versionNum,allProposal[_id].propStatus);
     }
     /// @dev Get the category, of given proposal. 
-    function getProposalDetailsById2(uint _proposalId) public constant returns(uint category,uint currentVotingId,uint intermediateVerdict,uint finalVerdict) 
+    function getProposalDetailsById2(uint _proposalId) public constant returns(uint category,uint currentVotingId,uint intermediateVerdict,uint finalVerdict,address votingTypeAddress) 
     {
         category = allProposal[_proposalId].category;
         currentVotingId = allProposal[_proposalId].currVotingStatus;
         intermediateVerdict = allProposal[_proposalId].currentVerdict; 
-        finalVerdict = allProposal[_proposalId].finalVerdict;   
+        finalVerdict = allProposal[_proposalId].finalVerdict;
+        votingTypeAddress = allProposal[_proposalId].votingTypeAddress;   
     }
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
     function editProposal(uint _proposalId , string _shortDesc, string _longDesc) onlyOwner public
@@ -423,7 +425,7 @@ contract governanceData is Ownable{
         
         (allProposal[_proposalId].category > 0);
             uint category;
-            (category,,,) = getProposalDetailsById2(_proposalId); 
+            (category,,,,) = getProposalDetailsById2(_proposalId); 
             uint verdictOptions = allProposalCategory[_proposalId].verdictOptions;
             uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
             Pcategory=ProposalCategory(PCAddress);
@@ -559,7 +561,7 @@ contract governanceData is Ownable{
     function categoryFunction(uint256 _proposalId) public
     {
         uint _categoryId;
-        (_categoryId,,,)= getProposalDetailsById2(_proposalId);
+        (_categoryId,,,,)= getProposalDetailsById2(_proposalId);
         uint paramint;
         bytes32 parambytes32;
         address paramaddress;
