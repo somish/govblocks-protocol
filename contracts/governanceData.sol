@@ -17,14 +17,12 @@
 pragma solidity ^0.4.8;
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 import "./zeppelin-solidity/contracts/token/MintableToken.sol";
-import "./VotingType.sol";
 import "./memberRoles.sol";
 import "./ProposalCategory.sol";
 // import "./BasicToken.sol";
 // import "./MintableToken.sol";
-// import "./VotingType.sol";
 
-contract governanceData is Ownable,VotingType {
+contract governanceData is Ownable {
     using SafeMath for uint;
     struct proposal{
         address owner;
@@ -73,8 +71,6 @@ contract governanceData is Ownable,VotingType {
         pendingProposalStart=0;
         quorumPercentage=25;
         addStatus();
-        uint[] verdictOption;
-        allVotes.push(proposalVote(0x00,0,verdictOption,now,0));
     }
 
     mapping(uint=>proposalCategory) allProposalCategory;
@@ -93,8 +89,6 @@ contract governanceData is Ownable,VotingType {
     BasicToken BT;
     address MRAddress;
     address PCAddress;
-    address VTAddress;
-    VotingType VT;
     memberRoles MR;
     ProposalCategory Pcategory;
 
@@ -129,12 +123,11 @@ contract governanceData is Ownable,VotingType {
     }
 
     /// @dev change all contract's addresses.
-    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _VTcontractAddress) public
+    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
     {
         BTAddress = _BTcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
-        VTAddress = _VTcontractAddress;
     }
 
     /// @dev add status.
