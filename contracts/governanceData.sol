@@ -81,7 +81,7 @@ contract governanceData is Ownable,VotingType {
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping(uint=>Status[]) proposalStatus;
     mapping(uint=>proposalPriority) allProposalPriority;
-    mapping (uint=>address) allVotingTypesAddress;
+    mapping(uint=>address) allVotingTypesAddress;
     
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
@@ -135,13 +135,6 @@ contract governanceData is Ownable,VotingType {
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
         VTAddress = _VTcontractAddress;
-    }
-    
-    function addInAllVotes()
-    {
-        VT=VotingType(VTAddress);
-        
-        VT.finalReward(12);
     }
 
     /// @dev add status.
