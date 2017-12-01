@@ -2,8 +2,36 @@
   "contractName": "VotingType",
   "abi": [
     {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_proposalId",
+          "type": "uint256"
+        }
+      ],
+      "name": "giveReward_afterFinalDecision",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "constant": true,
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "_proposalId",
+          "type": "uint256"
+        },
+        {
+          "name": "_roleId",
+          "type": "uint256"
+        }
+      ],
       "name": "totalVotes",
       "outputs": [
         {
@@ -66,10 +94,23 @@
         {
           "name": "_verdictChosen",
           "type": "uint256[]"
+        },
+        {
+          "name": "_optionIndex",
+          "type": "uint256"
         }
       ],
       "name": "changeMemberVote",
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "totalVotes",
+          "type": "uint256"
+        },
+        {
+          "name": "totalToken",
+          "type": "uint256"
+        }
+      ],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -88,6 +129,10 @@
         {
           "name": "_optionIndex",
           "type": "uint256"
+        },
+        {
+          "name": "_paramAddress",
+          "type": "address[]"
         }
       ],
       "name": "getProposalVoteAndTokenCountByRoleId",
@@ -126,7 +171,28 @@
         }
       ],
       "name": "addVerdictOption",
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "voter",
+          "type": "address"
+        },
+        {
+          "name": "proposalId",
+          "type": "uint256"
+        },
+        {
+          "name": "verdictChosen",
+          "type": "uint256[]"
+        },
+        {
+          "name": "dateSubmit",
+          "type": "uint256"
+        },
+        {
+          "name": "voterTokens",
+          "type": "uint256"
+        }
+      ],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
@@ -164,20 +230,6 @@
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "_proposalId",
-          "type": "uint256"
-        }
-      ],
-      "name": "finalReward",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -230,7 +282,7 @@
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "/* Copyright (C) 2017 GovBlocks.io\r\n\r\n  This program is free software: you can redistribute it and/or modify\r\n    it under the terms of the GNU General Public License as published by\r\n    the Free Software Foundation, either version 3 of the License, or\r\n    (at your option) any later version.\r\n\r\n  This program is distributed in the hope that it will be useful,\r\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\r\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\r\n    GNU General Public License for more details.\r\n\r\n  You should have received a copy of the GNU General Public License\r\n    along with this program.  If not, see http://www.gnu.org/licenses/ */\r\n\r\n/**\r\n * @title votingType interface for All Types of voting.\r\n */\r\n\r\npragma solidity ^0.4.8;\r\n\r\ncontract VotingType\r\n{\r\n    struct proposalVote {\r\n        address voter;\r\n        uint proposalId;\r\n        uint[] verdictChosen;\r\n        uint dateSubmit;\r\n        uint voterTokens;\r\n    }\r\n\r\n    struct proposalVoteAndTokenCount \r\n    {\r\n        mapping(uint=>mapping(uint=>uint)) totalVoteCount; \r\n        mapping(uint=>uint) totalTokenCount; \r\n    }\r\n\r\n    mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;\r\n    mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;\r\n    mapping(address=>mapping(uint=>uint)) AddressProposalVote; \r\n    proposalVote[] public allVotes;\r\n    uint public totalVotes;\r\n\r\n    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress);\r\n    function proposalVoting(uint _proposalId,uint[] _verdictChosen);\r\n    function changeMemberVote(uint _proposalId,uint[] _verdictChosen);\r\n    function closeProposalVote(uint _proposalId);\r\n\r\n    function increaseTotalVotes() internal returns (uint _totalVotes);\r\n    function getTotalVotes() internal constant returns (uint votesTotal);\r\n    function getVoteDetailByid(uint _voteid) constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens);\r\n\r\n    function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken);\r\n    function getProposalRoleVoteArray(uint _proposalId,uint _roleId) constant returns(uint[] voteId);\r\n    function finalReward(uint _proposalId);\r\n}\r\n",
+  "source": "/* Copyright (C) 2017 GovBlocks.io\r\n\r\n  This program is free software: you can redistribute it and/or modify\r\n    it under the terms of the GNU General Public License as published by\r\n    the Free Software Foundation, either version 3 of the License, or\r\n    (at your option) any later version.\r\n\r\n  This program is distributed in the hope that it will be useful,\r\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\r\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\r\n    GNU General Public License for more details.\r\n\r\n  You should have received a copy of the GNU General Public License\r\n    along with this program.  If not, see http://www.gnu.org/licenses/ */\r\n\r\n/**\r\n * @title votingType interface for All Types of voting.\r\n */\r\n\r\npragma solidity ^0.4.8;\r\n\r\ncontract VotingType\r\n{\r\n    struct proposalVote {\r\n        address voter;\r\n        uint proposalId;\r\n        uint[] verdictChosen;\r\n        uint dateSubmit;\r\n        uint voterTokens;\r\n    }\r\n\r\n    struct proposalVoteAndTokenCount \r\n    {\r\n        mapping(uint=>mapping(uint=>uint)) totalVoteCount; \r\n        mapping(uint=>uint) totalTokenCount; \r\n    }\r\n\r\n    mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;\r\n    mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;\r\n    mapping(address=>mapping(uint=>uint)) AddressProposalVote; \r\n    proposalVote[] public allVotes;\r\n    uint public totalVotes;\r\n\r\n    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress);\r\n    function proposalVoting(uint _proposalId,uint[] _verdictChosen);\r\n    function changeMemberVote(uint _proposalId,uint[] _verdictChosen);\r\n    function closeProposalVote(uint _proposalId);\r\n\r\n    function increaseTotalVotes() internal returns (uint _totalVotes);\r\n    function getTotalVotes() internal constant returns (uint votesTotal);\r\n    function getVoteDetailByid(uint _voteid) constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens);\r\n\r\n    function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken);\r\n    function getProposalRoleVoteArray(uint _proposalId,uint _roleId) constant returns(uint[] voteId);\r\n    function giveReward_afterFinalDecision(uint _proposalId);\r\n}\r\n",
   "sourcePath": "D:\\2. GovBlocks Contracts\\GovBlocks Git-Master\\contracts\\VotingType.sol",
   "ast": {
     "attributes": {
@@ -1885,7 +1937,7 @@
               "modifiers": [
                 null
               ],
-              "name": "finalReward",
+              "name": "giveReward_afterFinalDecision",
               "payable": false,
               "scope": 477,
               "stateMutability": "nonpayable",
@@ -1914,17 +1966,17 @@
                         },
                         "id": 472,
                         "name": "ElementaryTypeName",
-                        "src": "2309:4:1"
+                        "src": "2327:4:1"
                       }
                     ],
                     "id": 473,
                     "name": "VariableDeclaration",
-                    "src": "2309:16:1"
+                    "src": "2327:16:1"
                   }
                 ],
                 "id": 474,
                 "name": "ParameterList",
-                "src": "2308:18:1"
+                "src": "2326:18:1"
               },
               {
                 "attributes": {
@@ -1935,22 +1987,22 @@
                 "children": [],
                 "id": 475,
                 "name": "ParameterList",
-                "src": "2326:0:1"
+                "src": "2344:0:1"
               }
             ],
             "id": 476,
             "name": "FunctionDefinition",
-            "src": "2288:39:1"
+            "src": "2288:57:1"
           }
         ],
         "id": 477,
         "name": "ContractDefinition",
-        "src": "794:1536:1"
+        "src": "794:1554:1"
       }
     ],
     "id": 478,
     "name": "SourceUnit",
-    "src": "767:1565:1"
+    "src": "767:1583:1"
   },
   "compiler": {
     "name": "solc",
@@ -1958,5 +2010,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2017-12-01T06:59:23.962Z"
+  "updatedAt": "2017-12-01T08:07:36.143Z"
 }

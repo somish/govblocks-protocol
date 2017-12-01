@@ -52,5 +52,5 @@ contract VotingType
 
     function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken);
     function getProposalRoleVoteArray(uint _proposalId,uint _roleId) constant returns(uint[] voteId);
-    function finalReward(uint _proposalId);
+    function giveReward_afterFinalDecision(uint _proposalId);
 }
