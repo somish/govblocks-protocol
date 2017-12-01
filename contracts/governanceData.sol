@@ -73,17 +73,23 @@ contract governanceData is Ownable {
         addStatus();
     }
 
+    struct votingTypeDetails
+    {
+        string votingTypeName;
+        address votingTypeAddress;
+    }
+
     mapping(uint=>proposalCategory) allProposalCategory;
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping(uint=>Status[]) proposalStatus;
     mapping(uint=>proposalPriority) allProposalPriority;
-    mapping(uint=>address) allVotingTypesAddress;
-    
+        
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
     string[] public status;
     proposal[] allProposal;
+    votingTypeDetails[] allVotingTypeDetails;
 
     address BTAddress;
     BasicToken BT;
@@ -92,27 +98,32 @@ contract governanceData is Ownable {
     memberRoles MR;
     ProposalCategory Pcategory;
 
-    /// @dev Transfer reward after proposal Decision.
-    function transferTokenAfterFinalReward(address _memberAddress, uint _value)
+    function setVotingTypeDetails(string _votingTypeName,address _votingTypeAddress) onlyOwner
     {
-        BT=BasicToken(BTAddress);
-        BT.transfer(_memberAddress,_value);
+        allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress));   
     }
 
-    /// @dev Set voting type's address to follow for a given proposal.
-    function setVotingTypesAddress(uint[] _votingTypeId,address[] _votingTypesAddress) onlyOwner
+    function editVotingTypeDetails(uint[] _votingTypeId, address[] _votingTypeAddress) onlyOwner
     {
-        require(_votingTypeId.length == _votingTypesAddress.length);
-        for(uint i=0; i<_votingTypesAddress.length; i++)
+        require(_votingTypeId.length == _votingTypeAddress.length);
+        for(uint i=0; i<_votingTypeAddress.length; i++)
         {
-            allVotingTypesAddress[_votingTypeId[i]] = _votingTypesAddress[i];
+            allVotingTypeDetails[_votingTypeId[i]].votingTypeAddress = _votingTypeAddress[i];
         }
     }
 
-    /// @dev Get voting type address when giving Voting type id.
-    function getVotingTypeAddressById(uint _id) public constant returns(address)
+    function getVotingTypeAllAddress() public returns(address[] VTaddresses)
     {
-        return allVotingTypesAddress[_id];
+        for(uint i=0; i<allVotingTypeDetails.length; i++)
+        {
+            VTaddresses[i] = allVotingTypeDetails[i].votingTypeAddress;
+        }
+        return VTaddresses;
+    }
+
+    function getVotingTypeDetailsById(uint _votingTypeId) public returns(address votingTypeAddress)
+    {
+        return allVotingTypeDetails[_votingTypeId].votingTypeAddress;
     }
 
     /// @dev Fetch user balance when giving member address.
@@ -212,7 +223,7 @@ contract governanceData is Ownable {
     function addNewProposal(string _shortDesc,string _longDesc,uint _votingTypeId) public
     {
         require(getBalanceOfMember(msg.sender) != 0);
-        address votingTypeAddress = allVotingTypesAddress[_votingTypeId];
+        address votingTypeAddress = allVotingTypeDetails[_votingTypeId].votingTypeAddress;
         allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0,votingTypeAddress));   
     }
     /// @dev Fetch details of proposal by giving proposal Id
@@ -421,6 +432,13 @@ contract governanceData is Ownable {
     {
        reward = allProposalPriority[_proposalId].levelReward[_rewardIndex];
     }
+        /// @dev Transfer reward after proposal Decision.
+    function transferTokenAfterFinalReward(address _memberAddress, uint _value)
+    {
+        BT=BasicToken(BTAddress);
+        BT.transfer(_memberAddress,_value);
+    }
+
 
 }  
 
