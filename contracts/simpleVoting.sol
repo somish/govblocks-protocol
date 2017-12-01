@@ -33,6 +33,12 @@ contract simpleVoting is VotingType
     ProposalCategory PC;
     governanceData GD;
 
+    function simpleVoting()
+    {
+        uint[] verdictOption;
+        allVotes.push(proposalVote(0x00,0,verdictOption,now,0));
+    }
+
     function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
     {
         GDAddress = _GDcontractAddress;
