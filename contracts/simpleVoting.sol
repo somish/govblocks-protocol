@@ -20,8 +20,8 @@ import "./VotingType.sol";
 import "./memberRoles.sol";
 import "./ProposalCategory.sol";
 import "./governanceData.sol";
-// import "./SafeMath.sol";
 import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+// import "./SafeMath.sol";
 
 contract simpleVoting is VotingType
 {
@@ -92,9 +92,8 @@ contract simpleVoting is VotingType
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
         require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && _verdictChosen.length == 1);
-        uint index = currentVotingId;
 
-        if(index == 0)
+        if(currentVotingId == 0)
             require(_verdictChosen[0] <= verdictOptions);
         else
             require(_verdictChosen[0]==intermediateVerdict || _verdictChosen[0]==0);
@@ -122,7 +121,7 @@ contract simpleVoting is VotingType
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         uint voteId = AddressProposalVote[msg.sender][_proposalId];
         uint[] verdictChosen = allVotes[voteId].verdictChosen;
-        uint voterTokens; uint verdict = verdictChosen[0];
+        uint verdict = verdictChosen[0];
         
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict],1);
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen],1);
@@ -141,16 +140,13 @@ contract simpleVoting is VotingType
         (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
-        
-        uint index = currentVotingId; uint i;
-        require((msg.sender) != 0 && propStatus == 2 && index == 0);
-        uint _categoryId;
-        (_categoryId,,,,) = GD.getProposalDetailsById2(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        require(roleId == PC.getRoleSequencAtIndex(_categoryId,index) && AddressProposalVote[msg.sender][_proposalId] == 0 );
+        
+        require((msg.sender) != 0 && propStatus == 2 && currentVotingId == 0);
+        require(roleId == PC.getRoleSequencAtIndex(category,currentVotingId) && AddressProposalVote[msg.sender][_proposalId] == 0 );
         
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-        (,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_categoryId);
+        (,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(category);
 
         if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
         {
@@ -202,7 +198,7 @@ contract simpleVoting is VotingType
                     GD.updateProposalDetails(_proposalId,currentVotingId,max,max);
                     GD.changeProposalStatus(_proposalId,3);
                     PC.actionAfterProposalPass(_proposalId ,category);
-                    finalReward(_proposalId);
+                    giveReward_afterFinalDecision(_proposalId);
                 }
             }
             else
@@ -220,7 +216,7 @@ contract simpleVoting is VotingType
         } 
     }
      
-    function finalReward(uint _proposalId) public 
+    function giveReward_afterFinalDecision(uint _proposalId) public 
     {
         address voter; uint[] verdictChosen;uint category;uint votingLength; uint roleId; uint reward;uint length;uint voteid;
         PC=ProposalCategory(PCAddress); 
