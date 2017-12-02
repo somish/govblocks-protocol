@@ -38,7 +38,7 @@ contract VotingType
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;
     mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;
     mapping(address=>mapping(uint=>uint)) AddressProposalVote; 
-    proposalVote[] public allVotes;
+    proposalVote[] allVotes;
     uint public totalVotes;
 
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress);
@@ -46,8 +46,7 @@ contract VotingType
     function changeMemberVote(uint _proposalId,uint[] _verdictChosen);
     function closeProposalVote(uint _proposalId);
 
-    function increaseTotalVotes() internal returns (uint _totalVotes);
-    function getTotalVotes() internal constant returns (uint votesTotal);
+    function getTotalVotes() constant returns (uint votesTotal);
     function getVoteDetailByid(uint _voteid) constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens);
 
     function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken);
