@@ -118,7 +118,7 @@ contract RankBasedVoting is VotingType
             for(i=0; i<_verdictChosen.length; i++)
             {
                 uint verdict = _verdictChosen[i];
-                uint voteValue = ((verdictOptions - i)/sum)*100; 
+                uint voteValue = SafeMath.mul(SafeMath.div(SafeMath.sub(verdictOptions,i),sum),100);
                 allVoteValueAgainstOption[votelength].push(voteValue);
                 allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict],voteValue);
             }
@@ -150,7 +150,7 @@ contract RankBasedVoting is VotingType
         for(i=0; i<_verdictChosen.length; i++)
         {
             verdict = _verdictChosen[i];
-            voteValue = ((verdictOptions - i)/_sum)*100; 
+            voteValue = SafeMath.mul(SafeMath.div((SafeMath.sub(verdictOptions,i)),_sum),100); 
             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict],voteValue);
         }
         allVotes[voteId].verdictChosen = _verdictChosen;
