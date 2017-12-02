@@ -31,6 +31,7 @@ contract RankBasedVoting is VotingType
     memberRoles MR;
     ProposalCategory PC;
     governanceData GD;
+    mapping(uint=>uint[]) allVoteValueAgainstOption;
 
     function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
     {
@@ -98,8 +99,7 @@ contract RankBasedVoting is VotingType
             for(uint i=0; i<_verdictChosen.length; i++)
             {
                 require(_verdictChosen[i] <= verdictOptions);
-                uint val = verdictOptions - i;
-                uint sum = sum + val;
+                uint sum = SafeMath.add(sum,(SafeMath.sub(verdictOptions ,i)));
             }
         }   
         else
@@ -119,6 +119,7 @@ contract RankBasedVoting is VotingType
             {
                 uint verdict = _verdictChosen[i];
                 uint voteValue = ((verdictOptions - i)/sum)*100; 
+                allVoteValueAgainstOption[votelength].push(voteValue);
                 allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict],voteValue);
             }
 
@@ -139,10 +140,10 @@ contract RankBasedVoting is VotingType
         uint verdictOptions; uint verdict; uint voteValue;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
 
-        for(uint i=0; i<verdictChosen.length; i++)
+        for(uint i=0; i<allVoteValueAgainstOption[voteId].length; i++)
         {
             verdict = verdictChosen[i];
-            voteValue = ((verdictOptions - i)/_sum)*100; 
+            voteValue = allVoteValueAgainstOption[voteId][i];
             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict],voteValue);
         }
 
