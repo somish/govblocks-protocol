@@ -18,7 +18,7 @@ pragma solidity ^0.4.8;
 // import "./Ownable.sol";
 import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract  memberRoles is Ownable{
+contract  MemberRoles is Ownable{
 
   string[] memberRole;
   uint public categorizeAuthRoleid;
@@ -26,7 +26,7 @@ contract  memberRoles is Ownable{
   mapping (address=>uint) memberAddressToMemberRole;
   mapping (uint=>address) memberRoleToMemberAddress;
 
-  function memberRoles()
+  function MemberRoles()
   {
     memberRole.push("Member");
     memberRole.push("Advisory Board");

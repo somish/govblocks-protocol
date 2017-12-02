@@ -17,12 +17,12 @@
 pragma solidity ^0.4.8;
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 import "./zeppelin-solidity/contracts/token/MintableToken.sol";
-import "./memberRoles.sol";
+import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
 // import "./BasicToken.sol";
 // import "./MintableToken.sol";
 
-contract governanceData is Ownable {
+contract GovernanceData is Ownable {
     using SafeMath for uint;
     struct proposal{
         address owner;
@@ -95,7 +95,7 @@ contract governanceData is Ownable {
     BasicToken BT;
     address MRAddress;
     address PCAddress;
-    memberRoles MR;
+    MemberRoles MR;
     ProposalCategory Pcategory;
 
     function setVotingTypeDetails(string _votingTypeName,address _votingTypeAddress) onlyOwner
@@ -358,7 +358,7 @@ contract governanceData is Ownable {
     /// @dev categorizing proposal to proceed further.
     function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions,uint8 _proposalComplexityLevel,uint[] _levelReward) public
     {
-        MR = memberRoles(MRAddress); uint i;
+        MR = MemberRoles(MRAddress); uint i;
         Pcategory=ProposalCategory(PCAddress);
         require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
         require(allProposal[_proposalId].propStatus == 1 || allProposal[_proposalId].propStatus == 0);

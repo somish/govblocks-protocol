@@ -16,9 +16,9 @@
 
 pragma solidity ^0.4.8;
 import "./VotingType.sol";
-import "./memberRoles.sol";
+import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
-import "./governanceData.sol";
+import "./GovernanceData.sol";
 import "./zeppelin-solidity/contracts/math/SafeMath.sol";
 // import "./SafeMath.sol";
 
@@ -28,9 +28,9 @@ contract RankBasedVoting is VotingType
     address GDAddress;
     address MRAddress;
     address PCAddress;
-    memberRoles MR;
+    MemberRoles MR;
     ProposalCategory PC;
-    governanceData GD;
+    GovernanceData GD;
     mapping(uint=>uint[]) allVoteValueAgainstOption;
      
     function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
@@ -82,8 +82,8 @@ contract RankBasedVoting is VotingType
 
     function proposalVoting(uint _proposalId,uint[] _verdictChosen)
     {
-        GD=governanceData(GDAddress);
-        MR=memberRoles(MRAddress);
+        GD=GovernanceData(GDAddress);
+        MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
         uint propStatus;
         (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
@@ -133,7 +133,7 @@ contract RankBasedVoting is VotingType
 
     function changeMemberVote(uint _proposalId,uint[] _verdictChosen,uint _sum) 
     {
-        MR=memberRoles(MRAddress);
+        MR=MemberRoles(MRAddress);
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         uint voteId = AddressProposalVote[msg.sender][_proposalId];
         uint[] verdictChosen = allVotes[voteId].verdictChosen;
@@ -158,8 +158,8 @@ contract RankBasedVoting is VotingType
 
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress)
     {
-        GD=governanceData(GDAddress);
-        MR=memberRoles(MRAddress);
+        GD=GovernanceData(GDAddress);
+        MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
         
         uint propStatus;
@@ -188,8 +188,8 @@ contract RankBasedVoting is VotingType
 
     function closeProposalVote(uint _proposalId)
     {
-        GD=governanceData(GDAddress);
-        MR=memberRoles(MRAddress);
+        GD=GovernanceData(GDAddress);
+        MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
     
         uint propStatus;
@@ -251,7 +251,7 @@ contract RankBasedVoting is VotingType
     {
         address voter; uint[] verdictChosen;uint category;uint roleId; uint reward;uint voteid;
         PC=ProposalCategory(PCAddress); 
-        GD=governanceData(GDAddress);
+        GD=GovernanceData(GDAddress);
         uint currentVotingId;uint intermediateVerdict;uint finalVerdict;
         (category,currentVotingId,intermediateVerdict,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
