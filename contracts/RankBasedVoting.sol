@@ -32,7 +32,7 @@ contract RankBasedVoting is VotingType
     ProposalCategory PC;
     governanceData GD;
     mapping(uint=>uint[]) allVoteValueAgainstOption;
-
+     
     function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
     {
         GDAddress = _GDcontractAddress;
@@ -40,12 +40,12 @@ contract RankBasedVoting is VotingType
         PCAddress = _PCcontractAddress;
     }
 
-    function getTotalVotes() internal constant returns (uint votesTotal)
+    function getTotalVotes()  constant returns (uint votesTotal)
     {
         return(allVotes.length);
     }
 
-    function increaseTotalVotes() internal returns (uint _totalVotes)
+    function increaseTotalVotes() returns (uint _totalVotes)
     {
         _totalVotes = SafeMath.add(totalVotes,1);  
         totalVotes=_totalVotes;
@@ -170,7 +170,7 @@ contract RankBasedVoting is VotingType
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
         
         uint index = currentVotingId; uint i;
-        require((msg.sender) != 0 && propStatus == 2 && index == 0);
+        require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && index == 0);
         uint _categoryId;
         (_categoryId,,,,) = GD.getProposalDetailsById2(_proposalId); 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
@@ -249,27 +249,23 @@ contract RankBasedVoting is VotingType
      
     function giveReward_afterFinalDecision(uint _proposalId) public 
     {
-        address voter; uint[] verdictChosen;uint category;uint votingLength; uint roleId; uint reward;uint length;uint voteid;
+        address voter; uint[] verdictChosen;uint category;uint roleId; uint reward;uint voteid;
         PC=ProposalCategory(PCAddress); 
         GD=governanceData(GDAddress);
         uint currentVotingId;uint intermediateVerdict;uint finalVerdict;
         (category,currentVotingId,intermediateVerdict,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
-        votingLength = PC.getRoleSequencLength(category);
-        for(uint index=0; index<votingLength; index++)
+        for(uint index=0; index<PC.getRoleSequencLength(category); index++)
         {
             roleId = PC.getRoleSequencAtIndex(category,index);
-            length = getProposalRoleVoteLength(_proposalId,roleId);
             reward = GD.getProposalRewardAndComplexity(_proposalId,index);
-            for(uint i=0; i<length; i++)
+            for(uint i=0; i<getProposalRoleVoteLength(_proposalId,roleId); i++)
             {
                 voteid = getProposalRoleVote(_proposalId,roleId,i);
                 verdictChosen = allVotes[voteid].verdictChosen;
-                uint verdict = verdictChosen[0];
-                require(verdict == finalVerdict);
+                require(verdictChosen[0] == finalVerdict);
                 GD.transferTokenAfterFinalReward(voter,reward);  
             }
         }    
     }
-
 }
