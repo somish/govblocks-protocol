@@ -438,6 +438,12 @@ contract GovernanceData is Ownable {
         verdictOptions = allProposalCategory[_proposalId].verdictOptions;
     }
 
+    /// @dev Get Total number of verdict options against proposal.
+    function getTotalVerdictOptions(uint _proposalId) constant returns(uint verdictOptions)
+    {
+        verdictOptions = allProposalCategory[_proposalId].verdictOptions;
+    }
+
     /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
     function getProposalFinalVerdictDetails(uint _proposalId) public constant returns(uint paramint, bytes32 parambytes32,address paramaddress)
     {
