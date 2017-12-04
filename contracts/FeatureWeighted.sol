@@ -87,6 +87,15 @@ contract FeatureWeighted is VotingType
         return ProposalRoleVote[_proposalId][_roleId];
     }
 
+    function addProposalFeature(uint _proposalId,uint[] _featureArray) 
+    {
+        
+        for(uint i=0; i<_featureArray.length; i++)
+        {
+            allProposalFeatures[_proposalId].push(_featureArray[i]);
+        }    
+    }
+    
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress)
     {
         GD=GovernanceData(GDAddress);
@@ -157,15 +166,14 @@ contract FeatureWeighted is VotingType
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         uint featureLength = allProposalFeatures[_proposalId].length;
-
-        require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && _verdictChosen.length <= SafeMath.add(featureLength,verdictOptions));
+        require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && _verdictChosen.length <=  SafeMath.mul(featureLength+1,verdictOptions));
         require(roleId == PC.getRoleSequencAtIndex(category,currentVotingId));
 
         if(currentVotingId == 0)
         {
             for(uint i=0; i<_verdictChosen.length; i++)
             {
-                require(_verdictChosen[i] < getMaxLength(verdictOptions,featureLength));
+                require(_verdictChosen[i] <= getMaxLength(verdictOptions,featureLength));
             }
         }   
         else
@@ -179,12 +187,12 @@ contract FeatureWeighted is VotingType
             {
                 for(i=0; i<_verdictChosen.length; i=featureLength+1)
                 {
-                    voteValue = (getFeatureRankTotal(featureLength,_verdictChosen,i))/featureLength;
+                    uint sum = getFeatureRankTotal(featureLength,_verdictChosen,i);
+                    voteValue = SafeMath.div(SafeMath.mul(sum,100),featureLength);
                     allVoteValueAgainstOption[votelength].push(voteValue);
                     allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]],voteValue);
                 }
-
-            } 
+            }  
             else
             {
                 allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]],1);
