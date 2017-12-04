@@ -158,7 +158,7 @@ contract FeatureWeighted is VotingType
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
-        uint propStatus; uint voteValue;  uint length;
+        uint propStatus; uint voteValue;
         (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
         uint currentVotingId; uint category; uint intermediateVerdict;
         (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
@@ -181,15 +181,18 @@ contract FeatureWeighted is VotingType
 
         if(AddressProposalVote[msg.sender][_proposalId] == 0)
         {
-            uint votelength = getTotalVotes();
             addInTotalVotes(_proposalId,_verdictChosen);
             if(currentVotingId == 0)
             {
-                for(i=0; i<_verdictChosen.length; i=featureLength+1)
+                for(i=0; i<_verdictChosen.length; i=i+featureLength+1)
                 {
-                    uint sum = getFeatureRankTotal(featureLength,_verdictChosen,i);
+                    uint sum =0;      
+                    for(uint j=i+1; j<=featureLength+i; j++)
+                    {
+                        sum = sum + _verdictChosen[j];
+                    }
                     voteValue = SafeMath.div(SafeMath.mul(sum,100),featureLength);
-                    allVoteValueAgainstOption[votelength].push(voteValue);
+                    allVoteValueAgainstOption[getTotalVotes()].push(voteValue);
                     allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]],voteValue);
                 }
             }  
@@ -199,8 +202,8 @@ contract FeatureWeighted is VotingType
             }
             
             allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],GD.getBalanceOfMember(msg.sender));
-            AddressProposalVote[msg.sender][_proposalId] = votelength;
-            ProposalRoleVote[_proposalId][roleId].push(votelength);
+            AddressProposalVote[msg.sender][_proposalId] = getTotalVotes();
+            ProposalRoleVote[_proposalId][roleId].push(getTotalVotes());
         }
         else 
             changeMemberVote(_proposalId,_verdictChosen,featureLength);
