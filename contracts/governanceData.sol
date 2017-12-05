@@ -444,6 +444,12 @@ contract GovernanceData is Ownable {
         verdictOptions = allProposalCategory[_proposalId].verdictOptions;
     }
 
+    /// @dev Get Current Status of proposal when given proposal Id
+    function getProposalStatus(uint _proposalId) constant returns (uint proposalStatus)
+    {
+        proposalStatus = allProposal[_proposalId].propStatus;
+    }
+
     /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
     function getProposalFinalVerdictDetails(uint _proposalId) public constant returns(uint paramint, bytes32 parambytes32,address paramaddress)
     {
