@@ -86,24 +86,22 @@ contract RankBasedVoting is VotingType
         return ProposalRoleVote[_proposalId][_roleId];
     }
 
-    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress)
+    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount)
     {
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
-        
-        uint propStatus;
-        (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
+        GD.payableGNTTokens(_GNTPayableTokenAmount);
+
         uint currentVotingId; uint category; uint intermediateVerdict;
         (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
-        
-        require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && currentVotingId == 0);
+        require( currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2);
+        require(GD.getBalanceOfMember(msg.sender) != 0);
         uint _categoryId;
         (_categoryId,,,,) = GD.getProposalDetailsById2(_proposalId); 
-        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        require(roleId == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && AddressProposalVote[msg.sender][_proposalId] == 0 );
+        require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && AddressProposalVote[msg.sender][_proposalId] == 0 );
         
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
         (,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_categoryId);
@@ -120,14 +118,13 @@ contract RankBasedVoting is VotingType
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
-        uint propStatus; uint voteValue;
-        (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
+        uint voteValue;
         uint currentVotingId; uint category; uint intermediateVerdict;
         (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
 
-        require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && _verdictChosen.length <= verdictOptions);
+        require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _verdictChosen.length <= verdictOptions);
 
         if(currentVotingId == 0)
         {
