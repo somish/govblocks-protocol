@@ -70,6 +70,7 @@ contract GovernanceData is Ownable {
         proposalVoteClosingTime = 20;
         pendingProposalStart=0;
         quorumPercentage=25;
+        GNTStakValue=10;
         addStatus();
     }
 
@@ -87,12 +88,15 @@ contract GovernanceData is Ownable {
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
+    uint public GNTStakValue;
     string[] public status;
     proposal[] allProposal;
     votingTypeDetails[] allVotingTypeDetails;
 
+    address GNTAddress;
     address BTAddress;
     BasicToken BT;
+    MintableToken MT;
     address MRAddress;
     address PCAddress;
     MemberRoles MR;
@@ -112,8 +116,9 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev change all contract's addresses.
-    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    function changeAllContractsAddress(address _GNTcontractAddress,address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
     {
+        GNTAddress = _GNTcontractAddress;
         BTAddress = _BTcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
@@ -183,11 +188,20 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Changes the status of a given proposal to open it for voting. // wil get called when we submit the proposal on submit button
-    function openProposalForVoting(uint _proposalId) onlyOwner public
+    function openProposalForVoting(uint _proposalId,uint _TokenAmount) onlyOwner public
     {
         require(allProposal[_proposalId].category != 0);
+        payableGNTTokens(_TokenAmount);
         pushInProposalStatus(_proposalId,2);
         updateProposalStatus(_proposalId,2);
+    }
+
+    /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
+    function payableGNTTokens(uint _TokenAmount) public
+    {
+        MT=MintableToken(GNTAddress);
+        require(_TokenAmount >= GNTStakValue);
+        MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
     }
 
     /// @dev Changes the status of a given proposal.
@@ -389,7 +403,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev function to get called after Proposal Pass
-    function categoryFunction(uint256 _proposalId) public
+    function categoryFunction(uint256 _proposalId) public returns (bool)
     {
         uint _categoryId;
         (_categoryId,,,,)= getProposalDetailsById2(_proposalId);
@@ -397,6 +411,7 @@ contract GovernanceData is Ownable {
         bytes32 parambytes32;
         address paramaddress;
         (paramint,parambytes32,paramaddress) = getProposalFinalVerdictDetails(_proposalId);
+        return true;
         // add your functionality here;
         // gd1.updateCategoryMVR(_categoryId);
     }
