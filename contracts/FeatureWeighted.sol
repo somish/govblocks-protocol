@@ -33,7 +33,7 @@ contract FeatureWeighted is VotingType
     GovernanceData GD;
     mapping(uint=>uint[]) allVoteValueAgainstOption;
     mapping(uint=>uint[]) allProposalFeatures;
-    uint[] afterChangeVote;
+    uint[] changeVoteOptions;
 
     function FeatureWeighted()
     {
@@ -96,37 +96,8 @@ contract FeatureWeighted is VotingType
             allProposalFeatures[_proposalId].push(_featureArray[i]);
         }    
     }
-    
-    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress)
-    {
-        GD=GovernanceData(GDAddress);
-        MR=MemberRoles(MRAddress);
-        PC=ProposalCategory(PCAddress);
-        
-        uint propStatus;
-        (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
-        uint currentVotingId; uint category; uint intermediateVerdict;
-        (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
-        uint verdictOptions;
-        (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
-        
-        require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && currentVotingId == 0);
-        uint _categoryId;
-        (_categoryId,,,,) = GD.getProposalDetailsById2(_proposalId); 
-        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        require(roleId == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && AddressProposalVote[msg.sender][_proposalId] == 0 );
-        
-        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-        (,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_categoryId);
 
-        if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
-        {
-            verdictOptions = SafeMath.add(verdictOptions,1);
-            GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);  
-        } 
-    }
-
-    function getMaxLength(uint _verdictOptions,uint _featureLength) returns (uint maxLength)
+        function getMaxLength(uint _verdictOptions,uint _featureLength) returns (uint maxLength)
     {
         if(_verdictOptions < _featureLength)
             maxLength = _featureLength;
@@ -152,6 +123,39 @@ contract FeatureWeighted is VotingType
     function getAllVoteValueAgainstOption(uint _voteid) public constant returns(uint[] val)
     {
         return allVoteValueAgainstOption[_voteid];
+    }
+
+    function getAddressProposalVote(uint _proposalId) constant returns (uint check)
+    {
+        check = AddressProposalVote[msg.sender][_proposalId];
+    }
+
+    
+    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount)
+    {
+        GD=GovernanceData(GDAddress);
+        MR=MemberRoles(MRAddress);
+        PC=ProposalCategory(PCAddress);
+        GD.payableGNTTokens(_GNTPayableTokenAmount);
+
+        uint currentVotingId; uint category; uint intermediateVerdict;
+        (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
+        uint verdictOptions;
+        (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
+        require( currentVotingId == 0);
+        require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2);
+        uint _categoryId;
+        (_categoryId,,,,) = GD.getProposalDetailsById2(_proposalId); 
+        require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && AddressProposalVote[msg.sender][_proposalId] == 0 );
+        
+        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+        (,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_categoryId);
+
+        if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
+        {
+            verdictOptions = SafeMath.add(verdictOptions,1);
+            GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);  
+        } 
     }
 
     function proposalVoting(uint _proposalId,uint[] _verdictChosen)
@@ -208,11 +212,6 @@ contract FeatureWeighted is VotingType
             changeMemberVote(_proposalId,_verdictChosen,featureLength);
     }
 
-    function getAddressProposalVote(uint _proposalId) constant returns (uint check)
-    {
-        check = AddressProposalVote[msg.sender][_proposalId];
-    }
-
     function changeMemberVote(uint _proposalId,uint[] _verdictChosen,uint featureLength)  
     {
         MR=MemberRoles(MRAddress);
@@ -245,9 +244,9 @@ contract FeatureWeighted is VotingType
                 }
                 voteValue = SafeMath.div(SafeMath.mul(sum,100),featureLength);
                 allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]],voteValue);
-                afterChangeVote.push(voteValue);
+                changeVoteOptions.push(voteValue);
             }
-            changeInVoteArray(afterChangeVote,voteId);
+            changeInVoteArray(changeVoteOptions,voteId);
         }
         else
         {
@@ -257,12 +256,12 @@ contract FeatureWeighted is VotingType
         allVotes[voteId].verdictChosen = _verdictChosen;
     }
 
-    function changeInVoteArray(uint[] _afterChangeVote,uint _voteId)
+    function changeInVoteArray(uint[] _changeVoteOptions,uint _voteId)
     {
-        allVoteValueAgainstOption[_voteId]=new uint[](_afterChangeVote.length);
-        for(uint i=0; i<_afterChangeVote.length; i++)
+        allVoteValueAgainstOption[_voteId]=new uint[](_changeVoteOptions.length);
+        for(uint i=0; i<_changeVoteOptions.length; i++)
         {
-            allVoteValueAgainstOption[_voteId][i] = _afterChangeVote[i];
+            allVoteValueAgainstOption[_voteId][i] = _changeVoteOptions[i];
         }
     }
 
