@@ -41,9 +41,8 @@ contract VotingType
     proposalVote[] allVotes;
     uint public totalVotes;
 
-    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress);
+    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount);
     function proposalVoting(uint _proposalId,uint[] _verdictChosen);
-    function changeMemberVote(uint _proposalId,uint[] _verdictChosen);
     function closeProposalVote(uint _proposalId);
 
     function getTotalVotes() constant returns (uint votesTotal);
