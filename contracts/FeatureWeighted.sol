@@ -33,6 +33,7 @@ contract FeatureWeighted is VotingType
     GovernanceData GD;
     mapping(uint=>uint[]) allVoteValueAgainstOption;
     mapping(uint=>uint[]) allProposalFeatures;
+    uint[] afterChangeVote;
 
     function FeatureWeighted()
     {
@@ -89,7 +90,7 @@ contract FeatureWeighted is VotingType
 
     function addProposalFeature(uint _proposalId,uint[] _featureArray) 
     {
-        
+        require(allProposalFeatures[_proposalId].length == 0);
         for(uint i=0; i<_featureArray.length; i++)
         {
             allProposalFeatures[_proposalId].push(_featureArray[i]);
@@ -200,11 +201,16 @@ contract FeatureWeighted is VotingType
             }
             
             allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],GD.getBalanceOfMember(msg.sender));
-            AddressProposalVote[msg.sender][_proposalId] = getTotalVotes();
+            AddressProposalVote[msg.sender][_proposalId] = voteLength;
             ProposalRoleVote[_proposalId][roleId].push(voteLength);
         }
         else 
             changeMemberVote(_proposalId,_verdictChosen,featureLength);
+    }
+
+    function getAddressProposalVote(uint _proposalId) constant returns (uint check)
+    {
+        check = AddressProposalVote[msg.sender][_proposalId];
     }
 
     function changeMemberVote(uint _proposalId,uint[] _verdictChosen,uint featureLength)  
@@ -215,25 +221,33 @@ contract FeatureWeighted is VotingType
         uint voteId = AddressProposalVote[msg.sender][_proposalId];
         uint[] verdictChosen = allVotes[voteId].verdictChosen;
         uint verdict;
-        uint currentVotingId;
-        (,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+        uint category;
+        (category,,,,) = GD.getProposalDetailsById2(_proposalId);
 
-        if(currentVotingId == 0)
+        if(roleId == PC.getRoleSequencAtIndex(category,0))
         {
-            for(uint i=0; i<allVoteValueAgainstOption[voteId].length; i=featureLength+1)
+            for(uint i=0; i<verdictChosen.length; i=i+featureLength+1)
             {
-                verdict = verdictChosen[i];
-                uint voteValue = allVoteValueAgainstOption[voteId][i];
-                allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict],voteValue);
+                for(uint j=0; j<allVoteValueAgainstOption[voteId].length; j++)
+                {
+                    verdict = verdictChosen[i];
+                    uint voteValue = allVoteValueAgainstOption[voteId][j];
+                    allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict],voteValue);
+                }    
             }
 
-            for(i=0; i<_verdictChosen.length; i=featureLength+1)
+            for(i=0; i<_verdictChosen.length; i=i+featureLength+1)
             {
-                verdict = _verdictChosen[i];
-                voteValue = (getFeatureRankTotal(featureLength,_verdictChosen,i))/featureLength;
+                uint sum =0;      
+                for(j=i+1; j<=featureLength+i; j++)
+                {
+                    sum = sum + _verdictChosen[j];
+                }
+                voteValue = SafeMath.div(SafeMath.mul(sum,100),featureLength);
                 allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]],voteValue);
+                afterChangeVote.push(voteValue);
             }
-
+            changeInVoteArray(afterChangeVote,voteId);
         }
         else
         {
@@ -241,6 +255,15 @@ contract FeatureWeighted is VotingType
             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]],1);
         }
         allVotes[voteId].verdictChosen = _verdictChosen;
+    }
+
+    function changeInVoteArray(uint[] _afterChangeVote,uint _voteId)
+    {
+        allVoteValueAgainstOption[_voteId]=new uint[](_afterChangeVote.length);
+        for(uint i=0; i<_afterChangeVote.length; i++)
+        {
+            allVoteValueAgainstOption[_voteId][i] = _afterChangeVote[i];
+        }
     }
 
     function closeProposalVote(uint _proposalId)
