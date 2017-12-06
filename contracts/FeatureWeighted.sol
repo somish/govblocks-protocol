@@ -31,9 +31,7 @@ contract FeatureWeighted is VotingType
     MemberRoles MR;
     ProposalCategory PC;
     GovernanceData GD;
-    mapping(uint=>uint[]) allVoteValueAgainstOption;
     mapping(uint=>uint[]) allProposalFeatures;
-    uint[] changeVoteOptions;
 
     function FeatureWeighted()
     {
@@ -119,24 +117,10 @@ contract FeatureWeighted is VotingType
         increaseTotalVotes();
         allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChosen,now,GD.getBalanceOfMember(msg.sender)));
     }
-    
-    function getAllVoteValueAgainstOption(uint _voteid) public constant returns(uint[] val)
-    {
-        return allVoteValueAgainstOption[_voteid];
-    }
 
     function getAddressProposalVote(uint _proposalId) constant returns (uint check)
     {
         check = AddressProposalVote[msg.sender][_proposalId];
-    }
-
-    function changeInVoteArray(uint[] _changeVoteOptions,uint _voteId)
-    {
-        allVoteValueAgainstOption[_voteId]=new uint[](_changeVoteOptions.length);
-        for(uint i=0; i<_changeVoteOptions.length; i++)
-        {
-            allVoteValueAgainstOption[_voteId][i] = _changeVoteOptions[i];
-        }
     }
 
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount)
@@ -223,11 +207,13 @@ contract FeatureWeighted is VotingType
         {
             for(uint i=0; i<verdictChosen.length; i=i+featureLength+1)
             {
-                for(uint j=0; j<allVoteValueAgainstOption[voteId].length; j++)
+                uint sum =0;      
+                for(uint j=i+1; j<=featureLength+i; j++)
                 {
-                    uint voteValue = allVoteValueAgainstOption[voteId][j];
-                    allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]],voteValue);
-                }    
+                    sum = sum + verdictChosen[j];
+                }
+                uint voteValue = SafeMath.div(SafeMath.mul(sum,100),featureLength);
+                allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]],voteValue);  
             }
         }
         else
