@@ -167,45 +167,46 @@ contract RankBasedVoting is VotingType
         uint currentVotingId;
         (,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
 
+        revertChangesInMemberVote(_proposalId,currentVotingId,verdictChosen,voteId);
+        submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_verdictChosen,verdictOptions);
+        allVotes[voteId].verdictChosen = _verdictChosen;
+        verdictOptionsByVoteId[voteId] = verdictOptions;
+    }
+
+    function revertChangesInMemberVote(uint _proposalId,uint currentVotingId,uint[] verdictChosen,uint voteId)
+    {
         if(currentVotingId == 0)
         {
-            revertChangesInMemberVote(_proposalId,verdictChosen,voteId);
-            submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_verdictChosen,verdictOptions);
+            uint previousVerdictOptions = verdictOptionsByVoteId[voteId];
+            for(uint i=0; i<verdictChosen.length; i++)
+            {
+                uint sum = SafeMath.add(sum,(SafeMath.sub(previousVerdictOptions,i)));
+            }
+
+            for(i=0; i<verdictChosen.length; i++)
+            {
+                uint voteValue = SafeMath.div(SafeMath.mul(SafeMath.sub(previousVerdictOptions,i),100),sum);
+                allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]],voteValue);
+            }
         }
         else
         {
             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[0]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[0]],1);
         }
-
-        allVotes[voteId].verdictChosen = _verdictChosen;
-        verdictOptionsByVoteId[voteId] = verdictOptions;
-    }
-
-    function revertChangesInMemberVote(uint _proposalId,uint[] verdictChosen,uint voteId)
-    {
-        uint previousVerdictOptions = verdictOptionsByVoteId[voteId];
-        for(uint i=0; i<verdictChosen.length; i++)
-        {
-            uint sum = SafeMath.add(sum,(SafeMath.sub(previousVerdictOptions,i)));
-        }
-
-        for(i=0; i<verdictChosen.length; i++)
-        {
-            uint voteValue = SafeMath.div(SafeMath.mul(SafeMath.sub(previousVerdictOptions,i),100),sum);
-            allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]],voteValue);
-        }
+       
     }
 
     function submitAndUpdateNewMemberVote(uint _proposalId,uint currentVotingId,uint[] _verdictChosen,uint verdictOptions)
     {
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        for(uint i=0; i<_verdictChosen.length; i++)
-        {
-            uint sum = SafeMath.add(sum,(SafeMath.sub(verdictOptions ,i)));
-        }
 
         if(currentVotingId == 0)
         {
+            for(uint i=0; i<_verdictChosen.length; i++)
+            {
+                uint sum = SafeMath.add(sum,(SafeMath.sub(verdictOptions ,i)));
+            }
+
             for(i=0; i<_verdictChosen.length; i++)
             {
                 uint voteValue = SafeMath.div(SafeMath.mul(SafeMath.sub(verdictOptions,i),100),sum);
