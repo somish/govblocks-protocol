@@ -97,16 +97,13 @@ contract RankBasedVoting is VotingType
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
-        GD.payableGNTTokens(_GNTPayableTokenAmount);
 
-        uint currentVotingId; uint category; uint intermediateVerdict;
-        (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
-        require( currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2);
-        require(GD.getBalanceOfMember(msg.sender) != 0);
-        uint _categoryId;
-        (_categoryId,,,,) = GD.getProposalDetailsById2(_proposalId); 
+        uint _categoryId;uint currentVotingId;
+        (_categoryId,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+
+        require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GD.getBalanceOfMember(msg.sender) != 0);
         require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && AddressProposalVote[msg.sender][_proposalId] == 0 );
         
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
@@ -115,7 +112,8 @@ contract RankBasedVoting is VotingType
         if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
         {
             verdictOptions = SafeMath.add(verdictOptions,1);
-            GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);  
+            GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);
+            GD.payableGNTTokens(_GNTPayableTokenAmount);
         } 
     }
 
