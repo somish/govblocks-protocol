@@ -173,43 +173,43 @@ contract RankBasedVoting is VotingType
         verdictOptionsByVoteId[voteId] = verdictOptions;
     }
 
-    function revertChangesInMemberVote(uint _proposalId,uint currentVotingId,uint[] verdictChosen,uint voteId)
+    function revertChangesInMemberVote(uint _proposalId,uint _currentVotingId,uint[] _verdictChosen,uint _voteId)
     {
-        if(currentVotingId == 0)
+        if(_currentVotingId == 0)
         {
-            uint previousVerdictOptions = verdictOptionsByVoteId[voteId];
-            for(uint i=0; i<verdictChosen.length; i++)
+            uint previousVerdictOptions = verdictOptionsByVoteId[_voteId];
+            for(uint i=0; i<_verdictChosen.length; i++)
             {
                 uint sum = SafeMath.add(sum,(SafeMath.sub(previousVerdictOptions,i)));
             }
 
-            for(i=0; i<verdictChosen.length; i++)
+            for(i=0; i<_verdictChosen.length; i++)
             {
                 uint voteValue = SafeMath.div(SafeMath.mul(SafeMath.sub(previousVerdictOptions,i),100),sum);
-                allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]],voteValue);
+                allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_verdictChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_verdictChosen[i]],voteValue);
             }
         }
         else
         {
-            allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[0]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[0]],1);
+            allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_verdictChosen[0]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_verdictChosen[0]],1);
         }
        
     }
 
-    function submitAndUpdateNewMemberVote(uint _proposalId,uint currentVotingId,uint[] _verdictChosen,uint verdictOptions)
+    function submitAndUpdateNewMemberVote(uint _proposalId,uint _currentVotingId,uint[] _verdictChosen,uint _verdictOptions)
     {
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
 
-        if(currentVotingId == 0)
+        if(_currentVotingId == 0)
         {
             for(uint i=0; i<_verdictChosen.length; i++)
             {
-                uint sum = SafeMath.add(sum,(SafeMath.sub(verdictOptions ,i)));
+                uint sum = SafeMath.add(sum,(SafeMath.sub(_verdictOptions ,i)));
             }
 
             for(i=0; i<_verdictChosen.length; i++)
             {
-                uint voteValue = SafeMath.div(SafeMath.mul(SafeMath.sub(verdictOptions,i),100),sum);
+                uint voteValue = SafeMath.div(SafeMath.mul(SafeMath.sub(_verdictOptions,i),100),sum);
                 allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[i]],voteValue);
             }
         } 
@@ -280,11 +280,10 @@ contract RankBasedVoting is VotingType
      
     function giveReward_afterFinalDecision(uint _proposalId) public 
     {
-        address voter; uint[] verdict;uint category;uint roleId; uint reward;uint voteid;
         PC=ProposalCategory(PCAddress); 
         GD=GovernanceData(GDAddress);
-        uint currentVotingId;uint intermediateVerdict;uint finalVerdict;
-        (category,currentVotingId,intermediateVerdict,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
+        address voter;uint category;uint roleId; uint reward;uint voteid;uint finalVerdict;
+        (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
         for(uint index=0; index<PC.getRoleSequencLength(category); index++)
         {
@@ -293,8 +292,7 @@ contract RankBasedVoting is VotingType
             for(uint i=0; i<getProposalRoleVoteLength(_proposalId,roleId); i++)
             {
                 voteid = getProposalRoleVote(_proposalId,roleId,i);
-                verdict = allVotes[voteid].verdictChosen;
-                require(verdict[0] == finalVerdict);
+                require(allVotes[voteid].verdictChosen[0] == finalVerdict);
                 GD.transferTokenAfterFinalReward(voter,reward);  
             }
         }    
