@@ -17,10 +17,12 @@
 pragma solidity ^0.4.8;
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 import "./zeppelin-solidity/contracts/token/MintableToken.sol";
+import "./zeppelin-solidity/contracts/math/Math.sol";
 import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
 // import "./BasicToken.sol";
 // import "./MintableToken.sol";
+// import "./Math.sol";
 
 contract GovernanceData is Ownable {
     using SafeMath for uint;
@@ -37,6 +39,7 @@ contract GovernanceData is Ownable {
         uint finalVerdict;
         uint currentVerdict;
         address votingTypeAddress;
+        uint proposalValue;
     }
 
     struct proposalCategory{
@@ -86,7 +89,7 @@ contract GovernanceData is Ownable {
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
-    uint public GNTStakValue; uint public globalRiskFactor; uint public membershipScalingFator;
+    uint public GNTStakValue; uint public globalRiskFactor; uint public membershipScalingFactor;
     uint public scalingWeight;
 
     string[] public status;
@@ -115,15 +118,6 @@ contract GovernanceData is Ownable {
         transferOwnership(_memberAddress);
     }
 
-    /// @dev change all contract's addresses.
-    function changeAllContractsAddress(address _GNTcontractAddress,address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
-    {
-        GNTAddress = _GNTcontractAddress;
-        BTAddress = _BTcontractAddress;
-        MRAddress = _MRcontractAddress;
-        PCAddress = _PCcontractAddress;
-    }
-
     /// @dev add status.
     function addStatus() 
     {
@@ -135,6 +129,7 @@ contract GovernanceData is Ownable {
         status.push("Proposal Denied, Threshold not reached"); 
     }
 
+    /// @dev Set Parameters value that will help in Distributing reward.
     function setGlobalParameters()
     {
         proposalVoteClosingTime = 20;
@@ -142,8 +137,17 @@ contract GovernanceData is Ownable {
         quorumPercentage=25;
         GNTStakValue=50;
         globalRiskFactor=5;
-        membershipScalingFator=1;
+        membershipScalingFactor=1;
         scalingWeight=1;
+    }
+
+    /// @dev change all contract's addresses.
+    function changeAllContractsAddress(address _GNTcontractAddress,address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    {
+        GNTAddress = _GNTcontractAddress;
+        BTAddress = _BTcontractAddress;
+        MRAddress = _MRcontractAddress;
+        PCAddress = _PCcontractAddress;
     }
 
     /// @dev Set all the voting type names and thier addresses.
@@ -185,8 +189,35 @@ contract GovernanceData is Ownable {
     {
         require(allProposal[_proposalId].category != 0);
         payableGNTTokens(_TokenAmount);
+        setProposalValue(_proposalId,_TokenAmount);
         pushInProposalStatus(_proposalId,2);
         updateProposalStatus(_proposalId,2);
+    }
+
+    function setProposalValue(uint _proposalId,uint _memberStake) public
+    {
+        uint memberLevel = Math.max256(getMemberReputation(msg.sender),1);
+        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(getBalanceOfMember(msg.sender),100),100)),getTotalTokenInSupply());
+        uint maxValue= Math.max256(tokensHeld,membershipScalingFactor);
+
+        uint finalProposalValue = SafeMath.mul(SafeMath.mul(globalRiskFactor,memberLevel),SafeMath.mul(_memberStake,maxValue));
+        allProposal[_proposalId].proposalValue = finalProposalValue;
+    }
+
+    function getTotalTokenInSupply() constant returns(uint totalSupplyToken)
+    {
+        BT=BasicToken(BTAddress);
+        totalSupplyToken = BT.totalSupply();
+    }
+
+    function getMemberReputation(address _memberAddress) constant returns(uint _reputationLevel)
+    {
+        _reputationLevel = allMemberReputationByAddress[_memberAddress];
+    }
+
+    function getProposalValue(uint _proposalId) constant returns(uint _proposalValue)
+    {
+        _proposalValue = allProposal[_proposalId].proposalValue;
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
@@ -216,7 +247,7 @@ contract GovernanceData is Ownable {
         require(getBalanceOfMember(msg.sender) != 0);
         allMemberReputationByAddress[msg.sender]=1;
         address votingTypeAddress = allVotingTypeDetails[_votingTypeId].votingTypeAddress;
-        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0,votingTypeAddress));   
+        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0,votingTypeAddress,0));   
     }
 
     /// @dev function to get called after Proposal Pass
@@ -346,7 +377,7 @@ contract GovernanceData is Ownable {
 
     function changeMembershipScalingFator(uint _membershipScalingFactor) onlyOwner
     {
-        membershipScalingFator = _membershipScalingFactor;
+        membershipScalingFactor = _membershipScalingFactor;
     }
 
     function changeScalingWeight(uint _scalingWeight) onlyOwner
