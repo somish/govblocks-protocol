@@ -67,10 +67,7 @@ contract GovernanceData is Ownable {
 
     function governanceData () 
     {
-        proposalVoteClosingTime = 20;
-        pendingProposalStart=0;
-        quorumPercentage=25;
-        GNTStakValue=10;
+        setGlobalParameters();
         addStatus();
     }
 
@@ -84,11 +81,14 @@ contract GovernanceData is Ownable {
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping(uint=>Status[]) proposalStatus;
     mapping(uint=>proposalPriority) allProposalPriority;
-        
+    mapping (address=>uint) allMemberReputationByAddress;
+    
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
-    uint public GNTStakValue;
+    uint public GNTStakValue; uint public globalRiskFactor; uint public membershipScalingFator;
+    uint public scalingWeight;
+
     string[] public status;
     proposal[] allProposal;
     votingTypeDetails[] allVotingTypeDetails;
@@ -135,49 +135,42 @@ contract GovernanceData is Ownable {
         status.push("Proposal Denied, Threshold not reached"); 
     }
 
+    function setGlobalParameters()
+    {
+        proposalVoteClosingTime = 20;
+        pendingProposalStart=0;
+        quorumPercentage=25;
+        GNTStakValue=50;
+        globalRiskFactor=5;
+        membershipScalingFator=1;
+        scalingWeight=1;
+    }
+
     /// @dev Set all the voting type names and thier addresses.
     function setVotingTypeDetails(string _votingTypeName,address _votingTypeAddress) onlyOwner
     {
         allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress));   
     }
 
-    /// @dev Edit details of a type of voting.
-    function editVotingTypeDetails(uint[] _votingTypeId, address[] _votingTypeAddress) onlyOwner
+    /// @dev When member manually verdict options before proposal voting. (To be called from All type of votings - Add verdict Options)
+    function setProposalCategoryParams(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
     {
-        require(_votingTypeId.length == _votingTypeAddress.length);
-        for(uint i=0; i<_votingTypeAddress.length; i++)
+        uint i;
+        allProposalCategory[_proposalId].verdictOptions = _verdictOptions;
+        for(i=0;i<_paramInt.length;i++)
         {
-            allVotingTypeDetails[_votingTypeId[i]].votingTypeAddress = _votingTypeAddress[i];
+            allProposalCategory[_proposalId].paramInt.push(_paramInt[i]);
         }
-    }
 
-    /// @dev Get All Address for different types of voting.
-    function getVotingTypeAllAddress() public returns(address[] VTaddresses)
-    {
-        for(uint i=0; i<allVotingTypeDetails.length; i++)
+        for(i=0;i<_paramBytes32.length;i++)
         {
-            VTaddresses[i] = allVotingTypeDetails[i].votingTypeAddress;
+            allProposalCategory[_proposalId].paramBytes32.push(_paramBytes32[i]);
         }
-        return VTaddresses;
-    }
 
-    /// @dev Get Address of a type of voting when given Id.
-    function getVotingTypeDetailsById(uint _votingTypeId) public returns(address votingTypeAddress)
-    {
-        return allVotingTypeDetails[_votingTypeId].votingTypeAddress;
-    }
-
-    /// @dev Fetch user balance when giving member address.
-    function getBalanceOfMember(address _memberAddress) public constant returns (uint totalBalance)
-    {
-        BT=BasicToken(BTAddress);
-        totalBalance = BT.balanceOf(_memberAddress);
-    }
-
-    /// @dev Changes the time(in seconds) after which proposal voting is closed.
-    function changeProposalVoteClosingTime(uint _closingTime) onlyOwner public
-    {
-        proposalVoteClosingTime = _closingTime;   
+        for(i=0;i<_paramAddress.length;i++)
+        {
+            allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
+        }   
     }
 
     /// @dev Checks if voting time of a given proposal should be closed or not. 
@@ -204,14 +197,6 @@ contract GovernanceData is Ownable {
         MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
     }
 
-    /// @dev Changes the status of a given proposal.
-    function changeProposalStatus(uint _id,uint _status) 
-    {
-        require(allProposal[_id].category != 0);
-        pushInProposalStatus(_id,_status);
-        updateProposalStatus(_id,_status);
-    }
-
     /// @dev Updates  status of an existing proposal.
     function updateProposalStatus(uint _id ,uint _status) internal
     {
@@ -229,29 +214,23 @@ contract GovernanceData is Ownable {
     function addNewProposal(string _shortDesc,string _longDesc,uint _votingTypeId) public
     {
         require(getBalanceOfMember(msg.sender) != 0);
+        allMemberReputationByAddress[msg.sender]=1;
         address votingTypeAddress = allVotingTypeDetails[_votingTypeId].votingTypeAddress;
         allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0,votingTypeAddress));   
     }
 
-    /// @dev When member manually verdict options before proposal voting. (To be called from All type of votings - Add verdict Options)
-    function setProposalCategoryParams(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
+    /// @dev function to get called after Proposal Pass
+    function categoryFunction(uint256 _proposalId) public returns (bool)
     {
-        uint i;
-        allProposalCategory[_proposalId].verdictOptions = _verdictOptions;
-        for(i=0;i<_paramInt.length;i++)
-        {
-            allProposalCategory[_proposalId].paramInt.push(_paramInt[i]);
-        }
-
-        for(i=0;i<_paramBytes32.length;i++)
-        {
-            allProposalCategory[_proposalId].paramBytes32.push(_paramBytes32[i]);
-        }
-
-        for(i=0;i<_paramAddress.length;i++)
-        {
-            allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
-        }   
+        uint _categoryId;
+        (_categoryId,,,,)= getProposalDetailsById2(_proposalId);
+        uint paramint;
+        bytes32 parambytes32;
+        address paramaddress;
+        (paramint,parambytes32,paramaddress) = getProposalFinalVerdictDetails(_proposalId);
+        return true;
+        // add your functionality here;
+        // gd1.updateCategoryMVR(_categoryId);
     }
 
     /// @dev categorizing proposal to proceed further.
@@ -347,6 +326,39 @@ contract GovernanceData is Ownable {
         }
     }
 
+    /// @dev Changes the status of a given proposal.
+    function changeProposalStatus(uint _id,uint _status) 
+    {
+        require(allProposal[_id].category != 0);
+        pushInProposalStatus(_id,_status);
+        updateProposalStatus(_id,_status);
+    }
+
+    function changeGlobalRiskFactor(uint _riskFactor) onlyOwner
+    {
+        globalRiskFactor = _riskFactor;
+    }
+
+    function changeGNTStakValue(uint _GNTStakValue) onlyOwner
+    {
+        GNTStakValue = _GNTStakValue;
+    }
+
+    function changeMembershipScalingFator(uint _membershipScalingFactor) onlyOwner
+    {
+        membershipScalingFator = _membershipScalingFactor;
+    }
+
+    function changeScalingWeight(uint _scalingWeight) onlyOwner
+    {
+        scalingWeight = _scalingWeight;
+    }
+
+    function changeQuorumPercentage(uint _quorumPercentage) onlyOwner
+    {
+        quorumPercentage = _quorumPercentage;
+    }
+
     /// @dev Updating proposal's Major details (Called from close proposal Vote).
     function updateProposalDetails(uint _proposalId,uint _currVotingStatus, uint _intermediateVerdict,uint _finalVerdict)
     {
@@ -354,7 +366,6 @@ contract GovernanceData is Ownable {
         allProposal[_proposalId].currentVerdict = _intermediateVerdict;
         allProposal[_proposalId].finalVerdict = _finalVerdict;
     }
-
 
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
     function editProposal(uint _proposalId , string _shortDesc, string _longDesc) onlyOwner public
@@ -387,6 +398,16 @@ contract GovernanceData is Ownable {
             allProposal[_proposalId].category = 0;
     }
 
+    /// @dev Edit details of a type of voting.
+    function editVotingTypeDetails(uint[] _votingTypeId, address[] _votingTypeAddress) onlyOwner
+    {
+        require(_votingTypeId.length == _votingTypeAddress.length);
+        for(uint i=0; i<_votingTypeAddress.length; i++)
+        {
+            allVotingTypeDetails[_votingTypeId[i]].votingTypeAddress = _votingTypeAddress[i];
+        }
+    }
+
     /// @dev Stores the information of a given version number of a given proposal. Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _id) internal 
     {
@@ -402,18 +423,27 @@ contract GovernanceData is Ownable {
         allProposal[_id].versionNum = SafeMath.add(allProposal[_id].versionNum,1);
     }
 
-    /// @dev function to get called after Proposal Pass
-    function categoryFunction(uint256 _proposalId) public returns (bool)
+    /// @dev Get All Address for different types of voting.
+    function getVotingTypeAllAddress() public returns(address[] VTaddresses)
     {
-        uint _categoryId;
-        (_categoryId,,,,)= getProposalDetailsById2(_proposalId);
-        uint paramint;
-        bytes32 parambytes32;
-        address paramaddress;
-        (paramint,parambytes32,paramaddress) = getProposalFinalVerdictDetails(_proposalId);
-        return true;
-        // add your functionality here;
-        // gd1.updateCategoryMVR(_categoryId);
+        for(uint i=0; i<allVotingTypeDetails.length; i++)
+        {
+            VTaddresses[i] = allVotingTypeDetails[i].votingTypeAddress;
+        }
+        return VTaddresses;
+    }
+
+    /// @dev Get Address of a type of voting when given Id.
+    function getVotingTypeDetailsById(uint _votingTypeId) public returns(address votingTypeAddress)
+    {
+        return allVotingTypeDetails[_votingTypeId].votingTypeAddress;
+    }
+
+    /// @dev Fetch user balance when giving member address.
+    function getBalanceOfMember(address _memberAddress) public constant returns (uint totalBalance)
+    {
+        BT=BasicToken(BTAddress);
+        totalBalance = BT.balanceOf(_memberAddress);
     }
 
     /// @dev Fetch details of proposal by giving proposal Id
