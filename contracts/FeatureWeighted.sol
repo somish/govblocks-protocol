@@ -16,11 +16,7 @@
 
 pragma solidity ^0.4.8;
 import "./VotingType.sol";
-import "./MemberRoles.sol";
-import "./ProposalCategory.sol";
 import "./GovernanceData.sol";
-import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-// import "./SafeMath.sol";
 
 contract FeatureWeighted is VotingType
 {
@@ -28,9 +24,12 @@ contract FeatureWeighted is VotingType
     address GDAddress;
     address MRAddress;
     address PCAddress;
+    address GNTAddress;
     MemberRoles MR;
     ProposalCategory PC;
     GovernanceData GD;
+    MintableToken MT;
+    uint public GNTStakValue;
     mapping(uint=>uint[]) allProposalFeatures;
     mapping(uint=>uint) allMemberFinalVerdictByVoteId;
 
@@ -38,10 +37,20 @@ contract FeatureWeighted is VotingType
     {
         uint[] option;
         allVotes.push(proposalVote(0x00,0,option,now,0));
+        GNTStakValue=50;
     }
 
-    function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
+    function payableGNTTokensFeatureWeighted(uint _TokenAmount) public
     {
+        MT=MintableToken(GNTAddress);
+        require(_TokenAmount >= GNTStakValue);
+        MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
+    }
+
+    function changeAllContractsAddress(address _GNTcontractAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    {
+        GNTAddress = _GNTcontractAddress;
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
@@ -134,6 +143,7 @@ contract FeatureWeighted is VotingType
         (_categoryId,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
+        payableGNTTokensFeatureWeighted(_GNTPayableTokenAmount);
 
         require(currentVotingId == 0 && GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2);
         require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && AddressProposalVote[msg.sender][_proposalId] == 0 );
@@ -145,7 +155,6 @@ contract FeatureWeighted is VotingType
         {
             verdictOptions = SafeMath.add(verdictOptions,1);
             GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions); 
-            GD.payableGNTTokens(_GNTPayableTokenAmount);
         } 
     }
 
