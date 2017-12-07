@@ -16,11 +16,7 @@
 
 pragma solidity ^0.4.8;
 import "./VotingType.sol";
-import "./MemberRoles.sol";
-import "./ProposalCategory.sol";
 import "./GovernanceData.sol";
-import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-// import "./SafeMath.sol";
 
 contract RankBasedVoting is VotingType
 {
@@ -28,19 +24,32 @@ contract RankBasedVoting is VotingType
     address GDAddress;
     address MRAddress;
     address PCAddress;
+    address GNTAddress;
     MemberRoles MR;
     ProposalCategory PC;
+    MintableToken MT;
     GovernanceData  GD;
+    uint public GNTStakValue;
     mapping (uint=>uint) verdictOptionsByVoteId;
      
     function RankBasedVoting()
     {
         uint[] option;
         allVotes.push(proposalVote(0x00,0,option,now,0));
+        GNTStakValue=50;
     }
 
-    function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
+    function payableGNTTokensRankBasedVoting(uint _TokenAmount) public
     {
+        MT=MintableToken(GNTAddress);
+        require(_TokenAmount >= GNTStakValue);
+        MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
+    }
+
+    function changeAllContractsAddress(address _GNTcontractAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    {
+        GNTAddress = _GNTcontractAddress;
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
@@ -102,6 +111,7 @@ contract RankBasedVoting is VotingType
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
         uint _categoryId;uint currentVotingId;
         (_categoryId,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+        payableGNTTokensRankBasedVoting(_GNTPayableTokenAmount);
 
         require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GD.getBalanceOfMember(msg.sender) != 0);
         require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && AddressProposalVote[msg.sender][_proposalId] == 0 );
@@ -113,7 +123,6 @@ contract RankBasedVoting is VotingType
         {
             verdictOptions = SafeMath.add(verdictOptions,1);
             GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);
-            GD.payableGNTTokens(_GNTPayableTokenAmount);
         } 
     }
 
