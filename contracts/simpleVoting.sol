@@ -17,11 +17,7 @@
 pragma solidity ^0.4.8;
 
 import "./VotingType.sol";
-import "./MemberRoles.sol";
-import "./ProposalCategory.sol";
 import "./GovernanceData.sol";
-import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-// import "./SafeMath.sol";
 
 contract SimpleVoting is VotingType
 {
@@ -30,18 +26,31 @@ contract SimpleVoting is VotingType
     address GDAddress;
     address MRAddress;
     address PCAddress;
+    address GNTAddress;
     MemberRoles MR;
     ProposalCategory PC;
     GovernanceData GD;
+    MintableToken MT;
+    uint public GNTStakValue;
 
     function SimpleVoting()
     {
         uint[] verdictOption;
         allVotes.push(proposalVote(0x00,0,verdictOption,now,0));
+        GNTStakValue=50;
+    }
+    
+    /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
+    function payableGNTTokensSimpleVoting(uint _TokenAmount) public
+    {
+        MT=MintableToken(GNTAddress);
+        require(_TokenAmount >= GNTStakValue);
+        MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
     }
 
-    function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    function changeAllContractsAddress(address _GNTcontractAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
     {
+        GNTAddress = _GNTcontractAddress;
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
@@ -92,7 +101,7 @@ contract SimpleVoting is VotingType
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
-        GD.payableGNTTokens(_GNTPayableTokenAmount);
+        payableGNTTokensSimpleVoting(_GNTPayableTokenAmount);
         
         uint propStatus;
         (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
