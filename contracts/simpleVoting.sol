@@ -23,6 +23,7 @@ contract SimpleVoting is VotingType
 {
 
     using SafeMath for uint;
+    using Math for uint;
     address GDAddress;
     address MRAddress;
     address PCAddress;
@@ -96,12 +97,21 @@ contract SimpleVoting is VotingType
         return ProposalRoleVote[_proposalId][_roleId];
     }
 
+    function setMemberVerdictValue(uint _proposalId,uint _memberStake) public returns (uint finalVerdictValue)
+    {
+        GD=GovernanceData(GDAddress);
+        uint memberLevel = Math.max256(GD.getMemberReputation(msg.sender),1);
+        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(msg.sender),100),100)),GD.getTotalTokenInSupply());
+        uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
+
+        finalVerdictValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
+    }
+
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount)
     {
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
-        payableGNTTokensSimpleVoting(_GNTPayableTokenAmount);
         
         uint propStatus;
         (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
@@ -113,17 +123,19 @@ contract SimpleVoting is VotingType
         require(AddressProposalVote[msg.sender][_proposalId] == 0 );
         require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && currentVotingId == 0);
         require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(category,currentVotingId));
+        payableGNTTokensSimpleVoting(_GNTPayableTokenAmount);
         
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
         (,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(category);
 
         if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
         {
-            verdictOptions = SafeMath.add(verdictOptions,1);
+            uint stakValue = setMemberVerdictValue(_proposalId,_GNTPayableTokenAmount);
+            GD.setProposalVerdictAddressAndStakValue(_proposalId,msg.sender,stakValue);
+            verdictOptions = SafeMath.add(verdictOptions,1); 
             GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);   
         } 
     }
-
 
     function proposalVoting(uint _proposalId,uint[] _verdictChosen)
     {
