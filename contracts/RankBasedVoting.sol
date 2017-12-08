@@ -29,21 +29,20 @@ contract RankBasedVoting is VotingType
     ProposalCategory PC;
     MintableToken MT;
     GovernanceData  GD;
-    uint public GNTStakeValue;
     mapping (uint=>uint) verdictOptionsByVoteId;
      
     function RankBasedVoting()
     {
         uint[] option;
-        allVotes.push(proposalVote(0x00,0,option,now,0));
-        GNTStakeValue=50;
+        allVotes.push(proposalVote(0x00,0,option,now,0,0,0));
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
     function payableGNTTokensRankBasedVoting(uint _TokenAmount) public
     {
         MT=MintableToken(GNTAddress);
-        require(_TokenAmount >= GNTStakeValue);
+        GD=GovernanceData(GDAddress);
+        require(_TokenAmount >= GD.GNTStakeValue());
         MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
     }
 
@@ -95,20 +94,10 @@ contract RankBasedVoting is VotingType
         return ProposalRoleVote[_proposalId][_roleId];
     }
 
-    function addInTotalVotes(uint _proposalId,uint[] _verdictChosen)
+    function addInTotalVotes(uint _proposalId,uint[] _verdictChosen,uint _GNTPayableTokenAmount,uint _finalVoteValue)
     {
         increaseTotalVotes();
-        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChosen,now,GD.getBalanceOfMember(msg.sender)));
-    }
-
-    function setMemberVerdictValueRankBased(uint _proposalId,uint _memberStake) public returns (uint finalVerdictValue)
-    {
-        GD=GovernanceData(GDAddress);
-        uint memberLevel = Math.max256(GD.getMemberReputation(msg.sender),1);
-        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(msg.sender),100),100)),GD.getTotalTokenInSupply());
-        uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
-
-        finalVerdictValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
+        allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChosen,now,GD.getBalanceOfMember(msg.sender),_GNTPayableTokenAmount,_finalVoteValue));
     }
 
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount)
@@ -138,7 +127,7 @@ contract RankBasedVoting is VotingType
         } 
     }
 
-    function proposalVoting(uint _proposalId,uint[] _verdictChosen)
+    function proposalVoting(uint _proposalId,uint[] _verdictChosen,uint _GNTPayableTokenAmount)
     {    
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
@@ -165,18 +154,19 @@ contract RankBasedVoting is VotingType
         if(AddressProposalVote[msg.sender][_proposalId] == 0)
         {
             uint votelength = getTotalVotes();
-            addInTotalVotes(_proposalId,_verdictChosen);
             submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_verdictChosen,verdictOptions);
             allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)],GD.getBalanceOfMember(msg.sender));
             AddressProposalVote[msg.sender][_proposalId] = votelength;
             ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(votelength);
             verdictOptionsByVoteId[votelength] = verdictOptions;
+            uint finalVoteValue = setVoteValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
+            addInTotalVotes(_proposalId,_verdictChosen,_GNTPayableTokenAmount,finalVoteValue);
         }
         else 
-            changeMemberVote(_proposalId,_verdictChosen);
+            changeMemberVote(_proposalId,_verdictChosen,_GNTPayableTokenAmount);
     }
 
-    function changeMemberVote(uint _proposalId,uint[] _verdictChosen)  
+    function changeMemberVote(uint _proposalId,uint[] _verdictChosen,uint _GNTPayableTokenAmount)  
     {
         MR=MemberRoles(MRAddress);
         GD=GovernanceData(GDAddress);
@@ -192,6 +182,10 @@ contract RankBasedVoting is VotingType
         submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_verdictChosen,verdictOptions);
         allVotes[voteId].verdictChosen = _verdictChosen;
         verdictOptionsByVoteId[voteId] = verdictOptions;
+
+        uint finalVoteValue = setVoteValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
+        allVotes[voteId].voteStakeGNT = _GNTPayableTokenAmount;
+        allVotes[voteId].voteValue = finalVoteValue;
     }
 
     function revertChangesInMemberVote(uint _proposalId,uint _currentVotingId,uint[] _verdictChosen,uint _voteId)
@@ -238,6 +232,28 @@ contract RankBasedVoting is VotingType
         {   
             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]],1);
         }
+    }  
+
+    function setMemberVerdictValueRankBased(uint _proposalId,uint _memberStake) public returns (uint finalVerdictValue)
+    {
+        GD=GovernanceData(GDAddress);
+        uint memberLevel = Math.max256(GD.getMemberReputation(msg.sender),1);
+        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(msg.sender),100),100)),GD.getTotalTokenInSupply());
+        uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
+
+        finalVerdictValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
+    }
+
+    function setVoteValue_givenByMember(uint _proposalId,uint _memberStake) public returns (uint finalVoteValue)
+    {
+        GD=GovernanceData(GDAddress);
+        MT=MintableToken(GNTAddress);
+        if(_memberStake != 0)
+            MT.transferFrom(msg.sender,GNTAddress,_memberStake);
+
+        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(msg.sender),100),100)),GD.getTotalTokenInSupply());
+        uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
+        finalVoteValue = SafeMath.mul(GD.getMemberReputation(msg.sender),value);
     }  
 
     function closeProposalVote(uint _proposalId)
