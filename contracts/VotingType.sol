@@ -27,6 +27,8 @@ contract VotingType
         uint[] verdictChosen;
         uint dateSubmit;
         uint voterTokens;
+        uint voteStakeGNT;
+        uint voteValue;
     }
 
     struct proposalVoteAndTokenCount 
@@ -34,7 +36,7 @@ contract VotingType
         mapping(uint=>mapping(uint=>uint)) totalVoteCount; 
         mapping(uint=>uint) totalTokenCount; 
     }
-
+    
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;
     mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;
     mapping(address=>mapping(uint=>uint)) AddressProposalVote; 
@@ -42,7 +44,9 @@ contract VotingType
     uint public totalVotes;
 
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount);
-    function proposalVoting(uint _proposalId,uint[] _verdictChosen);
+    function proposalVoting(uint _proposalId,uint[] _verdictChosen,uint _GNTPayableTokenAmount);
+    function setVerdictValue_givenByMember(uint _proposalId,uint _memberStake) public returns (uint finalVerdictValue);
+    function setVoteValue_givenByMember(uint _proposalId,uint _memberStake) public returns (uint finalVoteValue);
     function closeProposalVote(uint _proposalId);
 
     function getTotalVotes() constant returns (uint votesTotal);
