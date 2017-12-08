@@ -29,7 +29,7 @@ contract FeatureWeighted is VotingType
     ProposalCategory PC;
     GovernanceData GD;
     MintableToken MT;
-    uint public GNTStakValue;
+    uint public GNTStakeValue;
     mapping(uint=>uint[]) allProposalFeatures;
     mapping(uint=>uint) allMemberFinalVerdictByVoteId;
 
@@ -37,14 +37,14 @@ contract FeatureWeighted is VotingType
     {
         uint[] option;
         allVotes.push(proposalVote(0x00,0,option,now,0));
-        GNTStakValue=50;
+        GNTStakeValue=50;
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
     function payableGNTTokensFeatureWeighted(uint _TokenAmount) public
     {
         MT=MintableToken(GNTAddress);
-        require(_TokenAmount >= GNTStakValue);
+        require(_TokenAmount >= GNTStakeValue);
         MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
     }
 
@@ -133,6 +133,16 @@ contract FeatureWeighted is VotingType
         check = AddressProposalVote[msg.sender][_proposalId];
     }
 
+    function setMemberVerdictValueFeatureVoting(uint _proposalId,uint _memberStake) public returns (uint finalVerdictValue)
+    {
+        GD=GovernanceData(GDAddress);
+        uint memberLevel = Math.max256(GD.getMemberReputation(msg.sender),1);
+        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(msg.sender),100),100)),GD.getTotalTokenInSupply());
+        uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
+
+        finalVerdictValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
+    }
+
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount)
     {
         GD=GovernanceData(GDAddress);
@@ -143,16 +153,18 @@ contract FeatureWeighted is VotingType
         (_categoryId,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
-        payableGNTTokensFeatureWeighted(_GNTPayableTokenAmount);
 
         require(currentVotingId == 0 && GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2);
         require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && AddressProposalVote[msg.sender][_proposalId] == 0 );
+        payableGNTTokensFeatureWeighted(_GNTPayableTokenAmount);
         
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
         (,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_categoryId);
 
         if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
         {
+            uint stakeValue = setMemberVerdictValueFeatureVoting(_proposalId,_GNTPayableTokenAmount);
+            GD.setProposalVerdictAddressAndStakeValue(_proposalId,msg.sender,stakeValue);
             verdictOptions = SafeMath.add(verdictOptions,1);
             GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions); 
         } 
