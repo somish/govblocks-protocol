@@ -48,6 +48,8 @@ contract GovernanceData is Ownable {
         bytes32[] paramBytes32;
         address[] paramAddress;
         uint verdictOptions;
+        address[] verdictAddedByAddress;
+        uint[] stakValueOfVerdict;
     }
 
     struct proposalVersionData{
@@ -175,6 +177,12 @@ contract GovernanceData is Ownable {
         {
             allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
         }   
+    }
+
+    function setProposalVerdictAddressAndStakValue(uint _proposalId,address _memberAddress,uint _stakValue)
+    {
+        allProposalCategory[_proposalId].verdictAddedByAddress.push(_memberAddress);
+        allProposalCategory[_proposalId].stakValueOfVerdict.push(_stakValue);
     }
 
     /// @dev Checks if voting time of a given proposal should be closed or not. 
