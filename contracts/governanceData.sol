@@ -40,6 +40,7 @@ contract GovernanceData is Ownable {
         uint currentVerdict;
         address votingTypeAddress;
         uint proposalValue;
+        uint proposalStake;
     }
 
     struct proposalCategory{
@@ -49,7 +50,8 @@ contract GovernanceData is Ownable {
         address[] paramAddress;
         uint verdictOptions;
         address[] verdictAddedByAddress;
-        uint[] stakValueOfVerdict;
+        uint[] valueOfVerdict;
+        uint[] stakeOnVerdict;
     }
 
     struct proposalVersionData{
@@ -91,7 +93,7 @@ contract GovernanceData is Ownable {
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
-    uint public GNTStakValue; uint public globalRiskFactor; uint public membershipScalingFactor;
+    uint public GNTStakeValue; uint public globalRiskFactor; uint public membershipScalingFactor;
     uint public scalingWeight;
 
     string[] public status;
@@ -137,7 +139,7 @@ contract GovernanceData is Ownable {
         proposalVoteClosingTime = 20;
         pendingProposalStart=0;
         quorumPercentage=25;
-        GNTStakValue=50;
+        GNTStakeValue=50;
         globalRiskFactor=5;
         membershipScalingFactor=1;
         scalingWeight=1;
@@ -179,10 +181,11 @@ contract GovernanceData is Ownable {
         }   
     }
 
-    function setProposalVerdictAddressAndStakValue(uint _proposalId,address _memberAddress,uint _stakValue)
+    function setProposalVerdictAddressAndStakeValue(uint _proposalId,address _memberAddress,uint _stakeValue,uint _verdictValue)
     {
         allProposalCategory[_proposalId].verdictAddedByAddress.push(_memberAddress);
-        allProposalCategory[_proposalId].stakValueOfVerdict.push(_stakValue);
+        allProposalCategory[_proposalId].valueOfVerdict.push(_verdictValue);
+        allProposalCategory[_proposalId].stakeOnVerdict.push(_stakeValue);
     }
 
     /// @dev Checks if voting time of a given proposal should be closed or not. 
@@ -204,6 +207,7 @@ contract GovernanceData is Ownable {
 
     function setProposalValue(uint _proposalId,uint _memberStake) public
     {
+        allProposal[_proposalId].proposalStake = _memberStake;
         uint memberLevel = Math.max256(getMemberReputation(msg.sender),1);
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(getBalanceOfMember(msg.sender),100),100)),getTotalTokenInSupply());
         uint maxValue= Math.max256(tokensHeld,membershipScalingFactor);
@@ -218,21 +222,42 @@ contract GovernanceData is Ownable {
         totalSupplyToken = BT.totalSupply();
     }
 
-    function getMemberReputation(address _memberAddress) constant returns(uint _reputationLevel)
+    function getMemberReputation(address _memberAddress) constant returns(uint reputationLevel)
     {
-        _reputationLevel = allMemberReputationByAddress[_memberAddress];
+        reputationLevel = allMemberReputationByAddress[_memberAddress];
     }
 
-    function getProposalValue(uint _proposalId) constant returns(uint _proposalValue)
+    function getProposalValueAndStake(uint _proposalId) constant returns(uint proposalValue,uint proposalStake)
     {
-        _proposalValue = allProposal[_proposalId].proposalValue;
+        proposalValue = allProposal[_proposalId].proposalValue;
+        proposalStake = allProposal[_proposalId].proposalStake;
+    }
+
+    function getLengthVerdictAddress(uint _proposalId) constant returns(uint length)
+    {
+        return  allProposalCategory[_proposalId].verdictAddedByAddress.length;
+    }
+
+    function getVerdictStakeByProposalId(uint _proposalId,uint _id) constant returns(uint verdictStake)
+    {
+        verdictStake = allProposalCategory[_proposalId].stakeOnVerdict[_id];
+    }
+
+    function getVerdictValueByProposalId(uint _proposalId,uint _id) constant returns(uint verdictValue)
+    {
+        verdictValue = allProposalCategory[_proposalId].valueOfVerdict[_id];
+    }
+
+    function getVerdictAddedAddressById(uint _proposalId,uint _verdictIndex) constant returns(address memberAddress)
+    {
+        memberAddress = allProposalCategory[_proposalId].verdictAddedByAddress[_verdictIndex];
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
     function payableGNTTokens(uint _TokenAmount) public
     {
         MT=MintableToken(GNTAddress);
-        require(_TokenAmount >= GNTStakValue);
+        require(_TokenAmount >= GNTStakeValue);
         MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
     }
 
@@ -255,7 +280,7 @@ contract GovernanceData is Ownable {
         require(getBalanceOfMember(msg.sender) != 0);
         allMemberReputationByAddress[msg.sender]=1;
         address votingTypeAddress = allVotingTypeDetails[_votingTypeId].votingTypeAddress;
-        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0,votingTypeAddress,0));   
+        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0,votingTypeAddress,0,0));   
     }
 
     /// @dev function to get called after Proposal Pass
@@ -272,6 +297,16 @@ contract GovernanceData is Ownable {
         // gd1.updateCategoryMVR(_categoryId);
     }
 
+    function addInitialVerdictDetails(uint _proposalId)
+    {
+        if(allProposalCategory[_proposalId].verdictAddedByAddress.length == 0)
+        {
+            allProposalCategory[_proposalId].verdictAddedByAddress.push(0x00);
+            allProposalCategory[_proposalId].valueOfVerdict.push(0);
+            allProposalCategory[_proposalId].stakeOnVerdict.push(0);
+        }      
+    }
+
     /// @dev categorizing proposal to proceed further.
     function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions,uint8 _proposalComplexityLevel,uint[] _levelReward) public
     {
@@ -280,7 +315,8 @@ contract GovernanceData is Ownable {
         require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
         require(allProposal[_proposalId].propStatus == 1 || allProposal[_proposalId].propStatus == 0);
         addComplexityLevelAndReward(_proposalId,_categoryId,_proposalComplexityLevel,_levelReward);
-        
+        addInitialVerdictDetails(_proposalId);
+
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
 
         if(_paramInt.length != 0  )
@@ -378,9 +414,9 @@ contract GovernanceData is Ownable {
         globalRiskFactor = _riskFactor;
     }
 
-    function changeGNTStakValue(uint _GNTStakValue) onlyOwner
+    function changeGNTStakeValue(uint _GNTStakeValue) onlyOwner
     {
-        GNTStakValue = _GNTStakValue;
+        GNTStakeValue = _GNTStakeValue;
     }
 
     function changeMembershipScalingFator(uint _membershipScalingFactor) onlyOwner
