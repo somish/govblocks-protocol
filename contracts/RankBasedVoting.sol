@@ -178,10 +178,10 @@ contract RankBasedVoting is VotingType
         uint currentVotingId;
         (,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
 
-        revertChangesInMemberVote(_proposalId,currentVotingId,verdictChosen,voteId);
-        submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_verdictChosen,verdictOptions);
         allVotes[voteId].verdictChosen = _verdictChosen;
         verdictOptionsByVoteId[voteId] = verdictOptions;
+        revertChangesInMemberVote(_proposalId,currentVotingId,verdictChosen,voteId);
+        submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_verdictChosen,verdictOptions);
 
         uint finalVoteValue = setVoteValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
         allVotes[voteId].voteStakeGNT = _GNTPayableTokenAmount;
@@ -314,29 +314,8 @@ contract RankBasedVoting is VotingType
             GD.changePendingProposalStart();
         } 
     }
-     
-    function giveReward_afterFinalDecision(uint _proposalId) public 
-    {
-        PC=ProposalCategory(PCAddress); 
-        GD=GovernanceData(GDAddress);
-        address voter;uint category;uint roleId; uint reward;uint voteid;uint finalVerdict;
-        (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
-        for(uint index=0; index<PC.getRoleSequencLength(category); index++)
-        {
-            roleId = PC.getRoleSequencAtIndex(category,index);
-            reward = GD.getProposalRewardAndComplexity(_proposalId,index);
-            for(uint i=0; i<getProposalRoleVoteLength(_proposalId,roleId); i++)
-            {
-                voteid = getProposalRoleVote(_proposalId,roleId,i);
-                require(allVotes[voteid].verdictChosen[0] == finalVerdict);
-                GD.transferTokenAfterFinalReward(voter,reward);  
-            }
-        }    
-    }
-
-
-    function getTotalTokensToBeDistributedANDvoteValue(uint _proposalId)
+    function giveReward_afterFinalDecision(uint _proposalId)
     {
         GD=GovernanceData(GDAddress); uint totalVoteValue;uint TotalTokensToDistribute;
         uint proposalValue; uint proposalStake;
