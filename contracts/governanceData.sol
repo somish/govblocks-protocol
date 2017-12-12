@@ -53,7 +53,7 @@ contract GovernanceData is Ownable {
         uint[] valueOfVerdict;
         uint[] stakeOnVerdict;
     }
-
+    
     struct proposalVersionData{
         uint versionNum;
         string shortDesc;
@@ -72,7 +72,7 @@ contract GovernanceData is Ownable {
         uint[] levelReward;
     }
 
-    function governanceData () 
+    function governanceData() 
     {
         setGlobalParameters();
         addStatus();
@@ -80,7 +80,7 @@ contract GovernanceData is Ownable {
 
     struct votingTypeDetails
     {
-        string votingTypeName;
+        bytes32 votingTypeName;
         address votingTypeAddress;
     }
 
@@ -88,7 +88,7 @@ contract GovernanceData is Ownable {
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping(uint=>Status[]) proposalStatus;
     mapping(uint=>proposalPriority) allProposalPriority;
-    mapping (address=>uint) allMemberReputationByAddress;
+    mapping(address=>uint) allMemberReputationByAddress;
     
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
@@ -155,7 +155,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Set all the voting type names and thier addresses.
-    function setVotingTypeDetails(string _votingTypeName,address _votingTypeAddress) onlyOwner
+    function setVotingTypeDetails(bytes32 _votingTypeName,address _votingTypeAddress) onlyOwner
     {
         allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress));   
     }
@@ -205,6 +205,7 @@ contract GovernanceData is Ownable {
         updateProposalStatus(_proposalId,2);
     }
 
+    /// @dev Calculate the proposal value to distribute it later - Distribute amount depends upon the final decision against proposal.
     function setProposalValue(uint _proposalId,uint _memberStake) public
     {
         allProposal[_proposalId].proposalStake = _memberStake;
@@ -214,43 +215,6 @@ contract GovernanceData is Ownable {
 
         uint finalProposalValue = SafeMath.mul(SafeMath.mul(globalRiskFactor,memberLevel),SafeMath.mul(_memberStake,maxValue));
         allProposal[_proposalId].proposalValue = finalProposalValue;
-    }
-
-    function getTotalTokenInSupply() constant returns(uint totalSupplyToken)
-    {
-        BT=BasicToken(BTAddress);
-        totalSupplyToken = BT.totalSupply();
-    }
-
-    function getMemberReputation(address _memberAddress) constant returns(uint reputationLevel)
-    {
-        reputationLevel = allMemberReputationByAddress[_memberAddress];
-    }
-
-    function getProposalValueAndStake(uint _proposalId) constant returns(uint proposalValue,uint proposalStake)
-    {
-        proposalValue = allProposal[_proposalId].proposalValue;
-        proposalStake = allProposal[_proposalId].proposalStake;
-    }
-
-    function getLengthVerdictAddress(uint _proposalId) constant returns(uint length)
-    {
-        return  allProposalCategory[_proposalId].verdictAddedByAddress.length;
-    }
-
-    function getVerdictStakeByProposalId(uint _proposalId,uint _id) constant returns(uint verdictStake)
-    {
-        verdictStake = allProposalCategory[_proposalId].stakeOnVerdict[_id];
-    }
-
-    function getVerdictValueByProposalId(uint _proposalId,uint _id) constant returns(uint verdictValue)
-    {
-        verdictValue = allProposalCategory[_proposalId].valueOfVerdict[_id];
-    }
-
-    function getVerdictAddedAddressById(uint _proposalId,uint _verdictIndex) constant returns(address memberAddress)
-    {
-        memberAddress = allProposalCategory[_proposalId].verdictAddedByAddress[_verdictIndex];
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
@@ -284,7 +248,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev function to get called after Proposal Pass
-    function categoryFunction(uint256 _proposalId) public returns (bool)
+    function categoryFunction(uint256 _proposalId) public
     {
         uint _categoryId;
         (_categoryId,,,,)= getProposalDetailsById2(_proposalId);
@@ -292,11 +256,11 @@ contract GovernanceData is Ownable {
         bytes32 parambytes32;
         address paramaddress;
         (paramint,parambytes32,paramaddress) = getProposalFinalVerdictDetails(_proposalId);
-        return true;
         // add your functionality here;
         // gd1.updateCategoryMVR(_categoryId);
     }
 
+    /// @dev As bydefault first verdict is alwayd deny option. One time configurable.
     function addInitialVerdictDetails(uint _proposalId)
     {
         if(allProposalCategory[_proposalId].verdictAddedByAddress.length == 0)
@@ -409,6 +373,7 @@ contract GovernanceData is Ownable {
         updateProposalStatus(_id,_status);
     }
 
+    /// @dev Change Variables that helps in Calculation of reward distribution. Risk Factor, GNT Stak Value, Scaling Factor,Scaling weight.
     function changeGlobalRiskFactor(uint _riskFactor) onlyOwner
     {
         globalRiskFactor = _riskFactor;
@@ -429,6 +394,7 @@ contract GovernanceData is Ownable {
         scalingWeight = _scalingWeight;
     }
 
+    /// @dev Change quoram percentage. Value required to proposal pass.
     function changeQuorumPercentage(uint _quorumPercentage) onlyOwner
     {
         quorumPercentage = _quorumPercentage;
@@ -508,6 +474,16 @@ contract GovernanceData is Ownable {
         return VTaddresses;
     }
 
+    /// @dev Get All names for different types of voting.
+    function getVotingTypeAllName() public returns(bytes32[] votingName)
+    {
+        for(uint i=0; i<allVotingTypeDetails.length; i++)
+        {
+            votingName[i] = allVotingTypeDetails[i].votingTypeName;
+        }
+        return votingName;
+    }
+    
     /// @dev Get Address of a type of voting when given Id.
     function getVotingTypeDetailsById(uint _votingTypeId) public returns(address votingTypeAddress)
     {
@@ -522,9 +498,9 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Fetch details of proposal by giving proposal Id
-    function getProposalDetailsById1(uint _id) public constant returns (address owner,string shortDesc,string longDesc,uint date_add,uint date_upd,uint versionNum,uint propStatus)
+    function getProposalDetailsById1(uint _proposalId) public constant returns (address owner,string shortDesc,string longDesc,uint date_add,uint date_upd,uint versionNum,uint propStatus)
     {
-        return (allProposal[_id].owner,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add,allProposal[_id].date_upd,allProposal[_id].versionNum,allProposal[_id].propStatus);
+        return (allProposal[_proposalId].owner,allProposal[_proposalId].shortDesc,allProposal[_proposalId].longDesc,allProposal[_proposalId].date_add,allProposal[_proposalId].date_upd,allProposal[_proposalId].versionNum,allProposal[_proposalId].propStatus);
     }
 
     /// @dev Get the category, of given proposal. 
@@ -538,9 +514,9 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Gets version details of a given proposal id.
-    function getProposalDetailsByIdAndVersion(uint _id,uint _versionNum) public constant returns( uint versionNum,string shortDesc,string longDesc,uint date_add)
+    function getProposalDetailsByIdAndVersion(uint _proposalId,uint _versionNum) public constant returns( uint versionNum,string shortDesc,string longDesc,uint date_add)
     {
-        return (proposalVersions[_id][_versionNum].versionNum,proposalVersions[_id][_versionNum].shortDesc,proposalVersions[_id][_versionNum].longDesc,proposalVersions[_id][_versionNum].date_add);
+        return (proposalVersions[_proposalId][_versionNum].versionNum,proposalVersions[_proposalId][_versionNum].shortDesc,proposalVersions[_proposalId][_versionNum].longDesc,proposalVersions[_proposalId][_versionNum].date_add);
     }
    
     /// @dev Get proposal Reward and complexity level Against proposal
@@ -590,6 +566,51 @@ contract GovernanceData is Ownable {
             paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
         }  
     }
+
+    /// @dev Get the number of tokens already distributed among members.
+    function getTotalTokenInSupply() constant returns(uint _totalSupplyToken)
+    {
+        BT=BasicToken(BTAddress);
+        _totalSupplyToken = BT.totalSupply();
+    }
+
+    /// @dev Member Reputation is set according to if Member's Decision is Final decision.
+    function getMemberReputation(address _memberAddress) constant returns(uint reputationLevel)
+    {
+        reputationLevel = allMemberReputationByAddress[_memberAddress];
+    }
+
+    /// @dev Get proposal Value and Member Stake on that proposal
+    function getProposalValueAndStake(uint _proposalId) constant returns(uint proposalValue,uint proposalStake)
+    {
+        proposalValue = allProposal[_proposalId].proposalValue;
+        proposalStake = allProposal[_proposalId].proposalStake;
+    }
+
+    /// @dev Fetch Total length of Member address array That added number of verdicts against proposal.
+    function getVerdictAddedAddressLength(uint _proposalId) constant returns(uint length)
+    {
+        return  allProposalCategory[_proposalId].verdictAddedByAddress.length;
+    }
+
+    /// @dev Get the Stake of verdict when given Proposal Id and Verdict index.
+    function getVerdictStakeByProposalId(uint _proposalId,uint _verdictIndex) constant returns(uint verdictStake)
+    {
+        verdictStake = allProposalCategory[_proposalId].stakeOnVerdict[_verdictIndex];
+    }
+
+    /// @dev Get the value of verdict when given Proposal Id and Verdict Index.
+    function getVerdictValueByProposalId(uint _proposalId,uint _verdictIndex) constant returns(uint verdictValue)
+    {
+        verdictValue = allProposalCategory[_proposalId].valueOfVerdict[_verdictIndex];
+    }
+
+    /// @dev Get the Address of member whosoever added the verdict when given Proposal Id and Verdict Index.
+    function getVerdictAddedAddressByProposalId(uint _proposalId,uint _verdictIndex) constant returns(address memberAddress)
+    {
+        memberAddress = allProposalCategory[_proposalId].verdictAddedByAddress[_verdictIndex];
+    }
+
 
 }  
 
