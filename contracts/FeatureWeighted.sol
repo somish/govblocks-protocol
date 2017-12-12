@@ -357,9 +357,9 @@ contract FeatureWeighted is VotingType
 
         for(uint i=0; i<allVotes.length; i++)
         {
-            for(uint j=0; j<GD.getLengthVerdictAddress(_proposalId); i++)
+            for(uint j=0; j<GD.getVerdictAddedAddressLength(_proposalId); i++)
             {
-                require(allVotes[i].voter == GD.getVerdictAddedAddressById(_proposalId,j));
+                require(allVotes[i].voter == GD.getVerdictAddedAddressByProposalId(_proposalId,j));
                 if(finalVerdict > 0)
                     totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + proposalValue + allVotes[i].voteValue;
                 else
@@ -370,19 +370,19 @@ contract FeatureWeighted is VotingType
         distributeReward(_proposalId,TotalTokensToDistribute,totalVoteValue,proposalStake);
     }
 
-    function distributeReward(uint _proposalId,uint TotalTokensToDistribute,uint totalVoteValue,uint proposalStake)
+    function distributeReward(uint _proposalId,uint _TotalTokensToDistribute,uint _totalVoteValue,uint _proposalStake)
     {
         address proposalOwner;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
         uint roleId;uint category;uint finalVerdict;
         (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
-        address verdictOwner = GD.getVerdictAddedAddressById(_proposalId,finalVerdict);
+        address verdictOwner = GD.getVerdictAddedAddressByProposalId(_proposalId,finalVerdict);
         
-        uint reward = (proposalStake*TotalTokensToDistribute)/totalVoteValue;
+        uint reward = (_proposalStake*_TotalTokensToDistribute)/_totalVoteValue;
         GD.transferTokenAfterFinalReward(proposalOwner,reward);
         
         uint verdictStake =GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
-        reward = (verdictStake*TotalTokensToDistribute)/totalVoteValue;
+        reward = (verdictStake*_TotalTokensToDistribute)/_totalVoteValue;
         GD.transferTokenAfterFinalReward(verdictOwner,reward);
 
         for(uint j=0; j<PC.getRoleSequencLength(category); j++)
@@ -392,14 +392,10 @@ contract FeatureWeighted is VotingType
             {
                 uint voteid = getProposalRoleVote(_proposalId,roleId,i);
                 require(allMemberFinalVerdictByVoteId[voteid] == finalVerdict);
-                reward = (allVotes[voteid].voteValue*TotalTokensToDistribute)/totalVoteValue;
-                TotalTokensToDistribute = TotalTokensToDistribute - reward;
+                reward = (allVotes[voteid].voteValue*_TotalTokensToDistribute)/_totalVoteValue;
+                _TotalTokensToDistribute = _TotalTokensToDistribute - reward;
                 GD.transferTokenAfterFinalReward(allVotes[voteid].voter,reward);
             }
         }
-    }
-
-    
-
-    
+    } 
 }
