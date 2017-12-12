@@ -89,12 +89,6 @@ contract SimpleVoting is VotingType
         totalToken = allProposalVoteAndTokenCount[_proposalId].totalTokenCount[_roleId];
     }
 
-    /// @dev Get Vote id of a _roleId against given proposal.
-    function getProposalRoleVoteArray(uint _proposalId,uint _roleId) internal returns(uint[] voteId) 
-    {
-        return ProposalRoleVote[_proposalId][_roleId];
-    }
-
     function setVerdictValue_givenByMember(uint _proposalId,uint _memberStake) public returns (uint finalVerdictValue)
     {
         GD=GovernanceData(GDAddress);
@@ -169,11 +163,11 @@ contract SimpleVoting is VotingType
         {
             uint votelength = getTotalVotes();
             increaseTotalVotes();
+            uint finalVoteValue = setVoteValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]],1);
             allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],GD.getBalanceOfMember(msg.sender));
             AddressProposalVote[msg.sender][_proposalId] = votelength;
             ProposalRoleVote[_proposalId][roleId].push(votelength);
-            uint finalVoteValue = setVoteValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
             allVotes.push(proposalVote(msg.sender,_proposalId,_verdictChosen,now,GD.getBalanceOfMember(msg.sender),_GNTPayableTokenAmount,finalVoteValue));
         }
         else 
@@ -186,9 +180,8 @@ contract SimpleVoting is VotingType
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         uint voteId = AddressProposalVote[msg.sender][_proposalId];
         uint[] verdictChosen = allVotes[voteId].verdictChosen;
-        uint verdict = verdictChosen[0];
         
-        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdict],1);
+        allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdictChosen[0]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][verdictChosen[0]],1);
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_verdictChosen[0]],1);
         allVotes[voteId].verdictChosen[0] = _verdictChosen[0];
 
@@ -204,8 +197,8 @@ contract SimpleVoting is VotingType
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
     
-        uint currentVotingId; uint category; uint intermediateVerdict;
-        (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
+        uint currentVotingId; uint category;
+        (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
     
