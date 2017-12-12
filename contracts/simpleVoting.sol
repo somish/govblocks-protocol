@@ -60,18 +60,18 @@ contract SimpleVoting is VotingType
         return(allVotes.length);
     }
 
-    function increaseTotalVotes() returns (uint _totalVotes)
+    function increaseTotalVotes() internal returns (uint _totalVotes)
     {
         _totalVotes = SafeMath.add(totalVotes,1);  
         totalVotes=_totalVotes;
     } 
 
-    function getVoteDetailByid(uint _voteid) public constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens)
+    function getVoteDetailByid(uint _voteid) public constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens,uint voteStakeGNT,uint voteValue)
     {
-        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens);
+        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens,allVotes[_voteid].voteStakeGNT,allVotes[_voteid].voteValue);
     }
 
-    function getProposalRoleVoteLength(uint _proposalId,uint _roleId) public constant returns(uint length)
+    function getProposalRoleVoteLength(uint _proposalId,uint _roleId) internal constant returns(uint length)
     {
          length = ProposalRoleVote[_proposalId][_roleId].length;
     }
@@ -83,14 +83,14 @@ contract SimpleVoting is VotingType
     }
 
     /// @dev Get the vote count for options of proposal when giving Proposal id and Option index.
-    function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken)
+    function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) public constant returns(uint totalVotes,uint totalToken)
     {
         totalVotes = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[_roleId][_optionIndex];
         totalToken = allProposalVoteAndTokenCount[_proposalId].totalTokenCount[_roleId];
     }
 
     /// @dev Get Vote id of a _roleId against given proposal.
-    function getProposalRoleVoteArray(uint _proposalId,uint _roleId) public constant returns(uint[] voteId) 
+    function getProposalRoleVoteArray(uint _proposalId,uint _roleId) internal returns(uint[] voteId) 
     {
         return ProposalRoleVote[_proposalId][_roleId];
     }
