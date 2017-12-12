@@ -55,7 +55,7 @@ contract SimpleVoting is VotingType
         PCAddress = _PCcontractAddress;
     }
 
-    function getTotalVotes() constant returns (uint votesTotal)
+    function getTotalVotes() constant returns (uint _votesTotal)
     {
         return(allVotes.length);
     }
@@ -124,15 +124,13 @@ contract SimpleVoting is VotingType
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
         
-        uint propStatus;
-        (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
         uint currentVotingId; uint category;
         (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
 
         require(AddressProposalVote[msg.sender][_proposalId] == 0 );
-        require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && currentVotingId == 0);
+        require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && currentVotingId == 0);
         require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(category,currentVotingId));
         payableGNTTokensSimpleVoting(_GNTPayableTokenAmount);
         
@@ -153,13 +151,12 @@ contract SimpleVoting is VotingType
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
-        uint propStatus;
-        (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
+
         uint currentVotingId; uint category; uint intermediateVerdict;
         (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
-        require(GD.getBalanceOfMember(msg.sender) != 0 && propStatus == 2 && _verdictChosen.length == 1);
+        require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _verdictChosen.length == 1);
 
         if(currentVotingId == 0)
             require(_verdictChosen[0] <= verdictOptions);
@@ -207,8 +204,6 @@ contract SimpleVoting is VotingType
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
     
-        uint propStatus;
-        (,,,,,,propStatus) = GD.getProposalDetailsById1(_proposalId);
         uint currentVotingId; uint category; uint intermediateVerdict;
         (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
@@ -261,10 +256,10 @@ contract SimpleVoting is VotingType
             GD.changePendingProposalStart();
         } 
     }
-     
+
     function giveReward_afterFinalDecision(uint _proposalId)
     {
-        GD=GovernanceData(GDAddress); uint totalVoteValue;uint TotalTokensToDistribute;
+        GD=GovernanceData(GDAddress);uint totalVoteValue;uint TotalTokensToDistribute;
         uint proposalValue; uint proposalStake;
         (proposalValue,proposalStake) = GD.getProposalValueAndStake(_proposalId);
         uint finalVerdict;
@@ -272,9 +267,9 @@ contract SimpleVoting is VotingType
 
         for(uint i=0; i<allVotes.length; i++)
         {
-            for(uint j=0; j<GD.getLengthVerdictAddress(_proposalId); i++)
+            for(uint j=0; j<GD.getVerdictAddedAddressLength(_proposalId); i++)
             {
-                require(allVotes[i].voter == GD.getVerdictAddedAddressById(_proposalId,j));
+                require(allVotes[i].voter == GD.getVerdictAddedAddressByProposalId(_proposalId,j));
                 if(finalVerdict > 0)
                     totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + proposalValue + allVotes[i].voteValue;
                 else
@@ -285,19 +280,19 @@ contract SimpleVoting is VotingType
         distributeReward(_proposalId,TotalTokensToDistribute,totalVoteValue,proposalStake);
     }
 
-    function distributeReward(uint _proposalId,uint TotalTokensToDistribute,uint totalVoteValue,uint proposalStake)
+    function distributeReward(uint _proposalId,uint _TotalTokensToDistribute,uint _totalVoteValue,uint _proposalStake)
     {
         address proposalOwner;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
         uint roleId;uint category;uint finalVerdict;
         (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
-        address verdictOwner = GD.getVerdictAddedAddressById(_proposalId,finalVerdict);
+        address verdictOwner = GD.getVerdictAddedAddressByProposalId(_proposalId,finalVerdict);
         
-        uint reward = (proposalStake*TotalTokensToDistribute)/totalVoteValue;
+        uint reward = (_proposalStake*_TotalTokensToDistribute)/_totalVoteValue;
         GD.transferTokenAfterFinalReward(proposalOwner,reward);
         
         uint verdictStake =GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
-        reward = (verdictStake*TotalTokensToDistribute)/totalVoteValue;
+        reward = (verdictStake*_TotalTokensToDistribute)/_totalVoteValue;
         GD.transferTokenAfterFinalReward(verdictOwner,reward);
 
         for(uint j=0; j<PC.getRoleSequencLength(category); j++)
@@ -307,8 +302,8 @@ contract SimpleVoting is VotingType
             {
                 uint voteid = getProposalRoleVote(_proposalId,roleId,i);
                 require(allVotes[voteid].verdictChosen[0] == finalVerdict);
-                reward = (allVotes[voteid].voteValue*TotalTokensToDistribute)/totalVoteValue;
-                TotalTokensToDistribute = TotalTokensToDistribute - reward;
+                reward = (allVotes[voteid].voteValue*_TotalTokensToDistribute)/_totalVoteValue;
+                _TotalTokensToDistribute = _TotalTokensToDistribute - reward;
                 GD.transferTokenAfterFinalReward(allVotes[voteid].voter,reward);
             }
         }
