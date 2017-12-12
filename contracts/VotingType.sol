@@ -50,9 +50,8 @@ contract VotingType
     function closeProposalVote(uint _proposalId);
 
     function getTotalVotes() constant returns (uint votesTotal);
-    function getVoteDetailByid(uint _voteid) constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens);
+    function getVoteDetailByid(uint _voteid) constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens,uint voteStakeGNT,uint voteValue);
 
     function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken);
-    function getProposalRoleVoteArray(uint _proposalId,uint _roleId) constant returns(uint[] voteId);
     function giveReward_afterFinalDecision(uint _proposalId);
 }
