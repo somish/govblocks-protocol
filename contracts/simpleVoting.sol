@@ -261,7 +261,7 @@ contract SimpleVoting is VotingType
         (proposalValue,proposalStake) = GD.getProposalValueAndStake(_proposalId);
         (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
-        for(uint i=0; i<GD.getVoteLengthAgainstProposal(_proposalId); i++)
+        for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
             if(allVotes[voteid].verdictChosen[0] == finalVerdict)
@@ -304,17 +304,13 @@ contract SimpleVoting is VotingType
             reward = (verdictStake*_totalTokenToDistribute)/_totalVoteValue;
             GD.transferTokenAfterFinalReward(verdictOwner,reward);
         }
-        
-        for(uint j=0; j<PC.getRoleSequencLength(category); j++)
+
+        for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
-            roleId = PC.getRoleSequencAtIndex(category,j);
-            for(uint i=0; i<getProposalRoleVoteLength(_proposalId,roleId); i++)
-            {
-                uint voteid = getProposalRoleVote(_proposalId,roleId,i);
-                require(allVotes[voteid].verdictChosen[0] == finalVerdict);
+            uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
+            require(allVotes[voteid].verdictChosen[0] == finalVerdict);
                 reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
                 GD.transferTokenAfterFinalReward(allVotes[voteid].voter,reward);
-            }
         }
     }
 }
