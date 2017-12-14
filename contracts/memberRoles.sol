@@ -32,6 +32,8 @@ contract  MemberRoles is Ownable{
     memberRole.push("Advisory Board");
     memberRole.push("Expert");
     categorizeAuthRoleid=1;
+    assignMemberRole(0xca35b7d915458ef540ade6068dfe2f44e8fa733c,2);
+    assignMemberRole(0xdd870fa1b7c4700f2bd7f44238821c26f7392148,1);
   }
 
   /// @dev Get the role id assigned to a member when giving memberAddress
@@ -75,6 +77,12 @@ contract  MemberRoles is Ownable{
   function changeAuthorizedMemberId(uint _roleId) onlyOwner public
   {
      categorizeAuthRoleid = _roleId;
+  }
+
+  /// @dev Get Total number of member Roles available.
+  function getTotalMemberRoles() constant returns(uint length)
+  {
+    return memberRole.length;
   }
 
 
