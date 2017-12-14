@@ -12,10 +12,10 @@
 
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
-    pragma solidity ^0.4.8;
+pragma solidity ^0.4.8;
 contract ProposalCategory
 {
-        struct category{
+    struct category{
         string categoryName;
         string functionName;
         address contractAt;
@@ -25,9 +25,17 @@ contract ProposalCategory
         uint8[] memberRoleSequence;
         uint[] memberRoleMajorityVote;
     }
+
+    struct categoryParamDetails
+    {
+        mapping(uint=>bytes32[]) paramData;
+        mapping(uint=>bytes32[]) paramByteData;
+        mapping(uint=>bytes32[]) paramAddressData;
+    }
     category[] public allCategory;
-    
-      /// @dev Gets the total number of categories.
+    mapping (uint=>categoryParamDetails[]) allCategoryParamDetails;
+
+    /// @dev Gets the total number of categories.
     function getCategoriesLength() constant returns (uint length)
     {
         length = allCategory.length;
@@ -67,6 +75,7 @@ contract ProposalCategory
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
         allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote));
+
     }
     /// @dev Updates a category details
     function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
@@ -78,14 +87,17 @@ contract ProposalCategory
         allCategory[_categoryId].paramBytes32 = _paramBytes32; 
         allCategory[_categoryId].paramAddress = _paramAddress;
 
+        allCategory[_categoryId].memberRoleSequence=new uint8[](_memberRoleSequence.length);
+        allCategory[_categoryId].memberRoleMajorityVote=new uint[](_memberRoleMajorityVote.length);
+
         for(uint i=0; i<_memberRoleSequence.length; i++)
         {
-            allCategory[_categoryId].memberRoleSequence.push(_memberRoleSequence[i]);
-            allCategory[_categoryId].memberRoleMajorityVote.push(_memberRoleMajorityVote[i]);
+            allCategory[_categoryId].memberRoleSequence[i] =_memberRoleSequence[i];
+            allCategory[_categoryId].memberRoleMajorityVote[i] = _memberRoleMajorityVote[i];
         }
     }
     /// @dev function to be called after proposal pass
-    function actionAfterProposalPass(uint _proposalId,uint _categoryId) public returns(bool)
+    function actionAfterProposalPass(uint _proposalId,uint _categoryId) public
     {
         address contractAt;
         (,,contractAt,,,,,) = getCategoryDetails(_categoryId);
