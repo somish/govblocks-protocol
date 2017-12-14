@@ -156,40 +156,6 @@ contract GovernanceData is Ownable {
         PCAddress = _PCcontractAddress;
     }
 
-    /// @dev Set all the voting type names and thier addresses.
-    function setVotingTypeDetails(bytes32 _votingTypeName,address _votingTypeAddress) onlyOwner
-    {
-        allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress));   
-    }
-
-    /// @dev When member manually verdict options before proposal voting. (To be called from All type of votings - Add verdict Options)
-    function setProposalCategoryParams(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
-    {
-        uint i;
-        allProposalCategory[_proposalId].verdictOptions = _verdictOptions;
-        for(i=0;i<_paramInt.length;i++)
-        {
-            allProposalCategory[_proposalId].paramInt.push(_paramInt[i]);
-        }
-
-        for(i=0;i<_paramBytes32.length;i++)
-        {
-            allProposalCategory[_proposalId].paramBytes32.push(_paramBytes32[i]);
-        }
-
-        for(i=0;i<_paramAddress.length;i++)
-        {
-            allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
-        }   
-    }
-
-    function setProposalVerdictAddressAndStakeValue(uint _proposalId,address _memberAddress,uint _stakeValue,uint _verdictValue)
-    {
-        allProposalCategory[_proposalId].verdictAddedByAddress.push(_memberAddress);
-        allProposalCategory[_proposalId].valueOfVerdict.push(_verdictValue);
-        allProposalCategory[_proposalId].stakeOnVerdict.push(_stakeValue);
-    }
-
     /// @dev Checks if voting time of a given proposal should be closed or not. 
     function checkProposalVoteClosing(uint _proposalId) constant returns(uint8 closeValue)
     {
@@ -217,6 +183,47 @@ contract GovernanceData is Ownable {
 
         uint finalProposalValue = SafeMath.mul(SafeMath.mul(globalRiskFactor,memberLevel),SafeMath.mul(_memberStake,maxValue));
         allProposal[_proposalId].proposalValue = finalProposalValue;
+    }
+
+    /// @dev Set Vote Id against given proposal.
+    function setVoteidAgainstProposal(uint _proposalId,uint _voteId) public
+    {
+        totalVotesAgainstProposal[_proposalId].push(_voteId);
+    }
+
+    /// @dev Set all the voting type names and thier addresses.
+    function setVotingTypeDetails(bytes32 _votingTypeName,address _votingTypeAddress) onlyOwner
+    {
+        allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress));   
+    }
+
+    /// @dev When member manually verdict options before proposal voting. (To be called from All type of votings - Add verdict Options)
+    function setProposalCategoryParams(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
+    {
+        uint i;
+        allProposalCategory[_proposalId].verdictOptions = _verdictOptions;
+        for(i=0;i<_paramInt.length;i++)
+        {
+            allProposalCategory[_proposalId].paramInt.push(_paramInt[i]);
+        }
+
+        for(i=0;i<_paramBytes32.length;i++)
+        {
+            allProposalCategory[_proposalId].paramBytes32.push(_paramBytes32[i]);
+        }
+
+        for(i=0;i<_paramAddress.length;i++)
+        {
+            allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
+        }   
+    }
+
+    /// @dev Set the Deatils of added verdict i.e. Verdict Stake, Verdict value and Address of the member whoever added the verdict.
+    function setProposalVerdictAddressAndStakeValue(uint _proposalId,address _memberAddress,uint _stakeValue,uint _verdictValue)
+    {
+        allProposalCategory[_proposalId].verdictAddedByAddress.push(_memberAddress);
+        allProposalCategory[_proposalId].valueOfVerdict.push(_verdictValue);
+        allProposalCategory[_proposalId].stakeOnVerdict.push(_stakeValue);
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
@@ -563,16 +570,19 @@ contract GovernanceData is Ownable {
         memberAddress = allProposalCategory[_proposalId].verdictAddedByAddress[_verdictIndex];
     }
 
-    function setVoteidAgainstProposal(uint _proposalId,uint _voteId) public
-    {
-        totalVotesAgainstProposal[_proposalId].push(_voteId);
-    }
-
-    function getVoteLengthAgainstProposal(uint _proposalId) constant returns(uint totalVotesLength)
+    /// @dev Get Total votes against a proposal when given proposal id.
+    function getTotalVoteLengthAgainstProposal(uint _proposalId) constant returns(uint totalVotesLength)
     {
         totalVotesLength =  totalVotesAgainstProposal[_proposalId].length;
     }
 
+    /// @dev Get Array of All vote id's against a given proposal when given _proposalId.
+    function getTotalVoteArrayAgainstProposal(uint _proposalId) constant returns(uint[] totalVotes)
+    {
+        return totalVotesAgainstProposal[_proposalId];
+    }
+
+    /// @dev Get Vote id one by one against a proposal when given proposal Id and Index to traverse vote array.
     function getVoteIdByProposalId(uint _proposalId,uint _voteArrayIndex) constant returns (uint voteId)
     {
         voteId = totalVotesAgainstProposal[_proposalId][_voteArrayIndex];
