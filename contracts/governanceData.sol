@@ -1,4 +1,3 @@
-
 /* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
@@ -377,24 +376,6 @@ contract GovernanceData is Ownable {
         require(allProposal[_proposalId].category > 0);
             uint category;
             (category,,,,) = getProposalDetailsById2(_proposalId); 
-            uint verdictOptions = allProposalCategory[_proposalId].verdictOptions;
-            uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-            Pcategory=ProposalCategory(PCAddress);
-            (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(category);
-            if(SafeMath.mul(verdictOptions,paramInt) != 0  )
-            {
-                allProposalCategory[_proposalId].paramInt=new uint[](verdictOptions);     
-            }
-    
-            if(SafeMath.mul(verdictOptions,paramBytes32) != 0  )
-            {
-                allProposalCategory[_proposalId].paramBytes32=new bytes32[](verdictOptions);   
-            }
-    
-            if(SafeMath.mul(verdictOptions,paramAddress) != 0  )
-            {
-                allProposalCategory[_proposalId].paramAddress=new address[](verdictOptions);        
-            }
             allProposal[_proposalId].category = 0;
     }
 
