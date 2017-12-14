@@ -1,3 +1,4 @@
+
 /* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
@@ -272,7 +273,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev categorizing proposal to proceed further.
-    function categorizeProposal(uint _proposalId , uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions,uint8 _proposalComplexityLevel,uint[] _levelReward) public
+    function categorizeProposal(uint _proposalId , uint _categoryId,uint8 _proposalComplexityLevel,uint[] _levelReward) public
     {
         MR = MemberRoles(MRAddress); uint i;
         Pcategory=ProposalCategory(PCAddress);
@@ -280,50 +281,8 @@ contract GovernanceData is Ownable {
         require(allProposal[_proposalId].propStatus == 1 || allProposal[_proposalId].propStatus == 0);
         addComplexityLevelAndReward(_proposalId,_categoryId,_proposalComplexityLevel,_levelReward);
         addInitialVerdictDetails(_proposalId);
-
-        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-
-        if(_paramInt.length != 0  )
-        {
-            allProposalCategory[_proposalId].paramInt=new uint[](_verdictOptions+1);
-            allProposalCategory[_proposalId].paramInt[0]=0;
-        }
-
-        if(_paramBytes32.length != 0  )
-        {
-            allProposalCategory[_proposalId].paramBytes32=new bytes32[](_verdictOptions+1);   
-            allProposalCategory[_proposalId].paramBytes32[0]="";
-        }
-
-        if(_paramAddress.length != 0  )
-        {
-            allProposalCategory[_proposalId].paramAddress=new address[](_verdictOptions+1);        
-            allProposalCategory[_proposalId].paramAddress[0]=0x00;
-        }
-        (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_categoryId);
-
-        if(paramInt*_verdictOptions == _paramInt.length && paramBytes32*_verdictOptions == _paramBytes32.length && paramAddress*_verdictOptions == _paramAddress.length)
-        {
-            allProposalCategory[_proposalId].verdictOptions = SafeMath.add(_verdictOptions,1);
-            allProposalCategory[_proposalId].categorizedBy = msg.sender;
-            allProposal[_proposalId].category = _categoryId;
-           
-                for(i=0; i<_paramInt.length; i++)
-                {
-                    allProposalCategory[_proposalId].paramInt[i+1]=_paramInt[i];
-                }
-        
-                for(i=0; i<_paramBytes32.length; i++)
-                {
-                    allProposalCategory[_proposalId].paramBytes32[i+1]=_paramBytes32[i];
-                }
-        
-                for(i=0; i<_paramAddress.length; i++)
-                {
-                    allProposalCategory[_proposalId].paramAddress[i+1]=_paramAddress[i];
-                }
-            
-        } 
+        allProposalCategory[_proposalId].categorizedBy = msg.sender;
+        allProposal[_proposalId].category = _categoryId;
     }
 
     /// @dev Proposal's complexity level and reward is added 
@@ -484,7 +443,7 @@ contract GovernanceData is Ownable {
         return votingName;
     }
     
-    /// @dev Get Address of a type of voting when given Id.
+    /// @dev Get Address of a type of voting when given Id. 
     function getVotingTypeDetailsById(uint _votingTypeId) public returns(address votingTypeAddress)
     {
         return allVotingTypeDetails[_votingTypeId].votingTypeAddress;
