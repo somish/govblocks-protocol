@@ -289,13 +289,13 @@ contract GovernanceData is Ownable {
     {
         Pcategory=ProposalCategory(PCAddress);
         uint votingLength = Pcategory.getRoleSequencLength(_category);
-        require(votingLength == _levelReward.length);
-        allProposalPriority[_proposalId].complexityLevel = _proposalComplexityLevel;
-        for(uint i=0; i<_levelReward.length; i++)
-        {
-            allProposalPriority[_proposalId].levelReward.push(_levelReward[i]);
-        }
-           
+        if(_levelReward.length != 0)
+            require(votingLength == _levelReward.length);
+            allProposalPriority[_proposalId].complexityLevel = _proposalComplexityLevel;
+            for(uint i=0; i<_levelReward.length; i++)
+            {
+                allProposalPriority[_proposalId].levelReward.push(_levelReward[i]);
+            }       
     }
 
     /// @dev Transfer reward after Final Proposal Decision.
