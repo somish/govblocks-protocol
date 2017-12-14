@@ -72,7 +72,7 @@ contract GovernanceData is Ownable {
         uint[] levelReward;
     }
 
-    function governanceData() 
+    function GovernanceData() 
     {
         setGlobalParameters();
         addStatus();
@@ -139,7 +139,7 @@ contract GovernanceData is Ownable {
         proposalVoteClosingTime = 20;
         pendingProposalStart=0;
         quorumPercentage=25;
-        GNTStakeValue=50;
+        GNTStakeValue=10;
         globalRiskFactor=5;
         membershipScalingFactor=1;
         scalingWeight=1;
@@ -546,8 +546,16 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Get the Address of member whosoever added the verdict when given Proposal Id and Verdict Index.
-    function getVerdictAddedAddressByProposalId(uint _proposalId,uint _verdictIndex) constant returns(address memberAddress)
+    function getVerdictAddressByProposalId(uint _proposalId,uint _verdictIndex) constant returns(address memberAddress)
     {
+        memberAddress = allProposalCategory[_proposalId].verdictAddedByAddress[_verdictIndex];
+    }
+
+    /// @dev Get the Value, stake and Address of the member whosoever added that verdict option.
+    function getVerdictAddedDetails(uint _proposalId,uint _verdictIndex) constant returns(uint verdictStake,uint verdictValue,address memberAddress)
+    {
+        verdictStake = allProposalCategory[_proposalId].stakeOnVerdict[_verdictIndex];
+        verdictValue = allProposalCategory[_proposalId].valueOfVerdict[_verdictIndex];
         memberAddress = allProposalCategory[_proposalId].verdictAddedByAddress[_verdictIndex];
     }
 
