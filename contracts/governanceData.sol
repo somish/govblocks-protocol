@@ -89,12 +89,14 @@ contract GovernanceData is Ownable {
     mapping(uint=>Status[]) proposalStatus;
     mapping(uint=>proposalPriority) allProposalPriority;
     mapping(address=>uint) allMemberReputationByAddress;
-    
+    mapping(uint=>uint[]) totalVotesAgainstProposal;
+
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
     uint public GNTStakeValue; uint public globalRiskFactor; uint public membershipScalingFactor;
     uint public scalingWeight;
+    uint public categoryFunctionValue;
 
     string[] public status;
     proposal[] allProposal;
@@ -250,12 +252,13 @@ contract GovernanceData is Ownable {
     /// @dev function to get called after Proposal Pass
     function categoryFunction(uint256 _proposalId) public
     {
-        uint _categoryId;
-        (_categoryId,,,,)= getProposalDetailsById2(_proposalId);
-        uint paramint;
-        bytes32 parambytes32;
-        address paramaddress;
-        (paramint,parambytes32,paramaddress) = getProposalFinalVerdictDetails(_proposalId);
+        // uint _categoryId;
+        // (_categoryId,,,,)= getProposalDetailsById2(_proposalId);
+        // uint paramint;
+        // bytes32 parambytes32;
+        // address paramaddress;
+        // (paramint,parambytes32,paramaddress) = getProposalFinalVerdictDetails(_proposalId);
+        categoryFunctionValue = 5;
         // add your functionality here;
         // gd1.updateCategoryMVR(_categoryId);
     }
@@ -405,8 +408,9 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Get All Address for different types of voting.
-    function getVotingTypeAllAddress() public returns(address[] VTaddresses)
+    function getVotingTypeAllAddress() public returns(address[])
     {
+        address[] VTaddresses;
         for(uint i=0; i<allVotingTypeDetails.length; i++)
         {
             VTaddresses[i] = allVotingTypeDetails[i].votingTypeAddress;
@@ -559,6 +563,21 @@ contract GovernanceData is Ownable {
         memberAddress = allProposalCategory[_proposalId].verdictAddedByAddress[_verdictIndex];
     }
 
+    function setVoteidAgainstProposal(uint _proposalId,uint _voteId) public
+    {
+        totalVotesAgainstProposal[_proposalId].push(_voteId);
+    }
+
+    function getVoteLengthAgainstProposal(uint _proposalId) constant returns(uint totalVotesLength)
+    {
+        totalVotesLength =  totalVotesAgainstProposal[_proposalId].length;
+    }
+
+    function getVoteIdByProposalId(uint _proposalId,uint _voteArrayIndex) constant returns (uint voteId)
+    {
+        voteId = totalVotesAgainstProposal[_proposalId][_voteArrayIndex];
+    }
+    
 
 }  
 
