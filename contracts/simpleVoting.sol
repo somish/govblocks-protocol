@@ -136,7 +136,7 @@ contract SimpleVoting is VotingType
             uint verdictValue = setVerdictValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
             GD.setProposalVerdictAddressAndStakeValue(_proposalId,msg.sender,_GNTPayableTokenAmount,verdictValue);
             verdictOptions = SafeMath.add(verdictOptions,1); 
-            GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);   
+            GD.setProposalCategoryParams(category,_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);   
         } 
     }
 
