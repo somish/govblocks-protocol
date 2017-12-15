@@ -65,9 +65,9 @@ contract RankBasedVoting is VotingType
         totalVotes=_totalVotes;
     } 
 
-    function getVoteDetailByid(uint _voteid) public constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens)
+    function getVoteDetailByid(uint _voteid) public constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens,uint voteStakeGNT,uint voteValue)
     {
-        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens);
+        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].verdictChosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens,allVotes[_voteid].voteStakeGNT,allVotes[_voteid].voteValue);
     }
 
     function getProposalRoleVoteLength(uint _proposalId,uint _roleId) public constant returns(uint length)
@@ -327,7 +327,7 @@ contract RankBasedVoting is VotingType
         {
             for(uint j=0; j<GD.getVerdictAddedAddressLength(_proposalId); i++)
             {
-                require(allVotes[i].voter == GD.getVerdictAddedAddressByProposalId(_proposalId,j));
+                require(allVotes[i].voter == GD.getVerdictAddressByProposalId(_proposalId,j));
                 if(finalVerdict > 0)
                     totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + proposalValue + allVotes[i].voteValue;
                 else
@@ -344,7 +344,7 @@ contract RankBasedVoting is VotingType
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
         uint roleId;uint category;uint finalVerdict;
         (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
-        address verdictOwner = GD.getVerdictAddedAddressByProposalId(_proposalId,finalVerdict);
+        address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
         
         uint reward = (_proposalStake*_TotalTokensToDistribute)/_totalVoteValue;
         GD.transferTokenAfterFinalReward(proposalOwner,reward);
