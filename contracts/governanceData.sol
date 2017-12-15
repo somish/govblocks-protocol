@@ -53,6 +53,15 @@ contract GovernanceData is Ownable {
         uint[] valueOfVerdict;
         uint[] stakeOnVerdict;
     }
+
+    struct proposalCategoryParams
+    {
+        mapping(uint=>mapping(bytes32=>uint)) optionNameIntValue;
+        mapping(uint=>mapping(bytes32=>bytes32)) optionNameBytesValue;
+        mapping(uint=>mapping(bytes32=>address)) optionNameAddressValue;
+    }
+
+    mapping(uint=>proposalCategoryParams) allProposalCategoryParams;
     
     struct proposalVersionData{
         uint versionNum;
@@ -197,8 +206,36 @@ contract GovernanceData is Ownable {
         allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress));   
     }
 
+    function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
+    {
+        uint optionIndex;bytes32 parameterName;
+        setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
+        Pcategory=ProposalCategory(PCAddress);
+        
+        for(uint i=0;i<_paramInt.length;i++)
+        {
+            parameterName = Pcategory.getCategoryParamNameUint(_category,i);
+            optionIndex =  allProposalCategory[_proposalId].paramInt.length;
+            allProposalCategoryParams[_proposalId].optionNameIntValue[optionIndex][parameterName] = _paramInt[i];
+        }
+
+        for(i=0;i<_paramBytes32.length;i++)
+        {
+            optionIndex = allProposalCategory[_proposalId].paramBytes32.length;
+            parameterName = Pcategory.getCategoryParamNameBytes(_category,i); 
+            allProposalCategoryParams[_proposalId].optionNameBytesValue[optionIndex][parameterName] = _paramBytes32[i];
+        }
+
+        for(i=0;i<_paramAddress.length;i++)
+        {
+            optionIndex = allProposalCategory[_proposalId].paramAddress.length;
+            parameterName = Pcategory.getCategoryParamNameAddress(_category,i); 
+            allProposalCategoryParams[_proposalId].optionNameAddressValue[optionIndex][parameterName] = _paramAddress[i];
+        }   
+    }
+
     /// @dev When member manually verdict options before proposal voting. (To be called from All type of votings - Add verdict Options)
-    function setProposalCategoryParams(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
+    function setProposalCategoryParams1(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
     {
         uint i;
         allProposalCategory[_proposalId].verdictOptions = _verdictOptions;
@@ -498,10 +535,11 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
-    function getProposalFinalVerdictDetails(uint _proposalId) public constant returns(uint paramint, bytes32 parambytes32,address paramaddress)
+    function getProposalFinalVerdictDetails(uint _proposalId) public returns(uint paramint, bytes32 parambytes32,address paramaddress)
     {
         uint category = allProposal[_proposalId].category;
         uint verdictChosen = allProposal[_proposalId].finalVerdict;
+
         if(allProposalCategory[_proposalId].paramInt.length != 0)
         {
              paramint = allProposalCategory[_proposalId].paramInt[verdictChosen];
@@ -517,7 +555,7 @@ contract GovernanceData is Ownable {
             paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
         }  
     }
-
+    
     /// @dev Get the number of tokens already distributed among members.
     function getTotalTokenInSupply() constant returns(uint _totalSupplyToken)
     {
