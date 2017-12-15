@@ -26,14 +26,16 @@ contract ProposalCategory
         uint[] memberRoleMajorityVote;
     }
 
-    struct categoryParamDetails
+    struct categoryParams
     {
-        mapping(uint=>bytes32[]) paramData;
-        mapping(uint=>bytes32[]) paramByteData;
-        mapping(uint=>bytes32[]) paramAddressData;
+        bytes32 parameterName;
     }
+
     category[] public allCategory;
-    mapping (uint=>categoryParamDetails[]) allCategoryParamDetails;
+
+    categoryParams[] uintParam;
+    categoryParams[] bytesParam;
+    categoryParams[] addressParam;
 
     /// @dev Gets the total number of categories.
     function getCategoriesLength() constant returns (uint length)
@@ -71,10 +73,29 @@ contract ProposalCategory
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
     /// @dev Adds a new category.
-    function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
+    function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName) public
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
+        addNewCategory1(_uintParamName,_bytesParamName,_addressParamName);
         allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote));
+    }
+    /// @dev Added Parameter's name required for a category.
+    function addNewCategory1(bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName)
+    {
+        for(uint i=0; i<_uintParamName.length; i++)
+        {
+            uintParam.push(categoryParams(_uintParamName[i]));
+        }
+
+        for(i=0; i<_bytesParamName.length; i++)
+        {
+            bytesParam.push(categoryParams(_bytesParamName[i]));
+        }
+
+        for(i=0; i<_addressParamName.length; i++)
+        {
+            addressParam.push(categoryParams(_addressParamName[i]));
+        }
 
     }
     /// @dev Updates a category details
