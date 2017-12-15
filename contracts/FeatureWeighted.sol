@@ -186,10 +186,11 @@ contract FeatureWeighted is VotingType
         {
             voteLength = getTotalVotes();
             submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_verdictChosen,featureLength,voteLength);
+            uint finalVoteValue = setVoteValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
             allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)],GD.getBalanceOfMember(msg.sender));
             AddressProposalVote[msg.sender][_proposalId] = voteLength;
             ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(voteLength);
-            uint finalVoteValue = setVoteValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
+            GD.setVoteidAgainstProposal(_proposalId,voteLength);
             addInTotalVotes(_proposalId,_verdictChosen,_GNTPayableTokenAmount,finalVoteValue);
 
         }
@@ -349,53 +350,64 @@ contract FeatureWeighted is VotingType
      
     function giveReward_afterFinalDecision(uint _proposalId)
     {
-        GD=GovernanceData(GDAddress); uint totalVoteValue;uint TotalTokensToDistribute;
-        uint proposalValue; uint proposalStake;
+        GD=GovernanceData(GDAddress);
+        uint voteValueFavour; uint voterStake; uint wrongOptionStake;
+        uint totalVoteValue; uint totalTokenToDistribute; 
+        uint finalVerdict; uint proposalValue; uint proposalStake; 
+
         (proposalValue,proposalStake) = GD.getProposalValueAndStake(_proposalId);
-        uint finalVerdict;
         (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
-        for(uint i=0; i<allVotes.length; i++)
+        for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
-            for(uint j=0; j<GD.getVerdictAddedAddressLength(_proposalId); i++)
-            {
-                require(allVotes[i].voter == GD.getVerdictAddressByProposalId(_proposalId,j));
-                if(finalVerdict > 0)
-                    totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + proposalValue + allVotes[i].voteValue;
+            uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
+            if(allVotes[voteid].verdictChosen[0] == finalVerdict)
+                    voteValueFavour = voteValueFavour + allVotes[voteid].voteValue;
                 else
-                    TotalTokensToDistribute = GD.getVerdictStakeByProposalId(_proposalId,j) + proposalStake + SafeMath.div(SafeMath.mul(allVotes[i].voteStakeGNT,100),GD.globalRiskFactor());
-            }
-
+                    voterStake = voterStake + allVotes[voteid].voteStakeGNT;
         }
-        distributeReward(_proposalId,TotalTokensToDistribute,totalVoteValue,proposalStake);
+
+        for(i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
+        {
+            if(i!= finalVerdict)         
+                 wrongOptionStake = wrongOptionStake + GD.getVerdictStakeByProposalId(_proposalId,i);
+        }
+
+        totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + voteValueFavour; 
+        totalTokenToDistribute = wrongOptionStake + voterStake*(1/GD.globalRiskFactor());
+
+        if(finalVerdict>0)
+            totalVoteValue = totalVoteValue + proposalValue;
+        else
+            totalTokenToDistribute = totalTokenToDistribute + proposalStake;
+
+        distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue,proposalStake);
     }
 
-    function distributeReward(uint _proposalId,uint _TotalTokensToDistribute,uint _totalVoteValue,uint _proposalStake)
+    function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue,uint _proposalStake)
     {
-        address proposalOwner;
+        address proposalOwner;uint reward;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
         uint roleId;uint category;uint finalVerdict;
         (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
-        address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
-        
-        uint reward = (_proposalStake*_TotalTokensToDistribute)/_totalVoteValue;
-        GD.transferTokenAfterFinalReward(proposalOwner,reward);
-        
-        uint verdictStake =GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
-        reward = (verdictStake*_TotalTokensToDistribute)/_totalVoteValue;
-        GD.transferTokenAfterFinalReward(verdictOwner,reward);
-
-        for(uint j=0; j<PC.getRoleSequencLength(category); j++)
+ 
+        if(finalVerdict > 0)
         {
-            roleId = PC.getRoleSequencAtIndex(category,j);
-            for(uint i=0; i<getProposalRoleVoteLength(_proposalId,roleId); i++)
-            {
-                uint voteid = getProposalRoleVote(_proposalId,roleId,i);
-                require(allMemberFinalVerdictByVoteId[voteid] == finalVerdict);
-                reward = (allVotes[voteid].voteValue*_TotalTokensToDistribute)/_totalVoteValue;
-                _TotalTokensToDistribute = _TotalTokensToDistribute - reward;
-                GD.transferTokenAfterFinalReward(allVotes[voteid].voter,reward);
-            }
+            reward = (_proposalStake*_totalTokenToDistribute)/_totalVoteValue;
+            GD.transferTokenAfterFinalReward(proposalOwner,reward);
+
+            address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
+            uint verdictStake =GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
+            reward = (verdictStake*_totalTokenToDistribute)/_totalVoteValue;
+            GD.transferTokenAfterFinalReward(verdictOwner,reward);
         }
-    } 
+
+        for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
+        {
+            uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
+            require(allMemberFinalVerdictByVoteId[voteid] == finalVerdict);
+                reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
+                GD.transferTokenAfterFinalReward(allVotes[voteid].voter,reward);
+        }
+    }
 }
