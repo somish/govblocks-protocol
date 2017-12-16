@@ -144,7 +144,7 @@ contract RankBasedVoting is VotingType
         {   
             for(uint i=0; i<_verdictChosen.length; i++)
             {
-                require(_verdictChosen[i] < verdictOptions);
+                require(_verdictChosen[i] < verdictOptions && msg.sender != GD.getVerdictAddressByProposalId(_proposalId,i));
             }
         }   
         else
