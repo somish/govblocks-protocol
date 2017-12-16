@@ -123,7 +123,7 @@ contract RankBasedVoting is VotingType
             uint verdictValue = setVerdictValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
             GD.setProposalVerdictAddressAndStakeValue(_proposalId,msg.sender,_GNTPayableTokenAmount,verdictValue);
             verdictOptions = SafeMath.add(verdictOptions,1);
-            GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);
+            GD.setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);
         } 
     }
 
@@ -354,7 +354,7 @@ contract RankBasedVoting is VotingType
 
     function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue,uint _proposalStake)
     {
-        address proposalOwner;uint reward;
+        address proposalOwner;uint reward;uint transferToken;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
         uint roleId;uint category;uint finalVerdict;
         (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
@@ -362,12 +362,14 @@ contract RankBasedVoting is VotingType
         if(finalVerdict > 0)
         {
             reward = (_proposalStake*_totalTokenToDistribute)/_totalVoteValue;
-            GD.transferTokenAfterFinalReward(proposalOwner,reward);
+            transferToken = _proposalStake + reward;
+            GD.transferBackGNTtoken(proposalOwner,transferToken);
 
             address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
             uint verdictStake =GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
             reward = (verdictStake*_totalTokenToDistribute)/_totalVoteValue;
-            GD.transferTokenAfterFinalReward(verdictOwner,reward);
+            transferToken = verdictStake + reward;
+            GD.transferBackGNTtoken(verdictOwner,transferToken);
         }
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
@@ -375,7 +377,8 @@ contract RankBasedVoting is VotingType
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
             require(allVotes[voteid].verdictChosen[0] == finalVerdict);
                 reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
-                GD.transferTokenAfterFinalReward(allVotes[voteid].voter,reward);
+                transferToken = allVotes[voteid].voteStakeGNT + reward;
+                GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
         }
     }
 
