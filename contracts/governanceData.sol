@@ -346,7 +346,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Transfer reward after Final Proposal Decision.
-    function transferTokenAfterFinalReward(address _memberAddress, uint _value)
+    function transferBackGNTtoken(address _memberAddress, uint _value)
     {
         BT=BasicToken(BTAddress);
         BT.transfer(_memberAddress,_value);
