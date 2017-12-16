@@ -154,7 +154,7 @@ contract FeatureWeighted is VotingType
             uint verdictValue = setVerdictValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
             GD.setProposalVerdictAddressAndStakeValue(_proposalId,msg.sender,_GNTPayableTokenAmount,verdictValue);
             verdictOptions = SafeMath.add(verdictOptions,1);
-            GD.setProposalCategoryParams(_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions); 
+            GD.setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions); 
         } 
     }
 
@@ -352,7 +352,7 @@ contract FeatureWeighted is VotingType
     {
         GD=GovernanceData(GDAddress);
         uint voteValueFavour; uint voterStake; uint wrongOptionStake;
-        uint totalVoteValue; uint totalTokenToDistribute; 
+        uint totalVoteValue; uint totalTokenToDistribute;uint returnTokens;
         uint finalVerdict; uint proposalValue; uint proposalStake; 
 
         (proposalValue,proposalStake) = GD.getProposalValueAndStake(_proposalId);
@@ -362,9 +362,15 @@ contract FeatureWeighted is VotingType
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
             if(allVotes[voteid].verdictChosen[0] == finalVerdict)
-                    voteValueFavour = voteValueFavour + allVotes[voteid].voteValue;
-                else
-                    voterStake = voterStake + allVotes[voteid].voteStakeGNT;
+            {
+                voteValueFavour = voteValueFavour + allVotes[voteid].voteValue;
+            }
+            else
+            {
+                voterStake = voterStake + allVotes[voteid].voteStakeGNT*(1/GD.globalRiskFactor());
+                returnTokens = allVotes[voteid].voteStakeGNT*(1-(1/GD.globalRiskFactor()));
+                GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
+            }
         }
 
         for(i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
@@ -374,7 +380,7 @@ contract FeatureWeighted is VotingType
         }
 
         totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + voteValueFavour; 
-        totalTokenToDistribute = wrongOptionStake + voterStake*(1/GD.globalRiskFactor());
+        totalTokenToDistribute = wrongOptionStake + voterStake;
 
         if(finalVerdict>0)
             totalVoteValue = totalVoteValue + proposalValue;
@@ -386,7 +392,7 @@ contract FeatureWeighted is VotingType
 
     function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue,uint _proposalStake)
     {
-        address proposalOwner;uint reward;
+        address proposalOwner;uint reward;uint transferToken;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
         uint roleId;uint category;uint finalVerdict;
         (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
@@ -394,12 +400,13 @@ contract FeatureWeighted is VotingType
         if(finalVerdict > 0)
         {
             reward = (_proposalStake*_totalTokenToDistribute)/_totalVoteValue;
-            GD.transferTokenAfterFinalReward(proposalOwner,reward);
+            transferToken = _proposalStake + reward;
+            GD.transferBackGNTtoken(proposalOwner,transferToken);
 
             address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
             uint verdictStake =GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
-            reward = (verdictStake*_totalTokenToDistribute)/_totalVoteValue;
-            GD.transferTokenAfterFinalReward(verdictOwner,reward);
+            transferToken = verdictStake + reward;
+            GD.transferBackGNTtoken(verdictOwner,transferToken);
         }
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
@@ -407,7 +414,8 @@ contract FeatureWeighted is VotingType
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
             require(allMemberFinalVerdictByVoteId[voteid] == finalVerdict);
                 reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
-                GD.transferTokenAfterFinalReward(allVotes[voteid].voter,reward);
+                transferToken = allVotes[voteid].voteStakeGNT + reward;
+                GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
         }
     }
 }
