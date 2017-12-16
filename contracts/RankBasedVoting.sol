@@ -319,7 +319,7 @@ contract RankBasedVoting is VotingType
     function giveReward_afterFinalDecision(uint _proposalId)
     {
         GD=GovernanceData(GDAddress);
-        uint voteValueFavour; uint voterStake; uint wrongOptionStake;
+        uint voteValueFavour; uint voterStake; uint wrongOptionStake; uint returnTokens;
         uint totalVoteValue; uint totalTokenToDistribute; 
         uint finalVerdict; uint proposalValue; uint proposalStake; 
 
@@ -329,10 +329,16 @@ contract RankBasedVoting is VotingType
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
-            if(allVotes[voteid].verdictChosen[0] == finalVerdict)
-                    voteValueFavour = voteValueFavour + allVotes[voteid].voteValue;
-                else
-                    voterStake = voterStake + allVotes[voteid].voteStakeGNT;
+           if(allVotes[voteid].verdictChosen[0] == finalVerdict)
+            {
+                voteValueFavour = voteValueFavour + allVotes[voteid].voteValue;
+            }
+            else
+            {
+                voterStake = voterStake + allVotes[voteid].voteStakeGNT*(1/GD.globalRiskFactor());
+                returnTokens = allVotes[voteid].voteStakeGNT*(1-(1/GD.globalRiskFactor()));
+                GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
+            }
         }
 
         for(i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
@@ -342,7 +348,7 @@ contract RankBasedVoting is VotingType
         }
 
         totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + voteValueFavour; 
-        totalTokenToDistribute = wrongOptionStake + voterStake*(1/GD.globalRiskFactor());
+        totalTokenToDistribute = wrongOptionStake + voterStake;
 
         if(finalVerdict>0)
             totalVoteValue = totalVoteValue + proposalValue;
