@@ -91,13 +91,18 @@ contract ProposalCategory
     function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName) public
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
-        addNewCategory1(allCategory.length,_uintParamName,_bytesParamName,_addressParamName);
         allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote));
+        addNewCategory1(_uintParamName,_bytesParamName,_addressParamName);
     }
 
     /// @dev Added Parameter's name required for a category.
-    function addNewCategory1(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName)
+    function addNewCategory1(bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName)
     {
+        uint _categoryId = allCategory.length;
+        uintParam[_categoryId].parameterName=new bytes32[](_uintParamName.length); 
+        bytesParam[_categoryId].parameterName=new bytes32[](_bytesParamName.length);
+        addressParam[_categoryId].parameterName=new bytes32[](_addressParamName.length);
+        
         for(uint i=0; i<_uintParamName.length; i++)
         {
             uintParam[_categoryId].parameterName[i] = _uintParamName[i];
