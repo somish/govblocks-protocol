@@ -242,16 +242,18 @@ contract FeatureWeighted is VotingType
     {
         if(currentVotingId == 0)
         {
-            uint max=0;uint maxValue;
+            uint max=0; uint maxValue;
             for(uint i=0; i<_verdictChosen.length; i=i+_featureLength+1)
             {
-                uint sum =0;      
+                uint sum =0;
+                require(msg.sender != GD.getVerdictAddressByProposalId(_proposalId,i));
+
                 for(uint j=i+1; j<=_featureLength+i; j++)
                 {
                     sum = sum + _verdictChosen[j];
                 }
                 uint voteValue = SafeMath.div(SafeMath.mul(sum,100),_featureLength);
-               
+
                 if(maxValue < voteValue)
                 {    
                     max = i;
@@ -419,3 +421,4 @@ contract FeatureWeighted is VotingType
         }
     }
 }
+
