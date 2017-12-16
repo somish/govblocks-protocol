@@ -254,7 +254,7 @@ contract SimpleVoting is VotingType
     function giveReward_afterFinalDecision(uint _proposalId)
     {
         GD=GovernanceData(GDAddress);
-        uint voteValueFavour; uint voterStake; uint wrongOptionStake;
+        uint voteValueFavour; uint voterStake; uint wrongOptionStake; uint returnTokens;
         uint totalVoteValue; uint totalTokenToDistribute; 
         uint finalVerdict; uint proposalValue; uint proposalStake; 
 
@@ -265,9 +265,15 @@ contract SimpleVoting is VotingType
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
             if(allVotes[voteid].verdictChosen[0] == finalVerdict)
-                    voteValueFavour = voteValueFavour + allVotes[voteid].voteValue;
-                else
-                    voterStake = voterStake + allVotes[voteid].voteStakeGNT;
+            {
+                voteValueFavour = voteValueFavour + allVotes[voteid].voteValue;
+            }
+            else
+                {
+                    voterStake = voterStake + allVotes[voteid].voteStakeGNT*(1/GD.globalRiskFactor());
+                    returnTokens = allVotes[voteid].voteStakeGNT*(1-(1/GD.globalRiskFactor()));
+                    GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
+                }
         }
 
         for(i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
@@ -277,7 +283,7 @@ contract SimpleVoting is VotingType
         }
 
         totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + voteValueFavour; 
-        totalTokenToDistribute = wrongOptionStake + voterStake*(1/GD.globalRiskFactor());
+        totalTokenToDistribute = wrongOptionStake + voterStake;
 
         if(finalVerdict>0)
             totalVoteValue = totalVoteValue + proposalValue;
@@ -298,13 +304,13 @@ contract SimpleVoting is VotingType
         {
             reward = (_proposalStake*_totalTokenToDistribute)/_totalVoteValue;
             transferToken = _proposalStake + reward;
-            GD.transferTokenAfterFinalReward(proposalOwner,transferToken);
+            GD.transferBackGNTtoken(proposalOwner,transferToken);
 
             address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
             uint verdictStake = GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
             reward = (verdictStake*_totalTokenToDistribute)/_totalVoteValue;
             transferToken = verdictStake + reward;
-            GD.transferTokenAfterFinalReward(verdictOwner,transferToken);
+            GD.transferBackGNTtoken(verdictOwner,transferToken);
         }
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
@@ -313,7 +319,7 @@ contract SimpleVoting is VotingType
             require(allVotes[voteid].verdictChosen[0] == finalVerdict);
                 reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
                 transferToken = allVotes[voteid].voteStakeGNT + reward;
-                GD.transferTokenAfterFinalReward(allVotes[voteid].voter,transferToken);
+                GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
         }
     }
 }
