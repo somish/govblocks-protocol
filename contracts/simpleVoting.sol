@@ -289,7 +289,7 @@ contract SimpleVoting is VotingType
 
     function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue,uint _proposalStake)
     {
-        address proposalOwner;uint reward;
+        address proposalOwner;uint reward;uint transferToken;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
         uint roleId;uint category;uint finalVerdict;
         (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
@@ -297,12 +297,14 @@ contract SimpleVoting is VotingType
         if(finalVerdict > 0)
         {
             reward = (_proposalStake*_totalTokenToDistribute)/_totalVoteValue;
-            GD.transferTokenAfterFinalReward(proposalOwner,reward);
+            transferToken = _proposalStake + reward;
+            GD.transferTokenAfterFinalReward(proposalOwner,transferToken);
 
             address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
-            uint verdictStake =GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
+            uint verdictStake = GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
             reward = (verdictStake*_totalTokenToDistribute)/_totalVoteValue;
-            GD.transferTokenAfterFinalReward(verdictOwner,reward);
+            transferToken = verdictStake + reward;
+            GD.transferTokenAfterFinalReward(verdictOwner,transferToken);
         }
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
@@ -310,7 +312,8 @@ contract SimpleVoting is VotingType
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
             require(allVotes[voteid].verdictChosen[0] == finalVerdict);
                 reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
-                GD.transferTokenAfterFinalReward(allVotes[voteid].voter,reward);
+                transferToken = allVotes[voteid].voteStakeGNT + reward;
+                GD.transferTokenAfterFinalReward(allVotes[voteid].voter,transferToken);
         }
     }
 }
