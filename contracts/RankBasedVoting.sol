@@ -362,8 +362,8 @@ contract RankBasedVoting is VotingType
     {
         address proposalOwner;uint reward;uint transferToken;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
-        uint roleId;uint category;uint finalVerdict;
-        (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
+        uint finalVerdict;
+        (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
  
         if(finalVerdict > 0)
         {
@@ -378,14 +378,42 @@ contract RankBasedVoting is VotingType
             GD.transferBackGNTtoken(verdictOwner,transferToken);
         }
 
+        // for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
+        // {
+        //     uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
+        //     require(allVotes[voteid].verdictChosen[0] == finalVerdict);
+        //         reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
+        //         transferToken = allVotes[voteid].voteStakeGNT + reward;
+        //         GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
+        // }
+
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
-            require(allVotes[voteid].verdictChosen[0] == finalVerdict);
-                reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
-                transferToken = allVotes[voteid].voteStakeGNT + reward;
-                GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
+            for(uint j=0; j<allVotes[voteid].verdictChosen.length; j++)
+            {
+                require(allVotes[voteid].verdictChosen[j] == finalVerdict);
+                    uint optionValue = distributeReward1(voteid,_proposalId,j);
+                    reward = ((allVotes[voteid].voteValue*optionValue)*_totalTokenToDistribute)/_totalVoteValue;
+                    transferToken = allVotes[voteid].voteStakeGNT + reward;
+                    GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
+            }
+               
         }
+    }
+
+    function distributeReward1(uint voteid,uint _proposalId,uint _optionIndex) returns (uint optionValue)
+    {
+        uint[] _verdictChosen = allVotes[voteid].verdictChosen;
+        uint _verdictOptions; 
+        (,,,_verdictOptions) = GD.getProposalCategoryParams(_proposalId);
+
+        for(uint i=0; i<_verdictChosen.length; i++)
+        {
+            uint sum = SafeMath.add(sum,(SafeMath.sub(_verdictOptions ,i)));
+        }
+
+        optionValue = SafeMath.div(SafeMath.mul(SafeMath.sub(_verdictOptions,_optionIndex),100),sum);
     }
 
 }
