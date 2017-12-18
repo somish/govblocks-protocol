@@ -114,8 +114,8 @@ contract FeatureWeighted is VotingType
     {
         for(uint j=0; j<_featureLength; j++)
         {
-            _index+=1;
-            sum = sum + _verdictChosen[_index];
+            _index = SafeMath.add(_index,1);
+            sum = SafeMath.add(sum,_verdictChosen[_index]);
         }
     }
     
@@ -225,7 +225,7 @@ contract FeatureWeighted is VotingType
                 uint sum =0;      
                 for(uint j=i+1; j<=featureLength+i; j++)
                 {
-                    sum = sum + verdictChosen[j];
+                    sum = SafeMath.add(sum,verdictChosen[j]);
                 }
                 uint voteValue = SafeMath.div(SafeMath.mul(sum,100),featureLength);
                 allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][verdictChosen[i]],voteValue);  
@@ -248,10 +248,9 @@ contract FeatureWeighted is VotingType
 
                 for(uint j=i+1; j<=_featureLength+i; j++)
                 {
-                    sum = sum + _verdictChosen[j];
+                    sum = SafeMath.add(sum,_verdictChosen[j]);
                 }
                 uint voteValue = SafeMath.div(SafeMath.mul(sum,100),_featureLength);
-
                 allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_verdictChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_verdictChosen[i]],voteValue);
             }
         }  
@@ -357,29 +356,29 @@ contract FeatureWeighted is VotingType
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
             if(allVotes[voteid].verdictChosen[0] == finalVerdict)
             {
-                voteValueFavour = voteValueFavour + allVotes[voteid].voteValue;
+                voteValueFavour = SafeMath.add(voteValueFavour,allVotes[voteid].voteValue);
             }
             else
             {
-                voterStake = voterStake + allVotes[voteid].voteStakeGNT*(1/GD.globalRiskFactor());
-                returnTokens = allVotes[voteid].voteStakeGNT*(1-(1/GD.globalRiskFactor()));
+                voterStake = SafeMath.add(voterStake,SafeMath.mul(allVotes[voteid].voteStakeGNT,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor()))));
+                returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGNT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
                 GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
             }
         }
 
         for(i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
         {
-            if(i!= finalVerdict)         
-                 wrongOptionStake = wrongOptionStake + GD.getVerdictStakeByProposalId(_proposalId,i);
+            if(i!= finalVerdict)  
+                wrongOptionStake = SafeMath.add(wrongOptionStake,GD.getVerdictStakeByProposalId(_proposalId,i));
         }
 
-        totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + voteValueFavour; 
-        totalTokenToDistribute = wrongOptionStake + voterStake;
+        totalVoteValue = SafeMath.add(GD.getVerdictValueByProposalId(_proposalId,finalVerdict),voteValueFavour);
+        totalTokenToDistribute = SafeMath.add(wrongOptionStake,voterStake);
 
         if(finalVerdict>0)
-            totalVoteValue = totalVoteValue + proposalValue;
+            totalVoteValue = SafeMath.add(totalVoteValue,proposalValue);
         else
-            totalTokenToDistribute = totalTokenToDistribute + proposalStake;
+            totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,proposalStake);
 
         distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue,proposalStake);
     }
@@ -393,13 +392,14 @@ contract FeatureWeighted is VotingType
  
         if(finalVerdict > 0)
         {
-            reward = (_proposalStake*_totalTokenToDistribute)/_totalVoteValue;
-            transferToken = _proposalStake + reward;
+            reward = SafeMath.div(SafeMath.mul(_proposalStake,_totalTokenToDistribute),_totalVoteValue);
+            transferToken = SafeMath.add(_proposalStake,reward);
             GD.transferBackGNTtoken(proposalOwner,transferToken);
 
             address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
-            uint verdictStake =GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
-            transferToken = verdictStake + reward;
+            uint verdictStake = GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
+            reward = SafeMath.div(SafeMath.mul(verdictStake,_totalTokenToDistribute),_totalVoteValue);
+            transferToken = SafeMath.add(verdictStake,reward);
             GD.transferBackGNTtoken(verdictOwner,transferToken);
         }
 
@@ -407,8 +407,8 @@ contract FeatureWeighted is VotingType
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
             uint optionValue = getOptionValue(voteid,_proposalId,finalVerdict);
-            reward = ((allVotes[voteid].voteValue*optionValue)*_totalTokenToDistribute)/_totalVoteValue;
-            transferToken = allVotes[voteid].voteStakeGNT + reward;
+            reward = SafeMath.div(SafeMath.mul(allVotes[voteid].voteValue,_totalTokenToDistribute),_totalVoteValue);
+            transferToken = SafeMath.add(allVotes[voteid].voteStakeGNT,reward);
             GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
         }
     }
@@ -420,11 +420,11 @@ contract FeatureWeighted is VotingType
 
         for(uint i=0; i<_verdictChosen.length; i=i+_featureLength+1)
         {
-            uint sum =0;
+            uint sum=0;
             require(_verdictChosen[i] == finalVerdict);
                 for(uint j=i+1; j<=_featureLength+i; j++)
                 {
-                    sum = sum + _verdictChosen[j];
+                    sum = SafeMath.add(sum,_verdictChosen[j]);
                 }
                 optionValue = SafeMath.div(SafeMath.mul(sum,100),_featureLength);
         }
