@@ -30,7 +30,6 @@ contract FeatureWeighted is VotingType
     GovernanceData GD;
     MintableToken MT;
     mapping(uint=>uint[]) allProposalFeatures;
-    mapping(uint=>uint) allMemberFinalVerdictByVoteId;
 
     function FeatureWeighted()
     {
@@ -242,7 +241,6 @@ contract FeatureWeighted is VotingType
     {
         if(currentVotingId == 0)
         {
-            uint max=0; uint maxValue;
             for(uint i=0; i<_verdictChosen.length; i=i+_featureLength+1)
             {
                 uint sum =0;
@@ -254,14 +252,8 @@ contract FeatureWeighted is VotingType
                 }
                 uint voteValue = SafeMath.div(SafeMath.mul(sum,100),_featureLength);
 
-                if(maxValue < voteValue)
-                {    
-                    max = i;
-                    maxValue = voteValue;
-                }
                 allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_verdictChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_verdictChosen[i]],voteValue);
             }
-            allMemberFinalVerdictByVoteId[_voteId] = max;
         }  
         else
         {
@@ -424,11 +416,8 @@ contract FeatureWeighted is VotingType
     function getOptionValue(uint voteid,uint _proposalId,uint finalVerdict) returns (uint optionValue)
     {
         uint[] _verdictChosen = allVotes[voteid].verdictChosen;
-        uint _verdictOptions; 
-        (,,,_verdictOptions) = GD.getProposalCategoryParams(_proposalId);
         uint _featureLength = allProposalFeatures[_proposalId].length;
 
-        uint max=0; uint maxValue;
         for(uint i=0; i<_verdictChosen.length; i=i+_featureLength+1)
         {
             uint sum =0;
