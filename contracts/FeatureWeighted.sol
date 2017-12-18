@@ -396,8 +396,8 @@ contract FeatureWeighted is VotingType
     {
         address proposalOwner;uint reward;uint transferToken;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
-        uint roleId;uint category;uint finalVerdict;
-        (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
+        uint finalVerdict;
+        (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
  
         if(finalVerdict > 0)
         {
@@ -414,11 +414,30 @@ contract FeatureWeighted is VotingType
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
-            require(allMemberFinalVerdictByVoteId[voteid] == finalVerdict);
-                reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
-                transferToken = allVotes[voteid].voteStakeGNT + reward;
-                GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
+            uint optionValue = getOptionValue(voteid,_proposalId,finalVerdict);
+            reward = ((allVotes[voteid].voteValue*optionValue)*_totalTokenToDistribute)/_totalVoteValue;
+            transferToken = allVotes[voteid].voteStakeGNT + reward;
+            GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
+        }
+    }
+
+    function getOptionValue(uint voteid,uint _proposalId,uint finalVerdict) returns (uint optionValue)
+    {
+        uint[] _verdictChosen = allVotes[voteid].verdictChosen;
+        uint _verdictOptions; 
+        (,,,_verdictOptions) = GD.getProposalCategoryParams(_proposalId);
+        uint _featureLength = allProposalFeatures[_proposalId].length;
+
+        uint max=0; uint maxValue;
+        for(uint i=0; i<_verdictChosen.length; i=i+_featureLength+1)
+        {
+            uint sum =0;
+            require(_verdictChosen[i] == finalVerdict);
+                for(uint j=i+1; j<=_featureLength+i; j++)
+                {
+                    sum = sum + _verdictChosen[j];
+                }
+                optionValue = SafeMath.div(SafeMath.mul(sum,100),_featureLength);
         }
     }
 }
-
