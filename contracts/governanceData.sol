@@ -595,6 +595,18 @@ contract GovernanceData is Ownable {
         proposalStake = allProposal[_proposalId].proposalStake;
     }
 
+    /// @dev Get proposal Value when given proposal Id.
+    function getProposalValue(uint _proposalId) constant returns(uint proposalValue)
+    {
+        proposalValue = allProposal[_proposalId].proposalValue;
+    }
+
+    /// @dev Get proposal Stake by member when given proposal Id.
+    function getProposalStake(uint _proposalId) constant returns(uint proposalStake)
+    {
+        proposalStake = allProposal[_proposalId].proposalStake;
+    }
+
     /// @dev Fetch Total length of Member address array That added number of verdicts against proposal.
     function getVerdictAddedAddressLength(uint _proposalId) constant returns(uint length)
     {
