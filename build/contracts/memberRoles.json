@@ -297,7 +297,7 @@
           ],
           "name": "memberRoles",
           "scope": 2364,
-          "SourceUnit": 5369,
+          "SourceUnit": 5261,
           "absolutePath": "/D/2. GovBlocks Contracts/GovBlocks Git-Master/contracts/zeppelin-solidity/contracts/ownership/Ownable.sol",
           "file": "./zeppelin-solidity/contracts/ownership/Ownable.sol",
           "symbolAliases": [
@@ -2284,14 +2284,14 @@
       {
         "attributes": {
           "contractDependencies": [
-            5368
+            5260
           ],
           "contractKind": "contract",
           "documentation": null,
           "fullyImplemented": true,
           "linearizedBaseContracts": [
             2363,
-            5368
+            5260
           ],
           "name": "MemberRoles",
           "scope": 2364
@@ -2308,7 +2308,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "Ownable",
-                  "referencedDeclaration": 5368,
+                  "referencedDeclaration": 5260,
                   "type": "contract Ownable"
                 },
                 "id": 2213,
@@ -3476,7 +3476,7 @@
                       "overloadedDeclarations": [
                         null
                       ],
-                      "referencedDeclaration": 5342,
+                      "referencedDeclaration": 5234,
                       "type": "modifier ()",
                       "value": "onlyOwner"
                     }
@@ -3929,7 +3929,7 @@
                       "overloadedDeclarations": [
                         null
                       ],
-                      "referencedDeclaration": 5342,
+                      "referencedDeclaration": 5234,
                       "type": "modifier ()",
                       "value": "onlyOwner"
                     }
@@ -4396,7 +4396,7 @@
                       "overloadedDeclarations": [
                         null
                       ],
-                      "referencedDeclaration": 5342,
+                      "referencedDeclaration": 5234,
                       "type": "modifier ()",
                       "value": "onlyOwner"
                     },
@@ -4601,5 +4601,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2017-12-18T10:34:38.904Z"
+  "updatedAt": "2017-12-18T12:14:08.544Z"
 }

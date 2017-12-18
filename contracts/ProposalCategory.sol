@@ -37,16 +37,19 @@ contract ProposalCategory
     categoryParams[] bytesParam;
     categoryParams[] addressParam;
 
+    /// @dev Get the int parameterName when given Category Id and parameterIndex
     function getCategoryParamNameUint(uint _categoryId,uint _index)constant returns(bytes32)
     {
         return uintParam[_categoryId].parameterName[_index];
     }
 
+    /// @dev Get the Bytes parameterName when given Category Id and parameterIndex
     function getCategoryParamNameBytes(uint _categoryId,uint _index)constant returns(bytes32)
     {
         return bytesParam[_categoryId].parameterName[_index];
     }
 
+    /// @dev Get the Address parameterName when given Category Id and parameterIndex
     function getCategoryParamNameAddress(uint _categoryId,uint _index)constant returns(bytes32)
     {
         return addressParam[_categoryId].parameterName[_index];
@@ -87,38 +90,17 @@ contract ProposalCategory
     {
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
-    /// @dev Adds a new category.
+    /// @dev Adds a new category and Category Function Parameter names..
     function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName) public
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
         allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote));
-        addNewCategory1(_uintParamName,_bytesParamName,_addressParamName);
-    }
-
-    /// @dev Added Parameter's name required for a category.
-    function addNewCategory1(bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName)
-    {
-        uint _categoryId = allCategory.length;
-        uintParam[_categoryId].parameterName=new bytes32[](_uintParamName.length); 
-        bytesParam[_categoryId].parameterName=new bytes32[](_bytesParamName.length);
-        addressParam[_categoryId].parameterName=new bytes32[](_addressParamName.length);
         
-        for(uint i=0; i<_uintParamName.length; i++)
-        {
-            uintParam[_categoryId].parameterName[i] = _uintParamName[i];
-        }
-
-        for(i=0; i<_bytesParamName.length; i++)
-        {
-            bytesParam[_categoryId].parameterName[i] = _bytesParamName[i];
-        }
-
-        for(i=0; i<_addressParamName.length; i++)
-        {
-            addressParam[_categoryId].parameterName[i] = _addressParamName[i];
-        }
+        uintParam.push(categoryParams(_uintParamName));
+        bytesParam.push(categoryParams(_bytesParamName));
+        addressParam.push(categoryParams(_addressParamName));
     }
-    
+
     /// @dev Updates a category details
     function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
     {
