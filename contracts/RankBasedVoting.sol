@@ -320,16 +320,14 @@ contract RankBasedVoting is VotingType
     {
         GD=GovernanceData(GDAddress);
         uint voteValueFavour; uint voterStake; uint wrongOptionStake; uint returnTokens;
-        uint totalVoteValue; uint totalTokenToDistribute; 
-        uint finalVerdict; uint proposalValue; uint proposalStake; 
-
-        (proposalValue,proposalStake) = GD.getProposalValueAndStake(_proposalId);
+        uint totalVoteValue; uint totalTokenToDistribute;
+        uint finalVerdict; 
         (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
-           if(allVotes[voteid].verdictChosen[0] == finalVerdict)
+            if(allVotes[voteid].verdictChosen[0] == finalVerdict)
             {
                 voteValueFavour = SafeMath.add(voteValueFavour,allVotes[voteid].voteValue);
             }
@@ -339,6 +337,7 @@ contract RankBasedVoting is VotingType
                 returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGNT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
                 GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
             }
+
         }
 
         for(i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
@@ -351,20 +350,21 @@ contract RankBasedVoting is VotingType
         totalTokenToDistribute = SafeMath.add(wrongOptionStake,voterStake);
 
        if(finalVerdict>0)
-            totalVoteValue = SafeMath.add(totalVoteValue,proposalValue);
+            totalVoteValue = SafeMath.add(totalVoteValue,GD.getProposalValue(_proposalId));
         else
-            totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,proposalStake);
+            totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,GD.getProposalStake(_proposalId));
 
-        distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue,proposalStake);
+        distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue);
     }
 
-    function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue,uint _proposalStake)
+    function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue)
     {
         address proposalOwner;uint reward;uint transferToken;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
         uint finalVerdict;
         (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
- 
+        uint _proposalStake = GD.getProposalStake(_proposalId);
+        
         if(finalVerdict > 0)
         {
             reward = SafeMath.div(SafeMath.mul(_proposalStake,_totalTokenToDistribute),_totalVoteValue);
