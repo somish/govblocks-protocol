@@ -346,9 +346,9 @@ contract FeatureWeighted is VotingType
         GD=GovernanceData(GDAddress);
         uint voteValueFavour; uint voterStake; uint wrongOptionStake;
         uint totalVoteValue; uint totalTokenToDistribute;uint returnTokens;
-        uint finalVerdict; uint proposalValue; uint proposalStake; 
+        uint finalVerdict;  
+        uint _featureLength = allProposalFeatures[_proposalId].length;
 
-        (proposalValue,proposalStake) = GD.getProposalValueAndStake(_proposalId);
         (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
@@ -364,6 +364,7 @@ contract FeatureWeighted is VotingType
                 returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGNT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
                 GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
             }
+
         }
 
         for(i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
@@ -376,24 +377,26 @@ contract FeatureWeighted is VotingType
         totalTokenToDistribute = SafeMath.add(wrongOptionStake,voterStake);
 
         if(finalVerdict>0)
-            totalVoteValue = SafeMath.add(totalVoteValue,proposalValue);
+            totalVoteValue = SafeMath.add(totalVoteValue,GD.getProposalValue(_proposalId));
         else
-            totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,proposalStake);
+            totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,GD.getProposalStake(_proposalId));
 
-        distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue,proposalStake);
+        distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue);
     }
 
-    function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue,uint _proposalStake)
+    function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue)
     {
         address proposalOwner;uint reward;uint transferToken;
         (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
         uint finalVerdict;
         (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
- 
+        uint proposalValue; uint proposalStake;
+        (proposalValue,proposalStake) = GD.getProposalValueAndStake(_proposalId);
+
         if(finalVerdict > 0)
         {
-            reward = SafeMath.div(SafeMath.mul(_proposalStake,_totalTokenToDistribute),_totalVoteValue);
-            transferToken = SafeMath.add(_proposalStake,reward);
+            reward = SafeMath.div(SafeMath.mul(proposalStake,_totalTokenToDistribute),_totalVoteValue);
+            transferToken = SafeMath.add(proposalStake,reward);
             GD.transferBackGNTtoken(proposalOwner,transferToken);
 
             address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
@@ -413,15 +416,15 @@ contract FeatureWeighted is VotingType
         }
     }
 
-    function getOptionValue(uint voteid,uint _proposalId,uint finalVerdict) returns (uint optionValue)
+    function getOptionValue(uint _voteid,uint _proposalId,uint _finalVerdict) returns (uint optionValue)
     {
-        uint[] _verdictChosen = allVotes[voteid].verdictChosen;
+        uint[] _verdictChosen = allVotes[_voteid].verdictChosen;
         uint _featureLength = allProposalFeatures[_proposalId].length;
 
         for(uint i=0; i<_verdictChosen.length; i=i+_featureLength+1)
         {
             uint sum=0;
-            require(_verdictChosen[i] == finalVerdict);
+            require(_verdictChosen[i] == _finalVerdict);
                 for(uint j=i+1; j<=_featureLength+i; j++)
                 {
                     sum = SafeMath.add(sum,_verdictChosen[j]);
@@ -429,4 +432,5 @@ contract FeatureWeighted is VotingType
                 optionValue = SafeMath.div(SafeMath.mul(sum,100),_featureLength);
         }
     }
+
 }
