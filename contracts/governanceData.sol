@@ -552,6 +552,25 @@ contract GovernanceData is Ownable {
             paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
         }  
     }
+    
+    function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName,uint _parameterType) constant returns (uint intParameter,bytes32 bytesParameter,address addressParameter)
+    {   
+        uint finalOption = allProposal[_proposalId].finalVerdict;
+        if(_parameterType == 0)
+        {
+            intParameter = allProposalCategoryParams[_proposalId].optionNameIntValue[finalOption][_parameterName];
+        }
+
+        if(_parameterType == 1)
+        {
+            bytesParameter = allProposalCategoryParams[_proposalId].optionNameBytesValue[finalOption][_parameterName];
+        }
+
+        if(_parameterType == 2)
+        {
+            addressParameter = allProposalCategoryParams[_proposalId].optionNameAddressValue[finalOption][_parameterName];
+        }
+    }
 
     /// @dev Get the number of tokens already distributed among members.
     function getTotalTokenInSupply() constant returns(uint _totalSupplyToken)
