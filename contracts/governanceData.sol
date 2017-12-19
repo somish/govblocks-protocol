@@ -62,7 +62,7 @@ contract GovernanceData is Ownable {
     }
 
     mapping(uint=>proposalCategoryParams) allProposalCategoryParams;
-    
+
     struct proposalVersionData{
         uint versionNum;
         string shortDesc;
@@ -206,25 +206,28 @@ contract GovernanceData is Ownable {
         allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress));   
     }
 
+    /// @dev Set proposal Category Parameters while adding verdict options from any voting type.
     function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
     {
         uint optionIndex;bytes32 parameterName;
         setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
         Pcategory=ProposalCategory(PCAddress);
-    
-        for(uint j=0; j<allProposalCategory[_proposalId].paramInt.length; j++)
+        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+        (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_category);
+        
+        for(uint j=0; j<paramInt; j++)
         {
             parameterName = Pcategory.getCategoryParamNameUint(_category,j);
             allProposalCategoryParams[_proposalId].optionNameIntValue[j][parameterName] = _paramInt[j];
         }
 
-        for(j=0; j<allProposalCategory[_proposalId].paramBytes32.length; j++)
+        for(j=0; j<paramBytes32; j++)
         {
             parameterName = Pcategory.getCategoryParamNameBytes(_category,j); 
             allProposalCategoryParams[_proposalId].optionNameBytesValue[j][parameterName] = _paramBytes32[j];
         }
 
-        for(j=0; j<allProposalCategory[_proposalId].paramAddress.length; j++)
+        for(j=0; j<paramAddress; j++)
         {
             parameterName = Pcategory.getCategoryParamNameAddress(_category,j); 
             allProposalCategoryParams[_proposalId].optionNameAddressValue[j][parameterName] = _paramAddress[j];  
@@ -553,6 +556,7 @@ contract GovernanceData is Ownable {
         }  
     }
     
+    /// @dev Fetch the parameter details for final option won (Final Verdict) when giving Proposal ID and Parameter Name Against proposal.
     function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName,uint _parameterType) constant returns (uint intParameter,bytes32 bytesParameter,address addressParameter)
     {   
         uint finalOption = allProposal[_proposalId].finalVerdict;
@@ -653,8 +657,6 @@ contract GovernanceData is Ownable {
     {
         voteId = totalVotesAgainstProposal[_proposalId][_voteArrayIndex];
     }
-    
-
 }  
 
 
