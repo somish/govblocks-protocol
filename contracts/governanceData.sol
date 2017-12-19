@@ -211,27 +211,24 @@ contract GovernanceData is Ownable {
         uint optionIndex;bytes32 parameterName;
         setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
         Pcategory=ProposalCategory(PCAddress);
-        
-        for(uint i=0;i<_paramInt.length;i++)
+    
+        for(uint j=0; j<allProposalCategory[_proposalId].paramInt.length; j++)
         {
-            parameterName = Pcategory.getCategoryParamNameUint(_category,i);
-            optionIndex =  allProposalCategory[_proposalId].paramInt.length;
-            allProposalCategoryParams[_proposalId].optionNameIntValue[optionIndex][parameterName] = _paramInt[i];
+            parameterName = Pcategory.getCategoryParamNameUint(_category,j);
+            allProposalCategoryParams[_proposalId].optionNameIntValue[j][parameterName] = _paramInt[j];
         }
 
-        for(i=0;i<_paramBytes32.length;i++)
+        for(j=0; j<allProposalCategory[_proposalId].paramBytes32.length; j++)
         {
-            optionIndex = allProposalCategory[_proposalId].paramBytes32.length;
-            parameterName = Pcategory.getCategoryParamNameBytes(_category,i); 
-            allProposalCategoryParams[_proposalId].optionNameBytesValue[optionIndex][parameterName] = _paramBytes32[i];
+            parameterName = Pcategory.getCategoryParamNameBytes(_category,j); 
+            allProposalCategoryParams[_proposalId].optionNameBytesValue[j][parameterName] = _paramBytes32[j];
         }
 
-        for(i=0;i<_paramAddress.length;i++)
+        for(j=0; j<allProposalCategory[_proposalId].paramAddress.length; j++)
         {
-            optionIndex = allProposalCategory[_proposalId].paramAddress.length;
-            parameterName = Pcategory.getCategoryParamNameAddress(_category,i); 
-            allProposalCategoryParams[_proposalId].optionNameAddressValue[optionIndex][parameterName] = _paramAddress[i];
-        }   
+            parameterName = Pcategory.getCategoryParamNameAddress(_category,j); 
+            allProposalCategoryParams[_proposalId].optionNameAddressValue[j][parameterName] = _paramAddress[j];  
+        }
     }
 
     /// @dev When member manually verdict options before proposal voting. (To be called from All type of votings - Add verdict Options)
@@ -554,25 +551,6 @@ contract GovernanceData is Ownable {
         {
             paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
         }  
-    }
-
-    function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName,uint _parameterType) constant returns (uint intParameter,bytes32 bytesParameter,address addressParameter)
-    {   
-        uint finalOption = allProposal[_proposalId].finalVerdict;
-        if(_parameterType == 0)
-        {
-            intParameter = allProposalCategoryParams[_proposalId].optionNameIntValue[finalOption][_parameterName];
-        }
-
-        if(_parameterType == 1)
-        {
-            bytesParameter = allProposalCategoryParams[_proposalId].optionNameBytesValue[finalOption][_parameterName];
-        }
-
-        if(_parameterType == 2)
-        {
-            addressParameter = allProposalCategoryParams[_proposalId].optionNameAddressValue[finalOption][_parameterName];
-        }
     }
 
     /// @dev Get the number of tokens already distributed among members.
