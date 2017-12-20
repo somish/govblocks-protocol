@@ -215,20 +215,20 @@ contract GovernanceData is Ownable {
         
         for(uint j=0; j<paramInt; j++)
         {
-            parameterName = Pcategory.getCategoryParamNameUint(_category,j);
-            allProposalCategoryParams[_proposalId].optionNameIntValue[j][parameterName] = _paramInt[j];
+            parameterName = Pcategory.getCategoryParamNameUint(_category,j+1);
+            allProposalCategoryParams[_proposalId].optionNameIntValue[j+1][parameterName] = _paramInt[j];
         }
 
         for(j=0; j<paramBytes32; j++)
         {
-            parameterName = Pcategory.getCategoryParamNameBytes(_category,j); 
-            allProposalCategoryParams[_proposalId].optionNameBytesValue[j][parameterName] = _paramBytes32[j];
+            parameterName = Pcategory.getCategoryParamNameBytes(_category,j+1); 
+            allProposalCategoryParams[_proposalId].optionNameBytesValue[j+1][parameterName] = _paramBytes32[j];
         }
 
         for(j=0; j<paramAddress; j++)
         {
-            parameterName = Pcategory.getCategoryParamNameAddress(_category,j); 
-            allProposalCategoryParams[_proposalId].optionNameAddressValue[j][parameterName] = _paramAddress[j];  
+            parameterName = Pcategory.getCategoryParamNameAddress(_category,j+1); 
+            allProposalCategoryParams[_proposalId].optionNameAddressValue[j+1][parameterName] = _paramAddress[j];  
         }
     }
 
@@ -306,14 +306,22 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev As bydefault first verdict is alwayd deny option. One time configurable.
-    function addInitialVerdictDetails(uint _proposalId)
+    function addInitialOptionDetails(uint _proposalId)
     {
         if(allProposalCategory[_proposalId].verdictAddedByAddress.length == 0)
         {
             allProposalCategory[_proposalId].verdictAddedByAddress.push(0x00);
             allProposalCategory[_proposalId].valueOfVerdict.push(0);
             allProposalCategory[_proposalId].stakeOnVerdict.push(0);
-        }      
+
+            allProposalCategoryParams[_proposalId].optionNameIntValue[0]["deny"] = 0;
+            allProposalCategoryParams[_proposalId].optionNameBytesValue[0]["deny"] = "deny";
+            allProposalCategoryParams[_proposalId].optionNameAddressValue[0]["deny"] = 0x00;
+
+            allProposalCategory[_proposalId].paramInt.push(0);
+            allProposalCategory[_proposalId].paramBytes32.push("");
+            allProposalCategory[_proposalId].paramAddress.push(0x00);
+        }
     }
 
     /// @dev categorizing proposal to proceed further.
@@ -324,7 +332,7 @@ contract GovernanceData is Ownable {
         require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
         require(allProposal[_proposalId].propStatus == 1 || allProposal[_proposalId].propStatus == 0);
         addComplexityLevelAndReward(_proposalId,_categoryId,_proposalComplexityLevel,_levelReward);
-        addInitialVerdictDetails(_proposalId);
+        addInitialOptionDetails(_proposalId);
         allProposalCategory[_proposalId].categorizedBy = msg.sender;
         allProposal[_proposalId].category = _categoryId;
     }
