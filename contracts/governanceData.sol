@@ -215,19 +215,19 @@ contract GovernanceData is Ownable {
         
         for(uint j=0; j<paramInt; j++)
         {
-            parameterName = Pcategory.getCategoryParamNameUint(_category,j+1);
+            parameterName = Pcategory.getCategoryParamNameUint(_category,j);
             allProposalCategoryParams[_proposalId].optionNameIntValue[j+1][parameterName] = _paramInt[j];
         }
 
         for(j=0; j<paramBytes32; j++)
         {
-            parameterName = Pcategory.getCategoryParamNameBytes(_category,j+1); 
+            parameterName = Pcategory.getCategoryParamNameBytes(_category,j); 
             allProposalCategoryParams[_proposalId].optionNameBytesValue[j+1][parameterName] = _paramBytes32[j];
         }
 
         for(j=0; j<paramAddress; j++)
         {
-            parameterName = Pcategory.getCategoryParamNameAddress(_category,j+1); 
+            parameterName = Pcategory.getCategoryParamNameAddress(_category,j); 
             allProposalCategoryParams[_proposalId].optionNameAddressValue[j+1][parameterName] = _paramAddress[j];  
         }
     }
