@@ -28,8 +28,7 @@ contract GovernanceData is Ownable {
     using SafeMath for uint;
     struct proposal{
         address owner;
-        string shortDesc;
-        string longDesc;
+        string proposalDescHash;
         uint date_add;
         uint date_upd;
         uint versionNum;
@@ -65,8 +64,7 @@ contract GovernanceData is Ownable {
 
     struct proposalVersionData{
         uint versionNum;
-        string shortDesc;
-        string longDesc;
+        string proposalDescHash;
         uint date_add;
     }
 
@@ -285,12 +283,12 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Creates a new proposal.
-    function addNewProposal(string _shortDesc,string _longDesc,uint _votingTypeId) public
+    function addNewProposal(string _proposalDescHash,uint _votingTypeId) public
     {
         require(getBalanceOfMember(msg.sender) != 0);
         allMemberReputationByAddress[msg.sender]=1;
         address votingTypeAddress = allVotingTypeDetails[_votingTypeId].votingTypeAddress;
-        allProposal.push(proposal(msg.sender,_shortDesc,_longDesc,now,now,0,0,0,0,0,0,votingTypeAddress,0,0));   
+        allProposal.push(proposal(msg.sender,_proposalDescHash,now,now,0,0,0,0,0,0,votingTypeAddress,0,0));   
     }
 
     /// @dev function to get called after Proposal Pass
@@ -414,10 +412,10 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
-    function editProposal(uint _proposalId , string _shortDesc, string _longDesc) onlyOwner public
+    function editProposal(uint _proposalId ,string _proposalDescHash) onlyOwner public
     {
         storeProposalVersion(_proposalId);
-        updateProposal(_proposalId,_shortDesc,_longDesc);
+        updateProposal(_proposalId,_proposalDescHash);
         changeProposalStatus(_proposalId,1);
         
         require(allProposal[_proposalId].category > 0);
@@ -437,16 +435,15 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Stores the information of a given version number of a given proposal. Maintains the record of all the versions of a proposal.
-    function storeProposalVersion(uint _id) internal 
+    function storeProposalVersion(uint _proposalId) internal 
     {
-        proposalVersions[_id].push(proposalVersionData(allProposal[_id].versionNum,allProposal[_id].shortDesc,allProposal[_id].longDesc,allProposal[_id].date_add));            
+        proposalVersions[_proposalId].push(proposalVersionData(allProposal[_proposalId].versionNum,allProposal[_proposalId].proposalDescHash,allProposal[_proposalId].date_add));            
     }
 
     /// @dev Edits the details of an existing proposal and creates new version.
-    function updateProposal(uint _id,string _shortDesc,string _longDesc) internal
+    function updateProposal(uint _id,string _proposalDescHash) internal
     {
-        allProposal[_id].shortDesc = _shortDesc;
-        allProposal[_id].longDesc = _longDesc;
+        allProposal[_id].proposalDescHash = _proposalDescHash;
         allProposal[_id].date_upd = now;
         allProposal[_id].versionNum = SafeMath.add(allProposal[_id].versionNum,1);
     }
@@ -486,9 +483,9 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Fetch details of proposal by giving proposal Id
-    function getProposalDetailsById1(uint _proposalId) public constant returns (address owner,string shortDesc,string longDesc,uint date_add,uint date_upd,uint versionNum,uint propStatus)
+    function getProposalDetailsById1(uint _proposalId) public constant returns (address owner,string proposalDescHash,uint date_add,uint date_upd,uint versionNum,uint propStatus)
     {
-        return (allProposal[_proposalId].owner,allProposal[_proposalId].shortDesc,allProposal[_proposalId].longDesc,allProposal[_proposalId].date_add,allProposal[_proposalId].date_upd,allProposal[_proposalId].versionNum,allProposal[_proposalId].propStatus);
+        return (allProposal[_proposalId].owner,allProposal[_proposalId].proposalDescHash,allProposal[_proposalId].date_add,allProposal[_proposalId].date_upd,allProposal[_proposalId].versionNum,allProposal[_proposalId].propStatus);
     }
 
     /// @dev Get the category, of given proposal. 
@@ -502,9 +499,9 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Gets version details of a given proposal id.
-    function getProposalDetailsByIdAndVersion(uint _proposalId,uint _versionNum) public constant returns( uint versionNum,string shortDesc,string longDesc,uint date_add)
+    function getProposalDetailsByIdAndVersion(uint _proposalId,uint _versionNum) public constant returns( uint versionNum,string proposalDescHash,uint date_add)
     {
-        return (proposalVersions[_proposalId][_versionNum].versionNum,proposalVersions[_proposalId][_versionNum].shortDesc,proposalVersions[_proposalId][_versionNum].longDesc,proposalVersions[_proposalId][_versionNum].date_add);
+        return (proposalVersions[_proposalId][_versionNum].versionNum,proposalVersions[_proposalId][_versionNum].proposalDescHash,proposalVersions[_proposalId][_versionNum].date_add);
     }
    
     /// @dev Get proposal Reward and complexity level Against proposal
