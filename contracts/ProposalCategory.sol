@@ -37,7 +37,7 @@ contract ProposalCategory
     categoryParams[] bytesParam;
     categoryParams[] addressParam;
 
-    /// @dev Get the int parameterName when given Category Id and parameterIndex
+    /// @dev Get the integer parameterName when given Category Id and parameterIndex
     function getCategoryParamNameUint(uint _categoryId,uint _index)constant returns(bytes32)
     {
         return uintParam[_categoryId].parameterName[_index];
@@ -99,6 +99,28 @@ contract ProposalCategory
         uintParam.push(categoryParams(_uintParamName));
         bytesParam.push(categoryParams(_bytesParamName));
         addressParam.push(categoryParams(_addressParamName));
+    }
+
+    function changeCategoryParameters(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName)
+    {   
+        uintParam[_categoryId].parameterName=new bytes32[](_uintParamName.length); 
+        bytesParam[_categoryId].parameterName=new bytes32[](_bytesParamName.length); 
+        addressParam[_categoryId].parameterName=new bytes32[](_addressParamName.length); 
+        
+        for(uint i=0; i<_uintParamName.length; i++)
+        {
+            uintParam[_categoryId].parameterName[i]=_uintParamName[i]; 
+        }
+            
+        for(i=0; i<_uintParamName.length; i++)
+        {
+            bytesParam[_categoryId].parameterName[i]=_bytesParamName[i];
+        }
+        
+        for(i=0; i<_uintParamName.length; i++)
+        {
+            addressParam[_categoryId].parameterName[i]=_addressParamName[i];
+        }
     }
 
     /// @dev Updates a category details
