@@ -207,12 +207,12 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Set proposal Category Parameters while adding verdict options from any voting type.
-    function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
+    function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) returns(uint8 paramInt, bytes32 parameterName)
     {
-        uint optionIndex;bytes32 parameterName;
         setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
         Pcategory=ProposalCategory(PCAddress);
-        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+
+         paramInt; uint8 paramBytes32; uint8 paramAddress;
         (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_category);
         
         for(uint j=0; j<paramInt; j++)
@@ -556,26 +556,6 @@ contract GovernanceData is Ownable {
         }  
     }
     
-    /// @dev Fetch the parameter details for final option won (Final Verdict) when giving Proposal ID and Parameter Name Against proposal.
-    function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName,uint _parameterType) constant returns (uint intParameter,bytes32 bytesParameter,address addressParameter)
-    {   
-        uint finalOption = allProposal[_proposalId].finalVerdict;
-        if(_parameterType == 0)
-        {
-            intParameter = allProposalCategoryParams[_proposalId].optionNameIntValue[finalOption][_parameterName];
-        }
-
-        if(_parameterType == 1)
-        {
-            bytesParameter = allProposalCategoryParams[_proposalId].optionNameBytesValue[finalOption][_parameterName];
-        }
-
-        if(_parameterType == 2)
-        {
-            addressParameter = allProposalCategoryParams[_proposalId].optionNameAddressValue[finalOption][_parameterName];
-        }
-    }
-
     /// @dev Get the number of tokens already distributed among members.
     function getTotalTokenInSupply() constant returns(uint _totalSupplyToken)
     {
@@ -657,6 +637,34 @@ contract GovernanceData is Ownable {
     {
         voteId = totalVotesAgainstProposal[_proposalId][_voteArrayIndex];
     }
+
+    /// @dev Fetch the parameter details for final option won (Final Verdict) when giving Proposal ID and Parameter Name Against proposal.
+    function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName,uint _parameterType) constant returns (uint intParameter,bytes32 bytesParameter,address addressParameter)
+    {   
+        uint _finalVerdict = allProposal[_proposalId].finalVerdict;
+        intParameter = getParameterDetails1(_proposalId,_parameterName,_finalVerdict);
+        bytesParameter = getParameterDetails2(_proposalId,_parameterName,_finalVerdict);
+        addressParameter = getParameterDetails3(_proposalId,_parameterName,_finalVerdict);
+    }
+
+    /// @dev Fetch the Integer parameter details by parameter name against the final option.
+    function getParameterDetails1(uint _proposalId,bytes32 _parameterName,uint finalOption) internal returns (uint intParameter)
+    {   
+        intParameter = allProposalCategoryParams[_proposalId].optionNameIntValue[finalOption][_parameterName];
+    }
+
+    /// @dev Fetch the Bytes parameter details by parameter name against the final option.
+    function getParameterDetails2(uint _proposalId,bytes32 _parameterName,uint finalOption) internal returns (bytes32 bytesParameter)
+    {   
+        bytesParameter = allProposalCategoryParams[_proposalId].optionNameBytesValue[finalOption][_parameterName];
+    }
+
+    /// @dev Fetch the Address parameter details by parameter name against the final option.
+    function getParameterDetails3(uint _proposalId,bytes32 _parameterName,uint finalOption) internal returns (address addressParameter)
+    {   
+        addressParameter = allProposalCategoryParams[_proposalId].optionNameAddressValue[finalOption][_parameterName];
+    }    
+
 }  
 
 
