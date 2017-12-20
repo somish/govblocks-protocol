@@ -29,6 +29,7 @@ contract ProposalCategory
     struct categoryParams
     {
         bytes32[] parameterName;
+        string parameterDescHash;
     }
 
     category[] public allCategory;
@@ -54,7 +55,7 @@ contract ProposalCategory
     {
         return addressParam[_categoryId].parameterName[_index];
     }
-
+    
     /// @dev Gets the total number of categories.
     function getCategoriesLength() constant returns (uint length)
     {
@@ -91,17 +92,20 @@ contract ProposalCategory
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
     /// @dev Adds a new category and Category Function Parameter names..
-    function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName) public
+    function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
         allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote));
-        
-        uintParam.push(categoryParams(_uintParamName));
-        bytesParam.push(categoryParams(_bytesParamName));
-        addressParam.push(categoryParams(_addressParamName));
     }
-
-    function changeCategoryParameters(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName)
+    /// @dev Saving descriptions against various parameters required for category.
+    function addCategoryParamsNameAndDesc(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName,string _uintParameterDescHash,string _bytesParameterDescHash,string _addressParameterDescHash)
+    {
+        uintParam.push(categoryParams(_uintParamName,_uintParameterDescHash));
+        bytesParam.push(categoryParams(_bytesParamName,_bytesParameterDescHash));
+        addressParam.push(categoryParams(_addressParamName,_addressParameterDescHash));
+    }
+    /// @dev Change the category parameters name against category.
+    function changeCategoryParametersName(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName)
     {   
         uintParam[_categoryId].parameterName=new bytes32[](_uintParamName.length); 
         bytesParam[_categoryId].parameterName=new bytes32[](_bytesParamName.length); 
