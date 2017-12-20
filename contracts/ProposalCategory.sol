@@ -55,7 +55,36 @@ contract ProposalCategory
     {
         return addressParam[_categoryId].parameterName[_index];
     }
-    
+
+    /// @dev Get the Address parameterName when given Category Id and parameterIndex
+    function getCategoryParamHashUint(uint _categoryId)constant returns(string)
+    {
+        return uintParam[_categoryId].parameterDescHash;
+    }
+
+    /// @dev Get the Address parameterName when given Category Id and parameterIndex
+    function getCategoryParamHashBytes(uint _categoryId)constant returns(string)
+    {
+        return bytesParam[_categoryId].parameterDescHash;
+    }
+
+    /// @dev Get the Address parameterName when given Category Id and parameterIndex
+    function getCategoryParamHashAddress(uint _categoryId)constant returns(string)
+    {
+        return addressParam[_categoryId].parameterDescHash;
+    }
+
+    /// @dev Get category parameter details when giving category id and Index.
+    function getCategoryParameterDetails(uint _categoryId,uint _index) constant returns(bytes32 paramInt,bytes32 paramBytes,bytes32 paramAddress, string uintHash,string bytesHash,string addressHash)
+    {
+        paramInt = uintParam[_categoryId].parameterName[_index];
+        paramBytes = bytesParam[_categoryId].parameterName[_index];
+        paramAddress = addressParam[_categoryId].parameterName[_index];
+        uintHash = uintParam[_categoryId].parameterDescHash;
+        bytesHash = bytesParam[_categoryId].parameterDescHash;
+        addressHash = addressParam[_categoryId].parameterDescHash;
+    }
+
     /// @dev Gets the total number of categories.
     function getCategoriesLength() constant returns (uint length)
     {
