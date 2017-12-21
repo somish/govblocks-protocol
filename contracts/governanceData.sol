@@ -107,6 +107,8 @@ contract GovernanceData is Ownable {
 
     string[] public status;
     proposal[] allProposal;
+    bytes32[] votingName;
+    address[] votingAddress;
     votingTypeDetails[] allVotingTypeDetails;
 
     address GNTAddress;
@@ -327,10 +329,11 @@ contract GovernanceData is Ownable {
     /// @dev categorizing proposal to proceed further.
     function categorizeProposal(uint _proposalId , uint _categoryId,uint8 _proposalComplexityLevel,uint[] _levelReward) public
     {
-        MR = MemberRoles(MRAddress); uint i;
+        MR = MemberRoles(MRAddress);
         Pcategory=ProposalCategory(PCAddress);
         require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
         require(allProposal[_proposalId].propStatus == 1 || allProposal[_proposalId].propStatus == 0);
+
         addComplexityLevelAndReward(_proposalId,_categoryId,_proposalComplexityLevel,_levelReward);
         addInitialOptionDetails(_proposalId);
         allProposalCategory[_proposalId].categorizedBy = msg.sender;
@@ -459,20 +462,19 @@ contract GovernanceData is Ownable {
     /// @dev Get All Address for different types of voting.
     function getVotingTypeAllAddress() public returns(address[])
     {
-        address[] VTaddresses;
         for(uint i=0; i<allVotingTypeDetails.length; i++)
         {
-            VTaddresses[i] = allVotingTypeDetails[i].votingTypeAddress;
+            votingAddress.push(allVotingTypeDetails[i].votingTypeAddress);
         }
-        return VTaddresses;
+        return votingAddress;
     }
 
     /// @dev Get All names for different types of voting.
-    function getVotingTypeAllName() public returns(bytes32[] votingName)
+    function getVotingTypeAllName() public returns(bytes32[])
     {
         for(uint i=0; i<allVotingTypeDetails.length; i++)
         {
-            votingName[i] = allVotingTypeDetails[i].votingTypeName;
+            votingName.push(allVotingTypeDetails[i].votingTypeName);
         }
         return votingName;
     }
@@ -644,7 +646,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Fetch the parameter details for final option won (Final Verdict) when giving Proposal ID and Parameter Name Against proposal.
-    function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName,uint _parameterType) constant returns (uint intParameter,bytes32 bytesParameter,address addressParameter)
+    function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName) constant returns (uint intParameter,bytes32 bytesParameter,address addressParameter)
     {   
         uint _finalVerdict = allProposal[_proposalId].finalVerdict;
         intParameter = getParameterDetails1(_proposalId,_parameterName,_finalVerdict);
