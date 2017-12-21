@@ -83,6 +83,7 @@ contract GovernanceData is Ownable {
     {
         setGlobalParameters();
         addStatus();
+        addMemberReputationPoints();
     }
 
     struct votingTypeDetails
@@ -102,9 +103,17 @@ contract GovernanceData is Ownable {
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
-    uint public GNTStakeValue; uint public globalRiskFactor; uint public membershipScalingFactor;
+    uint public GNTStakeValue; 
+    uint public globalRiskFactor; 
+    uint public membershipScalingFactor;
     uint public scalingWeight;
     uint public categoryFunctionValue;
+    uint addProposalOwnerPoints;
+    uint addOptionOwnerPoints;
+    uint addMemberPoints;
+    uint subProposalOwnerPoints;
+    uint subOptionOwnerPoints;
+    uint subMemberPoints;
 
     string[] public status;
     proposal[] allProposal;
@@ -120,6 +129,31 @@ contract GovernanceData is Ownable {
     address PCAddress;
     MemberRoles MR;
     ProposalCategory Pcategory;
+
+    function addMemberReputationPoints()
+    {
+        addProposalOwnerPoints = 5;
+        addOptionOwnerPoints = 5;
+        addMemberPoints = 1;
+        subProposalOwnerPoints = 1;
+        subOptionOwnerPoints = 1;
+        subMemberPoints = 1;
+    }
+
+    function changeMemberReputationPoints(uint _addProposalOwnerPoints,uint  _addOptionOwnerPoints, uint _addMemberPoints,uint _subProposalOwnerPoints,uint  _subOptionOwnerPoints, uint _subMemberPoints) onlyOwner
+    {
+        addProposalOwnerPoints = _addProposalOwnerPoints;
+        addOptionOwnerPoints= _addOptionOwnerPoints;
+        addMemberPoints = _addMemberPoints;
+        subProposalOwnerPoints = _subProposalOwnerPoints;
+        subOptionOwnerPoints= _subOptionOwnerPoints;
+        subMemberPoints = _subMemberPoints;
+    }
+
+    function getMemberReputationPoints() constant returns(uint addProposalOwnerPoints,uint addOptionOwnerPoints,uint addMemberPoints,uint subProposalOwnerPoints,uint subOptionOwnerPoints,uint subMemberPoints)
+    {
+        return (addProposalOwnerPoints,addOptionOwnerPoints,addMemberPoints,subProposalOwnerPoints,subOptionOwnerPoints,subMemberPoints);
+    } 
 
     /// @dev Check if the member who wants to change in contracts, is owner.
     function isOwner(address _memberAddress) returns(uint checkOwner)
