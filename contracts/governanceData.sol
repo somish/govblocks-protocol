@@ -97,6 +97,7 @@ contract GovernanceData is Ownable {
     mapping(uint=>proposalPriority) allProposalPriority;
     mapping(address=>uint) allMemberReputationByAddress;
     mapping(uint=>uint[]) totalVotesAgainstProposal;
+    mapping(address=>bytes32) votingTypeNameByAddress;
 
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
@@ -203,7 +204,8 @@ contract GovernanceData is Ownable {
     /// @dev Set all the voting type names and thier addresses.
     function setVotingTypeDetails(bytes32 _votingTypeName,address _votingTypeAddress) onlyOwner
     {
-        allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress));   
+        allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress)); 
+        votingTypeNameByAddress[_votingTypeAddress] = _votingTypeName;
     }
 
     /// @dev Set proposal Category Parameters while adding verdict options from any voting type.
@@ -480,9 +482,15 @@ contract GovernanceData is Ownable {
     }
     
     /// @dev Get Address of a type of voting when given Id. 
-    function getVotingTypeDetailsById(uint _votingTypeId) public returns(address votingTypeAddress)
+    function getVotingTypeAddressById(uint _votingTypeId) public returns(address votingTypeAddress)
     {
         return allVotingTypeDetails[_votingTypeId].votingTypeAddress;
+    }
+
+    /// @dev Get Voting type name when giving address.
+    function getVotingTypeNameByAddress(address _votingTypeAddress) public returns(bytes32)
+    {
+        return votingTypeNameByAddress[_votingTypeAddress];
     }
 
     /// @dev Fetch user balance when giving member address.
