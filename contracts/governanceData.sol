@@ -134,7 +134,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev add status.
-    function addStatus() 
+    function addStatus() internal
     {
         status.push("Draft for discussion"); 
         status.push("Draft Ready for submission");
@@ -145,7 +145,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Set Parameters value that will help in Distributing reward.
-    function setGlobalParameters()
+    function setGlobalParameters() internal
     {
         proposalVoteClosingTime = 20;
         pendingProposalStart=0;
@@ -183,7 +183,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Calculate the proposal value to distribute it later - Distribute amount depends upon the final decision against proposal.
-    function setProposalValue(uint _proposalId,uint _memberStake) public
+    function setProposalValue(uint _proposalId,uint _memberStake) internal
     {
         allProposal[_proposalId].proposalStake = _memberStake;
         uint memberLevel = Math.max256(getMemberReputation(msg.sender),1);
@@ -264,7 +264,7 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-    function payableGNTTokens(uint _TokenAmount) public
+    function payableGNTTokens(uint _TokenAmount) internal
     {
         MT=MintableToken(GNTAddress);
         require(_TokenAmount >= GNTStakeValue);
@@ -307,8 +307,8 @@ contract GovernanceData is Ownable {
         // gd1.updateCategoryMVR(_categoryId);
     }
 
-    /// @dev As bydefault first verdict is alwayd deny option. One time configurable.
-    function addInitialOptionDetails(uint _proposalId)
+    /// @dev As bydefault first option is alwayd deny option. One time configurable.
+    function addInitialOptionDetails(uint _proposalId) internal
     {
         if(allProposalCategory[_proposalId].verdictAddedByAddress.length == 0)
         {
@@ -501,11 +501,7 @@ contract GovernanceData is Ownable {
     /// @dev Get the category, of given proposal. 
     function getProposalDetailsById2(uint _proposalId) public constant returns(uint category,uint currentVotingId,uint intermediateVerdict,uint finalVerdict,address votingTypeAddress) 
     {
-        category = allProposal[_proposalId].category;
-        currentVotingId = allProposal[_proposalId].currVotingStatus;
-        intermediateVerdict = allProposal[_proposalId].currentVerdict; 
-        finalVerdict = allProposal[_proposalId].finalVerdict;
-        votingTypeAddress = allProposal[_proposalId].votingTypeAddress;   
+        return (allProposal[_proposalId].category,allProposal[_proposalId].currVotingStatus,allProposal[_proposalId].currentVerdict,allProposal[_proposalId].finalVerdict,allProposal[_proposalId].votingTypeAddress); 
     }
 
     /// @dev Gets version details of a given proposal id.
@@ -523,10 +519,7 @@ contract GovernanceData is Ownable {
     /// @dev Get the category parameters given against a proposal after categorizing the proposal.
     function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint verdictOptions)
     {
-        paramsInt = allProposalCategory[_proposalId].paramInt;
-        paramsBytes = allProposalCategory[_proposalId].paramBytes32;
-        paramsAddress = allProposalCategory[_proposalId].paramAddress;
-        verdictOptions = allProposalCategory[_proposalId].verdictOptions;
+        return (allProposalCategory[_proposalId].paramInt,allProposalCategory[_proposalId].paramBytes32,allProposalCategory[_proposalId].paramAddress,allProposalCategory[_proposalId].verdictOptions);
     }
 
     /// @dev Get Total number of verdict options against proposal.
