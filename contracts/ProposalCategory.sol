@@ -13,7 +13,10 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity ^0.4.8;
-contract ProposalCategory
+// import "./Ownable.sol";
+import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
+
+contract ProposalCategory is Ownable
 {
     struct category{
         string categoryName;
@@ -121,20 +124,20 @@ contract ProposalCategory
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
     /// @dev Adds a new category and Category Function Parameter names..
-    function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
+    function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) onlyOwner
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
         allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote));
     }
     /// @dev Saving descriptions against various parameters required for category.
-    function addCategoryParamsNameAndDesc(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName,string _uintParameterDescHash,string _bytesParameterDescHash,string _addressParameterDescHash)
+    function addCategoryParamsNameAndDesc(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName,string _uintParameterDescHash,string _bytesParameterDescHash,string _addressParameterDescHash) onlyOwner
     {
         uintParam.push(categoryParams(_uintParamName,_uintParameterDescHash));
         bytesParam.push(categoryParams(_bytesParamName,_bytesParameterDescHash));
         addressParam.push(categoryParams(_addressParamName,_addressParameterDescHash));
     }
     /// @dev Change the category parameters name against category.
-    function changeCategoryParametersName(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName)
+    function changeCategoryParametersName(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName) onlyOwner
     {   
         uintParam[_categoryId].parameterName=new bytes32[](_uintParamName.length); 
         bytesParam[_categoryId].parameterName=new bytes32[](_bytesParamName.length); 
@@ -157,7 +160,7 @@ contract ProposalCategory
     }
 
     /// @dev Updates a category details
-    function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) public
+    function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) onlyOwner
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
         allCategory[_categoryId].functionName = _functionName;
