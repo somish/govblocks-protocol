@@ -130,6 +130,7 @@ contract GovernanceData is Ownable {
     MemberRoles MR;
     ProposalCategory Pcategory;
 
+    /// @dev Add points to add or subtract in memberReputation when proposal/option/vote gets denied or accepted.
     function addMemberReputationPoints()
     {
         addProposalOwnerPoints = 5;
@@ -140,6 +141,7 @@ contract GovernanceData is Ownable {
         subMemberPoints = 1;
     }
 
+    /// @dev Change points to add or subtract in memberReputation when proposal/option/vote gets denied or accepted.
     function changeMemberReputationPoints(uint _addProposalOwnerPoints,uint  _addOptionOwnerPoints, uint _addMemberPoints,uint _subProposalOwnerPoints,uint  _subOptionOwnerPoints, uint _subMemberPoints) onlyOwner
     {
         addProposalOwnerPoints = _addProposalOwnerPoints;
@@ -150,10 +152,24 @@ contract GovernanceData is Ownable {
         subMemberPoints = _subMemberPoints;
     }
 
+    /// @dev Get points to proceed with updating the member reputation level.
     function getMemberReputationPoints() constant returns(uint addProposalOwnerPoints,uint addOptionOwnerPoints,uint addMemberPoints,uint subProposalOwnerPoints,uint subOptionOwnerPoints,uint subMemberPoints)
     {
         return (addProposalOwnerPoints,addOptionOwnerPoints,addMemberPoints,subProposalOwnerPoints,subOptionOwnerPoints,subMemberPoints);
     } 
+
+    /// @dev Update Member Reputation after final decision
+    function setMemberReputation(address _proposalOwnerAddress,address _finalOptionOwner,uint _finalPointsProposal,uint _finalPointsOwner)
+    {
+        allMemberReputationByAddress[_proposalOwnerAddress] = _finalPointsProposal;
+        allMemberReputationByAddress[_finalOptionOwner] = _finalPointsOwner;
+    }
+
+    /// @dev Set member reputation after final decision.
+    function setMemberReputation1(address _memberAddress,uint _points)
+    {
+        allMemberReputationByAddress[_memberAddress] = _points;
+    }
 
     /// @dev Check if the member who wants to change in contracts, is owner.
     function isOwner(address _memberAddress) returns(uint checkOwner)
@@ -546,6 +562,12 @@ contract GovernanceData is Ownable {
         return (allProposal[_proposalId].category,allProposal[_proposalId].currVotingStatus,allProposal[_proposalId].currentVerdict,allProposal[_proposalId].finalVerdict,allProposal[_proposalId].votingTypeAddress); 
     }
 
+    /// @dev Get member address who created the proposal.
+    function getProposalOwner(uint _proposalId) public constant returns(address)
+    {
+        return allProposal[_proposalId].owner;
+    }
+
     /// @dev Gets version details of a given proposal id.
     function getProposalDetailsByIdAndVersion(uint _proposalId,uint _versionNum) public constant returns( uint versionNum,string proposalDescHash,uint date_add)
     {
@@ -606,9 +628,9 @@ contract GovernanceData is Ownable {
     }
 
     /// @dev Member Reputation is set according to if Member's Decision is Final decision.
-    function getMemberReputation(address _memberAddress) constant returns(uint reputationLevel)
+    function getMemberReputation(address _memberAddress) constant returns(uint memberPoints)
     {
-        reputationLevel = allMemberReputationByAddress[_memberAddress];
+        memberPoints = allMemberReputationByAddress[_memberAddress];
     }
 
     /// @dev Get proposal Value and Member Stake on that proposal
