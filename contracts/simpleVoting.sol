@@ -36,6 +36,7 @@ contract SimpleVoting is VotingType
     {
         uint[] verdictOption;
         allVotes.push(proposalVote(0x00,0,verdictOption,now,0,0,0));
+        votingTypeName = "SimpleVoting";
     }
     
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
@@ -150,7 +151,7 @@ contract SimpleVoting is VotingType
         (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
-
+        
         require(msg.sender != GD.getVerdictAddressByProposalId(_proposalId,_verdictChosen[0]));
         require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _verdictChosen.length == 1);
 
@@ -158,6 +159,7 @@ contract SimpleVoting is VotingType
             require(_verdictChosen[0] <= verdictOptions);
         else
             require(_verdictChosen[0]==intermediateVerdict || _verdictChosen[0]==0);
+            
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         require(roleId == PC.getRoleSequencAtIndex(category,currentVotingId));
 
@@ -268,60 +270,97 @@ contract SimpleVoting is VotingType
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
             if(allVotes[voteid].verdictChosen[0] == finalVerdict)
             {
-                voteValueFavour = voteValueFavour + allVotes[voteid].voteValue;
+                voteValueFavour = SafeMath.add(voteValueFavour,allVotes[voteid].voteValue);
             }
             else
-                {
-                    voterStake = voterStake + allVotes[voteid].voteStakeGNT*(1/GD.globalRiskFactor());
-                    returnTokens = allVotes[voteid].voteStakeGNT*(1-(1/GD.globalRiskFactor()));
-                    GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
-                }
+            {
+                voterStake = SafeMath.add(voterStake,SafeMath.mul(allVotes[voteid].voteStakeGNT,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor()))));
+                returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGNT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
+                GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
+            }
         }
 
         for(i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
         {
             if(i!= finalVerdict)         
-                 wrongOptionStake = wrongOptionStake + GD.getVerdictStakeByProposalId(_proposalId,i);
+                wrongOptionStake = SafeMath.add(wrongOptionStake,GD.getVerdictStakeByProposalId(_proposalId,i));
         }
 
-        totalVoteValue = GD.getVerdictValueByProposalId(_proposalId,finalVerdict) + voteValueFavour; 
-        totalTokenToDistribute = wrongOptionStake + voterStake;
+        totalVoteValue = SafeMath.add(GD.getVerdictValueByProposalId(_proposalId,finalVerdict),voteValueFavour);
+        totalTokenToDistribute = SafeMath.add(wrongOptionStake,voterStake);
 
         if(finalVerdict>0)
-            totalVoteValue = totalVoteValue + proposalValue;
+            totalVoteValue = SafeMath.add(totalVoteValue,proposalValue); // accpted
         else
-            totalTokenToDistribute = totalTokenToDistribute + proposalStake;
+            totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,proposalStake); // denied
 
         distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue,proposalStake);
     }
 
     function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue,uint _proposalStake)
     {
-        address proposalOwner;uint reward;uint transferToken;
-        (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
-        uint roleId;uint category;uint finalVerdict;
-        (category,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
+        uint reward;uint transferToken;
+        uint finalVerdict;
+        (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
+        uint addMemberPoints; uint subMemberPoints;
+        (,,addMemberPoints,,,subMemberPoints)=GD.getMemberReputationPoints();
  
         if(finalVerdict > 0)
         {
-            reward = (_proposalStake*_totalTokenToDistribute)/_totalVoteValue;
-            transferToken = _proposalStake + reward;
-            GD.transferBackGNTtoken(proposalOwner,transferToken);
+            reward = SafeMath.div(SafeMath.mul(_proposalStake,_totalTokenToDistribute),_totalVoteValue);
+            transferToken = SafeMath.add(_proposalStake,reward);
+            GD.transferBackGNTtoken(GD.getProposalOwner(_proposalId),transferToken);
 
-            address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
-            uint verdictStake = GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
-            reward = (verdictStake*_totalTokenToDistribute)/_totalVoteValue;
-            transferToken = verdictStake + reward;
-            GD.transferBackGNTtoken(verdictOwner,transferToken);
+            reward = SafeMath.div(SafeMath.mul(GD.getVerdictStakeByProposalId(_proposalId,finalVerdict),_totalTokenToDistribute),_totalVoteValue);
+            transferToken = SafeMath.add(GD.getVerdictStakeByProposalId(_proposalId,finalVerdict),reward);
+            GD.transferBackGNTtoken(GD.getVerdictAddressByProposalId(_proposalId,finalVerdict),transferToken);
         }
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
-            require(allVotes[voteid].verdictChosen[0] == finalVerdict);
-                reward = (allVotes[voteid].voteValue*_totalTokenToDistribute)/_totalVoteValue;
-                transferToken = allVotes[voteid].voteStakeGNT + reward;
+            if(allVotes[voteid].verdictChosen[0] == finalVerdict)
+            {
+                reward = SafeMath.div(SafeMath.mul(allVotes[voteid].voteValue,_totalTokenToDistribute),_totalVoteValue);
+                transferToken = SafeMath.add(allVotes[voteid].voteStakeGNT,reward);
                 GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
+                GD.setMemberReputation1(allVotes[voteid].voter,SafeMath.add(addMemberPoints,GD.getMemberReputation(allVotes[voteid].voter)));
+            }
+            else
+            {
+                GD.setMemberReputation1(allVotes[voteid].voter,SafeMath.add(subMemberPoints,GD.getMemberReputation(allVotes[voteid].voter)));
+            }
+               
+        } 
+
+        updateMemberReputation(_proposalId,finalVerdict);
+    
+    }
+
+    function updateMemberReputation(uint _proposalId,uint finalVerdict)
+    {
+        address _proposalOwner =  GD.getProposalOwner(_proposalId);
+        address _finalOptionOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
+        uint addProposalOwnerPoints; uint addOptionOwnerPoints; uint subProposalOwnerPoints; uint subOptionOwnerPoints;
+        (addProposalOwnerPoints,addOptionOwnerPoints,,subProposalOwnerPoints,subOptionOwnerPoints,)=GD.getMemberReputationPoints();
+        uint memberPoints1; uint memberPoints2;
+
+        if(finalVerdict>0)
+        {
+            memberPoints1 = SafeMath.add(addProposalOwnerPoints,GD.getMemberReputation(_proposalOwner));
+            memberPoints1 = SafeMath.add(addOptionOwnerPoints,GD.getMemberReputation(_finalOptionOwner));
+            GD.setMemberReputation(_proposalOwner,_finalOptionOwner,memberPoints1,memberPoints2);  
         }
+        else
+        {
+            memberPoints1 = SafeMath.sub(subProposalOwnerPoints,GD.getMemberReputation(_proposalOwner));
+            GD.setMemberReputation1(_proposalOwner,memberPoints1);
+            for(uint i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
+            {
+                address memberAddress = GD.getVerdictAddressByProposalId(_proposalId,i);
+                memberPoints2 = SafeMath.sub(subOptionOwnerPoints,GD.getMemberReputation(memberAddress));
+                GD.setMemberReputation1(memberAddress,memberPoints2);  
+            }
+        }   
     }
 }
