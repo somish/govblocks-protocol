@@ -35,6 +35,7 @@ contract FeatureWeighted is VotingType
     {
         uint[] option;
         allVotes.push(proposalVote(0x00,0,option,now,0,0,0));
+        votingTypeName = "FeatureWeighted";
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
@@ -365,6 +366,20 @@ contract FeatureWeighted is VotingType
                 GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
             }
 
+            // uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
+            // for(uint j=0; j<allVotes[voteid].verdictChosen.length; j=i+_featureLength+1)
+            // {
+            //     if(allVotes[voteid].verdictChosen[j] == finalVerdict)
+            //     {
+            //         voteValueFavour = SafeMath.add(voteValueFavour,allVotes[voteid].voteValue)+getOptionValue1(voteid,_proposalId,j);
+            //     }
+            //     else
+            //     {
+            //         voterStake = SafeMath.add(voterStake,SafeMath.mul(allVotes[voteid].voteStakeGNT,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))) + getOptionValue1(voteid,_proposalId,j);
+            //         returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGNT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
+            //         GD.transferBackGNTtoken(allVotes[voteid].voter,returnTokens);
+            //     }
+            // }
         }
 
         for(i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
@@ -386,18 +401,17 @@ contract FeatureWeighted is VotingType
 
     function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue)
     {
-        address proposalOwner;uint reward;uint transferToken;
-        (proposalOwner,,,,,) = GD.getProposalDetailsById1(_proposalId);
+        uint reward;uint transferToken;
         uint finalVerdict;
         (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
-        uint proposalValue; uint proposalStake;
-        (proposalValue,proposalStake) = GD.getProposalValueAndStake(_proposalId);
+         uint addMemberPoints; uint subMemberPoints;
+        (,,addMemberPoints,,,subMemberPoints)=GD.getMemberReputationPoints();
 
         if(finalVerdict > 0)
         {
-            reward = SafeMath.div(SafeMath.mul(proposalStake,_totalTokenToDistribute),_totalVoteValue);
-            transferToken = SafeMath.add(proposalStake,reward);
-            GD.transferBackGNTtoken(proposalOwner,transferToken);
+            reward = SafeMath.div(SafeMath.mul(GD.getProposalStake(_proposalId),_totalTokenToDistribute),_totalVoteValue);
+            transferToken = SafeMath.add(GD.getProposalStake(_proposalId),reward);
+            GD.transferBackGNTtoken(GD.getProposalOwner(_proposalId),transferToken);
 
             address verdictOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
             uint verdictStake = GD.getVerdictStakeByProposalId(_proposalId,finalVerdict);
@@ -409,11 +423,19 @@ contract FeatureWeighted is VotingType
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
-            uint optionValue = getOptionValue(voteid,_proposalId,finalVerdict);
-            reward = SafeMath.div(SafeMath.mul(allVotes[voteid].voteValue,_totalTokenToDistribute),_totalVoteValue);
-            transferToken = SafeMath.add(allVotes[voteid].voteStakeGNT,reward);
-            GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
+            if(getOptionValue(voteid,_proposalId,finalVerdict) != 0)
+            {
+                reward = SafeMath.div(SafeMath.mul(allVotes[voteid].voteValue,_totalTokenToDistribute),_totalVoteValue);
+                transferToken = SafeMath.add(allVotes[voteid].voteStakeGNT,reward);
+                GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
+                GD.setMemberReputation1(allVotes[voteid].voter,SafeMath.add(GD.getMemberReputation(allVotes[voteid].voter),addMemberPoints));
+            }
+            else
+            {
+                GD.setMemberReputation1(allVotes[voteid].voter,SafeMath.sub(GD.getMemberReputation(allVotes[voteid].voter),subMemberPoints));
+            }  
         }
+        updateMemberReputation(_proposalId,finalVerdict);
     }
 
     function getOptionValue(uint _voteid,uint _proposalId,uint _finalVerdict) returns (uint optionValue)
@@ -433,4 +455,42 @@ contract FeatureWeighted is VotingType
         }
     }
 
+    function getOptionValue1(uint _voteid,uint _proposalId,uint _optionIndex) returns (uint optionValue)
+    {   
+        uint[] _verdictChosen = allVotes[_voteid].verdictChosen;
+        uint _featureLength = allProposalFeatures[_proposalId].length; uint sum;
+
+        for(uint j=_optionIndex+1; j<=_featureLength+_optionIndex; j++)
+        {
+            sum = SafeMath.add(sum,_verdictChosen[j]);
+        }
+        optionValue = SafeMath.div(SafeMath.mul(sum,100),_featureLength);
+    }
+
+    function updateMemberReputation(uint _proposalId,uint finalVerdict)
+    {
+        address _proposalOwner =  GD.getProposalOwner(_proposalId);
+        address _finalOptionOwner = GD.getVerdictAddressByProposalId(_proposalId,finalVerdict);
+        uint addProposalOwnerPoints; uint addOptionOwnerPoints; uint subProposalOwnerPoints; uint subOptionOwnerPoints;
+        (addProposalOwnerPoints,addOptionOwnerPoints,,subProposalOwnerPoints,subOptionOwnerPoints,)=GD.getMemberReputationPoints();
+        uint memberPoints1; uint memberPoints2;
+
+        if(finalVerdict>0)
+        {
+            memberPoints1 = SafeMath.add(addProposalOwnerPoints,GD.getMemberReputation(_proposalOwner));
+            memberPoints2 = SafeMath.add(addOptionOwnerPoints,GD.getMemberReputation(_finalOptionOwner));
+            GD.setMemberReputation(_proposalOwner,_finalOptionOwner,memberPoints1,memberPoints2);  
+        }
+        else
+        {
+            memberPoints1 = SafeMath.sub(GD.getMemberReputation(_proposalOwner),subProposalOwnerPoints);
+            GD.setMemberReputation1(_proposalOwner,memberPoints1);
+            for(uint i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
+            {
+                address memberAddress = GD.getVerdictAddressByProposalId(_proposalId,i);
+                memberPoints2 = SafeMath.sub(GD.getMemberReputation(memberAddress),subOptionOwnerPoints);
+                GD.setMemberReputation1(memberAddress,memberPoints2);  
+            }
+        }
+    }   
 }
