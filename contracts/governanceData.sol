@@ -159,13 +159,13 @@ contract GovernanceData is Ownable {
     } 
 
     /// @dev Update Member Reputation after final decision
-    function setMemberReputation(address _proposalOwnerAddress,address _finalOptionOwner,uint _finalPointsProposal,uint _finalPointsOwner)
+    function setMemberReputation(address _proposalOwnerAddress,address _OptionOwner,uint _finalPointsProposal,uint _finalPointsOwner)
     {
         allMemberReputationByAddress[_proposalOwnerAddress] = _finalPointsProposal;
-        allMemberReputationByAddress[_finalOptionOwner] = _finalPointsOwner;
+        allMemberReputationByAddress[_OptionOwner] = _finalPointsOwner;
     }
 
-    /// @dev Set member reputation after final decision.
+    /// @dev Update member reputation after final decision.
     function setMemberReputation1(address _memberAddress,uint _points)
     {
         allMemberReputationByAddress[_memberAddress] = _points;
