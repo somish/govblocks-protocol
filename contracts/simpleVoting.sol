@@ -324,17 +324,15 @@ contract SimpleVoting is VotingType
                 reward = SafeMath.div(SafeMath.mul(allVotes[voteid].voteValue,_totalTokenToDistribute),_totalVoteValue);
                 transferToken = SafeMath.add(allVotes[voteid].voteStakeGNT,reward);
                 GD.transferBackGNTtoken(allVotes[voteid].voter,transferToken);
-                GD.setMemberReputation1(allVotes[voteid].voter,SafeMath.add(addMemberPoints,GD.getMemberReputation(allVotes[voteid].voter)));
+                GD.setMemberReputation1(allVotes[voteid].voter,SafeMath.add(GD.getMemberReputation(allVotes[voteid].voter),addMemberPoints));
             }
             else
             {
-                GD.setMemberReputation1(allVotes[voteid].voter,SafeMath.add(subMemberPoints,GD.getMemberReputation(allVotes[voteid].voter)));
+                GD.setMemberReputation1(allVotes[voteid].voter,SafeMath.sub(GD.getMemberReputation(allVotes[voteid].voter),subMemberPoints));
             }
                
         } 
-
         updateMemberReputation(_proposalId,finalVerdict);
-    
     }
 
     function updateMemberReputation(uint _proposalId,uint finalVerdict)
@@ -347,18 +345,18 @@ contract SimpleVoting is VotingType
 
         if(finalVerdict>0)
         {
-            memberPoints1 = SafeMath.add(addProposalOwnerPoints,GD.getMemberReputation(_proposalOwner));
-            memberPoints1 = SafeMath.add(addOptionOwnerPoints,GD.getMemberReputation(_finalOptionOwner));
+            memberPoints1 = SafeMath.add(GD.getMemberReputation(_proposalOwner),addProposalOwnerPoints);
+            memberPoints2 = SafeMath.add(GD.getMemberReputation(_finalOptionOwner),addOptionOwnerPoints);
             GD.setMemberReputation(_proposalOwner,_finalOptionOwner,memberPoints1,memberPoints2);  
         }
         else
         {
-            memberPoints1 = SafeMath.sub(subProposalOwnerPoints,GD.getMemberReputation(_proposalOwner));
+            memberPoints1 = SafeMath.sub(GD.getMemberReputation(_proposalOwner),subProposalOwnerPoints);
             GD.setMemberReputation1(_proposalOwner,memberPoints1);
             for(uint i=0; i<GD.getVerdictAddedAddressLength(_proposalId); i++)
             {
                 address memberAddress = GD.getVerdictAddressByProposalId(_proposalId,i);
-                memberPoints2 = SafeMath.sub(subOptionOwnerPoints,GD.getMemberReputation(memberAddress));
+                memberPoints2 = SafeMath.sub(GD.getMemberReputation(memberAddress),subOptionOwnerPoints);
                 GD.setMemberReputation1(memberAddress,memberPoints2);  
             }
         }   
