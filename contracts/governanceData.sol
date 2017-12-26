@@ -20,11 +20,12 @@ import "./zeppelin-solidity/contracts/token/MintableToken.sol";
 import "./zeppelin-solidity/contracts/math/Math.sol";
 import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
+//import "./Master.sol";
 // import "./BasicToken.sol";
 // import "./MintableToken.sol";
 // import "./Math.sol";
 
-contract GovernanceData is Ownable {
+contract GovernanceData is Ownable{
     using SafeMath for uint;
     struct proposal{
         address owner;
@@ -123,10 +124,11 @@ contract GovernanceData is Ownable {
 
     address GNTAddress;
     address BTAddress;
-    BasicToken BT;
-    MintableToken MT;
     address MRAddress;
     address PCAddress;
+    address masterAddress;
+    BasicToken BT;
+    MintableToken MT;
     MemberRoles MR;
     ProposalCategory Pcategory;
 
@@ -205,6 +207,12 @@ contract GovernanceData is Ownable {
         globalRiskFactor=5;
         membershipScalingFactor=1;
         scalingWeight=1;
+    }
+
+    /// @dev Change master's contract address
+    function changeMasterAddress(address _masterContractAddress)
+    {
+        masterAddress = _masterContractAddress;
     }
 
     /// @dev change all contract's addresses.
