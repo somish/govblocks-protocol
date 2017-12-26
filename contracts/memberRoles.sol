@@ -22,6 +22,7 @@ contract  MemberRoles is Ownable{
 
   string[] memberRole;
   uint public categorizeAuthRoleid;
+  address masterAddress;
 
   mapping (address=>uint) memberAddressToMemberRole;
   mapping (uint=>address) memberRoleToMemberAddress;
@@ -32,6 +33,12 @@ contract  MemberRoles is Ownable{
     memberRole.push("Advisory Board");
     memberRole.push("Expert");
     categorizeAuthRoleid=1;
+  }
+
+  /// @dev Change master's contract address
+  function changeMasterAddress(address _masterContractAddress)
+  {
+      masterAddress = _masterContractAddress;
   }
 
   /// @dev Get the role id assigned to a member when giving memberAddress
