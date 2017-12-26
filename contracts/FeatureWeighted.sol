@@ -25,6 +25,7 @@ contract FeatureWeighted is VotingType
     address MRAddress;
     address PCAddress;
     address GNTAddress;
+    address masterAddress;
     MemberRoles MR;
     ProposalCategory PC;
     GovernanceData GD;
@@ -36,6 +37,12 @@ contract FeatureWeighted is VotingType
         uint[] option;
         allVotes.push(proposalVote(0x00,0,option,now,0,0,0));
         votingTypeName = "FeatureWeighted";
+    }
+
+    /// @dev Change master's contract address
+    function changeMasterAddress(address _masterContractAddress)
+    {
+        masterAddress = _masterContractAddress;
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
@@ -61,8 +68,8 @@ contract FeatureWeighted is VotingType
 
     function increaseTotalVotes() returns (uint _totalVotes)
     {
-        _totalVotes = SafeMath.add(totalVotes,1);  
-        totalVotes=_totalVotes;
+        _totalVotes = SafeMath.add(allVotesTotal,1);  
+        allVotesTotal=_totalVotes;
     } 
 
     function getVoteDetailByid(uint _voteid) public constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens,uint voteStakeGNT,uint voteValue)
