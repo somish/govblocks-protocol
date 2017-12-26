@@ -40,6 +40,13 @@ contract ProposalCategory is Ownable
     categoryParams[] uintParam;
     categoryParams[] bytesParam;
     categoryParams[] addressParam;
+    address masterAddress;
+
+    /// @dev Change master's contract address
+    function changeMasterAddress(address _masterContractAddress)
+    {
+        masterAddress = _masterContractAddress;
+    }
 
     /// @dev Get the integer parameterName when given Category Id and parameterIndex
     function getCategoryParamNameUint(uint _categoryId,uint _index)constant returns(bytes32)
