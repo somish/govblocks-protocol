@@ -41,7 +41,7 @@ contract VotingType
     mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;
     mapping(address=>mapping(uint=>uint)) AddressProposalVote; 
     proposalVote[] allVotes;
-    uint public totalVotes;
+    uint public allVotesTotal;
     string public votingTypeName;
 
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount);
