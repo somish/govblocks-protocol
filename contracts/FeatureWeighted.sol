@@ -53,12 +53,17 @@ contract FeatureWeighted is VotingType
         MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
     }
 
-    function changeAllContractsAddress(address _GNTcontractAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
     {
-        GNTAddress = _GNTcontractAddress;
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
+    }
+
+    /// @dev Changes GNT contract Address. //NEW
+    function changeGNTtokenAddress(address _GNTcontractAddress)
+    {
+        GNTAddress = _GNTcontractAddress;
     }
 
     function getTotalVotes()  constant returns (uint votesTotal)
@@ -146,7 +151,7 @@ contract FeatureWeighted is VotingType
 
         uint currentVotingId;uint _categoryId;
         (_categoryId,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
-        uint verdictOptions;
+        uint8 verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
 
         require(currentVotingId == 0 && GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2);
@@ -158,9 +163,9 @@ contract FeatureWeighted is VotingType
 
         if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
         {
-            uint verdictValue = setVerdictValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
-            GD.setProposalVerdictAddressAndStakeValue(_proposalId,msg.sender,_GNTPayableTokenAmount,verdictValue);
-            verdictOptions = SafeMath.add(verdictOptions,1);
+            uint optionValue = setOptionValue_givenByMember(_proposalId,_GNTPayableTokenAmount);
+            GD.setProposalVerdictAddressAndStakeValue(_proposalId,msg.sender,_GNTPayableTokenAmount,optionValue);
+            verdictOptions = verdictOptions+1;
             GD.setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions); 
         } 
     }
@@ -268,14 +273,14 @@ contract FeatureWeighted is VotingType
         }
     }
 
-    function setVerdictValue_givenByMember(uint _proposalId,uint _memberStake) public returns (uint finalVerdictValue)
+    function setOptionValue_givenByMember(uint _proposalId,uint _memberStake) public returns (uint finalOptionValue)
     {
         GD=GovernanceData(GDAddress);
         uint memberLevel = Math.max256(GD.getMemberReputation(msg.sender),1);
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(msg.sender),100),100)),GD.getTotalTokenInSupply());
         uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
 
-        finalVerdictValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
+        finalOptionValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
     }
 
     function setVoteValue_givenByMember(uint _proposalId,uint _memberStake) public returns (uint finalVoteValue)
@@ -296,17 +301,17 @@ contract FeatureWeighted is VotingType
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
     
-        uint currentVotingId; uint category;
+        uint8 currentVotingId; uint8 category;
         (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
-        uint verdictOptions;
+        uint8 verdictOptions;
         (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
     
         require(GD.checkProposalVoteClosing(_proposalId)==1);
-        uint max; uint totalVotes; uint verdictVal; uint majorityVote;
+        uint8 max; uint totalVotes; uint verdictVal; uint majorityVote;
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
 
         max=0;  
-        for(uint i = 0; i < verdictOptions; i++)
+        for(uint8 i = 0; i < verdictOptions; i++)
         {
             totalVotes = SafeMath.add(totalVotes,allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i]); 
             if(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][max] < allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][i])
@@ -319,7 +324,7 @@ contract FeatureWeighted is VotingType
        
         if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=majorityVote)
         {   
-            currentVotingId = SafeMath.add(currentVotingId,1);
+            currentVotingId = currentVotingId+1;
             if(max > 0 )
             {
                 if(currentVotingId < PC.getRoleSequencLength(category))
