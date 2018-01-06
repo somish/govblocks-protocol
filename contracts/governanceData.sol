@@ -20,7 +20,6 @@ import "./zeppelin-solidity/contracts/token/MintableToken.sol";
 import "./zeppelin-solidity/contracts/math/Math.sol";
 import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
-//import "./Master.sol";
 // import "./BasicToken.sol";
 // import "./MintableToken.sol";
 // import "./Math.sol";
@@ -32,12 +31,12 @@ contract GovernanceData is Ownable{
         string proposalDescHash;
         uint date_add;
         uint date_upd;
-        uint versionNum;
-        uint currVotingStatus;
-        uint propStatus;  
-        uint category;
-        uint finalVerdict;
-        uint currentVerdict;
+        uint8 versionNum;
+        uint8 currVotingStatus;
+        uint8 propStatus;  
+        uint8 category;
+        uint8 finalVerdict;
+        uint8 currentVerdict;
         address votingTypeAddress;
         uint proposalValue;
         uint proposalStake;
@@ -48,7 +47,7 @@ contract GovernanceData is Ownable{
         uint[] paramInt;
         bytes32[] paramBytes32;
         address[] paramAddress;
-        uint verdictOptions;
+        uint8 verdictOptions;
         address[] verdictAddedByAddress;
         uint[] valueOfVerdict;
         uint[] stakeOnVerdict;
@@ -80,7 +79,7 @@ contract GovernanceData is Ownable{
         uint[] levelReward;
     }
 
-    function GovernanceData() 
+    function GovernanceDataInitiate() 
     {
         setGlobalParameters();
         addStatus();
@@ -216,12 +215,17 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev change all contract's addresses.
-    function changeAllContractsAddress(address _GNTcontractAddress,address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
     {
-        GNTAddress = _GNTcontractAddress;
         BTAddress = _BTcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
+    }
+
+    /// @dev Changes GNT contract Address. //NEW
+    function changeGNTtokenAddress(address _GNTcontractAddress)
+    {
+        GNTAddress = _GNTcontractAddress;
     }
 
     /// @dev Checks if voting time of a given proposal should be closed or not. 
@@ -267,15 +271,15 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Set proposal Category Parameters while adding verdict options from any voting type.
-    function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) returns(uint8 paramInt, bytes32 parameterName)
+    function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions)
     {
         setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
         Pcategory=ProposalCategory(PCAddress);
 
-         paramInt; uint8 paramBytes32; uint8 paramAddress;
+         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
         (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_category);
         
-        for(uint j=0; j<paramInt; j++)
+        for(j=0; j<paramInt; j++)
         {
             parameterName = Pcategory.getCategoryParamNameUint(_category,j);
             allProposalCategoryParams[_proposalId].optionNameIntValue[j+1][parameterName] = _paramInt[j];
@@ -294,8 +298,8 @@ contract GovernanceData is Ownable{
         }
     }
 
-    /// @dev When member manually verdict options before proposal voting. (To be called from All type of votings - Add verdict Options)
-    function setProposalCategoryParams1(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _verdictOptions) 
+    /// @dev Set parameters against category.
+    function setProposalCategoryParams1(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) internal
     {
         uint i;
         allProposalCategory[_proposalId].verdictOptions = _verdictOptions;
@@ -332,14 +336,14 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Updates  status of an existing proposal.
-    function updateProposalStatus(uint _id ,uint _status) internal
+    function updateProposalStatus(uint _id ,uint8 _status) internal
     {
         allProposal[_id].propStatus = _status;
         allProposal[_id].date_upd = now;
     }
 
     /// @dev Stores the status information of a given proposal.
-    function pushInProposalStatus(uint _proposalId , uint _status) internal
+    function pushInProposalStatus(uint _proposalId , uint8 _status) internal
     {
         proposalStatus[_proposalId].push(Status(_status,now));
     }
@@ -387,7 +391,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev categorizing proposal to proceed further.
-    function categorizeProposal(uint _proposalId , uint _categoryId,uint8 _proposalComplexityLevel,uint[] _levelReward) public
+    function categorizeProposal(uint _proposalId , uint8 _categoryId,uint8 _proposalComplexityLevel,uint[] _levelReward) public
     {
         MR = MemberRoles(MRAddress);
         Pcategory=ProposalCategory(PCAddress);
@@ -440,7 +444,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Changes the status of a given proposal.
-    function changeProposalStatus(uint _id,uint _status) 
+    function changeProposalStatus(uint _id,uint8 _status) 
     {
         require(allProposal[_id].category != 0);
         pushInProposalStatus(_id,_status);
@@ -475,7 +479,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Updating proposal's Major details (Called from close proposal Vote).
-    function updateProposalDetails(uint _proposalId,uint _currVotingStatus, uint _intermediateVerdict,uint _finalVerdict)
+    function updateProposalDetails(uint _proposalId,uint8 _currVotingStatus, uint8 _intermediateVerdict,uint8 _finalVerdict)
     {
         allProposal[_proposalId].currVotingStatus = _currVotingStatus;
         allProposal[_proposalId].currentVerdict = _intermediateVerdict;
@@ -516,7 +520,7 @@ contract GovernanceData is Ownable{
     {
         allProposal[_id].proposalDescHash = _proposalDescHash;
         allProposal[_id].date_upd = now;
-        allProposal[_id].versionNum = SafeMath.add(allProposal[_id].versionNum,1);
+        allProposal[_id].versionNum = allProposal[_id].versionNum+1;
     }
 
     /// @dev Get All Address for different types of voting.
@@ -565,7 +569,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Get the category, of given proposal. 
-    function getProposalDetailsById2(uint _proposalId) public constant returns(uint category,uint currentVotingId,uint intermediateVerdict,uint finalVerdict,address votingTypeAddress) 
+    function getProposalDetailsById2(uint _proposalId) public constant returns(uint8 category,uint8 currentVotingId,uint8 intermediateVerdict,uint8 finalVerdict,address votingTypeAddress) 
     {
         return (allProposal[_proposalId].category,allProposal[_proposalId].currVotingStatus,allProposal[_proposalId].currentVerdict,allProposal[_proposalId].finalVerdict,allProposal[_proposalId].votingTypeAddress); 
     }
@@ -585,11 +589,11 @@ contract GovernanceData is Ownable{
     /// @dev Get proposal Reward and complexity level Against proposal
     function getProposalRewardAndComplexity(uint _proposalId,uint _rewardIndex) public constant returns (uint reward)
     {
-       reward = allProposalPriority[_proposalId].levelReward[_rewardIndex];
+      reward = allProposalPriority[_proposalId].levelReward[_rewardIndex];
     }
 
     /// @dev Get the category parameters given against a proposal after categorizing the proposal.
-    function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint verdictOptions)
+    function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
     {
         return (allProposalCategory[_proposalId].paramInt,allProposalCategory[_proposalId].paramBytes32,allProposalCategory[_proposalId].paramAddress,allProposalCategory[_proposalId].verdictOptions);
     }
@@ -606,27 +610,27 @@ contract GovernanceData is Ownable{
         proposalStatus = allProposal[_proposalId].propStatus;
     }
 
-    /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
-    function getProposalFinalVerdictDetails(uint _proposalId) public returns(uint paramint, bytes32 parambytes32,address paramaddress)
-    {
-        uint category = allProposal[_proposalId].category;
-        uint verdictChosen = allProposal[_proposalId].finalVerdict;
+    // /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
+    // function getProposalFinalVerdictDetails(uint _proposalId) public returns(uint paramint, bytes32 parambytes32,address paramaddress)
+    // {
+    //     uint category = allProposal[_proposalId].category;
+    //     uint verdictChosen = allProposal[_proposalId].finalVerdict;
 
-        if(allProposalCategory[_proposalId].paramInt.length != 0)
-        {
-             paramint = allProposalCategory[_proposalId].paramInt[verdictChosen];
-        }
+    //     if(allProposalCategory[_proposalId].paramInt.length != 0)
+    //     {
+    //          paramint = allProposalCategory[_proposalId].paramInt[verdictChosen];
+    //     }
 
-        if(allProposalCategory[_proposalId].paramBytes32.length != 0)
-        {
-            parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChosen];
-        }
+    //     if(allProposalCategory[_proposalId].paramBytes32.length != 0)
+    //     {
+    //         parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChosen];
+    //     }
 
-        if(allProposalCategory[_proposalId].paramAddress.length != 0)
-        {
-            paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
-        }  
-    }
+    //     if(allProposalCategory[_proposalId].paramAddress.length != 0)
+    //     {
+    //         paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
+    //     }  
+    // }
     
     /// @dev Get the number of tokens already distributed among members.
     function getTotalTokenInSupply() constant returns(uint _totalSupplyToken)
