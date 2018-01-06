@@ -21,10 +21,10 @@ import "./RankBasedVoting.sol";
 import "./FeatureWeighted.sol";
 import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
-// import "./MintableToken.sol";
-// import "./BasicToken.sol";
 import "./zeppelin-solidity/contracts/token/MintableToken.sol";
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+// import "./MintableToken.sol";
+// import "./BasicToken.sol";
 
 contract Master is Ownable {
 
@@ -43,14 +43,14 @@ contract Master is Ownable {
     mapping(uint=>contractDetails[]) public allContractVersions;
     mapping(address=>uint) contracts_active;
     
-    address  governanceDataAddress;
+    address governanceDataAddress;
     address memberRolesAddress;
     address proposalCategoryAddress;
     address mintableTokenAddress;
     address basicTokenAddress;
-    address  simpleVotingAddress;
-    address  rankBasedVotingAddress;
-    address  featureWeightedAddress;
+    address simpleVotingAddress;
+    address rankBasedVotingAddress;
+    address featureWeightedAddress;
     address masterAddress;
     GovernanceData GD;
     MemberRoles MR;
@@ -60,8 +60,6 @@ contract Master is Ownable {
     SimpleVoting SV;
     RankBasedVoting RB;
     FeatureWeighted FW;
-
-    address public owner;
 
     /// @dev Constructor
     function Master()
@@ -160,16 +158,32 @@ contract Master is Ownable {
    function changeOtherAddress(uint version) 
    {   
         GD=GovernanceData(governanceDataAddress);
-        GD.changeAllContractsAddress(mintableTokenAddress,basicTokenAddress,memberRolesAddress,proposalCategoryAddress);
+        GD.changeAllContractsAddress(basicTokenAddress,memberRolesAddress,proposalCategoryAddress);
         
         SV=SimpleVoting(simpleVotingAddress);
-        SV.changeAllContractsAddress(mintableTokenAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        SV.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
 
         RB=RankBasedVoting(rankBasedVotingAddress);
-        RB.changeAllContractsAddress(mintableTokenAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        RB.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
 
         FW=FeatureWeighted(featureWeightedAddress);
-        FW.changeAllContractsAddress(mintableTokenAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        FW.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+   }
+
+   /// @dev Change GNT token address all contracts //NEW // at first go, it will be mintable token address.
+   function changeGNTAddress(address _tokenAddress)
+   {
+        GD=GovernanceData(governanceDataAddress);
+        GD.changeGNTtokenAddress(mintableTokenAddress);
+        
+        SV=SimpleVoting(simpleVotingAddress);
+        SV.changeGNTtokenAddress(mintableTokenAddress);
+
+        RB=RankBasedVoting(rankBasedVotingAddress);
+        RB.changeGNTtokenAddress(mintableTokenAddress);
+
+        FW=FeatureWeighted(featureWeightedAddress);
+        FW.changeGNTtokenAddress(mintableTokenAddress);
    }
 
     /// @dev Switch to the recent version of contracts. (Last one)
