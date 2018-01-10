@@ -24,7 +24,7 @@ contract VotingType
     struct proposalVote {
         address voter;
         uint proposalId;
-        uint[] verdictChosen;
+        uint[] optionChosen;
         uint dateSubmit;
         uint voterTokens;
         uint voteStakeGNT;
@@ -44,15 +44,27 @@ contract VotingType
     uint public allVotesTotal;
     string public votingTypeName;
 
-    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount);
-    function proposalVoting(uint _proposalId,uint[] _verdictChosen,uint _GNTPayableTokenAmount);
-    function setVerdictValue_givenByMember(uint _proposalId,uint _memberStake) public returns (uint finalVerdictValue);
-    function setVoteValue_givenByMember(uint _proposalId,uint _memberStake) public returns (uint finalVoteValue);
-    function closeProposalVote(uint _proposalId);
+    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount) public;
+    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GNTPayableTokenAmount) public;
+    function closeProposalVote(uint _proposalId) public;
+    function giveReward_afterFinalDecision(uint _proposalId) public;
 
     function getTotalVotes() constant returns (uint votesTotal);
-    function getVoteDetailByid(uint _voteid) constant returns(address voter,uint proposalId,uint[] verdictChosen,uint dateSubmit,uint voterTokens,uint voteStakeGNT,uint voteValue);
-
+    function getVoteDetailByid(uint _voteid) constant returns(address voter,uint proposalId,uint[] optionChosen,uint dateSubmit,uint voterTokens,uint voteStakeGNT,uint voteValue);
     function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken);
-    function giveReward_afterFinalDecision(uint _proposalId);
+
+    function setVoteId_againstMember(address _memberAddress,uint _proposalId,uint _voteLength)
+    {
+        AddressProposalVote[_memberAddress][_proposalId] = _voteLength;
+    }
+
+    function getVoteId_againstMember(address _memberAddress,uint _proposalId) constant returns(uint voteId)
+    {
+        voteId = AddressProposalVote[_memberAddress][_proposalId];
+    }
+
+    function getVotesbyOption_againstProposal(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes)
+    {
+        totalVotes = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[_roleId][_optionIndex];
+    }
 }
