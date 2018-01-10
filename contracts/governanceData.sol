@@ -48,9 +48,9 @@ contract GovernanceData is Ownable{
         bytes32[] paramBytes32;
         address[] paramAddress;
         uint8 verdictOptions;
-        address[] verdictAddedByAddress;
-        uint[] valueOfVerdict;
-        uint[] stakeOnVerdict;
+        address[] optionAddedByAddress;
+        uint[] valueOfOption;
+        uint[] stakeOnOption;
     }
 
     struct proposalCategoryParams
@@ -132,7 +132,7 @@ contract GovernanceData is Ownable{
     ProposalCategory Pcategory;
 
     /// @dev Add points to add or subtract in memberReputation when proposal/option/vote gets denied or accepted.
-    function addMemberReputationPoints()
+    function addMemberReputationPoints() internal
     {
         addProposalOwnerPoints = 5;
         addOptionOwnerPoints = 5;
@@ -158,19 +158,6 @@ contract GovernanceData is Ownable{
     {
         return (addProposalOwnerPoints,addOptionOwnerPoints,addMemberPoints,subProposalOwnerPoints,subOptionOwnerPoints,subMemberPoints);
     } 
-
-    /// @dev Update Member Reputation after final decision
-    function setMemberReputation(address _proposalOwnerAddress,address _OptionOwner,uint _finalPointsProposal,uint _finalPointsOwner)
-    {
-        allMemberReputationByAddress[_proposalOwnerAddress] = _finalPointsProposal;
-        allMemberReputationByAddress[_OptionOwner] = _finalPointsOwner;
-    }
-
-    /// @dev Update member reputation after final decision.
-    function setMemberReputation1(address _memberAddress,uint _points)
-    {
-        allMemberReputationByAddress[_memberAddress] = _points;
-    }
 
     /// @dev Check if the member who wants to change in contracts, is owner.
     function isOwner(address _memberAddress) returns(uint checkOwner)
@@ -258,7 +245,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Set Vote Id against given proposal.
-    function setVoteidAgainstProposal(uint _proposalId,uint _voteId) public
+    function setVoteIdAgainstProposal(uint _proposalId,uint _voteId) public
     {
         totalVotesAgainstProposal[_proposalId].push(_voteId);
     }
@@ -269,7 +256,7 @@ contract GovernanceData is Ownable{
         allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress)); 
         votingTypeNameByAddress[_votingTypeAddress] = _votingTypeName;
     }
-
+    
     /// @dev Set proposal Category Parameters while adding verdict options from any voting type.
     function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions)
     {
@@ -320,11 +307,11 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Set the Deatils of added verdict i.e. Verdict Stake, Verdict value and Address of the member whoever added the verdict.
-    function setProposalVerdictAddressAndStakeValue(uint _proposalId,address _memberAddress,uint _stakeValue,uint _verdictValue)
+    function setProposalVerdictAddressAndStakeValue(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue)
     {
-        allProposalCategory[_proposalId].verdictAddedByAddress.push(_memberAddress);
-        allProposalCategory[_proposalId].valueOfVerdict.push(_verdictValue);
-        allProposalCategory[_proposalId].stakeOnVerdict.push(_stakeValue);
+        allProposalCategory[_proposalId].optionAddedByAddress.push(_memberAddress);
+        allProposalCategory[_proposalId].valueOfOption.push(_optionValue);
+        allProposalCategory[_proposalId].stakeOnOption.push(_stakeValue);
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
@@ -374,11 +361,11 @@ contract GovernanceData is Ownable{
     /// @dev As bydefault first option is alwayd deny option. One time configurable.
     function addInitialOptionDetails(uint _proposalId) internal
     {
-        if(allProposalCategory[_proposalId].verdictAddedByAddress.length == 0)
+        if(allProposalCategory[_proposalId].optionAddedByAddress.length == 0)
         {
-            allProposalCategory[_proposalId].verdictAddedByAddress.push(0x00);
-            allProposalCategory[_proposalId].valueOfVerdict.push(0);
-            allProposalCategory[_proposalId].stakeOnVerdict.push(0);
+            allProposalCategory[_proposalId].optionAddedByAddress.push(0x00);
+            allProposalCategory[_proposalId].valueOfOption.push(0);
+            allProposalCategory[_proposalId].stakeOnOption.push(0);
 
             allProposalCategoryParams[_proposalId].optionNameIntValue[0]["deny"] = 0;
             allProposalCategoryParams[_proposalId].optionNameBytesValue[0]["deny"] = "deny";
@@ -484,6 +471,34 @@ contract GovernanceData is Ownable{
         allProposal[_proposalId].currVotingStatus = _currVotingStatus;
         allProposal[_proposalId].currentVerdict = _intermediateVerdict;
         allProposal[_proposalId].finalVerdict = _finalVerdict;
+    }
+
+    function updateMemberReputation(uint _proposalId,uint _finalVerdict) 
+    {
+        address _proposalOwner =  getProposalOwner(_proposalId);
+        address _finalOptionOwner = getOptionAddressByProposalId(_proposalId,_finalVerdict);
+        uint addProposalOwnerPoints; uint addOptionOwnerPoints; uint subProposalOwnerPoints; uint subOptionOwnerPoints;
+        (addProposalOwnerPoints,addOptionOwnerPoints,,subProposalOwnerPoints,subOptionOwnerPoints,)=getMemberReputationPoints();
+
+        if(_finalVerdict>0)
+        {
+            allMemberReputationByAddress[_proposalOwner] = SafeMath.add(getMemberReputation(_proposalOwner),addProposalOwnerPoints);
+            allMemberReputationByAddress[_finalOptionOwner] = SafeMath.add(getMemberReputation(_finalOptionOwner),addOptionOwnerPoints); 
+        }
+        else
+        {
+            allMemberReputationByAddress[_proposalOwner] = SafeMath.sub(getMemberReputation(_proposalOwner),subProposalOwnerPoints);
+            for(uint i=0; i<getOptionAddedAddressLength(_proposalId); i++)
+            {
+                address memberAddress = getOptionAddressByProposalId(_proposalId,i);
+                allMemberReputationByAddress[memberAddress] = SafeMath.sub(getMemberReputation(memberAddress),subOptionOwnerPoints);
+            }
+        }   
+    }
+
+    function updateMemberReputation1(address _voterAddress,uint _voterPoints)
+    {
+        allMemberReputationByAddress[_voterAddress] = _voterPoints;
     }
 
     /// @dev Edits a proposal and Only owner of a proposal can edit it.
@@ -665,35 +680,35 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Fetch Total length of Member address array That added number of verdicts against proposal.
-    function getVerdictAddedAddressLength(uint _proposalId) constant returns(uint length)
+    function getOptionAddedAddressLength(uint _proposalId) constant returns(uint length)
     {
-        return  allProposalCategory[_proposalId].verdictAddedByAddress.length;
+        return  allProposalCategory[_proposalId].optionAddedByAddress.length;
     }
 
     /// @dev Get the Stake of verdict when given Proposal Id and Verdict index.
-    function getVerdictStakeByProposalId(uint _proposalId,uint _verdictIndex) constant returns(uint verdictStake)
+    function getOptionStakeByProposalId(uint _proposalId,uint _optionIndex) constant returns(uint optionStake)
     {
-        verdictStake = allProposalCategory[_proposalId].stakeOnVerdict[_verdictIndex];
+        optionStake = allProposalCategory[_proposalId].stakeOnOption[_optionIndex];
     }
 
     /// @dev Get the value of verdict when given Proposal Id and Verdict Index.
-    function getVerdictValueByProposalId(uint _proposalId,uint _verdictIndex) constant returns(uint verdictValue)
+    function getOptionValueByProposalId(uint _proposalId,uint _optionIndex) constant returns(uint optionValue)
     {
-        verdictValue = allProposalCategory[_proposalId].valueOfVerdict[_verdictIndex];
+        optionValue = allProposalCategory[_proposalId].valueOfOption[_optionIndex];
     }
 
     /// @dev Get the Address of member whosoever added the verdict when given Proposal Id and Verdict Index.
-    function getVerdictAddressByProposalId(uint _proposalId,uint _verdictIndex) constant returns(address memberAddress)
+    function getOptionAddressByProposalId(uint _proposalId,uint _optionIndex) constant returns(address memberAddress)
     {
-        memberAddress = allProposalCategory[_proposalId].verdictAddedByAddress[_verdictIndex];
+        memberAddress = allProposalCategory[_proposalId].optionAddedByAddress[_optionIndex];
     }
 
     /// @dev Get the Value, stake and Address of the member whosoever added that verdict option.
-    function getVerdictAddedDetails(uint _proposalId,uint _verdictIndex) constant returns(uint verdictStake,uint verdictValue,address memberAddress)
+    function getOptionAddedDetails(uint _proposalId,uint _optionIndex) constant returns(uint optionStake,uint optionValue,address memberAddress)
     {
-        verdictStake = allProposalCategory[_proposalId].stakeOnVerdict[_verdictIndex];
-        verdictValue = allProposalCategory[_proposalId].valueOfVerdict[_verdictIndex];
-        memberAddress = allProposalCategory[_proposalId].verdictAddedByAddress[_verdictIndex];
+        optionStake = allProposalCategory[_proposalId].stakeOnOption[_optionIndex];
+        optionValue = allProposalCategory[_proposalId].valueOfOption[_optionIndex];
+        memberAddress = allProposalCategory[_proposalId].optionAddedByAddress[_optionIndex];
     }
 
     /// @dev Get Total votes against a proposal when given proposal id.
