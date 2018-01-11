@@ -88,7 +88,7 @@ contract Master is Ownable {
         addContractDetails(versionNo,"SimpleVoting",_contractAddresses[5]);
         addContractDetails(versionNo,"RankBasedVoting",_contractAddresses[6]); 
         addContractDetails(versionNo,"FeatureWeighted",_contractAddresses[7]); 
-        addContractDetails(versionNo,"StandardVotingType",_contractAddresses[8]);   
+        addContractDetails(versionNo,"StandardVotingType",_contractAddresses[8]); 
     }
 
     /// @dev Adds Contract's name  and its ethereum address in a given version.
@@ -110,6 +110,8 @@ contract Master is Ownable {
         rankBasedVotingAddress = allContractVersions[_version][7].contractAddress;
         featureWeightedAddress = allContractVersions[_version][8].contractAddress;
         standardVotingTypeAddress = allContractVersions[_version][9].contractAddress;
+
+        changeOtherAddress();  
     }
 
     /// @dev Sets the older version contract address as inactive and the latest one as active.
@@ -136,7 +138,6 @@ contract Master is Ownable {
         contracts_active[allContractVersions[_version][_index].contractAddress]=1;
     }
 
-  
     /// @dev Links all contracts to master.sol by passing address of Master contract to the functions of other contracts.
     function changeMasterAddress(address _masterAddress) onlyOwner
     {
@@ -159,24 +160,9 @@ contract Master is Ownable {
         FW.changeMasterAddress(_masterAddress);
     }
 
-    /// @dev Change Master Address when giving version
-    function changeMasterAddressInVersion(uint _version, address _masterAddress) onlyOwner
-    {
-        allContractVersions[_version][0].contractAddress = _masterAddress;
-    }
-
    /// @dev Link contracts to one another.
-   function changeOtherAddress(uint _version) 
-   {   
-        governanceDataAddress = allContractVersions[_version][1].contractAddress;
-        memberRolesAddress = allContractVersions[_version][2].contractAddress;
-        proposalCategoryAddress = allContractVersions[_version][3].contractAddress;
-        basicTokenAddress = allContractVersions[_version][5].contractAddress;
-        simpleVotingAddress = allContractVersions[_version][6].contractAddress;
-        rankBasedVotingAddress = allContractVersions[_version][7].contractAddress;
-        featureWeightedAddress = allContractVersions[_version][8].contractAddress;
-        standardVotingTypeAddress = allContractVersions[_version][9].contractAddress;
-
+   function changeOtherAddress() internal
+   {  
         GD=GovernanceData(governanceDataAddress);
         GD.changeAllContractsAddress(basicTokenAddress,memberRolesAddress,proposalCategoryAddress);
 
@@ -216,7 +202,6 @@ contract Master is Ownable {
         uint version = versionLength-1;
         addInContractChangeDate(now,version);
         changeAddressInMaster(version);
-        changeOtherAddress(version);
     }
 
     /// @dev Stores the date when version of contracts get switched.
@@ -230,4 +215,5 @@ contract Master is Ownable {
     {
         versionLength = _length;
     }
+
 }

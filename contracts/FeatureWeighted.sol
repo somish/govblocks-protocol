@@ -33,13 +33,16 @@ contract FeatureWeighted is VotingType
     GovernanceData GD;
     MintableToken MT;
     StandardVotingType SVT;
+    uint8 constructorCheck;
     mapping(uint=>uint[]) allProposalFeatures;
 
     function FeatureWeightedInitiate()
     {
+        require(constructorCheck == 0);
         uint[] option;
         allVotes.push(proposalVote(0x00,0,option,now,0,0,0));
         votingTypeName = "FeatureWeighted";
+        constructorCheck = 1;
     }
 
     /// @dev Change master's contract address

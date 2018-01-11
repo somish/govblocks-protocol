@@ -31,11 +31,11 @@ contract GovBlocksMaster
 
     govBlocksUsers[] allGovBlocksUsers;
 
-    function setGovBlocksMaster(address _MasterUserAddress) 
+    function setGovBlocksMaster() 
     {
       require(owner == 0x00);
-      owner = 0xed2f74e1fb73b775e6e35720869ae7a7f4d755ad;
-    }
+      owner = 0xed2f74e1fb73b775e6e35720869ae7a7f4d755ad; 
+    } 
 
     modifier onlyOwner() 
     {

@@ -81,9 +81,11 @@ contract GovernanceData is Ownable{
 
     function GovernanceDataInitiate() 
     {
+        require(constructorCheck == 0);
         setGlobalParameters();
         addStatus();
         addMemberReputationPoints();
+        constructorCheck = 1;
     }
 
     struct votingTypeDetails
@@ -114,6 +116,7 @@ contract GovernanceData is Ownable{
     uint subProposalOwnerPoints;
     uint subOptionOwnerPoints;
     uint subMemberPoints;
+    uint constructorCheck;
 
     string[] public status;
     proposal[] allProposal;
@@ -210,7 +213,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Changes GNT contract Address. //NEW
-    function changeGNTtokenAddress(address _GNTcontractAddress)
+    function changeGNTtokenAddress(address _GNTcontractAddress) public
     {
         GNTAddress = _GNTcontractAddress;
     }
@@ -473,6 +476,7 @@ contract GovernanceData is Ownable{
         allProposal[_proposalId].finalVerdict = _finalVerdict;
     }
 
+    /// @dev AFter the proposal final decision, member reputation will get updated.
     function updateMemberReputation(uint _proposalId,uint _finalVerdict) 
     {
         address _proposalOwner =  getProposalOwner(_proposalId);
@@ -496,6 +500,7 @@ contract GovernanceData is Ownable{
         }   
     }
 
+    /// @dev Afer proposal Final Decision, Member reputation will get updated.
     function updateMemberReputation1(address _voterAddress,uint _voterPoints)
     {
         allMemberReputationByAddress[_voterAddress] = _voterPoints;
@@ -755,7 +760,6 @@ contract GovernanceData is Ownable{
     {   
         addressParameter = allProposalCategoryParams[_proposalId].optionNameAddressValue[finalOption][_parameterName];
     }    
-
 }  
 
 

@@ -33,13 +33,16 @@ contract RankBasedVoting is VotingType
     MintableToken MT;
     GovernanceData  GD;
     StandardVotingType SVT;
+    uint8 constructorCheck;
     mapping (uint=>uint8) verdictOptionsByVoteId;
      
     function RankBasedVotingInitiate()
     {
+        require(constructorCheck == 0 );
         uint[] option;
         allVotes.push(proposalVote(0x00,0,option,now,0,0,0));
         votingTypeName = "RankBasedVoting";
+        constructorCheck = 1;
     }
 
     /// @dev Change master's contract address
