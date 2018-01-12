@@ -14,7 +14,7 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 /**
- * @title votingType interface for All Types of voting.
+ * @title Standard votingType interface for All Types of voting That contains All Common functions required for voting type.
  */
 
 pragma solidity ^0.4.8;
@@ -67,20 +67,20 @@ contract StandardVotingType
         finalOptionValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
     }
 
-    function setVoteValue_givenByMember(address GNTAddress,uint _proposalId,uint _memberStake) public returns (uint finalVoteValue)
+    function setVoteValue_givenByMember(address GBTAddress,uint _proposalId,uint _memberStake) public returns (uint finalVoteValue)
     {
         GD=GovernanceData(GDAddress);
-        MT=MintableToken(GNTAddress);
+        MT=MintableToken(GBTAddress);
         
         if(_memberStake != 0)
-            MT.transferFrom(msg.sender,GNTAddress,_memberStake);
+            MT.transferFrom(msg.sender,GBTAddress,_memberStake);
 
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(msg.sender),100),100)),GD.getTotalTokenInSupply());
         uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
         finalVoteValue = SafeMath.mul(GD.getMemberReputation(msg.sender),value);
     }  
 
-    function addVerdictOptionSVT(address _VTaddress,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount)
+    function addVerdictOptionSVT(address _VTaddress,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount)
     {
         VT=VotingType(_VTaddress);
         GD=GovernanceData(GDAddress);
@@ -100,8 +100,8 @@ contract StandardVotingType
 
         if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
         {
-            uint optionValue = setOptionValue_givenByMemberSVT(GD,_proposalId,_GNTPayableTokenAmount);
-            GD.setProposalVerdictAddressAndStakeValue(_proposalId,msg.sender,_GNTPayableTokenAmount,optionValue);
+            uint optionValue = setOptionValue_givenByMemberSVT(GD,_proposalId,_GBTPayableTokenAmount);
+            GD.setProposalVerdictAddressAndStakeValue(_proposalId,msg.sender,_GBTPayableTokenAmount,optionValue);
             verdictOptions = verdictOptions+1;
             GD.setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);
         } 

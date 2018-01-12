@@ -27,7 +27,7 @@ contract VotingType
         uint[] optionChosen;
         uint dateSubmit;
         uint voterTokens;
-        uint voteStakeGNT;
+        uint voteStakeGBT;
         uint voteValue;
     }
 
@@ -44,13 +44,13 @@ contract VotingType
     uint public allVotesTotal;
     string public votingTypeName;
 
-    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GNTPayableTokenAmount) public;
-    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GNTPayableTokenAmount) public;
+    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount) public;
+    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount) public;
     function closeProposalVote(uint _proposalId) public;
     function giveReward_afterFinalDecision(uint _proposalId) public;
 
     function getTotalVotes() constant returns (uint votesTotal);
-    function getVoteDetailByid(uint _voteid) constant returns(address voter,uint proposalId,uint[] optionChosen,uint dateSubmit,uint voterTokens,uint voteStakeGNT,uint voteValue);
+    function getVoteDetailByid(uint _voteid) constant returns(address voter,uint proposalId,uint[] optionChosen,uint dateSubmit,uint voterTokens,uint voteStakeGBT,uint voteValue);
     function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken);
 
     function setVoteId_againstMember(address _memberAddress,uint _proposalId,uint _voteLength)

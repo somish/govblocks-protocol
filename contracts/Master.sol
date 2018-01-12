@@ -54,6 +54,7 @@ contract Master is Ownable {
     address featureWeightedAddress;
     address masterAddress;
     address standardVotingTypeAddress;
+    address GBTOwner;
     GovernanceData GD;
     MemberRoles MR;
     ProposalCategory PC;
@@ -73,6 +74,18 @@ contract Master is Ownable {
         versionLength =0;
     }
    
+    modifier onlyGBTOwner() 
+    {
+      require(msg.sender == owner || msg.sender == GBTOwner);
+      _;
+    }
+
+    function GovBlocksOwner()
+    {
+        require(GBTOwner == 0x00);
+        GBTOwner = msg.sender;
+    }
+
     /// @dev Creates a new version of contract addresses.
     function addNewVersion(address[] _contractAddresses) onlyOwner
     {
@@ -180,20 +193,20 @@ contract Master is Ownable {
         SVT.changeOtherContractAddress(simpleVotingAddress,rankBasedVotingAddress,featureWeightedAddress);
    }
 
-    /// @dev Change GNT token address all contracts
-    function changeGNTAddress(address _tokenAddress)
+    /// @dev Change GBT token address all contracts
+    function changeGBTAddress(address _tokenAddress) onlyGBTOwner
     {
         GD=GovernanceData(governanceDataAddress);
-        GD.changeGNTtokenAddress(mintableTokenAddress);
+        GD.changeGBTtokenAddress(mintableTokenAddress);
         
         SV=SimpleVoting(simpleVotingAddress);
-        SV.changeGNTtokenAddress(mintableTokenAddress);
+        SV.changeGBTtokenAddress(mintableTokenAddress);
 
         RB=RankBasedVoting(rankBasedVotingAddress);
-        RB.changeGNTtokenAddress(mintableTokenAddress);
+        RB.changeGBTtokenAddress(mintableTokenAddress);
 
         FW=FeatureWeighted(featureWeightedAddress);
-        FW.changeGNTtokenAddress(mintableTokenAddress);
+        FW.changeGBTtokenAddress(mintableTokenAddress);
     }
 
     /// @dev Switch to the recent version of contracts. (Last one)

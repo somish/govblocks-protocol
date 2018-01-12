@@ -37,6 +37,11 @@ contract GovBlocksMaster
       owner = 0xed2f74e1fb73b775e6e35720869ae7a7f4d755ad; 
     } 
 
+    function GovBlocksMasterInitiate()
+    {
+      setGovBlocksOwnerInAllMaster();
+    }
+    
     modifier onlyOwner() 
     {
       require(msg.sender == owner);
@@ -48,13 +53,23 @@ contract GovBlocksMaster
       owner = _newOwner;
     }
 
-    function updateGNTAddress(address _GNTContractAddress) onlyOwner
+    function updateGBTAddress(address _GBTContractAddress) onlyOwner
     {
         for(uint i=0; i< allGovBlocksUsers.length; i++)
         {
            MasterAddress = allGovBlocksUsers[i].masterAddress;
            MS=Master(MasterAddress);
-           MS.changeGNTAddress(_GNTContractAddress);
+           MS.changeGBTAddress(_GBTContractAddress);
+        }
+    }
+
+    function setGovBlocksOwnerInAllMaster() onlyOwner
+    {
+        for(uint i=0; i< allGovBlocksUsers.length; i++)
+        {
+           MasterAddress = allGovBlocksUsers[i].masterAddress;
+           MS=Master(MasterAddress);
+           MS.GovBlocksOwner();
         }
     }
 

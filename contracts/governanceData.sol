@@ -105,7 +105,7 @@ contract GovernanceData is Ownable{
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
-    uint public GNTStakeValue; 
+    uint public GBTStakeValue; 
     uint public globalRiskFactor; 
     uint public membershipScalingFactor;
     uint public scalingWeight;
@@ -124,7 +124,7 @@ contract GovernanceData is Ownable{
     address[] votingAddress;
     votingTypeDetails[] allVotingTypeDetails;
 
-    address GNTAddress;
+    address GBTAddress;
     address BTAddress;
     address MRAddress;
     address PCAddress;
@@ -192,7 +192,7 @@ contract GovernanceData is Ownable{
         proposalVoteClosingTime = 20;
         pendingProposalStart=0;
         quorumPercentage=25;
-        GNTStakeValue=10;
+        GBTStakeValue=10;
         globalRiskFactor=5;
         membershipScalingFactor=1;
         scalingWeight=1;
@@ -212,10 +212,10 @@ contract GovernanceData is Ownable{
         PCAddress = _PCcontractAddress;
     }
 
-    /// @dev Changes GNT contract Address. //NEW
-    function changeGNTtokenAddress(address _GNTcontractAddress) public
+    /// @dev Changes GBT contract Address. //NEW
+    function changeGBTtokenAddress(address _GBTcontractAddress) public
     {
-        GNTAddress = _GNTcontractAddress;
+        GBTAddress = _GBTcontractAddress;
     }
 
     /// @dev Checks if voting time of a given proposal should be closed or not. 
@@ -229,7 +229,7 @@ contract GovernanceData is Ownable{
     function openProposalForVoting(uint _proposalId,uint _TokenAmount) onlyOwner public
     {
         require(allProposal[_proposalId].category != 0);
-        payableGNTTokens(_TokenAmount);
+        payableGBTTokens(_TokenAmount);
         setProposalValue(_proposalId,_TokenAmount);
         pushInProposalStatus(_proposalId,2);
         updateProposalStatus(_proposalId,2);
@@ -318,11 +318,11 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-    function payableGNTTokens(uint _TokenAmount) internal
+    function payableGBTTokens(uint _TokenAmount) internal
     {
-        MT=MintableToken(GNTAddress);
-        require(_TokenAmount >= GNTStakeValue);
-        MT.transferFrom(msg.sender,GNTAddress,_TokenAmount);
+        MT=MintableToken(GBTAddress);
+        require(_TokenAmount >= GBTStakeValue);
+        MT.transferFrom(msg.sender,GBTAddress,_TokenAmount);
     }
 
     /// @dev Updates  status of an existing proposal.
@@ -409,7 +409,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Transfer reward after Final Proposal Decision.
-    function transferBackGNTtoken(address _memberAddress, uint _value)
+    function transferBackGBTtoken(address _memberAddress, uint _value)
     {
         BT=BasicToken(BTAddress);
         BT.transfer(_memberAddress,_value);
@@ -441,15 +441,15 @@ contract GovernanceData is Ownable{
         updateProposalStatus(_id,_status);
     }
 
-    /// @dev Change Variables that helps in Calculation of reward distribution. Risk Factor, GNT Stak Value, Scaling Factor,Scaling weight.
+    /// @dev Change Variables that helps in Calculation of reward distribution. Risk Factor, GBT Stak Value, Scaling Factor,Scaling weight.
     function changeGlobalRiskFactor(uint _riskFactor) onlyOwner
     {
         globalRiskFactor = _riskFactor;
     }
 
-    function changeGNTStakeValue(uint _GNTStakeValue) onlyOwner
+    function changeGBTStakeValue(uint _GBTStakeValue) onlyOwner
     {
-        GNTStakeValue = _GNTStakeValue;
+        GBTStakeValue = _GBTStakeValue;
     }
 
     function changeMembershipScalingFator(uint _membershipScalingFactor) onlyOwner
