@@ -14,7 +14,7 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 /**
- * @title Standard votingType interface for All Types of voting That contains All Common functions required for voting type.
+ * @title votingType interface for All Types of voting.
  */
 
 pragma solidity ^0.4.8;
@@ -23,6 +23,10 @@ import "./RankBasedVoting.sol";
 import "./FeatureWeighted.sol";
 import "./GovernanceData.sol";
 import "./VotingType.sol";
+// import "./BasicToken.sol";
+import "./Master.sol";
+import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+
 
 contract StandardVotingType
 {
@@ -33,90 +37,157 @@ contract StandardVotingType
     address MRAddress;
     address PCAddress;
     address VTAddress;
+    address BTAddress;
+    address GBTAddress;
+    address public masterAddress;
+    Master MS;
     MemberRoles MR;
     ProposalCategory PC;
     GovernanceData  GD;
-    MintableToken MT;
+    BasicToken BT;
     StandardVotingType SVT;
     SimpleVoting SV;
     RankBasedVoting RB;
     FeatureWeighted FW;
     VotingType VT;
 
-    function changeOtherContractAddress(address _SVaddress,address _RBaddress,address _FWaddress)
+    modifier onlyInternal {
+        MS=Master(masterAddress);
+        require(MS.isInternal(msg.sender) == 1);
+        _; 
+    }
+
+/// @dev Change master's contract address
+    function changeMasterAddress(address _masterContractAddress)
+    {
+        if(masterAddress == 0x000)
+            masterAddress = _masterContractAddress;
+        else
+        {
+            MS=Master(masterAddress);
+            require(MS.isInternal(msg.sender) == 1);
+                masterAddress = _masterContractAddress;
+        }
+    }
+    
+    function changeOtherContractAddress(address _SVaddress,address _RBaddress,address _FWaddress) onlyInternal
     {
         SVAddress = _SVaddress;
         RBAddress = _RBaddress;
         FWAddress = _FWaddress;
     }
     
-    function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    function changeAllContractsAddress(address _BTcontractAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
     {
+        BTAddress = _BTcontractAddress;
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
     }
+
+    /// @dev Changes GBT contract Address. 
+    function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
+    {
+        GBTAddress = _GBTcontractAddress;
+    }
     
-    function setOptionValue_givenByMemberSVT(address GDAddress,uint _proposalId,uint _memberStake) internal returns (uint finalOptionValue)
+    function setOptionValue_givenByMemberSVT(address _memberAddress,uint _proposalId,uint _memberStake) internal returns (uint finalOptionValue)
     {
         GD=GovernanceData(GDAddress);
-        uint memberLevel = Math.max256(GD.getMemberReputation(msg.sender),1);
-        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(msg.sender),100),100)),GD.getTotalTokenInSupply());
+        uint memberLevel = Math.max256(GD.getMemberReputation(_memberAddress),1);
+        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(_memberAddress),100),100)),GD.getTotalTokenInSupply());
         uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
 
         finalOptionValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
     }
 
-    function setVoteValue_givenByMember(address GBTAddress,uint _proposalId,uint _memberStake) public returns (uint finalVoteValue)
+    function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)
     {
         GD=GovernanceData(GDAddress);
-        MT=MintableToken(GBTAddress);
+        BT=BasicToken(BTAddress);
         
         if(_memberStake != 0)
-            MT.transferFrom(msg.sender,GBTAddress,_memberStake);
+            BT.transfer(GBTAddress,_memberStake);
 
-        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(msg.sender),100),100)),GD.getTotalTokenInSupply());
+        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(_memberAddress),100),100)),GD.getTotalTokenInSupply());
         uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
-        finalVoteValue = SafeMath.mul(GD.getMemberReputation(msg.sender),value);
+        finalVoteValue = SafeMath.mul(GD.getMemberReputation(_memberAddress),value);
     }  
+    
+    function getProposalVoptions(uint _proposalId) constant returns(uint8 verdictOptions)
+    {  
+        (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
+    }
 
-    function addVerdictOptionSVT(address _VTaddress,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount)
+    function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint _votingType,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount) onlyInternal
     {
-        VT=VotingType(_VTaddress);
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
-        
-        uint8 verdictOptions;
-        (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
+
+        if(_votingType == 0)
+        {
+           SV = SimpleVoting(SVAddress);
+           VT = SV;
+        }
+        else if(_votingType == 1)
+        {
+            RB = RankBasedVoting(RBAddress);
+            VT = RB;
+        } 
+        else
+        {
+            FW = FeatureWeighted(FWAddress);
+            VT = FW;
+        }
+
         uint _categoryId;uint currentVotingId;
         (_categoryId,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
 
-        require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GD.getBalanceOfMember(msg.sender) != 0);
-        require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && VT.getVoteId_againstMember(msg.sender,_proposalId) == 0 );
+        require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GD.getBalanceOfMember(_memberAddress) != 0);
+        require(MR.getMemberRoleIdByAddress(_memberAddress) == PC.getRoleSequencAtIndex(_categoryId,currentVotingId) && VT.getVoteId_againstMember(_memberAddress,_proposalId) == 0 );
         
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-        (,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_categoryId);
+        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_categoryId);
 
         if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
         {
-            uint optionValue = setOptionValue_givenByMemberSVT(GD,_proposalId,_GBTPayableTokenAmount);
-            GD.setProposalVerdictAddressAndStakeValue(_proposalId,msg.sender,_GBTPayableTokenAmount,optionValue);
-            verdictOptions = verdictOptions+1;
-            GD.setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress,verdictOptions);
+            addVerdictOptionSVT1(_proposalId,_memberAddress,_GBTPayableTokenAmount);
+            addVerdictOptionSVT2(_proposalId,_categoryId,_paramInt,_paramBytes32,_paramAddress);
         } 
     }
 
-    function closeProposalVoteSVT(address _VTaddress,uint _votingType,uint _proposalId)
+    function addVerdictOptionSVT1(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount) internal
+    {
+        GD.setProposalVerdictAddressAndStakeValue(_proposalId,_memberAddress,_GBTPayableTokenAmount,setOptionValue_givenByMemberSVT(_memberAddress,_proposalId,_GBTPayableTokenAmount));
+    }
+    function addVerdictOptionSVT2(uint _proposalId,uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) internal
+    {
+        GD.setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress,getProposalVoptions(_proposalId)+1); // MAKE +1 IN go
+    }
+    
+    function closeProposalVoteSVT(address _memberAddress,uint _votingType,uint _proposalId) onlyInternal
     {
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
-        SV=SimpleVoting(SVAddress);
-        RB=RankBasedVoting(RBAddress);
-        FW=FeatureWeighted(FWAddress);
-        VT=VotingType(_VTaddress);
-        
+
+        if(_votingType == 0)
+        {
+           SV = SimpleVoting(SVAddress);
+           VT = SV;
+        }
+        else if(_votingType == 1)
+        {
+            RB = RankBasedVoting(RBAddress);
+            VT = RB;
+        } 
+        else
+        {
+            FW = FeatureWeighted(FWAddress);
+            VT = FW;
+        }
+
         uint8 currentVotingId; uint8 category;
         (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
         uint8 verdictOptions;
@@ -124,7 +195,7 @@ contract StandardVotingType
     
         require(GD.checkProposalVoteClosing(_proposalId)==1);
         uint8 max; uint totalVotes; uint verdictVal; uint majorityVote;
-        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
+        uint roleId = MR.getMemberRoleIdByAddress(_memberAddress);
 
         max=0;  
         for(uint8 i = 0; i < verdictOptions; i++)
@@ -152,18 +223,7 @@ contract StandardVotingType
                     GD.updateProposalDetails(_proposalId,currentVotingId,max,max);
                     GD.changeProposalStatus(_proposalId,3);
                     PC.actionAfterProposalPass(_proposalId ,category);
-                    if(_votingType == 0)
-                    {
-                        SV.giveReward_afterFinalDecision(_proposalId);
-                    }
-                    else if(_votingType == 1)
-                    {
-                        RB.giveReward_afterFinalDecision(_proposalId);
-                    } 
-                    else
-                    {
-                        FW.giveReward_afterFinalDecision(_proposalId);
-                    }
+                    VT.giveReward_afterFinalDecision(_proposalId);
                 }
             }
             else

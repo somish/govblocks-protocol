@@ -74,16 +74,36 @@ contract Master is Ownable {
         versionLength =0;
     }
    
-    modifier onlyGBTOwner() 
+    modifier onlyGBTOwner
     {
       require(msg.sender == owner || msg.sender == GBTOwner);
       _;
+    }
+
+    modifier onlyInternal 
+    {
+        require(contracts_active[msg.sender] == 1 || owner==msg.sender);
+        _; 
     }
 
     function GovBlocksOwner()
     {
         require(GBTOwner == 0x00);
         GBTOwner = msg.sender;
+    }
+
+    function isInternal(address _contractAdd) constant returns(uint check)
+    {
+        check=0;
+        if(contracts_active[msg.sender] == 1 || owner==msg.sender)
+            check=1;
+    }
+
+    function isOwner(address _ownerAddress) constant returns(uint check)
+    {
+        check=0;
+        if(owner == _ownerAddress)
+            check=1;
     }
 
     /// @dev Creates a new version of contract addresses.
@@ -105,13 +125,13 @@ contract Master is Ownable {
     }
 
     /// @dev Adds Contract's name  and its ethereum address in a given version.
-    function addContractDetails(uint _versionNo,bytes32 _contractName,address _contractAddresse) 
+    function addContractDetails(uint _versionNo,bytes32 _contractName,address _contractAddresse) internal
     {
         allContractVersions[_versionNo].push(contractDetails(_contractName,_contractAddresse));        
     }
 
     /// @dev Changes all reference contract addresses in master 
-    function changeAddressInMaster(uint _version) onlyOwner
+    function changeAddressInMaster(uint _version) onlyInternal
     {
         changeAllAddress(_version);
         governanceDataAddress = allContractVersions[_version][1].contractAddress;
@@ -123,8 +143,7 @@ contract Master is Ownable {
         rankBasedVotingAddress = allContractVersions[_version][7].contractAddress;
         featureWeightedAddress = allContractVersions[_version][8].contractAddress;
         standardVotingTypeAddress = allContractVersions[_version][9].contractAddress;
-
-        changeOtherAddress();  
+        // changeOtherAddress();  
     }
 
     /// @dev Sets the older version contract address as inactive and the latest one as active.
@@ -157,12 +176,6 @@ contract Master is Ownable {
         GD=GovernanceData(governanceDataAddress);
         GD.changeMasterAddress(_masterAddress);
         
-        MR=MemberRoles(memberRolesAddress);
-        MR.changeMasterAddress(_masterAddress);
-
-        PC=ProposalCategory(proposalCategoryAddress);
-        PC.changeMasterAddress(_masterAddress);
-
         SV=SimpleVoting(simpleVotingAddress);
         SV.changeMasterAddress(_masterAddress);
 
@@ -171,25 +184,28 @@ contract Master is Ownable {
 
         FW=FeatureWeighted(featureWeightedAddress);
         FW.changeMasterAddress(_masterAddress);
+
+        SVT=StandardVotingType(standardVotingTypeAddress);
+        SVT.changeMasterAddress(_masterAddress);
     }
 
    /// @dev Link contracts to one another.
-   function changeOtherAddress() internal
+   function changeOtherAddress() onlyInternal
    {  
         GD=GovernanceData(governanceDataAddress);
         GD.changeAllContractsAddress(basicTokenAddress,memberRolesAddress,proposalCategoryAddress);
 
         SV=SimpleVoting(simpleVotingAddress);
-        SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        SV.changeAllContractsAddress(basicTokenAddress,standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
 
         RB=RankBasedVoting(rankBasedVotingAddress);
-        RB.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        RB.changeAllContractsAddress(basicTokenAddress,standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
 
         FW=FeatureWeighted(featureWeightedAddress);
-        FW.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        FW.changeAllContractsAddress(basicTokenAddress,standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
 
         SVT=StandardVotingType(standardVotingTypeAddress);
-        SVT.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        SVT.changeAllContractsAddress(basicTokenAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
         SVT.changeOtherContractAddress(simpleVotingAddress,rankBasedVotingAddress,featureWeightedAddress);
    }
 
@@ -197,20 +213,23 @@ contract Master is Ownable {
     function changeGBTAddress(address _tokenAddress) onlyGBTOwner
     {
         GD=GovernanceData(governanceDataAddress);
-        GD.changeGBTtokenAddress(mintableTokenAddress);
+        GD.changeGBTtokenAddress(_tokenAddress);
         
         SV=SimpleVoting(simpleVotingAddress);
-        SV.changeGBTtokenAddress(mintableTokenAddress);
+        SV.changeGBTtokenAddress(_tokenAddress);
 
         RB=RankBasedVoting(rankBasedVotingAddress);
-        RB.changeGBTtokenAddress(mintableTokenAddress);
+        RB.changeGBTtokenAddress(_tokenAddress);
 
         FW=FeatureWeighted(featureWeightedAddress);
-        FW.changeGBTtokenAddress(mintableTokenAddress);
+        FW.changeGBTtokenAddress(_tokenAddress);
+
+        SVT=StandardVotingType(standardVotingTypeAddress);
+        SVT.changeGBTtokenAddress(_tokenAddress);
     }
 
     /// @dev Switch to the recent version of contracts. (Last one)
-    function switchToRecentVersion() onlyOwner
+    function switchToRecentVersion() onlyInternal
     {
         uint version = versionLength-1;
         addInContractChangeDate(now,version);
@@ -224,7 +243,7 @@ contract Master is Ownable {
     }
   
     /// @dev Sets the length of version.
-    function setVersionLength(uint _length) 
+    function setVersionLength(uint _length) internal
     {
         versionLength = _length;
     }

@@ -18,6 +18,18 @@ pragma solidity ^0.4.8;
 import "./VotingType.sol";
 import "./GovernanceData.sol";
 import "./StandardVotingType.sol";
+import "./MemberRoles.sol";
+import "./ProposalCategory.sol";
+import "./Master.sol";
+import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+import "./zeppelin-solidity/contracts/token/MintableToken.sol";
+import "./zeppelin-solidity/contracts/math/Math.sol";
+import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+// import "./SafeMath.sol";
+// import "./BasicToken.sol";
+// import "./MintableToken.sol";
+// import "./Math.sol";
+
 
 contract RankBasedVoting is VotingType
 {
@@ -26,14 +38,17 @@ contract RankBasedVoting is VotingType
     address MRAddress;
     address PCAddress;
     address GBTAddress;
-    address masterAddress;
+    address BTAddress;
+    address public masterAddress;
     address SVTAddress;
     MemberRoles MR;
+    BasicToken BT;
     ProposalCategory PC;
     MintableToken MT;
     GovernanceData  GD;
     StandardVotingType SVT;
     uint8 constructorCheck;
+    Master MS;
     mapping (uint=>uint8) verdictOptionsByVoteId;
      
     function RankBasedVotingInitiate()
@@ -41,27 +56,41 @@ contract RankBasedVoting is VotingType
         require(constructorCheck == 0 );
         uint[] option;
         allVotes.push(proposalVote(0x00,0,option,now,0,0,0));
-        votingTypeName = "RankBasedVoting";
+        votingTypeName = "Ranking Based Voting";
         constructorCheck = 1;
+    }
+
+    modifier onlyInternal {
+        MS=Master(masterAddress);
+        require(MS.isInternal(msg.sender) == 1);
+        _; 
     }
 
     /// @dev Change master's contract address
     function changeMasterAddress(address _masterContractAddress)
     {
-        masterAddress = _masterContractAddress;
+        if(masterAddress == 0x000)
+            masterAddress = _masterContractAddress;
+        else
+        {
+            MS=Master(masterAddress);
+            require(MS.isInternal(msg.sender) == 1);
+                masterAddress = _masterContractAddress;
+        }
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
     function payableGBTTokensRankBasedVoting(uint _TokenAmount) public
     {
-        MT=MintableToken(GBTAddress);
+        BT=BasicToken(BTAddress);
         GD=GovernanceData(GDAddress);
         require(_TokenAmount >= GD.GBTStakeValue());
-        MT.transferFrom(msg.sender,GBTAddress,_TokenAmount);
+        BT.transfer(GBTAddress,_TokenAmount);
     }
 
-    function changeAllContractsAddress(address _StandardVotingAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    function changeAllContractsAddress(address _BTContractAddress,address _StandardVotingAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
     {
+        BTAddress = _BTContractAddress;
         SVTAddress = _StandardVotingAddress;
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
@@ -69,7 +98,7 @@ contract RankBasedVoting is VotingType
     }
 
     /// @dev Changes GBT contract Address. //NEW
-    function changeGBTtokenAddress(address _GBTcontractAddress)
+    function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
     {
         GBTAddress = _GBTcontractAddress;
     }
@@ -105,7 +134,7 @@ contract RankBasedVoting is VotingType
 
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount)
     {
-        SVT.addVerdictOptionSVT(msg.sender,_proposalId,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount);
+        SVT.addVerdictOptionSVT(_proposalId,msg.sender,1,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount);
         payableGBTTokensRankBasedVoting(_GBTPayableTokenAmount);
     }
 
@@ -138,7 +167,7 @@ contract RankBasedVoting is VotingType
         {
             uint votelength = getTotalVotes();
             submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_optionChosen,verdictOptions);
-            uint finalVoteValue = SVT.setVoteValue_givenByMember(GBTAddress,_proposalId,_GBTPayableTokenAmount);
+            uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
             allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)],GD.getBalanceOfMember(msg.sender));
             setVoteId_againstMember(msg.sender,_proposalId,votelength);
             ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(votelength);
@@ -169,7 +198,7 @@ contract RankBasedVoting is VotingType
         revertChangesInMemberVote(_proposalId,currentVotingId,optionChosen,voteId);
         submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_optionChosen,verdictOptions);
 
-        uint finalVoteValue = SVT.setVoteValue_givenByMember(GBTAddress,_proposalId,_GBTPayableTokenAmount);
+        uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
         allVotes[voteId].voteStakeGBT = _GBTPayableTokenAmount;
         allVotes[voteId].voteValue = finalVoteValue;
     }
@@ -222,6 +251,7 @@ contract RankBasedVoting is VotingType
 
     function closeProposalVote(uint _proposalId)
     {
+        SVT=StandardVotingType(SVTAddress);
         SVT.closeProposalVoteSVT(msg.sender,1,_proposalId);
     }
 

@@ -18,6 +18,9 @@ pragma solidity ^0.4.8;
 import "./VotingType.sol";
 import "./GovernanceData.sol";
 import  "./StandardVotingType.sol";
+import "./Master.sol";
+// import "./BasicToken.sol";
+import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 
 contract FeatureWeighted is VotingType
 {
@@ -26,13 +29,16 @@ contract FeatureWeighted is VotingType
     address MRAddress;
     address PCAddress;
     address GBTAddress;
-    address masterAddress;
+    address BTAddress;
+    address public masterAddress;
     address SVTAddress;
     MemberRoles MR;
     ProposalCategory PC;
     GovernanceData GD;
     MintableToken MT;
     StandardVotingType SVT;
+    BasicToken BT;
+    Master MS;
     uint8 constructorCheck;
     mapping(uint=>uint[]) allProposalFeatures;
 
@@ -41,18 +47,32 @@ contract FeatureWeighted is VotingType
         require(constructorCheck == 0);
         uint[] option;
         allVotes.push(proposalVote(0x00,0,option,now,0,0,0));
-        votingTypeName = "FeatureWeighted";
+        votingTypeName = "Feature Weighted Voting";
         constructorCheck = 1;
+    }
+
+    modifier onlyInternal {
+        MS=Master(masterAddress);
+        require(MS.isInternal(msg.sender) == 1);
+        _; 
     }
 
     /// @dev Change master's contract address
     function changeMasterAddress(address _masterContractAddress)
     {
-        masterAddress = _masterContractAddress;
+        if(masterAddress == 0x000)
+            masterAddress = _masterContractAddress;
+        else
+        {
+            MS=Master(masterAddress);
+            require(MS.isInternal(msg.sender) == 1);
+                masterAddress = _masterContractAddress;
+        }
     }
 
-    function changeAllContractsAddress(address _SVTcontractAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    function changeAllContractsAddress(address _BTContractAddress,address _SVTcontractAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
     {
+        BTAddress = _BTContractAddress;
         SVTAddress = _SVTcontractAddress;
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
@@ -60,7 +80,7 @@ contract FeatureWeighted is VotingType
     }
 
     /// @dev Changes GBT contract Address. //NEW
-    function changeGBTtokenAddress(address _GBTcontractAddress)
+    function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
     {
         GBTAddress = _GBTcontractAddress;
     }
@@ -68,9 +88,10 @@ contract FeatureWeighted is VotingType
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
     function payableGBTTokensFeatureWeighted(uint _TokenAmount) internal
     {
-        MT=MintableToken(GBTAddress);
+        BT=BasicToken(BTAddress);
+        GD=GovernanceData(GDAddress);
         require(_TokenAmount >= GD.GBTStakeValue());
-        MT.transferFrom(msg.sender,GBTAddress,_TokenAmount);
+        BT.transfer(GBTAddress,_TokenAmount);
     }
 
     function getTotalVotes()  constant returns (uint votesTotal)
@@ -121,7 +142,7 @@ contract FeatureWeighted is VotingType
 
     function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount)
     {
-        SVT.addVerdictOptionSVT(msg.sender,_proposalId,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount);
+        SVT.addVerdictOptionSVT(_proposalId,msg.sender,2,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount);
         payableGBTTokensFeatureWeighted(_GBTPayableTokenAmount);
     }
 
@@ -154,7 +175,7 @@ contract FeatureWeighted is VotingType
         {
             voteLength = getTotalVotes();
             submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_optionChosen,featureLength,voteLength);
-            uint finalVoteValue = SVT.setVoteValue_givenByMember(GBTAddress,_proposalId,_GBTPayableTokenAmount);
+            uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
             allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)],GD.getBalanceOfMember(msg.sender));
             AddressProposalVote[msg.sender][_proposalId] = voteLength;
             ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(voteLength);
@@ -181,7 +202,7 @@ contract FeatureWeighted is VotingType
         submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_optionChosen,featureLength,voteId);
         allVotes[voteId].optionChosen = _optionChosen;
         
-        uint finalVoteValue = SVT.setVoteValue_givenByMember(GBTAddress,_proposalId,_GBTPayableTokenAmount);
+        uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
         allVotes[voteId].voteStakeGBT = _GBTPayableTokenAmount;
         allVotes[voteId].voteValue = finalVoteValue;
 

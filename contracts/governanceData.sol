@@ -23,6 +23,7 @@ import "./ProposalCategory.sol";
 // import "./BasicToken.sol";
 // import "./MintableToken.sol";
 // import "./Math.sol";
+import "./Master.sol";
 
 contract GovernanceData is Ownable{
     using SafeMath for uint;
@@ -120,20 +121,30 @@ contract GovernanceData is Ownable{
 
     string[] public status;
     proposal[] allProposal;
-    bytes32[] votingName;
-    address[] votingAddress;
     votingTypeDetails[] allVotingTypeDetails;
 
     address GBTAddress;
     address BTAddress;
     address MRAddress;
     address PCAddress;
-    address masterAddress;
+    address public masterAddress;
     BasicToken BT;
     MintableToken MT;
     MemberRoles MR;
     ProposalCategory Pcategory;
+    Master MS;
 
+    modifier onlyInternal {
+        MS=Master(masterAddress);
+        require(MS.isInternal(msg.sender) == 1);
+        _; 
+    }
+     modifier onlyOwner{
+        MS=Master(masterAddress);
+        require(MS.isOwner(msg.sender) == 1);
+        _; 
+    }
+    
     /// @dev Add points to add or subtract in memberReputation when proposal/option/vote gets denied or accepted.
     function addMemberReputationPoints() internal
     {
@@ -157,13 +168,13 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Get points to proceed with updating the member reputation level.
-    function getMemberReputationPoints() constant returns(uint addProposalOwnerPoints,uint addOptionOwnerPoints,uint addMemberPoints,uint subProposalOwnerPoints,uint subOptionOwnerPoints,uint subMemberPoints)
+    function getMemberReputationPoints() constant returns(uint addProposalOwnPoints,uint addOptionOwnPoints,uint addMemPoints,uint subProposalOwnPoints,uint subOptionOwnPoints,uint subMemPoints)
     {
         return (addProposalOwnerPoints,addOptionOwnerPoints,addMemberPoints,subProposalOwnerPoints,subOptionOwnerPoints,subMemberPoints);
     } 
 
     /// @dev Check if the member who wants to change in contracts, is owner.
-    function isOwner(address _memberAddress) returns(uint checkOwner)
+    function isOwner(address _memberAddress) returns(uint checkOwner) 
     {
         require(owner == _memberAddress);
             checkOwner=1;
@@ -199,13 +210,20 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Change master's contract address
-    function changeMasterAddress(address _masterContractAddress)
+    function changeMasterAddress(address _masterContractAddress) 
     {
-        masterAddress = _masterContractAddress;
+        if(masterAddress == 0x000)
+            masterAddress = _masterContractAddress;
+        else
+        {
+            MS=Master(masterAddress);
+            require(MS.isInternal(msg.sender) == 1);
+                masterAddress = _masterContractAddress;
+        }
     }
 
     /// @dev change all contract's addresses.
-    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
     {
         BTAddress = _BTcontractAddress;
         MRAddress = _MRcontractAddress;
@@ -213,13 +231,13 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Changes GBT contract Address. //NEW
-    function changeGBTtokenAddress(address _GBTcontractAddress) public
+    function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
     {
         GBTAddress = _GBTcontractAddress;
     }
 
     /// @dev Checks if voting time of a given proposal should be closed or not. 
-    function checkProposalVoteClosing(uint _proposalId) constant returns(uint8 closeValue)
+    function checkProposalVoteClosing(uint _proposalId) onlyInternal constant returns(uint8 closeValue) 
     {
         require(SafeMath.add(allProposal[_proposalId].date_upd,proposalVoteClosingTime) <= now);
         closeValue=1;
@@ -248,7 +266,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Set Vote Id against given proposal.
-    function setVoteIdAgainstProposal(uint _proposalId,uint _voteId) public
+    function setVoteIdAgainstProposal(uint _proposalId,uint _voteId) onlyInternal
     {
         totalVotesAgainstProposal[_proposalId].push(_voteId);
     }
@@ -261,13 +279,13 @@ contract GovernanceData is Ownable{
     }
     
     /// @dev Set proposal Category Parameters while adding verdict options from any voting type.
-    function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions)
+    function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) onlyInternal
     {
         setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
         Pcategory=ProposalCategory(PCAddress);
 
          uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
-        (,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_category);
+        (,,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_category);
         
         for(j=0; j<paramInt; j++)
         {
@@ -310,7 +328,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Set the Deatils of added verdict i.e. Verdict Stake, Verdict value and Address of the member whoever added the verdict.
-    function setProposalVerdictAddressAndStakeValue(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue)
+    function setProposalVerdictAddressAndStakeValue(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue) onlyInternal
     {
         allProposalCategory[_proposalId].optionAddedByAddress.push(_memberAddress);
         allProposalCategory[_proposalId].valueOfOption.push(_optionValue);
@@ -320,9 +338,12 @@ contract GovernanceData is Ownable{
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
     function payableGBTTokens(uint _TokenAmount) internal
     {
-        MT=MintableToken(GBTAddress);
+        // MT=MintableToken(GBTAddress);
+        // require(_TokenAmount >= GBTStakeValue);
+        // MT.transferFrom(msg.sender,GBTAddress,_TokenAmount);
+        BT=BasicToken(BTAddress);
         require(_TokenAmount >= GBTStakeValue);
-        MT.transferFrom(msg.sender,GBTAddress,_TokenAmount);
+        BT.transfer(GBTAddress,_TokenAmount);
     }
 
     /// @dev Updates  status of an existing proposal.
@@ -348,7 +369,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev function to get called after Proposal Pass
-    function categoryFunction(uint256 _proposalId) public
+    function categoryFunction(uint256 _proposalId) onlyInternal
     {
         // uint _categoryId;
         // (_categoryId,,,,)= getProposalDetailsById2(_proposalId);
@@ -409,14 +430,14 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Transfer reward after Final Proposal Decision.
-    function transferBackGBTtoken(address _memberAddress, uint _value)
+    function transferBackGBTtoken(address _memberAddress, uint _value) onlyInternal
     {
         BT=BasicToken(BTAddress);
         BT.transfer(_memberAddress,_value);
     }
 
     /// @dev Change pending proposal start variable
-    function changePendingProposalStart() public
+    function changePendingProposalStart() onlyInternal
     {
         uint pendingPS = pendingProposalStart;
         uint proposalLength = allProposal.length;
@@ -434,7 +455,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Changes the status of a given proposal.
-    function changeProposalStatus(uint _id,uint8 _status) 
+    function changeProposalStatus(uint _id,uint8 _status) onlyInternal
     {
         require(allProposal[_id].category != 0);
         pushInProposalStatus(_id,_status);
@@ -469,7 +490,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Updating proposal's Major details (Called from close proposal Vote).
-    function updateProposalDetails(uint _proposalId,uint8 _currVotingStatus, uint8 _intermediateVerdict,uint8 _finalVerdict)
+    function updateProposalDetails(uint _proposalId,uint8 _currVotingStatus, uint8 _intermediateVerdict,uint8 _finalVerdict) onlyInternal 
     {
         allProposal[_proposalId].currVotingStatus = _currVotingStatus;
         allProposal[_proposalId].currentVerdict = _intermediateVerdict;
@@ -477,7 +498,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev AFter the proposal final decision, member reputation will get updated.
-    function updateMemberReputation(uint _proposalId,uint _finalVerdict) 
+    function updateMemberReputation(uint _proposalId,uint _finalVerdict) onlyInternal
     {
         address _proposalOwner =  getProposalOwner(_proposalId);
         address _finalOptionOwner = getOptionAddressByProposalId(_proposalId,_finalVerdict);
@@ -501,7 +522,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Afer proposal Final Decision, Member reputation will get updated.
-    function updateMemberReputation1(address _voterAddress,uint _voterPoints)
+    function updateMemberReputation1(address _voterAddress,uint _voterPoints) onlyInternal
     {
         allMemberReputationByAddress[_voterAddress] = _voterPoints;
     }
@@ -542,37 +563,17 @@ contract GovernanceData is Ownable{
         allProposal[_id].date_upd = now;
         allProposal[_id].versionNum = allProposal[_id].versionNum+1;
     }
-
-    /// @dev Get All Address for different types of voting.
-    function getVotingTypeAllAddress() public returns(address[])
-    {
-        for(uint i=0; i<allVotingTypeDetails.length; i++)
-        {
-            votingAddress.push(allVotingTypeDetails[i].votingTypeAddress);
-        }
-        return votingAddress;
-    }
-
-    /// @dev Get All names for different types of voting.
-    function getVotingTypeAllName() public returns(bytes32[])
-    {
-        for(uint i=0; i<allVotingTypeDetails.length; i++)
-        {
-            votingName.push(allVotingTypeDetails[i].votingTypeName);
-        }
-        return votingName;
-    }
     
-    /// @dev Get Address of a type of voting when given Id. 
-    function getVotingTypeAddressById(uint _votingTypeId) public returns(address votingTypeAddress)
+    function getVotingTypeLength() public constant returns(uint) 
     {
-        return allVotingTypeDetails[_votingTypeId].votingTypeAddress;
+        return allVotingTypeDetails.length;
     }
 
-    /// @dev Get Voting type name when giving address.
-    function getVotingTypeNameByAddress(address _votingTypeAddress) public returns(bytes32)
+    function getVotingTypeDetailsById(uint _votingTypeId) public constant returns(uint votingTypeId,bytes32 VTName,address VTAddress)
     {
-        return votingTypeNameByAddress[_votingTypeAddress];
+        votingTypeId = _votingTypeId;
+        VTName = allVotingTypeDetails[_votingTypeId].votingTypeName;
+        VTAddress = allVotingTypeDetails[_votingTypeId].votingTypeAddress;
     }
 
     /// @dev Fetch user balance when giving member address.
@@ -630,27 +631,27 @@ contract GovernanceData is Ownable{
         proposalStatus = allProposal[_proposalId].propStatus;
     }
 
-    // /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
-    // function getProposalFinalVerdictDetails(uint _proposalId) public returns(uint paramint, bytes32 parambytes32,address paramaddress)
-    // {
-    //     uint category = allProposal[_proposalId].category;
-    //     uint verdictChosen = allProposal[_proposalId].finalVerdict;
+    /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
+    function getProposalFinalVerdictDetails(uint _proposalId) public returns(uint paramint, bytes32 parambytes32,address paramaddress)
+    {
+        uint category = allProposal[_proposalId].category;
+        uint verdictChosen = allProposal[_proposalId].finalVerdict;
 
-    //     if(allProposalCategory[_proposalId].paramInt.length != 0)
-    //     {
-    //          paramint = allProposalCategory[_proposalId].paramInt[verdictChosen];
-    //     }
+        if(allProposalCategory[_proposalId].paramInt.length != 0)
+        {
+             paramint = allProposalCategory[_proposalId].paramInt[verdictChosen];
+        }
 
-    //     if(allProposalCategory[_proposalId].paramBytes32.length != 0)
-    //     {
-    //         parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChosen];
-    //     }
+        if(allProposalCategory[_proposalId].paramBytes32.length != 0)
+        {
+            parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChosen];
+        }
 
-    //     if(allProposalCategory[_proposalId].paramAddress.length != 0)
-    //     {
-    //         paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
-    //     }  
-    // }
+        if(allProposalCategory[_proposalId].paramAddress.length != 0)
+        {
+            paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
+        }  
+    }
     
     /// @dev Get the number of tokens already distributed among members.
     function getTotalTokenInSupply() constant returns(uint _totalSupplyToken)
@@ -673,7 +674,7 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Get proposal Value when given proposal Id.
-    function getProposalValue(uint _proposalId) constant returns(uint proposalValue)
+    function getProposalValue(uint _proposalId) constant  returns(uint proposalValue) 
     {
         proposalValue = allProposal[_proposalId].proposalValue;
     }
@@ -759,7 +760,17 @@ contract GovernanceData is Ownable{
     function getParameterDetails3(uint _proposalId,bytes32 _parameterName,uint finalOption) internal returns (address addressParameter)
     {   
         addressParameter = allProposalCategoryParams[_proposalId].optionNameAddressValue[finalOption][_parameterName];
-    }    
+    }
+
+    function getProposalLength()constant returns(uint)
+    {  
+        return (allProposal.length);
+    } 
+
+    function getProposalDetailsById3(uint _proposalId) constant returns(uint proposalIndex,string proposalDescHash,uint dateAdded,string propStatus,uint propCategory,uint totalVotes,uint8 totalOption)
+    {
+        return (_proposalId,allProposal[_proposalId].proposalDescHash,allProposal[_proposalId].date_add,status[allProposal[_proposalId].propStatus],allProposal[_proposalId].category,totalVotesAgainstProposal[_proposalId].length,allProposalCategory[_proposalId].verdictOptions);
+    }  
 }  
 
 

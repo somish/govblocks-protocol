@@ -17,8 +17,12 @@
 pragma solidity ^0.4.8;
 
 import "./VotingType.sol";
+import "./Master.sol";
 import "./StandardVotingType.sol";
 import "./GovernanceData.sol";
+// import "./BasicToken.sol";
+import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+
 
 contract SimpleVoting is VotingType
 {
@@ -28,41 +32,57 @@ contract SimpleVoting is VotingType
     address MRAddress;
     address PCAddress;
     address GBTAddress;
-    address masterAddress;
+    address BTAddress;
+    address public masterAddress;
     address SVTAddress;
     MemberRoles MR;
+    BasicToken BT;
     ProposalCategory PC;
     GovernanceData GD;
-    MintableToken MT;
     StandardVotingType SVT;
+    Master MS;
     uint constructorCheck;
+
+    modifier onlyInternal {
+        MS=Master(masterAddress);
+        require(MS.isInternal(msg.sender) == 1);
+        _; 
+    }
 
     function SimpleVotingInitiate()
     {
         require(constructorCheck == 0);
         uint[] optionChosen;
         allVotes.push(proposalVote(0x00,0,optionChosen,now,0,0,0));
-        votingTypeName = "SimpleVoting";
+        votingTypeName = "Simple Voting";
         constructorCheck =1;
     }
     
     /// @dev Change master's contract address
     function changeMasterAddress(address _masterContractAddress)
     {
-        masterAddress = _masterContractAddress;
+        if(masterAddress == 0x000)
+            masterAddress = _masterContractAddress;
+        else
+        {
+            MS=Master(masterAddress);
+            require(MS.isInternal(msg.sender) == 1);
+                masterAddress = _masterContractAddress;
+        }
     }
     
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
     function payableGBTTokensSimpleVoting(uint _TokenAmount) internal
     {
-        MT=MintableToken(GBTAddress);
+        BT=BasicToken(BTAddress);
         GD=GovernanceData(GDAddress);
         require(_TokenAmount >= GD.GBTStakeValue());
-        MT.transferFrom(msg.sender,GBTAddress,_TokenAmount);
+        BT.transfer(GBTAddress,_TokenAmount);
     }
-
-    function changeAllContractsAddress(address _StandardVotingAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) public
+    
+    function changeAllContractsAddress(address _BTcontractAddress,address _StandardVotingAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
     {
+        BTAddress = _BTcontractAddress;
         SVTAddress = _StandardVotingAddress;
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
@@ -70,7 +90,7 @@ contract SimpleVoting is VotingType
     }
 
     /// @dev Changes GBT contract Address. //NEW
-    function changeGBTtokenAddress(address _GBTcontractAddress)
+    function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
     {
         GBTAddress = _GBTcontractAddress;
     }
@@ -98,13 +118,14 @@ contract SimpleVoting is VotingType
         totalToken = allProposalVoteAndTokenCount[_proposalId].totalTokenCount[_roleId];
     }
 
-    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount)
+    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount) 
     {
-        SVT.addVerdictOptionSVT(msg.sender,_proposalId,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount);
+        SVT=StandardVotingType(SVTAddress);
+        SVT.addVerdictOptionSVT(_proposalId,msg.sender,0,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount);
         payableGBTTokensSimpleVoting(_GBTPayableTokenAmount);
     }
 
-    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount)
+    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount) 
     {
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
@@ -131,7 +152,7 @@ contract SimpleVoting is VotingType
         {
             uint votelength = getTotalVotes();
             increaseTotalVotes();
-            uint finalVoteValue = SVT.setVoteValue_givenByMember(GBTAddress,_proposalId,_GBTPayableTokenAmount);
+            uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[0]],1);
             allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[roleId],GD.getBalanceOfMember(msg.sender));
             AddressProposalVote[msg.sender][_proposalId] = votelength;
@@ -154,7 +175,7 @@ contract SimpleVoting is VotingType
         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[0]],1);
         allVotes[voteId].optionChosen[0] = _optionChosen[0];
 
-        uint finalVoteValue = SVT.setVoteValue_givenByMember(GBTAddress,_proposalId,_GBTPayableTokenAmount);
+        uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
         allVotes[voteId].voteStakeGBT = _GBTPayableTokenAmount;
         allVotes[voteId].voteValue = finalVoteValue;
 

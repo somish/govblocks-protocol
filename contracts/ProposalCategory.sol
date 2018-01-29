@@ -40,12 +40,18 @@ contract ProposalCategory is Ownable
     categoryParams[] uintParam;
     categoryParams[] bytesParam;
     categoryParams[] addressParam;
-    address masterAddress;
 
-    /// @dev Change master's contract address
-    function changeMasterAddress(address _masterContractAddress)
+    function ProposalCategoryInitiate()
     {
-        masterAddress = _masterContractAddress;
+        require(uintParam.length == 0 && bytesParam.length == 0 && addressParam.length == 0);
+        uintParam.push(categoryParams(new bytes32[](0),""));
+        bytesParam.push(categoryParams(new bytes32[](0),""));
+        addressParam.push(categoryParams(new bytes32[](0),""));
+    }
+
+    function getCategoryName(uint8 _categoryId)constant returns(string)
+    {
+        return allCategory[_categoryId].categoryName;
     }
 
     /// @dev Get the integer parameterName when given Category Id and parameterIndex
@@ -84,17 +90,6 @@ contract ProposalCategory is Ownable
         return addressParam[_categoryId].parameterDescHash;
     }
 
-    /// @dev Get category parameter details when giving category id and Index.
-    function getCategoryParameterDetails(uint _categoryId,uint _index) constant returns(bytes32 paramInt,bytes32 paramBytes,bytes32 paramAddress, string uintHash,string bytesHash,string addressHash)
-    {
-        paramInt = uintParam[_categoryId].parameterName[_index];
-        paramBytes = bytesParam[_categoryId].parameterName[_index];
-        paramAddress = addressParam[_categoryId].parameterName[_index];
-        uintHash = uintParam[_categoryId].parameterDescHash;
-        bytesHash = bytesParam[_categoryId].parameterDescHash;
-        addressHash = addressParam[_categoryId].parameterDescHash;
-    }
-
     /// @dev Gets the total number of categories.
     function getCategoriesLength() constant returns (uint length)
     {
@@ -102,8 +97,9 @@ contract ProposalCategory is Ownable
     }
 
     /// @dev Gets category details by category id.
-    function getCategoryDetails(uint _categoryId) public constant returns (string categoryName,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress,uint8[] memberRoleSequence,uint[] memberRoleMajorityVote)
+    function getCategoryDetails(uint _categoryId) public constant returns (uint cateId,string categoryName,string functionName,address contractAt,uint8 paramInt,uint8 paramBytes32,uint8 paramAddress,uint8[] memberRoleSequence,uint[] memberRoleMajorityVote)
     {    
+        cateId = _categoryId;
         categoryName = allCategory[_categoryId].categoryName;
         functionName = allCategory[_categoryId].functionName;
         contractAt = allCategory[_categoryId].contractAt;
@@ -143,28 +139,29 @@ contract ProposalCategory is Ownable
         bytesParam.push(categoryParams(_bytesParamName,_bytesParameterDescHash));
         addressParam.push(categoryParams(_addressParamName,_addressParameterDescHash));
     }
-    /// @dev Change the category parameters name against category.
-    function changeCategoryParametersName(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName) onlyOwner
-    {   
-        uintParam[_categoryId].parameterName=new bytes32[](_uintParamName.length); 
-        bytesParam[_categoryId].parameterName=new bytes32[](_bytesParamName.length); 
-        addressParam[_categoryId].parameterName=new bytes32[](_addressParamName.length); 
+
+    // /// @dev Change the category parameters name against category. // 
+    // function changeCategoryParametersName(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName) onlyOwner
+    // {   
+    //     uintParam[_categoryId].parameterName=new bytes32[](_uintParamName.length); 
+    //     bytesParam[_categoryId].parameterName=new bytes32[](_bytesParamName.length); 
+    //     addressParam[_categoryId].parameterName=new bytes32[](_addressParamName.length); 
         
-        for(uint i=0; i<_uintParamName.length; i++)
-        {
-            uintParam[_categoryId].parameterName[i]=_uintParamName[i]; 
-        }
+    //     for(uint i=0; i<_uintParamName.length; i++)
+    //     {
+    //         uintParam[_categoryId].parameterName[i]=_uintParamName[i]; 
+    //     }
             
-        for(i=0; i<_uintParamName.length; i++)
-        {
-            bytesParam[_categoryId].parameterName[i]=_bytesParamName[i];
-        }
+    //     for(i=0; i<_uintParamName.length; i++)
+    //     {
+    //         bytesParam[_categoryId].parameterName[i]=_bytesParamName[i];
+    //     }
         
-        for(i=0; i<_uintParamName.length; i++)
-        {
-            addressParam[_categoryId].parameterName[i]=_addressParamName[i];
-        }
-    }
+    //     for(i=0; i<_uintParamName.length; i++)
+    //     {
+    //         addressParam[_categoryId].parameterName[i]=_addressParamName[i];
+    //     }
+    // }
 
     /// @dev Updates a category details
     function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) onlyOwner
@@ -189,7 +186,7 @@ contract ProposalCategory is Ownable
     function actionAfterProposalPass(uint _proposalId,uint _categoryId) public
     {
         address contractAt;
-        (,,contractAt,,,,,) = getCategoryDetails(_categoryId);
+        (,,,contractAt,,,,,) = getCategoryDetails(_categoryId);
         contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
     }
 

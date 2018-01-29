@@ -31,16 +31,12 @@ contract GovBlocksMaster
 
     govBlocksUsers[] allGovBlocksUsers;
 
+
     function setGovBlocksMaster() 
     {
       require(owner == 0x00);
       owner = 0xed2f74e1fb73b775e6e35720869ae7a7f4d755ad; 
     } 
-
-    function GovBlocksMasterInitiate()
-    {
-      setGovBlocksOwnerInAllMaster();
-    }
     
     modifier onlyOwner() 
     {
@@ -48,29 +44,23 @@ contract GovBlocksMaster
       _;
     }
 
-    function transferOwnership(address _newOwner) onlyOwner public 
+    function transferOwnership(address _newOwner) onlyOwner  
     {
       owner = _newOwner;
     }
 
-    function updateGBTAddress(address _GBTContractAddress) onlyOwner
+    function updateGBTAddress(uint _masterId,address _GBTContractAddress) onlyOwner
     {
-        for(uint i=0; i< allGovBlocksUsers.length; i++)
-        {
-           MasterAddress = allGovBlocksUsers[i].masterAddress;
-           MS=Master(MasterAddress);
-           MS.changeGBTAddress(_GBTContractAddress);
-        }
+        MasterAddress = allGovBlocksUsers[_masterId].masterAddress;
+        MS=Master(MasterAddress);
+        MS.changeGBTAddress(_GBTContractAddress);
     }
 
-    function setGovBlocksOwnerInAllMaster() onlyOwner
+    function setGovBlocksOwnerInMaster(uint _masterId) onlyOwner
     {
-        for(uint i=0; i< allGovBlocksUsers.length; i++)
-        {
-           MasterAddress = allGovBlocksUsers[i].masterAddress;
-           MS=Master(MasterAddress);
-           MS.GovBlocksOwner();
-        }
+        MasterAddress = allGovBlocksUsers[_masterId].masterAddress;
+        MS=Master(MasterAddress);
+        MS.GovBlocksOwner();
     }
 
     function addGovBlocksUser(address _tokenAddress,address _masterAddress) onlyOwner
