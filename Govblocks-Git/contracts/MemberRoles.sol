@@ -22,15 +22,31 @@ contract  MemberRoles is Ownable{
 
   bytes32[] memberRole;
   uint public categorizeAuthRoleid;
+  string memberRoleDescHash;
+  uint8 constructorCheck;
 
+  struct memberRoleDetails
+  {
+    uint memberCounter;
+    mapping(address=>uint)  memberActive; // will set active to 1/0;
+    address[] memberAddress;
+  }
+
+  mapping(uint=>memberRoleDetails) memberRoleData;
   mapping (address=>uint) memberAddressToMemberRole;
-  mapping (uint=>address) memberRoleToMemberAddress;
 
   function MemberRolesInitiate()
   {
-    memberRole.push("Member");
-    memberRole.push("Advisory Board");
-    categorizeAuthRoleid=1;
+    require(constructorCheck == 0);
+        memberRole.push("Member");
+        memberRole.push("Advisory Board");
+        categorizeAuthRoleid=1;
+        constructorCheck =1;
+  }
+
+  function getRoleDescHash()constant returns(string)
+  {
+    return memberRoleDescHash;
   }
 
   /// @dev Get the role id assigned to a member when giving memberAddress
@@ -40,15 +56,16 @@ contract  MemberRoles is Ownable{
   }
 
   /// @dev Get that member address assigned as a specific role when giving member role Id.
-  function getMemberAddressByRoleId(uint _memberRoleId) public constant returns(address memberAddress)
+  function getMemberAddressByRoleId(uint _memberRoleId) public constant returns(address[] allMemberAddress)
   {
-      memberAddress = memberRoleToMemberAddress[_memberRoleId];
+      return memberRoleData[_memberRoleId].memberAddress;
   }
 
   /// @dev Add new member role for governance.
-  function addNewMemberRole(bytes32 _newRoleName) onlyOwner
+  function addNewMemberRole(bytes32 _newRoleName,string _newDescHash) onlyOwner
   {
-      memberRole.push(_newRoleName);  
+      memberRole.push(_newRoleName);
+      memberRoleDescHash = _newDescHash;  
   }
   
   /// @dev Get the role name whem giving role Id.
@@ -60,8 +77,20 @@ contract  MemberRoles is Ownable{
   /// @dev Assign role to a member when giving member address and role id
   function assignMemberRole(address _memberAddress,uint _memberRoleId) onlyOwner
   {
+      require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 0);
+      memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter+1;
+      memberRoleData[_memberRoleId].memberActive[_memberAddress] = 1;
       memberAddressToMemberRole[_memberAddress] = _memberRoleId;
-      memberRoleToMemberAddress[_memberRoleId] = _memberAddress;
+      memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
+  }
+
+  function removeMember(address _memberAddress,uint _memberRoleId)
+  {
+      require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 1);
+      memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter-1;
+      memberRoleData[_memberRoleId].memberActive[_memberAddress] = 0;
+      memberAddressToMemberRole[_memberAddress] = 0;
+      // memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
   }
 
   /// @dev Get the role id which is authorized to categorize a proposal.
