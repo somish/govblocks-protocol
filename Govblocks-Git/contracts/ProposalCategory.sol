@@ -19,6 +19,7 @@ import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ProposalCategory is Ownable
 {
+    uint8 constructorCheck;
     struct category{
         string categoryName;
         string functionName;
@@ -52,31 +53,40 @@ contract ProposalCategory is Ownable
         MRAddress = _MRContractAddress;
     }
 
-    function ProposalCategoryInitiate(address _MRAddress)
+    function ProposalCategoryInitiate()
     {
+        require(constructorCheck == 0);
         require(uintParam.length == 0 && bytesParam.length == 0 && addressParam.length == 0);
         uintParam.push(categoryParams(new bytes32[](0),""));
         bytesParam.push(categoryParams(new bytes32[](0),""));
         addressParam.push(categoryParams(new bytes32[](0),""));
-        addCategory(_MRAddress);
+        addCategory();
+        constructorCheck =1;
     }
 
-    function addCategory(address _MRAddress) internal
+    function addCategory() internal
     {
         allCategory.push(category("Uncategorized","",0x00,0,0,0,new uint8[](0),new uint[](0),new uint24[](0),0,0));
         allCategory.push(category("Add new member role","addNewMemberRole(bytes32)",0x00,0,1,0,new uint8[](0),new uint[](0),new uint24[](0),0,10));
-        allCategory[1].contractAt = _MRAddress;
     }
 
-    function getCategoryData1(uint _categoryId,uint8 _index) constant returns(uint index,bytes32 roleName,uint majorityVote,uint24 closingTime)
+    function getCategoryData1(uint _categoryId) constant returns(bytes32[] roleName,uint[] majorityVote,uint24[] closingTime,string categoryName,bool functionValue)
     {
         MR=MemberRoles(MRAddress);
-        index = _index;
-        roleName = MR.getMemberRoleNameById(allCategory[_categoryId].memberRoleSequence[_index]);
-        majorityVote = allCategory[_categoryId].memberRoleMajorityVote[_index];
-        closingTime =  allCategory[_categoryId].closingTime[_index];
+        roleName=new bytes32[]( allCategory[_categoryId].memberRoleSequence.length);
+        for(uint8 i=0; i < allCategory[_categoryId].memberRoleSequence.length; i++)
+        {
+            roleName[i] = MR.getMemberRoleNameById(allCategory[_categoryId].memberRoleSequence[i]);
+        }
+        
+        majorityVote = allCategory[_categoryId].memberRoleMajorityVote;
+        closingTime =  allCategory[_categoryId].closingTime;
+        categoryName = allCategory[_categoryId].categoryName;
+        if(allCategory[_categoryId].contractAt != 0x00)
+          functionValue = true;
+          
     }
-
+    
     function getMinStake(uint _categoryId)constant returns(uint8)
     {
         return allCategory[_categoryId].minStake;
@@ -91,7 +101,7 @@ contract ProposalCategory is Ownable
     {
         return allCategory[_categoryId].categoryName;
     }
-
+    
     /// @dev Get the integer parameterName when given Category Id and parameterIndex
     function getCategoryParamNameUint(uint _categoryId,uint _index)constant returns(bytes32)
     {
@@ -248,5 +258,9 @@ contract ProposalCategory is Ownable
     //     }
     // }
 
+    function getCatgoryData2(uint _categoryId) constant returns(bytes32[] intParameter,bytes32[] bytesParameter,bytes32[] addressParameter,string intDesc, string bytesDesc, string addressDesc)
+    {
+        return (uintParam[_categoryId].parameterName,bytesParam[_categoryId].parameterName,addressParam[_categoryId].parameterName,uintParam[_categoryId].parameterDescHash,bytesParam[_categoryId].parameterDescHash,addressParam[_categoryId].parameterDescHash);
+    }
 
 }
