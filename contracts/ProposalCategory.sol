@@ -14,10 +14,12 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity ^0.4.8;
 // import "./Ownable.sol";
+import "./MemberRoles.sol";
 import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ProposalCategory is Ownable
 {
+    uint8 constructorCheck;
     struct category{
         string categoryName;
         string functionName;
@@ -27,6 +29,9 @@ contract ProposalCategory is Ownable
         uint8 paramAddress;
         uint8[] memberRoleSequence;
         uint[] memberRoleMajorityVote;
+        uint24[] closingTime;
+        uint8 minStake;
+        uint8 maxStake;
     }
 
     struct categoryParams
@@ -40,20 +45,63 @@ contract ProposalCategory is Ownable
     categoryParams[] uintParam;
     categoryParams[] bytesParam;
     categoryParams[] addressParam;
+    MemberRoles MR;
+    address MRAddress;
+
+    function changeAllContractsAddress(address _MRContractAddress)
+    {
+        MRAddress = _MRContractAddress;
+    }
 
     function ProposalCategoryInitiate()
     {
+        require(constructorCheck == 0);
         require(uintParam.length == 0 && bytesParam.length == 0 && addressParam.length == 0);
         uintParam.push(categoryParams(new bytes32[](0),""));
         bytesParam.push(categoryParams(new bytes32[](0),""));
         addressParam.push(categoryParams(new bytes32[](0),""));
+        addCategory();
+        constructorCheck =1;
+    }
+
+    function addCategory() internal
+    {
+        allCategory.push(category("Uncategorized","",0x00,0,0,0,new uint8[](0),new uint[](0),new uint24[](0),0,0));
+        allCategory.push(category("Add new member role","addNewMemberRole(bytes32)",0x00,0,1,0,new uint8[](0),new uint[](0),new uint24[](0),0,10));
+    }
+
+    function getCategoryData1(uint _categoryId) constant returns(bytes32[] roleName,uint[] majorityVote,uint24[] closingTime,string categoryName,bool functionValue)
+    {
+        MR=MemberRoles(MRAddress);
+        roleName=new bytes32[]( allCategory[_categoryId].memberRoleSequence.length);
+        for(uint8 i=0; i < allCategory[_categoryId].memberRoleSequence.length; i++)
+        {
+            roleName[i] = MR.getMemberRoleNameById(allCategory[_categoryId].memberRoleSequence[i]);
+        }
+        
+        majorityVote = allCategory[_categoryId].memberRoleMajorityVote;
+        closingTime =  allCategory[_categoryId].closingTime;
+        categoryName = allCategory[_categoryId].categoryName;
+        if(allCategory[_categoryId].contractAt != 0x00)
+          functionValue = true;
+          
+    }
+    
+    function getMinStake(uint _categoryId)constant returns(uint8)
+    {
+        return allCategory[_categoryId].minStake;
+    }
+
+    function getMaxStake(uint _categoryId) constant returns(uint8)
+    {
+        return allCategory[_categoryId].maxStake;
     }
 
     function getCategoryName(uint8 _categoryId)constant returns(string)
     {
         return allCategory[_categoryId].categoryName;
     }
-
+    
     /// @dev Get the integer parameterName when given Category Id and parameterIndex
     function getCategoryParamNameUint(uint _categoryId,uint _index)constant returns(bytes32)
     {
@@ -116,6 +164,21 @@ contract ProposalCategory is Ownable
         return allCategory[_categoryId].memberRoleMajorityVote[_index];
     }
     
+    function getRoleMajorityVotelength(uint _categoryId) constant returns(uint majorityVoteLength)
+    {
+        return allCategory[_categoryId].memberRoleMajorityVote.length;
+    }
+
+    function getClosingTimeLength(uint _categoryId) constant returns(uint closingTimeLength)
+    {
+        return allCategory[_categoryId].closingTime.length;
+    }
+
+    function getClosingTimeByIndex(uint _categoryId,uint _index) constant returns(uint closeTime)
+    {
+        return allCategory[_categoryId].closingTime[_index];
+    }
+
     /// @dev Get the length of voting levels against given proposal.
     function getRoleSequencLength(uint _categoryId) constant returns(uint roleLength)
     {
@@ -127,10 +190,10 @@ contract ProposalCategory is Ownable
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
     /// @dev Adds a new category and Category Function Parameter names..
-    function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) onlyOwner
+    function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake) onlyOwner
     {
-        require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
-        allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote));
+        require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleSequence.length == _closingTime.length);
+        allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake));
     }
     /// @dev Saving descriptions against various parameters required for category.
     function addCategoryParamsNameAndDesc(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName,string _uintParameterDescHash,string _bytesParameterDescHash,string _addressParameterDescHash) onlyOwner
@@ -138,6 +201,38 @@ contract ProposalCategory is Ownable
         uintParam.push(categoryParams(_uintParamName,_uintParameterDescHash));
         bytesParam.push(categoryParams(_bytesParamName,_bytesParameterDescHash));
         addressParam.push(categoryParams(_addressParamName,_addressParameterDescHash));
+    }
+
+    /// @dev Updates a category details
+    function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake) onlyOwner
+    {
+        require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleSequence.length == _closingTime.length);
+        allCategory[_categoryId].functionName = _functionName;
+        allCategory[_categoryId].contractAt = _contractAt;
+        allCategory[_categoryId].paramInt = _paramInt;
+        allCategory[_categoryId].paramBytes32 = _paramBytes32; 
+        allCategory[_categoryId].paramAddress = _paramAddress;
+        allCategory[_categoryId].minStake = _minStake;
+        allCategory[_categoryId].maxStake = _maxStake;
+
+        allCategory[_categoryId].memberRoleSequence=new uint8[](_memberRoleSequence.length);
+        allCategory[_categoryId].memberRoleMajorityVote=new uint[](_memberRoleMajorityVote.length);
+        allCategory[_categoryId].closingTime = new uint24[](_closingTime.length);
+
+        for(uint i=0; i<_memberRoleSequence.length; i++)
+        {
+            allCategory[_categoryId].memberRoleSequence[i] =_memberRoleSequence[i];
+            allCategory[_categoryId].memberRoleMajorityVote[i] = _memberRoleMajorityVote[i];
+            allCategory[_categoryId].closingTime[i] = _closingTime[i];
+        }
+    }
+
+    /// @dev function to be called after proposal pass
+    function actionAfterProposalPass(uint _proposalId,uint _categoryId) public
+    {
+        address contractAt;
+        (,,,contractAt,,,,,) = getCategoryDetails(_categoryId);
+        contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
     }
 
     // /// @dev Change the category parameters name against category. // 
@@ -163,31 +258,9 @@ contract ProposalCategory is Ownable
     //     }
     // }
 
-    /// @dev Updates a category details
-    function updateCategory(uint _categoryId,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote) onlyOwner
+    function getCatgoryData2(uint _categoryId) constant returns(bytes32[] intParameter,bytes32[] bytesParameter,bytes32[] addressParameter,string intDesc, string bytesDesc, string addressDesc)
     {
-        require(_memberRoleSequence.length == _memberRoleMajorityVote.length);
-        allCategory[_categoryId].functionName = _functionName;
-        allCategory[_categoryId].contractAt = _contractAt;
-        allCategory[_categoryId].paramInt = _paramInt;
-        allCategory[_categoryId].paramBytes32 = _paramBytes32; 
-        allCategory[_categoryId].paramAddress = _paramAddress;
-
-        allCategory[_categoryId].memberRoleSequence=new uint8[](_memberRoleSequence.length);
-        allCategory[_categoryId].memberRoleMajorityVote=new uint[](_memberRoleMajorityVote.length);
-
-        for(uint i=0; i<_memberRoleSequence.length; i++)
-        {
-            allCategory[_categoryId].memberRoleSequence[i] =_memberRoleSequence[i];
-            allCategory[_categoryId].memberRoleMajorityVote[i] = _memberRoleMajorityVote[i];
-        }
-    }
-    /// @dev function to be called after proposal pass
-    function actionAfterProposalPass(uint _proposalId,uint _categoryId) public
-    {
-        address contractAt;
-        (,,,contractAt,,,,,) = getCategoryDetails(_categoryId);
-        contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
+        return (uintParam[_categoryId].parameterName,bytesParam[_categoryId].parameterName,addressParam[_categoryId].parameterName,uintParam[_categoryId].parameterDescHash,bytesParam[_categoryId].parameterDescHash,addressParam[_categoryId].parameterDescHash);
     }
 
 }

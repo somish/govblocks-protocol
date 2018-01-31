@@ -20,16 +20,14 @@ import "./GovernanceData.sol";
 import "./StandardVotingType.sol";
 import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
+import "./Governance.sol";
+// import "./BasicToken.sol";
+// import "./Math.sol";
+// import "./SafeMath.sol";
 import "./Master.sol";
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-import "./zeppelin-solidity/contracts/token/MintableToken.sol";
 import "./zeppelin-solidity/contracts/math/Math.sol";
 import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-// import "./SafeMath.sol";
-// import "./BasicToken.sol";
-// import "./MintableToken.sol";
-// import "./Math.sol";
-
 
 contract RankBasedVoting is VotingType
 {
@@ -40,11 +38,12 @@ contract RankBasedVoting is VotingType
     address GBTAddress;
     address BTAddress;
     address public masterAddress;
+    address G1Address;
     address SVTAddress;
     MemberRoles MR;
+    Governance G1;
     BasicToken BT;
     ProposalCategory PC;
-    MintableToken MT;
     GovernanceData  GD;
     StandardVotingType SVT;
     uint8 constructorCheck;
@@ -97,6 +96,11 @@ contract RankBasedVoting is VotingType
         PCAddress = _PCcontractAddress;
     }
 
+    function changeGovernanceAddress(address _G1ContractAddress)
+    {
+        G1Address = _G1ContractAddress;
+    }
+
     /// @dev Changes GBT contract Address. //NEW
     function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
     {
@@ -126,15 +130,15 @@ contract RankBasedVoting is VotingType
         totalToken = allProposalVoteAndTokenCount[_proposalId].totalTokenCount[_roleId];
     }
 
-    function addInTotalVotes(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _finalVoteValue) internal
+    function addInAllVotes(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _finalVoteValue) internal
     {
         increaseTotalVotes();
         allVotes.push(proposalVote(msg.sender,_proposalId,_optionChosen,now,GD.getBalanceOfMember(msg.sender),_GBTPayableTokenAmount,_finalVoteValue));
     }
 
-    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount)
+    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash)
     {
-        SVT.addVerdictOptionSVT(_proposalId,msg.sender,1,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount);
+        SVT.addVerdictOptionSVT(_proposalId,msg.sender,1,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
         payableGBTTokensRankBasedVoting(_GBTPayableTokenAmount);
     }
 
@@ -148,7 +152,7 @@ contract RankBasedVoting is VotingType
         uint8 currentVotingId; uint8 category; uint8 intermediateVerdict;
         uint8 verdictOptions;
         (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
-        (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
+        (,,,verdictOptions) = GD.getProposalOptions(_proposalId);
 
         require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2);
         require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(category,currentVotingId) && _optionChosen.length <= verdictOptions);
@@ -173,7 +177,8 @@ contract RankBasedVoting is VotingType
             ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(votelength);
             verdictOptionsByVoteId[votelength] = verdictOptions;
             GD.setVoteIdAgainstProposal(_proposalId,votelength);
-            addInTotalVotes(_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
+            GD.addInTotalVotes(msg.sender);
+            addInAllVotes(_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
         }
         else 
             changeMemberVote(_proposalId,_optionChosen,_GBTPayableTokenAmount);
@@ -189,7 +194,7 @@ contract RankBasedVoting is VotingType
         uint[] optionChosen = allVotes[voteId].optionChosen;
 
         uint8 verdictOptions; 
-        (,,,verdictOptions) = GD.getProposalCategoryParams(_proposalId);
+        (,,,verdictOptions) = GD.getProposalOptions(_proposalId);
         uint8 currentVotingId;
         (,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
 
@@ -275,7 +280,7 @@ contract RankBasedVoting is VotingType
             {
                 voterStake = SafeMath.add(voterStake,SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor()))));
                 returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
-                GD.transferBackGBTtoken(allVotes[voteid].voter,returnTokens);
+                G1.transferBackGBTtoken(allVotes[voteid].voter,returnTokens);
             }
 
             // uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
@@ -313,6 +318,9 @@ contract RankBasedVoting is VotingType
 
     function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue) internal
     {
+        GD=GovernanceData(GDAddress);
+        G1=Governance(G1Address);
+
         uint reward;uint transferToken;
         uint8 finalVerdict;
         (,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
@@ -323,11 +331,11 @@ contract RankBasedVoting is VotingType
         {
             reward = SafeMath.div(SafeMath.mul(GD.getProposalStake(_proposalId),_totalTokenToDistribute),_totalVoteValue);
             transferToken = SafeMath.add(GD.getProposalStake(_proposalId),reward);
-            GD.transferBackGBTtoken(GD.getProposalOwner(_proposalId),transferToken);
+            G1.transferBackGBTtoken(GD.getProposalOwner(_proposalId),transferToken);
 
             reward = SafeMath.div(SafeMath.mul(GD.getOptionStakeByProposalId(_proposalId,finalVerdict),_totalTokenToDistribute),_totalVoteValue);
             transferToken = SafeMath.add(GD.getOptionStakeByProposalId(_proposalId,finalVerdict),reward);
-            GD.transferBackGBTtoken(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),transferToken);
+            G1.transferBackGBTtoken(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),transferToken);
         }
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
@@ -340,24 +348,24 @@ contract RankBasedVoting is VotingType
                     uint optionValue = getOptionValue(voteid,_proposalId,j);
                     reward = SafeMath.div(SafeMath.mul(allVotes[voteid].voteValue,_totalTokenToDistribute),_totalVoteValue);
                     transferToken = SafeMath.add(allVotes[voteid].voteStakeGBT,reward);
-                    GD.transferBackGBTtoken(allVotes[voteid].voter,transferToken);
-                    GD.updateMemberReputation1(allVotes[voteid].voter,SafeMath.add(addMemberPoints,GD.getMemberReputation(allVotes[voteid].voter)));
+                    G1.transferBackGBTtoken(allVotes[voteid].voter,transferToken);
+                    G1.updateMemberReputation1(allVotes[voteid].voter,SafeMath.add(addMemberPoints,GD.getMemberReputation(allVotes[voteid].voter)));
                 }
                 else
                 {
-                    GD.updateMemberReputation1(allVotes[voteid].voter,SafeMath.sub(GD.getMemberReputation(allVotes[voteid].voter),subMemberPoints));
+                    G1.updateMemberReputation1(allVotes[voteid].voter,SafeMath.sub(GD.getMemberReputation(allVotes[voteid].voter),subMemberPoints));
                 }
                     
             }        
         }
-        GD.updateMemberReputation(_proposalId,finalVerdict);
+        G1.updateMemberReputation(_proposalId,finalVerdict);
     }
 
     function getOptionValue(uint voteid,uint _proposalId,uint _optionIndex) internal returns (uint optionValue)
     {
         uint[] _optionChosen = allVotes[voteid].optionChosen;
         uint8 _verdictOptions; 
-        (,,,_verdictOptions) = GD.getProposalCategoryParams(_proposalId);
+        (,,,_verdictOptions) = GD.getProposalOptions(_proposalId);
 
         for(uint i=0; i<_optionChosen.length; i++)
         {

@@ -17,15 +17,12 @@
 pragma solidity ^0.4.8;
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 import "./zeppelin-solidity/contracts/token/MintableToken.sol";
-import "./zeppelin-solidity/contracts/math/Math.sol";
-import "./MemberRoles.sol";
-import "./ProposalCategory.sol";
 // import "./BasicToken.sol";
 // import "./MintableToken.sol";
-// import "./Math.sol";
-import "./Master.sol";
+// import "./Master.sol";
+// import "./Pool.sol";
 
-contract GovernanceData is Ownable{
+contract GovernanceData {
     using SafeMath for uint;
     struct proposal{
         address owner;
@@ -52,6 +49,7 @@ contract GovernanceData is Ownable{
         address[] optionAddedByAddress;
         uint[] valueOfOption;
         uint[] stakeOnOption;
+        string[] optionDescHash;
     }
 
     struct proposalCategoryParams
@@ -80,15 +78,7 @@ contract GovernanceData is Ownable{
         uint[] levelReward;
     }
 
-    function GovernanceDataInitiate() 
-    {
-        require(constructorCheck == 0);
-        setGlobalParameters();
-        addStatus();
-        addMemberReputationPoints();
-        constructorCheck = 1;
-    }
-
+   
     struct votingTypeDetails
     {
         bytes32 votingTypeName;
@@ -102,6 +92,10 @@ contract GovernanceData is Ownable{
     mapping(address=>uint) allMemberReputationByAddress;
     mapping(uint=>uint[]) totalVotesAgainstProposal;
     mapping(address=>bytes32) votingTypeNameByAddress;
+    mapping(address=>uint[]) allProposalMember; // Proposal Against Member
+    mapping(address=>uint) allProposalOption; // Total Options against Member
+    mapping(address=>uint) totalOptionStake; // total Optionstake Against member
+    mapping(address=>uint) totalVotesAgainstMember; // Total Votes given by member till now..
 
     uint public proposalVoteClosingTime;
     uint public quorumPercentage;
@@ -110,7 +104,6 @@ contract GovernanceData is Ownable{
     uint public globalRiskFactor; 
     uint public membershipScalingFactor;
     uint public scalingWeight;
-    uint public categoryFunctionValue;
     uint addProposalOwnerPoints;
     uint addOptionOwnerPoints;
     uint addMemberPoints;
@@ -119,30 +112,40 @@ contract GovernanceData is Ownable{
     uint subMemberPoints;
     uint constructorCheck;
 
-    string[] public status;
+    string[]  status;
     proposal[] allProposal;
     votingTypeDetails[] allVotingTypeDetails;
 
     address GBTAddress;
     address BTAddress;
-    address MRAddress;
-    address PCAddress;
-    address public masterAddress;
+    address MTAddress;
+    // address masterAddress;
+    address owner;
     BasicToken BT;
     MintableToken MT;
-    MemberRoles MR;
-    ProposalCategory Pcategory;
-    Master MS;
+    // Master MS;
+    // Pool P1;
 
     modifier onlyInternal {
-        MS=Master(masterAddress);
-        require(MS.isInternal(msg.sender) == 1);
+        // MS=Master(masterAddress);
+        // require(MS.isInternal(msg.sender) == 1);
+        
         _; 
     }
-     modifier onlyOwner{
-        MS=Master(masterAddress);
-        require(MS.isOwner(msg.sender) == 1);
+    
+     modifier onlyOwner {
+        // MS=Master(masterAddress);
+        // require(MS.isOwner(msg.sender) == 1);
         _; 
+    }
+    
+    function GovernanceDataInitiate() 
+    {
+        require(constructorCheck == 0);
+            setGlobalParameters();
+            addStatus();
+            addMemberReputationPoints();
+            constructorCheck =1;
     }
     
     /// @dev Add points to add or subtract in memberReputation when proposal/option/vote gets denied or accepted.
@@ -173,18 +176,6 @@ contract GovernanceData is Ownable{
         return (addProposalOwnerPoints,addOptionOwnerPoints,addMemberPoints,subProposalOwnerPoints,subOptionOwnerPoints,subMemberPoints);
     } 
 
-    /// @dev Check if the member who wants to change in contracts, is owner.
-    function isOwner(address _memberAddress) returns(uint checkOwner) 
-    {
-        require(owner == _memberAddress);
-            checkOwner=1;
-    }
-
-    /// @dev Change current owner.
-    function changeOwner(address _memberAddress) onlyOwner public
-    {
-        transferOwnership(_memberAddress);
-    }
 
     /// @dev add status.
     function addStatus() internal
@@ -212,23 +203,27 @@ contract GovernanceData is Ownable{
     /// @dev Change master's contract address
     function changeMasterAddress(address _masterContractAddress) 
     {
-        if(masterAddress == 0x000)
-            masterAddress = _masterContractAddress;
-        else
-        {
-            MS=Master(masterAddress);
-            require(MS.isInternal(msg.sender) == 1);
-                masterAddress = _masterContractAddress;
-        }
+        // if(masterAddress == 0x000)
+        //     masterAddress = _masterContractAddress;
+        // else
+        // {
+        //     MS=Master(masterAddress);
+        //     require(MS.isInternal(msg.sender) == 1);
+        //         masterAddress = _masterContractAddress;
+        // }
     }
 
     /// @dev change all contract's addresses.
-    function changeAllContractsAddress(address _BTcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
+    function changeAllContractsAddress(address _BTcontractAddress,address _MTContractAddress) onlyInternal
     {
+        MTAddress = _MTContractAddress;
         BTAddress = _BTcontractAddress;
-        MRAddress = _MRcontractAddress;
-        PCAddress = _PCcontractAddress;
     }
+
+    // function changePoolAddress(address _poolAddress)
+    // {
+    //     PAddress = _poolAddress;
+    // }
 
     /// @dev Changes GBT contract Address. //NEW
     function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
@@ -243,28 +238,6 @@ contract GovernanceData is Ownable{
         closeValue=1;
     }
 
-    /// @dev Changes the status of a given proposal to open it for voting. // wil get called when we submit the proposal on submit button
-    function openProposalForVoting(uint _proposalId,uint _TokenAmount) onlyOwner public
-    {
-        require(allProposal[_proposalId].category != 0);
-        payableGBTTokens(_TokenAmount);
-        setProposalValue(_proposalId,_TokenAmount);
-        pushInProposalStatus(_proposalId,2);
-        updateProposalStatus(_proposalId,2);
-    }
-
-    /// @dev Calculate the proposal value to distribute it later - Distribute amount depends upon the final decision against proposal.
-    function setProposalValue(uint _proposalId,uint _memberStake) internal
-    {
-        allProposal[_proposalId].proposalStake = _memberStake;
-        uint memberLevel = Math.max256(getMemberReputation(msg.sender),1);
-        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(getBalanceOfMember(msg.sender),100),100)),getTotalTokenInSupply());
-        uint maxValue= Math.max256(tokensHeld,membershipScalingFactor);
-
-        uint finalProposalValue = SafeMath.mul(SafeMath.mul(globalRiskFactor,memberLevel),SafeMath.mul(_memberStake,maxValue));
-        allProposal[_proposalId].proposalValue = finalProposalValue;
-    }
-
     /// @dev Set Vote Id against given proposal.
     function setVoteIdAgainstProposal(uint _proposalId,uint _voteId) onlyInternal
     {
@@ -277,113 +250,66 @@ contract GovernanceData is Ownable{
         allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress)); 
         votingTypeNameByAddress[_votingTypeAddress] = _votingTypeName;
     }
-    
-    /// @dev Set proposal Category Parameters while adding verdict options from any voting type.
-    function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) onlyInternal
+
+    function editVotingType(uint _votingTypeId,address _votingTypeAddress)
     {
-        setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
-        Pcategory=ProposalCategory(PCAddress);
-
-         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
-        (,,,,paramInt,paramBytes32,paramAddress,,) = Pcategory.getCategoryDetails(_category);
-        
-        for(j=0; j<paramInt; j++)
-        {
-            parameterName = Pcategory.getCategoryParamNameUint(_category,j);
-            allProposalCategoryParams[_proposalId].optionNameIntValue[j+1][parameterName] = _paramInt[j];
-        }
-
-        for(j=0; j<paramBytes32; j++)
-        {
-            parameterName = Pcategory.getCategoryParamNameBytes(_category,j); 
-            allProposalCategoryParams[_proposalId].optionNameBytesValue[j+1][parameterName] = _paramBytes32[j];
-        }
-
-        for(j=0; j<paramAddress; j++)
-        {
-            parameterName = Pcategory.getCategoryParamNameAddress(_category,j); 
-            allProposalCategoryParams[_proposalId].optionNameAddressValue[j+1][parameterName] = _paramAddress[j];  
-        }
+        allVotingTypeDetails[_votingTypeId].votingTypeAddress = _votingTypeAddress;
     }
-
-    /// @dev Set parameters against category.
-    function setProposalCategoryParams1(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) internal
+    
+    function setTotalOptions(uint _proposalId,uint8 _options)
     {
-        uint i;
-        allProposalCategory[_proposalId].verdictOptions = _verdictOptions;
-        for(i=0;i<_paramInt.length;i++)
-        {
-            allProposalCategory[_proposalId].paramInt.push(_paramInt[i]);
-        }
-
-        for(i=0;i<_paramBytes32.length;i++)
-        {
-            allProposalCategory[_proposalId].paramBytes32.push(_paramBytes32[i]);
-        }
-
-        for(i=0;i<_paramAddress.length;i++)
-        {
-            allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
-        }   
+        allProposalCategory[_proposalId].verdictOptions = _options;
     }
 
     /// @dev Set the Deatils of added verdict i.e. Verdict Stake, Verdict value and Address of the member whoever added the verdict.
-    function setProposalVerdictAddressAndStakeValue(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue) onlyInternal
+    function setOptionAddressAndStake(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue,string _optionHash) onlyInternal
     {
         allProposalCategory[_proposalId].optionAddedByAddress.push(_memberAddress);
         allProposalCategory[_proposalId].valueOfOption.push(_optionValue);
         allProposalCategory[_proposalId].stakeOnOption.push(_stakeValue);
+        allProposalCategory[_proposalId].optionDescHash.push(_optionHash);
+        allProposalOption[_memberAddress] = SafeMath.add(allProposalOption[_memberAddress],1);
+        totalOptionStake[_memberAddress] = SafeMath.add(totalOptionStake[_memberAddress],_stakeValue);
+    }
+
+    function setProposalCategory(uint _proposalId,uint8 _categoryId)
+    {
+        allProposal[_proposalId].category = _categoryId;
+    }
+
+    function setProposalStake(uint _proposalId,uint _memberStake)
+    {
+        allProposal[_proposalId].proposalStake = _memberStake;
+    }
+
+    function setProposalValue(uint _proposalId,uint _proposalValue)
+    {
+        allProposal[_proposalId].proposalValue = _proposalValue;
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-    function payableGBTTokens(uint _TokenAmount) internal
+    function payableGBTTokens(uint _TokenAmount) onlyInternal
     {
-        // MT=MintableToken(GBTAddress);
-        // require(_TokenAmount >= GBTStakeValue);
-        // MT.transferFrom(msg.sender,GBTAddress,_TokenAmount);
         BT=BasicToken(BTAddress);
         require(_TokenAmount >= GBTStakeValue);
         BT.transfer(GBTAddress,_TokenAmount);
     }
 
     /// @dev Updates  status of an existing proposal.
-    function updateProposalStatus(uint _id ,uint8 _status) internal
+    function updateProposalStatus(uint _id ,uint8 _status) onlyInternal
     {
         allProposal[_id].propStatus = _status;
         allProposal[_id].date_upd = now;
     }
 
     /// @dev Stores the status information of a given proposal.
-    function pushInProposalStatus(uint _proposalId , uint8 _status) internal
+    function pushInProposalStatus(uint _proposalId , uint8 _status) onlyInternal
     {
         proposalStatus[_proposalId].push(Status(_status,now));
     }
 
-    /// @dev Creates a new proposal.
-    function addNewProposal(string _proposalDescHash,uint _votingTypeId) public
-    {
-        require(getBalanceOfMember(msg.sender) != 0);
-        allMemberReputationByAddress[msg.sender]=1;
-        address votingTypeAddress = allVotingTypeDetails[_votingTypeId].votingTypeAddress;
-        allProposal.push(proposal(msg.sender,_proposalDescHash,now,now,0,0,0,0,0,0,votingTypeAddress,0,0));   
-    }
-
-    /// @dev function to get called after Proposal Pass
-    function categoryFunction(uint256 _proposalId) onlyInternal
-    {
-        // uint _categoryId;
-        // (_categoryId,,,,)= getProposalDetailsById2(_proposalId);
-        // uint paramint;
-        // bytes32 parambytes32;
-        // address paramaddress;
-        // (paramint,parambytes32,paramaddress) = getProposalFinalVerdictDetails(_proposalId);
-        categoryFunctionValue = 5;
-        // add your functionality here;
-        // gd1.updateCategoryMVR(_categoryId);
-    }
-
     /// @dev As bydefault first option is alwayd deny option. One time configurable.
-    function addInitialOptionDetails(uint _proposalId) internal
+    function addInitialOptionDetails(uint _proposalId) onlyInternal
     {
         if(allProposalCategory[_proposalId].optionAddedByAddress.length == 0)
         {
@@ -401,39 +327,22 @@ contract GovernanceData is Ownable{
         }
     }
 
-    /// @dev categorizing proposal to proceed further.
-    function categorizeProposal(uint _proposalId , uint8 _categoryId,uint8 _proposalComplexityLevel,uint[] _levelReward) public
+    function setProposalPriority(uint _proposalId,uint[] _levelReward)
     {
-        MR = MemberRoles(MRAddress);
-        Pcategory=ProposalCategory(PCAddress);
-        require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
-        require(allProposal[_proposalId].propStatus == 1 || allProposal[_proposalId].propStatus == 0);
-
-        addComplexityLevelAndReward(_proposalId,_categoryId,_proposalComplexityLevel,_levelReward);
-        addInitialOptionDetails(_proposalId);
-        allProposalCategory[_proposalId].categorizedBy = msg.sender;
-        allProposal[_proposalId].category = _categoryId;
+         for(uint i=0; i<_levelReward.length; i++)
+          {
+              allProposalPriority[_proposalId].levelReward.push(_levelReward[i]);
+          }  
     }
 
-    /// @dev Proposal's complexity level and reward is added 
-    function addComplexityLevelAndReward(uint _proposalId,uint _category,uint8 _proposalComplexityLevel,uint[] _levelReward) internal
+    function setCategorizedBy(uint _proposalId,address _memberAddress)
     {
-        Pcategory=ProposalCategory(PCAddress);
-        uint votingLength = Pcategory.getRoleSequencLength(_category);
-        if(_levelReward.length != 0)
-            require(votingLength == _levelReward.length);
-            allProposalPriority[_proposalId].complexityLevel = _proposalComplexityLevel;
-            for(uint i=0; i<_levelReward.length; i++)
-            {
-                allProposalPriority[_proposalId].levelReward.push(_levelReward[i]);
-            }       
+        allProposalCategory[_proposalId].categorizedBy = _memberAddress;
     }
 
-    /// @dev Transfer reward after Final Proposal Decision.
-    function transferBackGBTtoken(address _memberAddress, uint _value) onlyInternal
+    function setProposalLevel(uint _proposalId,uint8 _proposalComplexityLevel)
     {
-        BT=BasicToken(BTAddress);
-        BT.transfer(_memberAddress,_value);
+         allProposalPriority[_proposalId].complexityLevel = _proposalComplexityLevel;
     }
 
     /// @dev Change pending proposal start variable
@@ -497,73 +406,45 @@ contract GovernanceData is Ownable{
         allProposal[_proposalId].finalVerdict = _finalVerdict;
     }
 
-    /// @dev AFter the proposal final decision, member reputation will get updated.
-    function updateMemberReputation(uint _proposalId,uint _finalVerdict) onlyInternal
+    function setMemberReputation(address _memberAddress,uint _repPoints)
     {
-        address _proposalOwner =  getProposalOwner(_proposalId);
-        address _finalOptionOwner = getOptionAddressByProposalId(_proposalId,_finalVerdict);
-        uint addProposalOwnerPoints; uint addOptionOwnerPoints; uint subProposalOwnerPoints; uint subOptionOwnerPoints;
-        (addProposalOwnerPoints,addOptionOwnerPoints,,subProposalOwnerPoints,subOptionOwnerPoints,)=getMemberReputationPoints();
-
-        if(_finalVerdict>0)
-        {
-            allMemberReputationByAddress[_proposalOwner] = SafeMath.add(getMemberReputation(_proposalOwner),addProposalOwnerPoints);
-            allMemberReputationByAddress[_finalOptionOwner] = SafeMath.add(getMemberReputation(_finalOptionOwner),addOptionOwnerPoints); 
-        }
-        else
-        {
-            allMemberReputationByAddress[_proposalOwner] = SafeMath.sub(getMemberReputation(_proposalOwner),subProposalOwnerPoints);
-            for(uint i=0; i<getOptionAddedAddressLength(_proposalId); i++)
-            {
-                address memberAddress = getOptionAddressByProposalId(_proposalId,i);
-                allMemberReputationByAddress[memberAddress] = SafeMath.sub(getMemberReputation(memberAddress),subOptionOwnerPoints);
-            }
-        }   
-    }
-
-    /// @dev Afer proposal Final Decision, Member reputation will get updated.
-    function updateMemberReputation1(address _voterAddress,uint _voterPoints) onlyInternal
-    {
-        allMemberReputationByAddress[_voterAddress] = _voterPoints;
-    }
-
-    /// @dev Edits a proposal and Only owner of a proposal can edit it.
-    function editProposal(uint _proposalId ,string _proposalDescHash) onlyOwner public
-    {
-        storeProposalVersion(_proposalId);
-        updateProposal(_proposalId,_proposalDescHash);
-        changeProposalStatus(_proposalId,1);
-        
-        require(allProposal[_proposalId].category > 0);
-            uint category;
-            (category,,,,) = getProposalDetailsById2(_proposalId); 
-            allProposal[_proposalId].category = 0;
-    }
-
-    /// @dev Edit details of a type of voting.
-    function editVotingTypeDetails(uint[] _votingTypeId, address[] _votingTypeAddress) onlyOwner
-    {
-        require(_votingTypeId.length == _votingTypeAddress.length);
-        for(uint i=0; i<_votingTypeAddress.length; i++)
-        {
-            allVotingTypeDetails[_votingTypeId[i]].votingTypeAddress = _votingTypeAddress[i];
-        }
+        allMemberReputationByAddress[_memberAddress] = _repPoints;
     }
 
     /// @dev Stores the information of a given version number of a given proposal. Maintains the record of all the versions of a proposal.
-    function storeProposalVersion(uint _proposalId) internal 
+    function storeProposalVersion(uint _proposalId) onlyInternal 
     {
         proposalVersions[_proposalId].push(proposalVersionData(allProposal[_proposalId].versionNum,allProposal[_proposalId].proposalDescHash,allProposal[_proposalId].date_add));            
     }
 
     /// @dev Edits the details of an existing proposal and creates new version.
-    function updateProposal(uint _id,string _proposalDescHash) internal
+    function updateProposal(uint _id,string _proposalDescHash) onlyInternal
     {
         allProposal[_id].proposalDescHash = _proposalDescHash;
         allProposal[_id].date_upd = now;
         allProposal[_id].versionNum = allProposal[_id].versionNum+1;
     }
-    
+     
+    function setProposalCategoryParams1(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) onlyInternal
+    {
+      uint i;
+      setTotalOptions(_proposalId,_verdictOptions);
+      for(i=0;i<_paramInt.length;i++)
+      {
+          allProposalCategory[_proposalId].paramInt.push(_paramInt[i]);
+      }
+
+      for(i=0;i<_paramBytes32.length;i++)
+      {
+          allProposalCategory[_proposalId].paramBytes32.push(_paramBytes32[i]);
+      }
+
+      for(i=0;i<_paramAddress.length;i++)
+      {
+          allProposalCategory[_proposalId].paramAddress.push(_paramAddress[i]);
+      }   
+    }
+
     function getVotingTypeLength() public constant returns(uint) 
     {
         return allVotingTypeDetails.length;
@@ -576,10 +457,15 @@ contract GovernanceData is Ownable{
         VTAddress = allVotingTypeDetails[_votingTypeId].votingTypeAddress;
     }
 
+    function getVotingTypeAddress(uint _votingTypeId)constant returns (address)
+    {
+        return allVotingTypeDetails[_votingTypeId].votingTypeAddress;
+    }
+
     /// @dev Fetch user balance when giving member address.
     function getBalanceOfMember(address _memberAddress) public constant returns (uint totalBalance)
     {
-        BT=BasicToken(BTAddress);
+        BT=BasicToken(MTAddress);
         totalBalance = BT.balanceOf(_memberAddress);
     }
 
@@ -614,13 +500,13 @@ contract GovernanceData is Ownable{
     }
 
     /// @dev Get the category parameters given against a proposal after categorizing the proposal.
-    function getProposalCategoryParams(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
+    function getProposalOptions(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
     {
         return (allProposalCategory[_proposalId].paramInt,allProposalCategory[_proposalId].paramBytes32,allProposalCategory[_proposalId].paramAddress,allProposalCategory[_proposalId].verdictOptions);
     }
 
     /// @dev Get Total number of verdict options against proposal.
-    function getTotalVerdictOptions(uint _proposalId) constant returns(uint verdictOptions)
+    function getTotalVerdictOptions(uint _proposalId) constant returns(uint8 verdictOptions)
     {
         verdictOptions = allProposalCategory[_proposalId].verdictOptions;
     }
@@ -629,6 +515,11 @@ contract GovernanceData is Ownable{
     function getProposalStatus(uint _proposalId) constant returns (uint proposalStatus)
     {
         proposalStatus = allProposal[_proposalId].propStatus;
+    }
+
+    function getProposalCategory(uint _proposalId) constant returns(uint8 categoryId)
+    {
+        return allProposal[_proposalId].category;
     }
 
     /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
@@ -689,6 +580,11 @@ contract GovernanceData is Ownable{
     function getOptionAddedAddressLength(uint _proposalId) constant returns(uint length)
     {
         return  allProposalCategory[_proposalId].optionAddedByAddress.length;
+    }
+
+    function getOptionDescByProposalId(uint _proposalId,uint _optionIndex) constant returns(string)
+    {
+        return allProposalCategory[_proposalId].optionDescHash[_optionIndex];
     }
 
     /// @dev Get the Stake of verdict when given Proposal Id and Verdict index.
@@ -762,6 +658,21 @@ contract GovernanceData is Ownable{
         addressParameter = allProposalCategoryParams[_proposalId].optionNameAddressValue[finalOption][_parameterName];
     }
 
+    function setParameterDetails1(uint _proposalId,uint index,bytes32 parameterName,uint[] _paramInt)
+    {
+        allProposalCategoryParams[_proposalId].optionNameIntValue[index][parameterName] = _paramInt[index];
+    }
+
+    function setParameterDetails2(uint _proposalId,uint index,bytes32 parameterName,bytes32[] _paramBytes32)
+    {
+        allProposalCategoryParams[_proposalId].optionNameBytesValue[index][parameterName] = _paramBytes32[index];
+    }
+
+    function setParameterDetails3(uint _proposalId,uint index,bytes32 parameterName,address[] _paramAddress)
+    {
+        allProposalCategoryParams[_proposalId].optionNameAddressValue[index][parameterName] = _paramAddress[index];  
+    }
+
     function getProposalLength()constant returns(uint)
     {  
         return (allProposal.length);
@@ -771,6 +682,60 @@ contract GovernanceData is Ownable{
     {
         return (_proposalId,allProposal[_proposalId].proposalDescHash,allProposal[_proposalId].date_add,status[allProposal[_proposalId].propStatus],allProposal[_proposalId].category,totalVotesAgainstProposal[_proposalId].length,allProposalCategory[_proposalId].verdictOptions);
     }  
+
+    function getMemberDetails(address _memberAddress) constant returns(uint memberReputation, uint totalProposal,uint proposalStake,uint totalOption,uint optionStake,uint totalVotes)
+    {
+        memberReputation = getMemberReputation(_memberAddress);
+        totalProposal = allProposalMember[_memberAddress].length;
+        proposalStake = getProposalStakeByMember(_memberAddress);
+        totalOption = allProposalOption[_memberAddress];
+        optionStake = totalOptionStake[_memberAddress];
+        totalVotes = getTotalVotesAgainstMember(_memberAddress);
+    }
+
+    function getStakeByProposal(uint _proposalId)internal constant returns(uint stake)
+    {
+        return allProposal[_proposalId].proposalStake;
+    }
+
+    function getProposalStakeByMember(address _memberAddress)internal constant returns(uint stakeValueProposal)
+    {
+        for(uint i=0; i<allProposalMember[_memberAddress].length; i++)
+        {
+            stakeValueProposal = stakeValueProposal + getStakeByProposal(i);
+        }
+    }
+
+    function getTotalOption(address _memberAddress)constant returns(uint)
+    {
+        return allProposalOption[_memberAddress];
+    }
+
+    function addInTotalVotes(address _memberAddress)
+    {
+        totalVotesAgainstMember[_memberAddress] = totalVotesAgainstMember[_memberAddress] + 1;
+    }
+
+    function getTotalVotesAgainstMember(address _memberAddress) constant returns(uint)
+    {
+        return totalVotesAgainstMember[_memberAddress];
+    }
+
+    function addTotalProposal(uint _proposalId,address _memberAddress)
+    {
+        allProposalMember[_memberAddress].push(_proposalId);
+    }
+
+    function getTotalProposal(address _memberAddress) constant returns(uint)
+    {
+        return allProposalMember[_memberAddress].length;
+    }
+
+    function addNewProposal(string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress)
+    {
+        allProposal.push(proposal(msg.sender,_proposalDescHash,now,now,0,0,0,_categoryId,0,0,_votingTypeAddress,0,0));               
+    }
+
 }  
 
 

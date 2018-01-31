@@ -17,8 +17,9 @@
 pragma solidity ^0.4.8;
 import "./VotingType.sol";
 import "./GovernanceData.sol";
-import  "./StandardVotingType.sol";
+import "./StandardVotingType.sol";
 import "./Master.sol";
+import "./Governance.sol";
 // import "./BasicToken.sol";
 import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 
@@ -32,10 +33,11 @@ contract FeatureWeighted is VotingType
     address BTAddress;
     address public masterAddress;
     address SVTAddress;
+    address G1Address;
+    Governance G1;
     MemberRoles MR;
     ProposalCategory PC;
     GovernanceData GD;
-    MintableToken MT;
     StandardVotingType SVT;
     BasicToken BT;
     Master MS;
@@ -77,6 +79,11 @@ contract FeatureWeighted is VotingType
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
+    }
+
+    function changeGovernanceAddress(address _G1ContractAddress)
+    {
+        G1Address = _G1ContractAddress;
     }
 
     /// @dev Changes GBT contract Address. //NEW
@@ -134,15 +141,15 @@ contract FeatureWeighted is VotingType
             maxLength = _verdictOptions;
     }
 
-    function addInTotalVotes(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _finalVoteValue) internal
+    function addInAllVotes(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _finalVoteValue) internal
     {
         increaseTotalVotes();
         allVotes.push(proposalVote(msg.sender,_proposalId,_optionChosen,now,GD.getBalanceOfMember(msg.sender),_GBTPayableTokenAmount,_finalVoteValue));
     }
 
-    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount)
+    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash)
     {
-        SVT.addVerdictOptionSVT(_proposalId,msg.sender,2,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount);
+        SVT.addVerdictOptionSVT(_proposalId,msg.sender,2,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
         payableGBTTokensFeatureWeighted(_GBTPayableTokenAmount);
     }
 
@@ -180,7 +187,8 @@ contract FeatureWeighted is VotingType
             AddressProposalVote[msg.sender][_proposalId] = voteLength;
             ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(voteLength);
             GD.setVoteIdAgainstProposal(_proposalId,voteLength);
-            addInTotalVotes(_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
+            GD.addInTotalVotes(msg.sender);
+            addInAllVotes(_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
 
         }
         else 
@@ -261,6 +269,8 @@ contract FeatureWeighted is VotingType
     function giveReward_afterFinalDecision(uint _proposalId) public
     {
         GD=GovernanceData(GDAddress);
+        G1=Governance(G1Address);
+
         uint voteValueFavour; uint voterStake; uint wrongOptionStake;
         uint totalVoteValue; uint totalTokenToDistribute;uint returnTokens;
         uint8 finalVerdict;  
@@ -279,7 +289,7 @@ contract FeatureWeighted is VotingType
             {
                 voterStake = SafeMath.add(voterStake,SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor()))));
                 returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
-                GD.transferBackGBTtoken(allVotes[voteid].voter,returnTokens);
+                G1.transferBackGBTtoken(allVotes[voteid].voter,returnTokens);
             }
 
             // uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
@@ -327,13 +337,13 @@ contract FeatureWeighted is VotingType
         {
             reward = SafeMath.div(SafeMath.mul(GD.getProposalStake(_proposalId),_totalTokenToDistribute),_totalVoteValue);
             transferToken = SafeMath.add(GD.getProposalStake(_proposalId),reward);
-            GD.transferBackGBTtoken(GD.getProposalOwner(_proposalId),transferToken);
+            G1.transferBackGBTtoken(GD.getProposalOwner(_proposalId),transferToken);
 
             address verdictOwner = GD.getOptionAddressByProposalId(_proposalId,finalVerdict);
             uint verdictStake = GD.getOptionStakeByProposalId(_proposalId,finalVerdict);
             reward = SafeMath.div(SafeMath.mul(verdictStake,_totalTokenToDistribute),_totalVoteValue);
             transferToken = SafeMath.add(verdictStake,reward);
-            GD.transferBackGBTtoken(verdictOwner,transferToken);
+            G1.transferBackGBTtoken(verdictOwner,transferToken);
         }
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
@@ -343,15 +353,15 @@ contract FeatureWeighted is VotingType
             {
                 reward = SafeMath.div(SafeMath.mul(allVotes[voteid].voteValue,_totalTokenToDistribute),_totalVoteValue);
                 transferToken = SafeMath.add(allVotes[voteid].voteStakeGBT,reward);
-                GD.transferBackGBTtoken(allVotes[voteid].voter,transferToken);
-                GD.updateMemberReputation1(allVotes[voteid].voter,SafeMath.add(GD.getMemberReputation(allVotes[voteid].voter),addMemberPoints));
+                G1.transferBackGBTtoken(allVotes[voteid].voter,transferToken);
+                G1.updateMemberReputation1(allVotes[voteid].voter,SafeMath.add(GD.getMemberReputation(allVotes[voteid].voter),addMemberPoints));
             }
             else
             {
-                GD.updateMemberReputation1(allVotes[voteid].voter,SafeMath.sub(GD.getMemberReputation(allVotes[voteid].voter),subMemberPoints));
+                G1.updateMemberReputation1(allVotes[voteid].voter,SafeMath.sub(GD.getMemberReputation(allVotes[voteid].voter),subMemberPoints));
             }  
         }
-        GD.updateMemberReputation(_proposalId,finalVerdict);
+        G1.updateMemberReputation(_proposalId,finalVerdict);
     }
 
     function getOptionValue(uint _voteid,uint _proposalId,uint _finalVerdict) internal returns (uint optionValue)
