@@ -43,7 +43,7 @@ contract GovBlocksMaster
       require(msg.sender == owner);
       _;
     }
-
+    /// @dev Transfer Ownership to another user
     function transferOwnership(address _newOwner) onlyOwner  
     {
       owner = _newOwner;
