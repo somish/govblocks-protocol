@@ -116,7 +116,7 @@ contract GovernanceData {
     proposal[] allProposal;
     votingTypeDetails[] allVotingTypeDetails;
 
-    address GBTAddress;
+    address public GBTAddress;
     address BTAddress;
     address MTAddress;
     // address masterAddress;
@@ -287,13 +287,7 @@ contract GovernanceData {
         allProposal[_proposalId].proposalValue = _proposalValue;
     }
 
-    /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-    function payableGBTTokens(uint _TokenAmount) onlyInternal
-    {
-        BT=BasicToken(BTAddress);
-        require(_TokenAmount >= GBTStakeValue);
-        BT.transfer(GBTAddress,_TokenAmount);
-    }
+   
 
     /// @dev Updates  status of an existing proposal.
     function updateProposalStatus(uint _id ,uint8 _status) onlyInternal
@@ -737,7 +731,5 @@ contract GovernanceData {
     }
 
 }  
-
-
 
 

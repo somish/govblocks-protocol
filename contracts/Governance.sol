@@ -88,12 +88,21 @@ contract Governance {
       require(GD.getProposalCategory(_proposalId) != 0);
       require(_TokenAmount >= PC.getMinStake(GD.getProposalCategory(_proposalId)) && _TokenAmount <= PC.getMaxStake(GD.getProposalCategory(_proposalId)));
 
-      GD.payableGBTTokens(_TokenAmount);
+      payableGBTTokens(_TokenAmount);
       setProposalValue(_proposalId,_TokenAmount);
       GD.pushInProposalStatus(_proposalId,2);
       GD.updateProposalStatus(_proposalId,2);
       // P1.closeProposalOraclise(_proposalId,Pcategory.getClosingTimeByIndex(allProposal[_proposalId].category,));
   }
+  
+   /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
+    function payableGBTTokens(uint _TokenAmount) 
+    {
+        BT=BasicToken(BTAddress);
+        GD=GovernanceData(GDAddress);
+        require(_TokenAmount >= GD.GBTStakeValue());
+        BT.transfer(GD.GBTAddress(),_TokenAmount);
+    }
 
   /// @dev Edits a proposal and Only owner of a proposal can edit it.
   function editProposal(uint _proposalId ,string _proposalDescHash) onlyOwner public
@@ -108,7 +117,7 @@ contract Governance {
   }
 
   /// @dev Calculate the proposal value to distribute it later - Distribute amount depends upon the final decision against proposal.
-  function setProposalValue(uint _proposalId,uint _memberStake) internal
+  function setProposalValue(uint _proposalId,uint _memberStake) 
   {
       GD=GovernanceData(GDAddress);
       GD.setProposalStake(_proposalId,_memberStake);
@@ -190,7 +199,7 @@ contract Governance {
       if(_categoryId > 0)
       {
           GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
-          openProposalForVoting(GD.getProposalLength(),_TokenAmount);
+          openProposalForVoting(GD.getProposalLength()-1,_TokenAmount);
       }
       else
           GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));          
