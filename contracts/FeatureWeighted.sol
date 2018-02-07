@@ -96,12 +96,12 @@ contract FeatureWeighted is VotingType
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-    function payableGBTTokensFeatureWeighted(uint _TokenAmount) internal
+    function payableGBTTokensFeatureWeighted(address _member,uint _TokenAmount) internal
     {
         GBTC=GBTController(GBTCAddress);
         GD=GovernanceData(GDAddress);
         require(_TokenAmount >= GD.GBTStakeValue());
-        GBTC.receiveGBT(msg.sender,_TokenAmount);
+        GBTC.receiveGBT(_member,_TokenAmount);
     }
 
     function getTotalVotes()  constant returns (uint votesTotal)
@@ -165,7 +165,7 @@ contract FeatureWeighted is VotingType
     {
         SVT=StandardVotingType(SVTAddress);
         SVT.addVerdictOptionSVT(_proposalId,_member,_votingTypeId,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
-        payableGBTTokensFeatureWeighted(_GBTPayableTokenAmount);
+        payableGBTTokensFeatureWeighted(_member,_GBTPayableTokenAmount);
     }
      function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) 
     {

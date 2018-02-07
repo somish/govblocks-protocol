@@ -19,15 +19,16 @@ import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Master.sol";
-import "./BasicToken.sol";
-import "./SafeMath.sol";
-import "./Math.sol";
+// import "./BasicToken.sol";
+// import "./SafeMath.sol";
+// import "./Math.sol";
 import "./Pool.sol";
 import "./GBTController.sol";
 import "./VotingType.sol";
-// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-// import "./zeppelin-solidity/contracts/math/Math.sol";
+import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+import "./zeppelin-solidity/contracts/math/Math.sol";
+
 
 
 contract Governance {
@@ -233,19 +234,15 @@ contract Governance {
       GD=GovernanceData(GDAddress);
 
       require(GD.getBalanceOfMember(msg.sender) != 0);
+      require(_categoryId != 0);
       GD.setMemberReputation(msg.sender,1);
+      
       GD.addTotalProposal(GD.getProposalLength(),msg.sender);
-
-      if(_categoryId > 0)
-      {
-          uint _proposalId = GD.getProposalLength()-1;
-          GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
-          openProposalForVoting(_proposalId,_TokenAmount/2);
-          GD.addInitialOptionDetails(_proposalId);
-          GD.setCategorizedBy(_proposalId,msg.sender);
-      }
-      else
-          GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));          
+      uint _proposalId = GD.getProposalLength()-1;
+      GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
+      openProposalForVoting(_proposalId,_TokenAmount/2);
+      GD.addInitialOptionDetails(_proposalId);
+      GD.setCategorizedBy(_proposalId,msg.sender);
       VT=VotingType(GD.getVotingTypeAddress(_votingTypeId));
       VT.addVerdictOption(_proposalId,msg.sender,_votingTypeId,_paramInt,_paramBytes32,_paramAddress,_TokenAmount,_optionDescHash);
   }

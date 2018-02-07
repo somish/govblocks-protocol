@@ -15,8 +15,8 @@
 
 
 pragma solidity ^0.4.8;
-import "./Ownable.sol";
-// import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
+// import "./Ownable.sol";
+import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract  MemberRoles is Ownable{
 

@@ -75,12 +75,12 @@ contract SimpleVoting is VotingType
     }
     
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-    function payableGBTTokensSimpleVoting(uint _TokenAmount) internal
+    function payableGBTTokensSimpleVoting(address _member,uint _TokenAmount) internal
     {
         GBTC=GBTController(GBTCAddress);
         GD=GovernanceData(GDAddress);
         require(_TokenAmount >= GD.GBTStakeValue());
-        GBTC.receiveGBT(msg.sender,_TokenAmount);
+        GBTC.receiveGBT(_member,_TokenAmount);
     }
     
     function changeAllContractsAddress(address _StandardVotingAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
@@ -152,7 +152,7 @@ contract SimpleVoting is VotingType
     {
         SVT=StandardVotingType(SVTAddress);
         SVT.addVerdictOptionSVT(_proposalId,_member,_votingTypeId,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
-        payableGBTTokensSimpleVoting(_GBTPayableTokenAmount);
+        payableGBTTokensSimpleVoting(_member,_GBTPayableTokenAmount);
     }
      function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) 
     {
@@ -313,3 +313,4 @@ contract SimpleVoting is VotingType
     }
 
 }
+

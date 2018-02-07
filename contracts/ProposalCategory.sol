@@ -13,10 +13,10 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity ^0.4.8;
-import "./Ownable.sol";
+// import "./Ownable.sol";
 import "./MemberRoles.sol";
 import "./GovernanceData.sol";
-// import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ProposalCategory is Ownable
 {

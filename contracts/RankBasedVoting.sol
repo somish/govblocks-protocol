@@ -21,12 +21,12 @@ import "./StandardVotingType.sol";
 import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
 import "./Governance.sol";
-import "./Math.sol";
-import "./SafeMath.sol";
+// import "./Math.sol";
+// import "./SafeMath.sol";
 import "./Master.sol";
 import "./GBTController.sol";
-// import "./zeppelin-solidity/contracts/math/Math.sol";
-// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+import "./zeppelin-solidity/contracts/math/Math.sol";
+import "./zeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 contract RankBasedVoting is VotingType
@@ -80,12 +80,12 @@ contract RankBasedVoting is VotingType
     }
 
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-    function payableGBTTokensRankBasedVoting(uint _TokenAmount) public
+    function payableGBTTokensRankBasedVoting(address _member,uint _TokenAmount) public
     {
         GBTC=GBTController(GBTCAddress);
         GD=GovernanceData(GDAddress);
         require(_TokenAmount >= GD.GBTStakeValue());
-        GBTC.receiveGBT(msg.sender,_TokenAmount);
+        GBTC.receiveGBT(_member,_TokenAmount);
     }
 
     function changeAllContractsAddress(address _StandardVotingAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
@@ -157,7 +157,7 @@ contract RankBasedVoting is VotingType
     {
         SVT=StandardVotingType(SVTAddress);
         SVT.addVerdictOptionSVT(_proposalId,_member,_votingTypeId,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
-        payableGBTTokensRankBasedVoting(_GBTPayableTokenAmount);
+        payableGBTTokensRankBasedVoting(_member,_GBTPayableTokenAmount);
     }
      function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) 
     {
