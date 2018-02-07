@@ -23,10 +23,10 @@ import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
 import "./StandardVotingType.sol";
 import "./Governance.sol";
-import "./zeppelin-solidity/contracts/token/MintableToken.sol";
-import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-// import "./MintableToken.sol";
-// import "./BasicToken.sol";
+import "./Pool.sol";
+import "./GBTController.sol";
+import "./GBTStandardToken.sol";
+
 
 contract Master is Ownable {
 
@@ -48,8 +48,6 @@ contract Master is Ownable {
     address governanceDataAddress;
     address memberRolesAddress;
     address proposalCategoryAddress;
-    address mintableTokenAddress;
-    address basicTokenAddress;
     address simpleVotingAddress;
     address rankBasedVotingAddress;
     address featureWeightedAddress;
@@ -57,12 +55,16 @@ contract Master is Ownable {
     address standardVotingTypeAddress;
     address GBTOwner;
     address governanceAddress;
+    address poolAddress;
+    address GBTCAddress;
+    address GBTSAddress;
+    GBTController GBTC;
+    GBTStandardToken GBTS;
+    Pool P1;
     Governance G1;
     GovernanceData GD;
     MemberRoles MR;
     ProposalCategory PC;
-    MintableToken MT;
-    BasicToken BT;
     SimpleVoting SV;
     RankBasedVoting RB;
     FeatureWeighted FW;
@@ -118,14 +120,15 @@ contract Master is Ownable {
         addContractDetails(versionNo,"Master",masterAddress);
         addContractDetails(versionNo,"GovernanceData",_contractAddresses[0]);
         addContractDetails(versionNo,"MemberRoles",_contractAddresses[1]);
-        addContractDetails(versionNo,"ProposalCategory",_contractAddresses[2]);
-        addContractDetails(versionNo,"MintableToken",_contractAddresses[3]); 
-        addContractDetails(versionNo,"BasicToken",_contractAddresses[4]); 
-        addContractDetails(versionNo,"SimpleVoting",_contractAddresses[5]);
-        addContractDetails(versionNo,"RankBasedVoting",_contractAddresses[6]); 
-        addContractDetails(versionNo,"FeatureWeighted",_contractAddresses[7]); 
-        addContractDetails(versionNo,"StandardVotingType",_contractAddresses[8]); 
-        addContractDetails(versionNo,"Governance",_contractAddresses[9]); 
+        addContractDetails(versionNo,"ProposalCategory",_contractAddresses[2]); 
+        addContractDetails(versionNo,"SimpleVoting",_contractAddresses[3]);
+        addContractDetails(versionNo,"RankBasedVoting",_contractAddresses[4]); 
+        addContractDetails(versionNo,"FeatureWeighted",_contractAddresses[5]); 
+        addContractDetails(versionNo,"StandardVotingType",_contractAddresses[6]); 
+        addContractDetails(versionNo,"Governance",_contractAddresses[7]); 
+        addContractDetails(versionNo,"Pool",_contractAddresses[8]); 
+        addContractDetails(versionNo,"GBTController",_contractAddresses[9]); 
+        addContractDetails(versionNo,"GBTStandardToken",_contractAddresses[10]); 
     }
 
     /// @dev Adds Contract's name  and its ethereum address in a given version.
@@ -141,14 +144,14 @@ contract Master is Ownable {
         governanceDataAddress = allContractVersions[_version][1].contractAddress;
         memberRolesAddress = allContractVersions[_version][2].contractAddress;
         proposalCategoryAddress = allContractVersions[_version][3].contractAddress;
-        mintableTokenAddress = allContractVersions[_version][4].contractAddress;
-        basicTokenAddress = allContractVersions[_version][5].contractAddress;
-        simpleVotingAddress = allContractVersions[_version][6].contractAddress;
-        rankBasedVotingAddress = allContractVersions[_version][7].contractAddress;
-        featureWeightedAddress = allContractVersions[_version][8].contractAddress;
-        standardVotingTypeAddress = allContractVersions[_version][9].contractAddress;
-        governanceAddress = allContractVersions[_version][10].contractAddress;
-
+        simpleVotingAddress = allContractVersions[_version][4].contractAddress;
+        rankBasedVotingAddress = allContractVersions[_version][5].contractAddress;
+        featureWeightedAddress = allContractVersions[_version][6].contractAddress;
+        standardVotingTypeAddress = allContractVersions[_version][7].contractAddress;
+        governanceAddress = allContractVersions[_version][8].contractAddress;
+        poolAddress = allContractVersions[_version][9].contractAddress;
+        GBTCAddress = allContractVersions[_version][10].contractAddress;
+        GBTSAddress = allContractVersions[_version][11].contractAddress;
     }
 
     /// @dev Sets the older version contract address as inactive and the latest one as active.
@@ -164,6 +167,7 @@ contract Master is Ownable {
         addRemoveAddress(version,8);
         addRemoveAddress(version,9);
         addRemoveAddress(version,10);
+        addRemoveAddress(version,11);
     }
 
     /// @dev Deactivates address of a contract from last version.
@@ -196,32 +200,51 @@ contract Master is Ownable {
 
         G1=Governance(governanceAddress);
         G1.changeMasterAddress(_masterAddress);
+
+        P1=Pool(poolAddress);
+        P1.changeMasterAddress(_masterAddress);
+
+        GBTC=GBTController(GBTCAddress);
+        GBTC.changeMasterAddress(_masterAddress);
     }
 
    /// @dev Link contracts to one another.
    function changeOtherAddress() onlyInternal
    {  
+        changeGBTAddress(GBTSAddress);
+        changeGBTControllerAddress(GBTCAddress);
+        
         GD=GovernanceData(governanceDataAddress);
-        GD.changeAllContractsAddress(basicTokenAddress,mintableTokenAddress);
+        GD.changeAllContractsAddress(poolAddress);
 
         SV=SimpleVoting(simpleVotingAddress);
-        SV.changeAllContractsAddress(basicTokenAddress,standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        SV.changeGBTControllerAddress(GBTCAddress);
 
         RB=RankBasedVoting(rankBasedVotingAddress);
-        RB.changeAllContractsAddress(basicTokenAddress,standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
-
-        FW=FeatureWeighted(featureWeightedAddress);
-        FW.changeAllContractsAddress(basicTokenAddress,standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
-
-        SVT=StandardVotingType(standardVotingTypeAddress);
-        SVT.changeAllContractsAddress(basicTokenAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
-        SVT.changeOtherContractAddress(simpleVotingAddress,rankBasedVotingAddress,featureWeightedAddress);
+        RB.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        RB.changeGBTControllerAddress(GBTCAddress);
         
+        FW=FeatureWeighted(featureWeightedAddress);
+        FW.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        FW.changeGBTControllerAddress(GBTCAddress);
+        
+        SVT=StandardVotingType(standardVotingTypeAddress);
+        SVT.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        SVT.changeOtherContractAddress(simpleVotingAddress,rankBasedVotingAddress,featureWeightedAddress);
+        SVT.changeOtherContractAddress1(governanceAddress,poolAddress);
+
         G1=Governance(governanceAddress);
-        G1.changeAllContractsAddress(basicTokenAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
-   
+        G1.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        G1.changePoolAddress(poolAddress);
+        G1.changeGBTControllerAddress(GBTCAddress);
+        
         PC=ProposalCategory(proposalCategoryAddress);
-        PC.changeAllContractsAddress(memberRolesAddress);
+        PC.changeAllContractsAddress(memberRolesAddress,governanceDataAddress);
+
+        P1=Pool(poolAddress);
+        P1.changeAllContractsAddress(governanceDataAddress,simpleVotingAddress);
+        P1.changeGBTControllerAddress(GBTCAddress);
    }
 
     /// @dev Change GBT token address all contracts
@@ -230,17 +253,41 @@ contract Master is Ownable {
         GD=GovernanceData(governanceDataAddress);
         GD.changeGBTtokenAddress(_tokenAddress);
         
+        // SV=SimpleVoting(simpleVotingAddress);
+        // SV.changeGBTtokenAddress(_tokenAddress);
+
+        // RB=RankBasedVoting(rankBasedVotingAddress);
+        // RB.changeGBTtokenAddress(_tokenAddress);
+
+        // FW=FeatureWeighted(featureWeightedAddress);
+        // FW.changeGBTtokenAddress(_tokenAddress);
+
+        // SVT=StandardVotingType(standardVotingTypeAddress);
+        // SVT.changeGBTtokenAddress(_tokenAddress);
+
+        GBTC=GBTController(GBTCAddress);
+        GBTC.changeGBTtokenAddress(_tokenAddress);
+
+        P1=Pool(poolAddress);
+        P1.changeGBTtokenAddress(_tokenAddress);  
+    }
+
+    function changeGBTControllerAddress(address _controllerAddress)
+    {
+        G1=Governance(governanceAddress);
+        G1.changeGBTControllerAddress(_controllerAddress);
+
         SV=SimpleVoting(simpleVotingAddress);
-        SV.changeGBTtokenAddress(_tokenAddress);
+        SV.changeGBTControllerAddress(_controllerAddress);
 
         RB=RankBasedVoting(rankBasedVotingAddress);
-        RB.changeGBTtokenAddress(_tokenAddress);
+        RB.changeGBTControllerAddress(_controllerAddress);
 
         FW=FeatureWeighted(featureWeightedAddress);
-        FW.changeGBTtokenAddress(_tokenAddress);
-
-        SVT=StandardVotingType(standardVotingTypeAddress);
-        SVT.changeGBTtokenAddress(_tokenAddress);
+        FW.changeGBTControllerAddress(_controllerAddress);
+        
+        P1=Pool(poolAddress);
+        P1.changeGBTControllerAddress(_controllerAddress);
     }
 
     /// @dev Switch to the recent version of contracts. (Last one)
@@ -264,3 +311,4 @@ contract Master is Ownable {
     }
 
 }
+

@@ -15,12 +15,10 @@
 
 
 pragma solidity ^0.4.8;
-import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-import "./zeppelin-solidity/contracts/token/MintableToken.sol";
-// import "./BasicToken.sol";
-// import "./MintableToken.sol";
-// import "./Master.sol";
-// import "./Pool.sol";
+import "./Master.sol";
+import "./Pool.sol";
+import "./GBTStandardToken.sol";
+
 
 contract GovernanceData {
     using SafeMath for uint;
@@ -97,7 +95,6 @@ contract GovernanceData {
     mapping(address=>uint) totalOptionStake; // total Optionstake Against member
     mapping(address=>uint) totalVotesAgainstMember; // Total Votes given by member till now..
 
-    uint public proposalVoteClosingTime;
     uint public quorumPercentage;
     uint public pendingProposalStart;
     uint public GBTStakeValue; 
@@ -116,15 +113,13 @@ contract GovernanceData {
     proposal[] allProposal;
     votingTypeDetails[] allVotingTypeDetails;
 
-    address public GBTAddress;
-    address BTAddress;
-    address MTAddress;
+    address GBTSAddress;
+    address PoolAddress;
     // address masterAddress;
     address owner;
-    BasicToken BT;
-    MintableToken MT;
+    GBTStandardToken GBTS;
     // Master MS;
-    // Pool P1;
+    Pool P1;
 
     modifier onlyInternal {
         // MS=Master(masterAddress);
@@ -191,10 +186,9 @@ contract GovernanceData {
     /// @dev Set Parameters value that will help in Distributing reward.
     function setGlobalParameters() internal
     {
-        proposalVoteClosingTime = 20;
         pendingProposalStart=0;
         quorumPercentage=25;
-        GBTStakeValue=10;
+        GBTStakeValue=0;
         globalRiskFactor=5;
         membershipScalingFactor=1;
         scalingWeight=1;
@@ -214,29 +208,21 @@ contract GovernanceData {
     }
 
     /// @dev change all contract's addresses.
-    function changeAllContractsAddress(address _BTcontractAddress,address _MTContractAddress) onlyInternal
+    function changeAllContractsAddress(address _poolAddress) onlyInternal
     {
-        MTAddress = _MTContractAddress;
-        BTAddress = _BTcontractAddress;
+        PoolAddress = _poolAddress;
     }
-
-    // function changePoolAddress(address _poolAddress)
-    // {
-    //     PAddress = _poolAddress;
-    // }
 
     /// @dev Changes GBT contract Address. //NEW
     function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
     {
-        GBTAddress = _GBTcontractAddress;
+        GBTSAddress = _GBTcontractAddress;
     }
 
-    /// @dev Checks if voting time of a given proposal should be closed or not. 
-    function checkProposalVoteClosing(uint _proposalId) onlyInternal constant returns(uint8 closeValue) 
-    {
-        require(SafeMath.add(allProposal[_proposalId].date_upd,proposalVoteClosingTime) <= now);
-        closeValue=1;
-    }
+    // function changeGBTControllerAddress(address _GBTCAddress)
+    // {
+    //     GBTCAddress = _GBTCAddress;
+    // }
 
     /// @dev Set Vote Id against given proposal.
     function setVoteIdAgainstProposal(uint _proposalId,uint _voteId) onlyInternal
@@ -451,28 +437,28 @@ contract GovernanceData {
         VTAddress = allVotingTypeDetails[_votingTypeId].votingTypeAddress;
     }
 
-    function getVotingTypeAddress(uint _votingTypeId)constant returns (address)
+    function getVotingTypeAddress(uint _votingTypeId)constant returns (address votingAddress)
     {
-        return allVotingTypeDetails[_votingTypeId].votingTypeAddress;
+        return (allVotingTypeDetails[_votingTypeId].votingTypeAddress);
     }
 
     /// @dev Fetch user balance when giving member address.
     function getBalanceOfMember(address _memberAddress) public constant returns (uint totalBalance)
     {
-        BT=BasicToken(MTAddress);
-        totalBalance = BT.balanceOf(_memberAddress);
+        GBTS=GBTStandardToken(GBTSAddress);
+        totalBalance = GBTS.balanceOf(_memberAddress);
     }
 
     /// @dev Fetch details of proposal by giving proposal Id
-    function getProposalDetailsById1(uint _proposalId) public constant returns (address owner,string proposalDescHash,uint date_add,uint date_upd,uint versionNum,uint propStatus)
+    function getProposalDetailsById1(uint _proposalId) public constant returns (uint id,address owner,string proposalDescHash,uint date_add,uint date_upd,uint versionNum,uint propStatus)
     {
-        return (allProposal[_proposalId].owner,allProposal[_proposalId].proposalDescHash,allProposal[_proposalId].date_add,allProposal[_proposalId].date_upd,allProposal[_proposalId].versionNum,allProposal[_proposalId].propStatus);
+        return (_proposalId,allProposal[_proposalId].owner,allProposal[_proposalId].proposalDescHash,allProposal[_proposalId].date_add,allProposal[_proposalId].date_upd,allProposal[_proposalId].versionNum,allProposal[_proposalId].propStatus);
     }
 
     /// @dev Get the category, of given proposal. 
-    function getProposalDetailsById2(uint _proposalId) public constant returns(uint8 category,uint8 currentVotingId,uint8 intermediateVerdict,uint8 finalVerdict,address votingTypeAddress) 
+    function getProposalDetailsById2(uint _proposalId) public constant returns(uint id,uint8 category,uint8 currentVotingId,uint8 intermediateVerdict,uint8 finalVerdict,address votingTypeAddress) 
     {
-        return (allProposal[_proposalId].category,allProposal[_proposalId].currVotingStatus,allProposal[_proposalId].currentVerdict,allProposal[_proposalId].finalVerdict,allProposal[_proposalId].votingTypeAddress); 
+        return (_proposalId,allProposal[_proposalId].category,allProposal[_proposalId].currVotingStatus,allProposal[_proposalId].currentVerdict,allProposal[_proposalId].finalVerdict,allProposal[_proposalId].votingTypeAddress); 
     }
 
     /// @dev Get member address who created the proposal.
@@ -482,9 +468,9 @@ contract GovernanceData {
     }
 
     /// @dev Gets version details of a given proposal id.
-    function getProposalDetailsByIdAndVersion(uint _proposalId,uint _versionNum) public constant returns( uint versionNum,string proposalDescHash,uint date_add)
+    function getProposalDetailsByIdAndVersion(uint _proposalId,uint _versionNum) public constant returns(uint id,uint versionNum,string proposalDescHash,uint date_add)
     {
-        return (proposalVersions[_proposalId][_versionNum].versionNum,proposalVersions[_proposalId][_versionNum].proposalDescHash,proposalVersions[_proposalId][_versionNum].date_add);
+        return (_proposalId,proposalVersions[_proposalId][_versionNum].versionNum,proposalVersions[_proposalId][_versionNum].proposalDescHash,proposalVersions[_proposalId][_versionNum].date_add);
     }
    
     /// @dev Get proposal Reward and complexity level Against proposal
@@ -517,8 +503,9 @@ contract GovernanceData {
     }
 
     /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
-    function getProposalFinalVerdictDetails(uint _proposalId) public returns(uint paramint, bytes32 parambytes32,address paramaddress)
+    function getProposalFinalVerdictDetails(uint _proposalId) public returns(uint id,uint paramint, bytes32 parambytes32,address paramaddress)
     {
+        id = _proposalId;
         uint category = allProposal[_proposalId].category;
         uint verdictChosen = allProposal[_proposalId].finalVerdict;
 
@@ -541,8 +528,8 @@ contract GovernanceData {
     /// @dev Get the number of tokens already distributed among members.
     function getTotalTokenInSupply() constant returns(uint _totalSupplyToken)
     {
-        BT=BasicToken(BTAddress);
-        _totalSupplyToken = BT.totalSupply();
+        GBTS=GBTStandardToken(GBTSAddress);
+        _totalSupplyToken = GBTS.totalSupply();
     }
 
     /// @dev Member Reputation is set according to if Member's Decision is Final decision.
@@ -552,8 +539,9 @@ contract GovernanceData {
     }
 
     /// @dev Get proposal Value and Member Stake on that proposal
-    function getProposalValueAndStake(uint _proposalId) constant returns(uint proposalValue,uint proposalStake)
+    function getProposalValueAndStake(uint _proposalId) constant returns(uint id,uint proposalValue,uint proposalStake)
     {
+        id = _proposalId;
         proposalValue = allProposal[_proposalId].proposalValue;
         proposalStake = allProposal[_proposalId].proposalStake;
     }
@@ -600,11 +588,14 @@ contract GovernanceData {
     }
 
     /// @dev Get the Value, stake and Address of the member whosoever added that verdict option.
-    function getOptionAddedDetails(uint _proposalId,uint _optionIndex) constant returns(uint optionStake,uint optionValue,address memberAddress)
+    function getOptionAddedDetails(uint _proposalId,uint _optionIndex) constant returns(uint id, uint optionid,uint optionStake,uint optionValue,address memberAddress,string optionHash)
     {
+        id = _proposalId;
+        optionid = _optionIndex;
         optionStake = allProposalCategory[_proposalId].stakeOnOption[_optionIndex];
         optionValue = allProposalCategory[_proposalId].valueOfOption[_optionIndex];
         memberAddress = allProposalCategory[_proposalId].optionAddedByAddress[_optionIndex];
+        return (id,optionid,optionStake,optionValue,memberAddress,allProposalCategory[_proposalId].optionDescHash[_optionIndex]);
     }
 
     /// @dev Get Total votes against a proposal when given proposal id.
@@ -614,9 +605,9 @@ contract GovernanceData {
     }
 
     /// @dev Get Array of All vote id's against a given proposal when given _proposalId.
-    function getTotalVoteArrayAgainstProposal(uint _proposalId) constant returns(uint[] totalVotes)
+    function getTotalVoteArrayAgainstProposal(uint _proposalId) constant returns(uint id,uint[] totalVotes)
     {
-        return totalVotesAgainstProposal[_proposalId];
+        return (_proposalId,totalVotesAgainstProposal[_proposalId]);
     }
 
     /// @dev Get Vote id one by one against a proposal when given proposal Id and Index to traverse vote array.
@@ -626,8 +617,9 @@ contract GovernanceData {
     }
 
     /// @dev Fetch the parameter details for final option won (Final Verdict) when giving Proposal ID and Parameter Name Against proposal.
-    function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName) constant returns (uint intParameter,bytes32 bytesParameter,address addressParameter)
+    function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName) constant returns (uint id,uint intParameter,bytes32 bytesParameter,address addressParameter)
     {   
+        id = _proposalId;
         uint _finalVerdict = allProposal[_proposalId].finalVerdict;
         intParameter = getParameterDetails1(_proposalId,_parameterName,_finalVerdict);
         bytesParameter = getParameterDetails2(_proposalId,_parameterName,_finalVerdict);
@@ -689,10 +681,10 @@ contract GovernanceData {
 
     function getStakeByProposal(uint _proposalId)internal constant returns(uint stake)
     {
-        return allProposal[_proposalId].proposalStake;
+        return (allProposal[_proposalId].proposalStake);
     }
 
-    function getProposalStakeByMember(address _memberAddress)internal constant returns(uint stakeValueProposal)
+    function getProposalStakeByMember(address _memberAddress)internal constant returns( uint stakeValueProposal)
     {
         for(uint i=0; i<allProposalMember[_memberAddress].length; i++)
         {
@@ -700,9 +692,9 @@ contract GovernanceData {
         }
     }
 
-    function getTotalOption(address _memberAddress)constant returns(uint)
+    function getTotalOption(address _memberAddress)constant returns(uint total)
     {
-        return allProposalOption[_memberAddress];
+        total = allProposalOption[_memberAddress];
     }
 
     function addInTotalVotes(address _memberAddress)
@@ -710,9 +702,9 @@ contract GovernanceData {
         totalVotesAgainstMember[_memberAddress] = totalVotesAgainstMember[_memberAddress] + 1;
     }
 
-    function getTotalVotesAgainstMember(address _memberAddress) constant returns(uint)
+    function getTotalVotesAgainstMember(address _memberAddress) constant returns(uint total)
     {
-        return totalVotesAgainstMember[_memberAddress];
+        total = totalVotesAgainstMember[_memberAddress];
     }
 
     function addTotalProposal(uint _proposalId,address _memberAddress)

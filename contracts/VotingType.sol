@@ -44,9 +44,12 @@ contract VotingType
     uint public allVotesTotal;
     string public votingTypeName;
 
-    function addVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) public;
+    function addVerdictOption(uint _proposalId,address _member,uint _votingTypeId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) ;
+
+     function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) ;
+
     function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount) public;
-    function closeProposalVote(uint _proposalId) public;
+    function closeProposalVote(uint _proposalId,address _memberAddress) public;
     function giveReward_afterFinalDecision(uint _proposalId) public;
 
     function getTotalVotes() constant returns (uint votesTotal);

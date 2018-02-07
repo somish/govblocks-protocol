@@ -23,10 +23,9 @@ import "./RankBasedVoting.sol";
 import "./FeatureWeighted.sol";
 import "./GovernanceData.sol";
 import "./VotingType.sol";
-// import "./BasicToken.sol";
+import "./Pool.sol";
 import "./Master.sol";
 import "./Governance.sol";
-import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 
 
 contract StandardVotingType
@@ -38,11 +37,11 @@ contract StandardVotingType
     address MRAddress;
     address PCAddress;
     address VTAddress;
-    address BTAddress;
-    address GBTAddress;
     address G1Address;
+    address P1Address;
     address public masterAddress;
     Master MS;
+    Pool P1;
     Governance G1;
     MemberRoles MR;
     ProposalCategory PC;
@@ -79,20 +78,25 @@ contract StandardVotingType
         RBAddress = _RBaddress;
         FWAddress = _FWaddress;
     }
-    
-    function changeAllContractsAddress(address _BTcontractAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
+
+    function changeOtherContractAddress1(address _governanceContractAddress,address _poolContractAddress)
     {
-        BTAddress = _BTcontractAddress;
+        G1Address = _governanceContractAddress;
+        P1Address = _poolContractAddress;
+    }
+    
+    function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress) onlyInternal
+    {
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
         PCAddress = _PCcontractAddress;
     }
 
-    /// @dev Changes GBT contract Address. 
-    function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
-    {
-        GBTAddress = _GBTcontractAddress;
-    }
+    // /// @dev Changes GBT contract Address. 
+    // function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
+    // {
+    //     GBTAddress = _GBTcontractAddress;
+    // }
     
     function setOptionValue_givenByMemberSVT(address _memberAddress,uint _proposalId,uint _memberStake) internal returns (uint finalOptionValue)
     {
@@ -107,10 +111,6 @@ contract StandardVotingType
     function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)
     {
         GD=GovernanceData(GDAddress);
-        BT=BasicToken(BTAddress);
-        
-        if(_memberStake != 0)
-            BT.transfer(GBTAddress,_memberStake);
 
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(_memberAddress),100),100)),GD.getTotalTokenInSupply());
         uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
@@ -140,7 +140,7 @@ contract StandardVotingType
         }
 
         uint currentVotingId;
-        (,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+        (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
 
         require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GD.getBalanceOfMember(_memberAddress) != 0);
         require(MR.getMemberRoleIdByAddress(_memberAddress) == PC.getRoleSequencAtIndex(GD.getProposalCategory(_proposalId),currentVotingId) && VT.getVoteId_againstMember(_memberAddress,_proposalId) == 0 );
@@ -170,6 +170,7 @@ contract StandardVotingType
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
+        G1=Governance(G1Address);
 
         if(_votingType == 0)
         {
@@ -188,10 +189,11 @@ contract StandardVotingType
         }
 
         uint8 currentVotingId; uint8 category;
-        (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+        (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
         uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId);
     
-        require(GD.checkProposalVoteClosing(_proposalId)==1);
+        require(G1.checkProposalVoteClosing(_proposalId)==1);
+
         uint8 max; uint totalVotes; uint verdictVal; uint majorityVote;
         uint roleId = MR.getMemberRoleIdByAddress(_memberAddress);
 
@@ -215,6 +217,8 @@ contract StandardVotingType
                 if(currentVotingId < PC.getRoleSequencLength(category))
                 {
                     GD.updateProposalDetails(_proposalId,currentVotingId,max,0);
+                    P1=Pool(P1Address);
+                    P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(category,currentVotingId));
                 } 
                 else
                 {

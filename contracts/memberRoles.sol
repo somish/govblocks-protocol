@@ -15,8 +15,8 @@
 
 
 pragma solidity ^0.4.8;
-// import "./Ownable.sol";
-import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./Ownable.sol";
+// import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract  MemberRoles is Ownable{
 
@@ -56,11 +56,17 @@ contract  MemberRoles is Ownable{
   }
 
   /// @dev Get that member address assigned as a specific role when giving member role Id.
-  function getMemberAddressByRoleId(uint _memberRoleId) public constant returns(address[] allMemberAddress)
+  function getMemberAddressByRoleId(uint _memberRoleId) public constant returns(uint roleId,address[] allMemberAddress)
   {
-      return memberRoleData[_memberRoleId].memberAddress;
+      roleId = _memberRoleId;
+      return (roleId,memberRoleData[_memberRoleId].memberAddress);
   }
 
+  function getAllMemberLength(uint _memberRoleId) public constant returns(uint)
+  {
+    return memberRoleData[_memberRoleId].memberAddress.length;    
+  }
+  
   /// @dev Add new member role for governance.
   function addNewMemberRole(bytes32 _newRoleName,string _newDescHash) onlyOwner
   {
@@ -69,11 +75,25 @@ contract  MemberRoles is Ownable{
   }
   
   /// @dev Get the role name whem giving role Id.
-  function getMemberRoleNameById(uint _memberRoleId) public constant returns(bytes32 memberRoleName)
+  function getMemberRoleNameById(uint _memberRoleId) public constant returns(uint roleId,bytes32 memberRoleName)
   {
       memberRoleName = memberRole[_memberRoleId];
+      roleId = _memberRoleId;
   }
   
+  function getRolesAndMember()constant returns(bytes32[] roleName,uint[] totalMembers)
+  {
+      roleName=new bytes32[](memberRole.length);
+      totalMembers=new uint[](memberRole.length);
+      for(uint i=0; i < memberRole.length; i++)
+      {
+          bytes32 Name;
+          (,Name) = getMemberRoleNameById(i);
+          roleName[i]=Name;
+          totalMembers[i] = getAllMemberLength(i);
+      }
+  }
+
   /// @dev Assign role to a member when giving member address and role id
   function assignMemberRole(address _memberAddress,uint _memberRoleId) onlyOwner
   {
@@ -84,7 +104,7 @@ contract  MemberRoles is Ownable{
       memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
   }
 
-  function removeMember(address _memberAddress,uint _memberRoleId)
+  function removeMember(address _memberAddress,uint _memberRoleId) onlyOwner
   {
       require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 1);
       memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter-1;

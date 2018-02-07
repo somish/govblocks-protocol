@@ -19,12 +19,16 @@ import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Master.sol";
-// import "./BasicToken.sol";
-// import "./SafeMath.sol";
-// import "./Math.sol";
-import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-import "./zeppelin-solidity/contracts/math/Math.sol";
+import "./BasicToken.sol";
+import "./SafeMath.sol";
+import "./Math.sol";
+import "./Pool.sol";
+import "./GBTController.sol";
+import "./VotingType.sol";
+// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+// import "./zeppelin-solidity/contracts/math/Math.sol";
+
 
 contract Governance {
     
@@ -35,11 +39,17 @@ contract Governance {
   address MRAddress;
   address masterAddress;
   address BTAddress;
+  address P1Address;
+  address GBTCAddress;
+  
+  GBTController GBTC;
   Master MS;
   MemberRoles MR;
   ProposalCategory PC;
   GovernanceData GD;
   BasicToken BT;
+  Pool P1;
+  VotingType VT;
 
     modifier onlyInternal {
         MS=Master(masterAddress);
@@ -52,12 +62,16 @@ contract Governance {
         _; 
     }
 
-  function changeAllContractsAddress(address _BTContractAddress,address _GDContractAddress,address _MRContractAddress,address _PCContractAddress)
+  function changeAllContractsAddress(address _GDContractAddress,address _MRContractAddress,address _PCContractAddress) onlyInternal
   {
-     BTAddress = _BTContractAddress;
      GDAddress = _GDContractAddress;
      PCAddress = _PCContractAddress;
      MRAddress = _MRContractAddress;
+  }
+
+  function changeGBTControllerAddress(address _GBTCAddress)
+  {
+     GBTCAddress = _GBTCAddress;
   }
 
   function changeMasterAddress(address _MasterAddress)
@@ -72,18 +86,23 @@ contract Governance {
     }
   }
   
+  function changePoolAddress(address _PoolContractAddress) onlyInternal
+  {
+     P1Address = _PoolContractAddress;
+  }
+
   /// @dev Transfer reward after Final Proposal Decision.
   function transferBackGBTtoken(address _memberAddress, uint _value) onlyInternal
   {
-      BT=BasicToken(BTAddress);
-      BT.transfer(_memberAddress,_value);
+      GBTC=GBTController(GBTCAddress);
+      GBTC.transferGBT(_memberAddress,_value);
   }
 
-  function openProposalForVoting(uint _proposalId,uint _TokenAmount) onlyOwner public
+  function openProposalForVoting(uint _proposalId,uint _TokenAmount) public
   {
       PC = ProposalCategory(PCAddress);
-      GD=GovernanceData(GDAddress);
-      // P1 = Pool(PAddress);
+      GD =GovernanceData(GDAddress);
+      P1 = Pool(P1Address);
 
       require(GD.getProposalCategory(_proposalId) != 0);
       require(_TokenAmount >= PC.getMinStake(GD.getProposalCategory(_proposalId)) && _TokenAmount <= PC.getMaxStake(GD.getProposalCategory(_proposalId)));
@@ -92,17 +111,17 @@ contract Governance {
       setProposalValue(_proposalId,_TokenAmount);
       GD.pushInProposalStatus(_proposalId,2);
       GD.updateProposalStatus(_proposalId,2);
-      // P1.closeProposalOraclise(_proposalId,Pcategory.getClosingTimeByIndex(allProposal[_proposalId].category,));
+      P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0));
   }
   
-   /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-    function payableGBTTokens(uint _TokenAmount) 
-    {
-        BT=BasicToken(BTAddress);
-        GD=GovernanceData(GDAddress);
-        require(_TokenAmount >= GD.GBTStakeValue());
-        BT.transfer(GD.GBTAddress(),_TokenAmount);
-    }
+ /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
+  function payableGBTTokens(uint _TokenAmount) 
+  {
+      GBTC=GBTController(GBTCAddress);
+      GD=GovernanceData(GDAddress);
+      require(_TokenAmount >= GD.GBTStakeValue());
+      GBTC.receiveGBT(msg.sender,_TokenAmount);
+  }
 
   /// @dev Edits a proposal and Only owner of a proposal can edit it.
   function editProposal(uint _proposalId ,string _proposalDescHash) onlyOwner public
@@ -141,21 +160,21 @@ contract Governance {
       for(j=0; j<paramInt; j++)
       {
           parameterName = PC.getCategoryParamNameUint(_category,j);
-          GD.setParameterDetails1(_proposalId,j+1,parameterName,_paramInt);
+          GD.setParameterDetails1(_proposalId,j,parameterName,_paramInt);
           // allProposalCategoryParams[_proposalId].optionNameIntValue[j+1][parameterName] = _paramInt[j];
       }
 
       for(j=0; j<paramBytes32; j++)
       {
           parameterName = PC.getCategoryParamNameBytes(_category,j); 
-          GD.setParameterDetails2(_proposalId,j+1,parameterName,_paramBytes32);
+          GD.setParameterDetails2(_proposalId,j,parameterName,_paramBytes32);
           // allProposalCategoryParams[_proposalId].optionNameBytesValue[j+1][parameterName] = _paramBytes32[j];
       }
 
       for(j=0; j<paramAddress; j++)
       {
           parameterName = PC.getCategoryParamNameAddress(_category,j);
-          GD.setParameterDetails3(_proposalId,j+1,parameterName,_paramAddress); 
+          GD.setParameterDetails3(_proposalId,j,parameterName,_paramAddress); 
           // allProposalCategoryParams[_proposalId].optionNameAddressValue[j+1][parameterName] = _paramAddress[j];  
       }
   }
@@ -198,13 +217,38 @@ contract Governance {
 
       if(_categoryId > 0)
       {
+          uint _proposalId = GD.getProposalLength()-1;
           GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
-          openProposalForVoting(GD.getProposalLength()-1,_TokenAmount);
+          openProposalForVoting(_proposalId,_TokenAmount);
+          GD.addInitialOptionDetails(_proposalId);
+          GD.setCategorizedBy(_proposalId,msg.sender);
       }
       else
           GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));          
   }
+  
+ /// @dev Creates a new proposal.
+  function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _TokenAmount,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,string _optionDescHash) public
+  {
+      GD=GovernanceData(GDAddress);
 
+      require(GD.getBalanceOfMember(msg.sender) != 0);
+      GD.setMemberReputation(msg.sender,1);
+      GD.addTotalProposal(GD.getProposalLength(),msg.sender);
+
+      if(_categoryId > 0)
+      {
+          uint _proposalId = GD.getProposalLength()-1;
+          GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
+          openProposalForVoting(_proposalId,_TokenAmount/2);
+          GD.addInitialOptionDetails(_proposalId);
+          GD.setCategorizedBy(_proposalId,msg.sender);
+      }
+      else
+          GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));          
+      VT=VotingType(GD.getVotingTypeAddress(_votingTypeId));
+      VT.addVerdictOption(_proposalId,msg.sender,_votingTypeId,_paramInt,_paramBytes32,_paramAddress,_TokenAmount,_optionDescHash);
+  }
   /// @dev AFter the proposal final decision, member reputation will get updated.
   function updateMemberReputation(uint _proposalId,uint _finalVerdict) onlyInternal
   {
@@ -237,14 +281,31 @@ contract Governance {
      GD.setMemberReputation(_voterAddress,_voterPoints);
   }
 
+  function checkProposalVoteClosing(uint _proposalId) onlyInternal constant returns(uint8 closeValue) 
+  {
+      PC=ProposalCategory(PCAddress);
+      GD=GovernanceData(GDAddress);
+      
+      uint currentVotingId;uint category;
+      (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+      uint dateUpdate;
+      (,,,,dateUpdate,,) = GD.getProposalDetailsById1(_proposalId);
+      require(SafeMath.add(dateUpdate,PC.getClosingTimeByIndex(category,currentVotingId)) <= now);
+       closeValue=1;
+  }
 
+  function checkRoleVoteClosing(uint _proposalId,uint _roleVoteLength)constant returns(uint8 closeValue) // IN PROPOSAL VOTING FUNCTION
+  {
+     PC=ProposalCategory(PCAddress);
+     GD=GovernanceData(GDAddress);
+     MR=MemberRoles(MRAddress);
+     P1=Pool(P1Address);
 
-
-
-
-
-
-
-
-
+      uint currentVotingId;uint category;
+      (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+      
+      uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
+      require(_roleVoteLength == MR.getAllMemberLength(roleId));
+        P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(category,0));
+  }
 }
