@@ -284,7 +284,7 @@ contract Governance {
       GD=GovernanceData(GDAddress);
       
       uint currentVotingId;uint category;
-      (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+      (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
       uint dateUpdate;
       (,,,,dateUpdate,,) = GD.getProposalDetailsById1(_proposalId);
       require(SafeMath.add(dateUpdate,PC.getClosingTimeByIndex(category,currentVotingId)) <= now);
@@ -299,7 +299,7 @@ contract Governance {
      P1=Pool(P1Address);
 
       uint currentVotingId;uint category;
-      (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+      (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
       
       uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
       if(_roleVoteLength == MR.getAllMemberLength(roleId))

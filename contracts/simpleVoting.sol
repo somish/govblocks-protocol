@@ -168,7 +168,7 @@ contract SimpleVoting is VotingType
         G1=Governance(G1Address);
 
         uint currentVotingId; uint category; uint intermediateVerdict;
-        (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId); //1,0,0
+        (,category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId); //1,0,0
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalOptions(_proposalId); //7
         

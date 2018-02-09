@@ -191,7 +191,7 @@ contract FeatureWeighted is VotingType
         uint voteValue; uint voteLength;
         uint currentVotingId; uint category; uint intermediateVerdict;
         uint featureLength = allProposalFeatures[_proposalId].length;
-        (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
+        (,category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
 
         require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _optionChosen.length <=  SafeMath.mul(featureLength+1,GD.getTotalVerdictOptions(_proposalId)));
         require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(category,currentVotingId));

@@ -145,7 +145,7 @@ contract Pool is usingOraclize
             GD=GovernanceData(GDAddress);
             uint proposalId = getIdOfApiId(myid);
             address votingTypeAddress;
-            (,,,,votingTypeAddress) = GD.getProposalDetailsById2(proposalId);
+            (,,,,,votingTypeAddress) = GD.getProposalDetailsById2(proposalId);
             SV=SimpleVoting(votingTypeAddress);
             SV.closeProposalVote(proposalId,msg.sender); 
         }  
