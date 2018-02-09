@@ -291,7 +291,7 @@ contract Governance {
        closeValue=1;
   }
 
-  function checkRoleVoteClosing(uint _proposalId,uint _roleVoteLength)constant returns(uint8 closeValue) // IN PROPOSAL VOTING FUNCTION
+ function checkRoleVoteClosing(uint _proposalId,uint _roleVoteLength) 
   {
      PC=ProposalCategory(PCAddress);
      GD=GovernanceData(GDAddress);
@@ -302,7 +302,7 @@ contract Governance {
       (category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
       
       uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
-      require(_roleVoteLength == MR.getAllMemberLength(roleId));
+      if(_roleVoteLength == MR.getAllMemberLength(roleId))
         P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(category,0));
   }
 }
