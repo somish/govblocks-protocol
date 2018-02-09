@@ -168,9 +168,9 @@ contract SimpleVoting is VotingType
         G1=Governance(G1Address);
 
         uint currentVotingId; uint category; uint intermediateVerdict;
-        (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
+        (category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId); //1,0,0
         uint verdictOptions;
-        (,,,verdictOptions) = GD.getProposalOptions(_proposalId);
+        (,,,verdictOptions) = GD.getProposalOptions(_proposalId); //7
         
         require(msg.sender != GD.getOptionAddressByProposalId(_proposalId,_optionChosen[0]));
         require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _optionChosen.length == 1);
