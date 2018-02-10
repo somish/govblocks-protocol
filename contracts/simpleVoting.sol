@@ -141,7 +141,7 @@ contract SimpleVoting is VotingType
         return (ProposalRoleVote[_proposalId][_roleId][_index],index);
     }
 
-    function transferVoteStakeSV(uint _memberStake) onlyInternal
+    function transferVoteStakeSV(uint _memberStake)
     {
         GBTC=GBTController(GBTCAddress);
         if(_memberStake != 0)
