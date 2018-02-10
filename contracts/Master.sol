@@ -216,18 +216,25 @@ contract Master is Ownable {
         
         GD=GovernanceData(governanceDataAddress);
         GD.changeAllContractsAddress(poolAddress);
-
+        GD.editVotingType(0,simpleVotingAddress);
+        GD.editVotingType(1,rankBasedVotingAddress);
+        GD.editVotingType(2,featureWeightedAddress);
+        
+        
         SV=SimpleVoting(simpleVotingAddress);
         SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
         SV.changeGBTControllerAddress(GBTCAddress);
+        SV.changeGovernanceAddress(governanceAddress);
 
         RB=RankBasedVoting(rankBasedVotingAddress);
         RB.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
         RB.changeGBTControllerAddress(GBTCAddress);
+        RB.changeGovernanceAddress(governanceAddress);
         
         FW=FeatureWeighted(featureWeightedAddress);
         FW.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
         FW.changeGBTControllerAddress(GBTCAddress);
+        FW.changeGovernanceAddress(governanceAddress);
         
         SVT=StandardVotingType(standardVotingTypeAddress);
         SVT.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
