@@ -318,4 +318,3 @@ contract Master is Ownable {
     }
 
 }
-
