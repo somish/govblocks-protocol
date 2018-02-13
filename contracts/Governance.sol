@@ -306,4 +306,26 @@ contract Governance {
       if(_roleVoteLength == MR.getAllMemberLength(roleId))
         P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(category,0));
   }
+  //get status of proposals
+  function getStatusOfProposals() returns (uint _proposalLength,uint _draftProposals,uint _pendingProposals,uint _acceptedProposals,uint _rejectedProposals){
+    GD=GovernanceData(GDAddress);
+    uint proposalStatus;
+    _proposalLength=GD.getProposalLength();
+    _draftProposals=0;
+    _pendingProposals=0;
+    _acceptedProposals=0;
+    _rejectedProposals=0;
+    for(uint i=0;i<_proposalLength;i++){
+      proposalStatus=GD.getProposalStatus(i);
+      if(proposalStatus<2)
+          _draftProposals++;
+      else if(proposalStatus==2)
+        _pendingProposals++;
+      else if(proposalStatus==3)
+        _acceptedProposals++;
+      else if(proposalStatus>=4)
+        _rejectedProposals++;
+    }
+    return (_proposalLength,_draftProposals,_pendingProposals,_acceptedProposals,_rejectedProposals);
+  }
 }
