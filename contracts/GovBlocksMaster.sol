@@ -16,26 +16,29 @@
 
 pragma solidity ^0.4.8;
 import "./Master.sol";
+// import "./MemberRoles.sol";
+// import "./ProposalCategory.sol";
 
 contract GovBlocksMaster 
 {
-    address MasterAddress;
+    
     Master MS;
     address public owner;
-  
-    struct govBlocksUsers
-    {
-      address tokenAddress;
-      address masterAddress;
-    }
+    address GBTControllerAddress;
+    address GBTAddress;
 
-    govBlocksUsers[] allGovBlocksUsers;
+    
+    mapping(bytes32=>address) govBlocksDapps;
+    bytes32[] allGovBlocksUsers;
 
 
-    function setGovBlocksMaster() 
+    function GovBlocksMasterInit(address _GBTControllerAddress,address _GBTAddress) 
     {
       require(owner == 0x00);
-      owner = 0xed2f74e1fb73b775e6e35720869ae7a7f4d755ad; 
+      owner = msg.sender; 
+      GBTControllerAddress=_GBTControllerAddress;
+      GBTAddress = _GBTAddress;
+      
     } 
     
     modifier onlyOwner() 
@@ -49,29 +52,73 @@ contract GovBlocksMaster
       owner = _newOwner;
     }
 
-    function updateGBTAddress(uint _masterId,address _GBTContractAddress) onlyOwner
+    function updateGBTAddress(address _GBTContractAddress) onlyOwner
     {
-        MasterAddress = allGovBlocksUsers[_masterId].masterAddress;
-        MS=Master(MasterAddress);
+        GBTAddress=_GBTContractAddress;
+        for(uint i=0;i<allGovBlocksUsers.length; i++){
+        address masterAddress = govBlocksDapps[allGovBlocksUsers[i]];
+        MS=Master(masterAddress);
         MS.changeGBTAddress(_GBTContractAddress);
+        }
+       
+    }
+
+     function updateGBTControllerAddress(address _GBTConrollerAddress) onlyOwner
+    {
+        GBTControllerAddress=_GBTConrollerAddress;
+        for(uint i=0;i<allGovBlocksUsers.length; i++){
+        address masterAddress = govBlocksDapps[allGovBlocksUsers[i]];
+        MS=Master(masterAddress);
+        MS.changeGBTControllerAddress(_GBTConrollerAddress);
+        }
+       
     }
 
     function setGovBlocksOwnerInMaster(uint _masterId) onlyOwner
     {
-        MasterAddress = allGovBlocksUsers[_masterId].masterAddress;
-        MS=Master(MasterAddress);
+        address masterAddress = govBlocksDapps[allGovBlocksUsers[_masterId]];
+        MS=Master(masterAddress);
         MS.GovBlocksOwner();
     }
 
-    function addGovBlocksUser(address _tokenAddress,address _masterAddress) onlyOwner
+    address public _proposalCategoryAddress,_newMemberRoleAddress;
+    function addGovBlocksUser(bytes32 _gbUserName) onlyOwner
     {
-        allGovBlocksUsers.push(govBlocksUsers(_tokenAddress,_masterAddress));   
+        require(govBlocksDapps[_gbUserName]==0x00);
+         address _newMasterAddress = new Master();
+        allGovBlocksUsers.push(_gbUserName);  
+        govBlocksDapps[_gbUserName] = _newMasterAddress;
+        // address _newMemberRoleAddress = new MemberRoles();
+        // _proposalCategoryAddress = new ProposalCategory();
+        MS=Master(_newMasterAddress);
+
+        // MS.addNewVersion([address(0),_newMemberRoleAddress,_proposalCategoryAddress,address(0),address(0),address(0),address(0),address(0),address(0),GBTControllerAddress,GBTAddress]);
+        // MS.switchToRecentVersion();
+        // MS.changeOtherAddress();
+
+    }
+    
+
+    function changeDappMasterAddress(bytes32 _gbUserName,address _newMasterAddress)
+    {
+     if( govBlocksDapps[_gbUserName] == 0x000)
+                 govBlocksDapps[_gbUserName] = _newMasterAddress;
+     else
+      {            
+                if(msg.sender ==  govBlocksDapps[_gbUserName])
+                     govBlocksDapps[_gbUserName] = _newMasterAddress;
+                else
+                    throw;
+      }   
     }
 
-    function getGovBlocksUserDetails(uint _Id) constant returns(address TokenAddress,address MasterContractAddress)
+    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address MasterContractAddress)
     {
-        TokenAddress = allGovBlocksUsers[_Id].tokenAddress;
-        MasterContractAddress = allGovBlocksUsers[_Id].masterAddress;
+        return (_gbUserName,govBlocksDapps[_gbUserName]);
+    }
+     function getGovBlocksUserDetailsByIndex(uint _index) constant returns(uint index,bytes32 GbUserName,address MasterContractAddress)
+    {
+        return (_index,allGovBlocksUsers[_index],govBlocksDapps[allGovBlocksUsers[_index]]);
     }
 
 }

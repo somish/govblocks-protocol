@@ -189,13 +189,13 @@ contract StandardVotingType
         }
 
         uint8 currentVotingId; uint8 category;
-        (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
-        uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId);
+        (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId); //1,1
+        uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId);//2
     
-        require(G1.checkProposalVoteClosing(_proposalId)==1);
+        require(G1.checkProposalVoteClosing(_proposalId)==1); //1
 
         uint8 max; uint totalVotes; uint verdictVal; uint majorityVote;
-        uint roleId = MR.getMemberRoleIdByAddress(_memberAddress);
+        uint roleId = MR.getMemberRoleIdByAddress(_memberAddress); //1
 
         max=0;  
         for(uint8 i = 0; i < verdictOptions; i++)

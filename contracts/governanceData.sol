@@ -688,7 +688,7 @@ contract GovernanceData {
     {
         for(uint i=0; i<allProposalMember[_memberAddress].length; i++)
         {
-            stakeValueProposal = stakeValueProposal + getStakeByProposal(i);
+            stakeValueProposal = stakeValueProposal + getStakeByProposal(allProposalMember[_memberAddress][i]);
         }
     }
 
@@ -720,8 +720,12 @@ contract GovernanceData {
     function addNewProposal(string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress)
     {
         allProposal.push(proposal(msg.sender,_proposalDescHash,now,now,0,0,0,_categoryId,0,0,_votingTypeAddress,0,0));               
+    } 
+    function getProposalsbyAddress(address _member) constant returns(uint[] proposalid)
+    {
+        return  allProposalMember[_member];
     }
 
 }  
-
+ 
 

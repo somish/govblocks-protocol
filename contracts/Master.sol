@@ -110,9 +110,33 @@ contract Master is Ownable {
         if(owner == _ownerAddress)
             check=1;
     }
+    
+    
+    function generate_PC_MR_Pool() onlyOwner
+    {
+        proposalCategoryAddress = new ProposalCategory();
+        memberRolesAddress = new MemberRoles();
+        poolAddress = new Pool();
+    }
+    
+    function generate_SVT_SV() onlyOwner{
+        standardVotingTypeAddress = new StandardVotingType();
+        simpleVotingAddress = new SimpleVoting();
+    }
+    
+    function generate_GD() onlyOwner{
+        governanceDataAddress = new GovernanceData();
+    }
+    
+    function generate_G1() onlyOwner
+    {
+        governanceAddress = new Governance();
+    }
+    
 
+    
     /// @dev Creates a new version of contract addresses.
-    function addNewVersion(address[] _contractAddresses) onlyOwner
+    function addNewVersion(address[11] _contractAddresses) onlyOwner
     {
         uint versionNo = versionLength;
         setVersionLength(versionNo+1);
@@ -209,7 +233,7 @@ contract Master is Ownable {
     }
 
    /// @dev Link contracts to one another.
-   function changeOtherAddress() onlyInternal
+   function changeOtherAddress() 
    {  
         changeGBTAddress(GBTSAddress);
         changeGBTControllerAddress(GBTCAddress);
@@ -298,7 +322,7 @@ contract Master is Ownable {
     }
 
     /// @dev Switch to the recent version of contracts. (Last one)
-    function switchToRecentVersion() onlyInternal
+    function switchToRecentVersion() 
     {
         uint version = versionLength-1;
         addInContractChangeDate(now,version);
