@@ -19,15 +19,15 @@ import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Master.sol";
-// import "./BasicToken.sol";
-// import "./SafeMath.sol";
-// import "./Math.sol";
+import "./BasicToken.sol";
+import "./SafeMath.sol";
+import "./Math.sol";
 import "./Pool.sol";
 import "./GBTController.sol";
 import "./VotingType.sol";
-import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-import "./zeppelin-solidity/contracts/math/Math.sol";
+// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+// import "./zeppelin-solidity/contracts/math/Math.sol";
 
 contract Governance {
     
@@ -158,19 +158,19 @@ contract Governance {
       for(j=0; j<paramInt; j++)
       {
           parameterName = PC.getCategoryParamNameUint(_category,j);
-          GD.setParameterDetails1(_proposalId,j,parameterName,_paramInt);
+          GD.setParameterDetails1(_proposalId,j+1,parameterName,_paramInt);
       }
 
       for(j=0; j<paramBytes32; j++)
       {
           parameterName = PC.getCategoryParamNameBytes(_category,j); 
-          GD.setParameterDetails2(_proposalId,j,parameterName,_paramBytes32);
+          GD.setParameterDetails2(_proposalId,j+1,parameterName,_paramBytes32);
       }
 
       for(j=0; j<paramAddress; j++)
       {
           parameterName = PC.getCategoryParamNameAddress(_category,j);
-          GD.setParameterDetails3(_proposalId,j,parameterName,_paramAddress); 
+          GD.setParameterDetails3(_proposalId,j+1,parameterName,_paramAddress); 
       }
   }
 
