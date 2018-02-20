@@ -126,7 +126,7 @@ contract  MemberRoles is Ownable{
   }
 
   /// @dev Get Total number of member Roles available.
-  function getTotalMemberRoles() constant returns(uint length)
+  function getTotalMemberRoles() public constant returns(uint length)
   {
     return memberRole.length;
   }

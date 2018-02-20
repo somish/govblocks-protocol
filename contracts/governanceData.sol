@@ -769,5 +769,5 @@ contract GovernanceData {
         return (allProposalCategory[_proposalId].rewardOption[_optionIndex]);
     }       
 }  
-
+ 
 

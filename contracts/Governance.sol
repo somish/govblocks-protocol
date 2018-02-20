@@ -340,5 +340,5 @@ contract Governance {
         _rejectedProposals++;
         }
   }
- 
+
 }
