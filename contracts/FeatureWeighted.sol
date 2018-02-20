@@ -47,7 +47,7 @@ contract FeatureWeighted is VotingType
     {
         require(constructorCheck == 0);
         uint[] option;
-        allVotes.push(proposalVote(0x00,0,option,now,0,0,0));
+        allVotes.push(proposalVote(0x00,0,option,now,0,0,0,0));
         votingTypeName = "Feature Weighted Voting";
         constructorCheck = 1;
     }
@@ -121,9 +121,9 @@ contract FeatureWeighted is VotingType
     }
 
     /// @dev Get the vote count for options of proposal when giving Proposal id and Option index.
-    function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes,uint totalToken)
+    function getProposalVoteAndTokenCountByRoleId(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVoteValue,uint totalToken)
     {
-        totalVotes = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[_roleId][_optionIndex];
+        totalVoteValue = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[_roleId][_optionIndex];
         totalToken = allProposalVoteAndTokenCount[_proposalId].totalTokenCount[_roleId];
     }
 
@@ -147,12 +147,7 @@ contract FeatureWeighted is VotingType
     function addInAllVotes(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _finalVoteValue) internal
     {
         increaseTotalVotes();
-        allVotes.push(proposalVote(msg.sender,_proposalId,_optionChosen,now,GD.getBalanceOfMember(msg.sender),_GBTPayableTokenAmount,_finalVoteValue));
-    }
-
-    function getVoteLengthAgainstRole(uint _proposalId,uint _roleId) constant returns(uint[] totalVotes)
-    {
-        return ProposalRoleVote[_proposalId][_roleId];
+        allVotes.push(proposalVote(msg.sender,_proposalId,_optionChosen,now,GD.getBalanceOfMember(msg.sender),_GBTPayableTokenAmount,_finalVoteValue,0));
     }
 
     // function getVoteIdByIndex(uint _proposalId,uint _roleId,uint _index)constant returns(uint voteId,uint index)
@@ -161,19 +156,19 @@ contract FeatureWeighted is VotingType
     //     return (ProposalRoleVote[_proposalId][_roleId][_index],index);
     // }
     
-     function addVerdictOption(uint _proposalId,address _member,uint _votingTypeId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash)
+    function addVerdictOption(uint _proposalId,address _member,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash)
     {
         SVT=StandardVotingType(SVTAddress);
-        SVT.addVerdictOptionSVT(_proposalId,_member,_votingTypeId,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
+        SVT.addVerdictOptionSVT(_proposalId,_member,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
         payableGBTTokensFeatureWeighted(_member,_GBTPayableTokenAmount);
     }
-     function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) 
+     
+    function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) 
     {
-        addVerdictOption(_proposalId,msg.sender,2,_paramInt,_paramBytes32,_paramAddress, _GBTPayableTokenAmount, _optionHash);
-     }
+        addVerdictOption(_proposalId,msg.sender,_paramInt,_paramBytes32,_paramAddress, _GBTPayableTokenAmount, _optionHash);
+    }
 
   
-
     function transferVoteStakeFW(uint _memberStake)
     {
        GBTC=GBTController(GBTCAddress);
@@ -211,14 +206,16 @@ contract FeatureWeighted is VotingType
             voteLength = getTotalVotes();
             submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_optionChosen,featureLength,voteLength);
             uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
+            
             allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)],GD.getBalanceOfMember(msg.sender));
             AddressProposalVote[msg.sender][_proposalId] = voteLength;
             ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(voteLength);
             GD.setVoteIdAgainstProposal(_proposalId,voteLength);
             GD.addInTotalVotes(msg.sender);
+            
+            G1.checkRoleVoteClosing(_proposalId,getVoteLength(_proposalId,PC.getRoleSequencAtIndex(category,currentVotingId)));
             addInAllVotes(_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
             transferVoteStakeFW(_GBTPayableTokenAmount);
-            G1.checkRoleVoteClosing(_proposalId,getVoteLengthAgainstRole(_proposalId,PC.getRoleSequencAtIndex(category,currentVotingId)).length);
         }
         else 
             changeMemberVote(_proposalId,_optionChosen,featureLength,_GBTPayableTokenAmount);
@@ -243,11 +240,13 @@ contract FeatureWeighted is VotingType
         uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
         allVotes[voteId].voteStakeGBT = _GBTPayableTokenAmount;
         allVotes[voteId].voteValue = finalVoteValue;
-        // G1.checkRoleVoteClosing(_proposalId,getVoteLengthAgainstRole(_proposalId,PC.getRoleSequencAtIndex(GD.getProposalCategory(_proposalId),currentVotingId)).length);
+        // G1.checkRoleVoteClosing(_proposalId,getVoteLength(_proposalId,PC.getRoleSequencAtIndex(GD.getProposalCategory(_proposalId),currentVotingId)));
     }
 
     function revertChangesInMemberVote(uint _proposalId,uint currentVotingId,uint[] optionChosen,uint voteId,uint featureLength) internal
     {
+        uint _finalVoteValue = allVotes[voteId].voteValue;
+        
         if(currentVotingId == 0)
         {
             for(uint i=0; i<optionChosen.length; i=i+featureLength+1)
@@ -257,18 +256,20 @@ contract FeatureWeighted is VotingType
                 {
                     sum = SafeMath.add(sum,optionChosen[j]);
                 }
-                uint voteValue = SafeMath.div(SafeMath.mul(sum,100),featureLength);
-                allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][optionChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][optionChosen[i]],voteValue);  
+                uint optionValue = SafeMath.div(SafeMath.mul(sum,100),featureLength);
+                allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][optionChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][optionChosen[i]],optionValue+_finalVoteValue);  
             }
         }
         else
         {
-            allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][optionChosen[0]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][optionChosen[0]],1);
+            allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][optionChosen[0]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][optionChosen[0]],_finalVoteValue);
         }
     }
 
     function submitAndUpdateNewMemberVote(uint _proposalId,uint currentVotingId,uint[] _optionChosen,uint _featureLength,uint _voteId) internal
     {
+        uint _finalVoteValue = allVotes[_voteId].voteValue;
+        
         if(currentVotingId == 0)
         {
             for(uint i=0; i<_optionChosen.length; i=i+_featureLength+1)
@@ -280,20 +281,20 @@ contract FeatureWeighted is VotingType
                 {
                     sum = SafeMath.add(sum,_optionChosen[j]);
                 }
-                uint voteValue = SafeMath.div(SafeMath.mul(sum,100),_featureLength);
-                allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[i]],voteValue);
+                uint optionValue = SafeMath.div(SafeMath.mul(sum,100),_featureLength);
+                allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[i]],optionValue+_finalVoteValue);
             }
         }  
         else
         {
-            allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[0]],1);
+            allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[0]],_finalVoteValue);
         }
     }
 
-    function closeProposalVote(uint _proposalId,address _memberAddress)
+    function closeProposalVote(uint _proposalId)
     {
         SVT=StandardVotingType(SVTAddress);
-        SVT.closeProposalVoteSVT(_memberAddress,2,_proposalId);
+        SVT.closeProposalVoteSVT(_proposalId);
     }
      
     function giveReward_afterFinalDecision(uint _proposalId) public
@@ -317,8 +318,8 @@ contract FeatureWeighted is VotingType
             }
             else
             {
-                voterStake = SafeMath.add(voterStake,SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor()))));
-                returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
+                voterStake = SafeMath.add(voterStake,(SafeMath.div(allVotes[voteid].voteStakeGBT,GD.globalRiskFactor())));
+                returnTokens = SafeMath.sub(allVotes[voteid].voteStakeGBT,SafeMath.div(allVotes[voteid].voteStakeGBT,GD.globalRiskFactor()));
                 G1.transferBackGBTtoken(allVotes[voteid].voter,returnTokens);
             }
 
@@ -357,29 +358,29 @@ contract FeatureWeighted is VotingType
 
     function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue) internal
     {
-        uint reward;uint transferToken;
-        uint8 finalVerdict;
+        uint reward;uint transferToken; uint8 finalVerdict;
         (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
          uint addMemberPoints; uint subMemberPoints;
         (,,addMemberPoints,,,subMemberPoints)=GD.getMemberReputationPoints();
 
         if(finalVerdict > 0)
         {
-            reward = SafeMath.div(SafeMath.mul(GD.getProposalStake(_proposalId),_totalTokenToDistribute),_totalVoteValue);
+            reward = SafeMath.div(SafeMath.mul(GD.getProposalValue(_proposalId),_totalTokenToDistribute),_totalVoteValue);
             transferToken = SafeMath.add(GD.getProposalStake(_proposalId),reward);
             G1.transferBackGBTtoken(GD.getProposalOwner(_proposalId),transferToken);
 
-            address verdictOwner = GD.getOptionAddressByProposalId(_proposalId,finalVerdict);
-            uint verdictStake = GD.getOptionStakeByProposalId(_proposalId,finalVerdict);
-            reward = SafeMath.div(SafeMath.mul(verdictStake,_totalTokenToDistribute),_totalVoteValue);
-            transferToken = SafeMath.add(verdictStake,reward);
-            G1.transferBackGBTtoken(verdictOwner,transferToken);
+            reward = SafeMath.div(SafeMath.mul(GD.getOptionValueByProposalId(_proposalId,finalVerdict),_totalTokenToDistribute),_totalVoteValue);
+            transferToken = SafeMath.add(GD.getOptionValueByProposalId(_proposalId,finalVerdict),reward);
+            G1.transferBackGBTtoken(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),transferToken);
         }
 
         for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
         {
             uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
-            if(getOptionValue(voteid,_proposalId,finalVerdict) != 0)
+
+            // if(getOptionValue(voteid,_proposalId,finalVerdict) != 0)
+            // {
+            if(allVotes[voteid].optionChosen[0] == finalVerdict)
             {
                 reward = SafeMath.div(SafeMath.mul(allVotes[voteid].voteValue,_totalTokenToDistribute),_totalVoteValue);
                 transferToken = SafeMath.add(allVotes[voteid].voteStakeGBT,reward);
