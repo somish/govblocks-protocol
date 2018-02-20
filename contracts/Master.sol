@@ -317,4 +317,28 @@ contract Master is Ownable {
         versionLength = _length;
     }
 
+
+    // NEWLY CREATED
+
+    // function getCurrentVersion() constant returns(uint versionNo, address masterAddress)
+    // {
+    //     versionNo = versionLength - 1;
+    //     masterAddress = allContractVersions[versionNo][0];
+    // }
+
+    // function getLatestVersionData(uint _versionNo)constant returns(uint versionNo,bytes32[] contractsName, address[] contractsAddress)
+    // {
+    //     versionNo = _versionNo;
+    //     contractsName=new bytes32[](allContractVersions[versionNo].length);
+    //     contractsAddress=new address[](allContractVersions[versionNo].length);
+    
+    //     for(uint i=0; i < allContractVersions[versionNo].length; i++)
+    //     {
+    //         contractsName[i]=allContractVersions[versionNo][i].name;
+    //         totalMembers[i] = allContractVersions[versionNo][i].contractAddress;
+    //     }
+    // }
+
+    // NEWLY CREATED
+
 }

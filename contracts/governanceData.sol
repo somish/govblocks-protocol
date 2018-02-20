@@ -18,6 +18,7 @@ pragma solidity ^0.4.8;
 import "./Master.sol";
 import "./Pool.sol";
 import "./GBTStandardToken.sol";
+import "./GBTController.sol";
 
 
 contract GovernanceData {
@@ -36,6 +37,9 @@ contract GovernanceData {
         address votingTypeAddress;
         uint proposalValue;
         uint proposalStake;
+        uint reward;
+        uint totalreward;
+        uint blocknumber;
     }
 
     struct proposalCategory{
@@ -48,6 +52,7 @@ contract GovernanceData {
         uint[] valueOfOption;
         uint[] stakeOnOption;
         string[] optionDescHash;
+        mapping(uint=>uint) rewardOption;
     }
 
     struct proposalCategoryParams
@@ -73,7 +78,7 @@ contract GovernanceData {
     struct proposalPriority 
     {
         uint8 complexityLevel;
-        uint[] levelReward;
+        uint commonIncentive;
     }
 
    
@@ -111,12 +116,15 @@ contract GovernanceData {
 
     string[]  status;
     proposal[] allProposal;
+    // proposalReward[] allProposalReward;
     votingTypeDetails[] allVotingTypeDetails;
 
     address GBTSAddress;
     address PoolAddress;
     // address masterAddress;
     address owner;
+    address GBTCAddress;
+    GBTController GBTC;
     GBTStandardToken GBTS;
     // Master MS;
     Pool P1;
@@ -140,6 +148,9 @@ contract GovernanceData {
             setGlobalParameters();
             addStatus();
             addMemberReputationPoints();
+            setVotingTypeDetails("Simple Voting",0x6c1493b7f50cc0ed3a3046a7f4954da556e142f6);
+            setVotingTypeDetails("Rank Based Voting",0xf98056759d1590dd0714cfe3c688cc18b02c4a8c);
+            setVotingTypeDetails("Feature Weighted Voting",0x416153329b7e9d78c0e72eef4fedd926807f700b);
             constructorCheck =1;
     }
     
@@ -219,10 +230,10 @@ contract GovernanceData {
         GBTSAddress = _GBTcontractAddress;
     }
 
-    // function changeGBTControllerAddress(address _GBTCAddress)
-    // {
-    //     GBTCAddress = _GBTCAddress;
-    // }
+    function changeGBTControllerAddress(address _GBTCAddress)
+    {
+        GBTCAddress = _GBTCAddress;
+    }
 
     /// @dev Set Vote Id against given proposal.
     function setVoteIdAgainstProposal(uint _proposalId,uint _voteId) onlyInternal
@@ -273,8 +284,6 @@ contract GovernanceData {
         allProposal[_proposalId].proposalValue = _proposalValue;
     }
 
-   
-
     /// @dev Updates  status of an existing proposal.
     function updateProposalStatus(uint _id ,uint8 _status) onlyInternal
     {
@@ -304,15 +313,15 @@ contract GovernanceData {
             allProposalCategory[_proposalId].paramInt.push(0);
             allProposalCategory[_proposalId].paramBytes32.push("");
             allProposalCategory[_proposalId].paramAddress.push(0x00);
+            allProposalCategory[_proposalId].optionDescHash.push("");
+            allProposalCategory[_proposalId].rewardOption[0] = 0;
+            allProposalCategory[_proposalId].verdictOptions = allProposalCategory[_proposalId].verdictOptions +1;
         }
     }
 
-    function setProposalPriority(uint _proposalId,uint[] _levelReward)
+    function setProposalIncentive(uint _proposalId,uint _reward)
     {
-         for(uint i=0; i<_levelReward.length; i++)
-          {
-              allProposalPriority[_proposalId].levelReward.push(_levelReward[i]);
-          }  
+        allProposalPriority[_proposalId].commonIncentive = _reward;  
     }
 
     function setCategorizedBy(uint _proposalId,address _memberAddress)
@@ -474,9 +483,20 @@ contract GovernanceData {
     }
    
     /// @dev Get proposal Reward and complexity level Against proposal
-    function getProposalRewardAndComplexity(uint _proposalId,uint _rewardIndex) public constant returns (uint reward)
+    function getProposalRewardAndComplexity(uint _proposalId) public constant returns (uint reward,uint complexity)
     {
-      reward = allProposalPriority[_proposalId].levelReward[_rewardIndex];
+        reward = allProposalPriority[_proposalId].commonIncentive;
+        complexity = allProposalPriority[_proposalId].complexityLevel;
+    }
+
+    function getProposalIncentive(uint _proposalId)constant returns(uint reward)
+    {
+        reward = allProposalPriority[_proposalId].commonIncentive;
+    }
+
+    function getProposalComplexity(uint _proposalId)constant returns(uint level)
+    {
+        level =  allProposalPriority[_proposalId].complexityLevel;
     }
 
     /// @dev Get the category parameters given against a proposal after categorizing the proposal.
@@ -671,12 +691,12 @@ contract GovernanceData {
 
     function getMemberDetails(address _memberAddress) constant returns(uint memberReputation, uint totalProposal,uint proposalStake,uint totalOption,uint optionStake,uint totalVotes)
     {
-        memberReputation = getMemberReputation(_memberAddress);
+        memberReputation = allMemberReputationByAddress[_memberAddress];
         totalProposal = allProposalMember[_memberAddress].length;
         proposalStake = getProposalStakeByMember(_memberAddress);
         totalOption = allProposalOption[_memberAddress];
         optionStake = totalOptionStake[_memberAddress];
-        totalVotes = getTotalVotesAgainstMember(_memberAddress);
+        totalVotes = totalVotesAgainstMember[_memberAddress];
     }
 
     function getStakeByProposal(uint _proposalId)internal constant returns(uint stake)
@@ -684,11 +704,11 @@ contract GovernanceData {
         return (allProposal[_proposalId].proposalStake);
     }
 
-    function getProposalStakeByMember(address _memberAddress)internal constant returns( uint stakeValueProposal)
+    function getProposalStakeByMember(address _memberAddress) returns(uint stakeValueProposal)
     {
         for(uint i=0; i<allProposalMember[_memberAddress].length; i++)
         {
-            stakeValueProposal = stakeValueProposal + getStakeByProposal(i);
+            stakeValueProposal = stakeValueProposal + getStakeByProposal(allProposalMember[_memberAddress][i]);
         }
     }
 
@@ -717,11 +737,37 @@ contract GovernanceData {
         return allProposalMember[_memberAddress].length;
     }
 
-    function addNewProposal(string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress)
+    function addNewProposal(address _memberAddress,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress)
     {
-        allProposal.push(proposal(msg.sender,_proposalDescHash,now,now,0,0,0,_categoryId,0,0,_votingTypeAddress,0,0));               
+        allProposal.push(proposal(_memberAddress,_proposalDescHash,now,now,0,0,0,_categoryId,0,0,_votingTypeAddress,0,0,0,0,0));               
+    }
+    
+    function getProposalsbyAddress(address _memberAddress) constant returns(uint[] proposalid)
+    {
+       return  allProposalMember[_memberAddress];
     }
 
+    function setProposalReward(uint _proposalId,uint _totalTokenToDistribute,uint _blockNumber,uint _reward)
+    {
+        allProposal[_proposalId].totalreward = _totalTokenToDistribute;
+        allProposal[_proposalId].blocknumber = _blockNumber;
+        allProposal[_proposalId].reward = _reward;
+    }
+
+    function setOptionReward(uint _proposalId,uint _reward,uint _optionIndex)
+    {
+        allProposalCategory[_proposalId].rewardOption[_optionIndex] = _reward;
+    }
+
+    function getProposalReward(uint _proposalId)constant returns(uint totalTokenToDistribute,uint numberBlock,uint propReward)
+    {
+        return(allProposal[_proposalId].totalreward,allProposal[_proposalId].blocknumber,allProposal[_proposalId].reward);
+    }
+
+    function getOptionReward(uint _proposalId,uint _optionIndex)constant returns(uint)
+    {
+        return (allProposalCategory[_proposalId].rewardOption[_optionIndex]);
+    }       
 }  
 
 

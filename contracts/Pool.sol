@@ -18,6 +18,7 @@ pragma solidity ^0.4.8;
 import "./GovernanceData.sol";
 import "./Master.sol";
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.4.sol";
+// import "./oraclizeAPI_0.4.sol";
 import "./SimpleVoting.sol";
 import "./GBTStandardToken.sol";
 import "./GBTController.sol";
@@ -72,8 +73,14 @@ contract Pool is usingOraclize
         require(M1.isInternal(msg.sender) == 1);
         _; 
     }
+    
+    modifier onlyOwner {
+        M1=Master(masterAddress);
+        require(M1.isOwner(msg.sender) == 1);
+        _; 
+    }
      
-    function changeAllContractsAddress(address _GDContractAddress,address _SVContractAddress) onlyInternal
+    function changeAllContractsAddress(address _GDContractAddress,address _SVContractAddress) 
     {
         GDAddress = _GDContractAddress;
         SVAddress = _SVContractAddress;
@@ -96,9 +103,16 @@ contract Pool is usingOraclize
         GBTC.buyTokenGBT(_memberAddress,msg.value);
     }
 
-    function closeProposalOraclise(uint _proposalId , uint24 _closingTime) onlyInternal
+    function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
     {
         bytes32 myid2 = oraclize_query(_closingTime,"","",4000000);
+        saveApiDetails(myid2,"PRO",_proposalId);
+        addInAllApiCall(myid2);
+    }
+
+    function closeProposalOraclise1(uint _proposalId) 
+    {
+        bytes32 myid2 = oraclize_query("","",4000000);
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
@@ -147,15 +161,21 @@ contract Pool is usingOraclize
             address votingTypeAddress;
             (,,,,,votingTypeAddress) = GD.getProposalDetailsById2(proposalId);
             SV=SimpleVoting(votingTypeAddress);
-            SV.closeProposalVote(proposalId,msg.sender); 
+            SV.closeProposalVote(proposalId); 
         }  
     }
-
+    
     function __callback(bytes32 myid, string res) 
     {
         M1=Master(masterAddress);
         if(msg.sender != oraclize_cbAddress() && M1.isOwner(msg.sender)!=1) throw;
         delegateCallBack(myid,res);
+    }
+    
+    function transferBackEther(uint256 amount) onlyOwner
+    {
+        address _add=msg.sender;
+        bool succ = _add.send(amount);  
     }
 
 }

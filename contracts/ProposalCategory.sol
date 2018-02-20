@@ -33,6 +33,7 @@ contract ProposalCategory is Ownable
         uint24[] closingTime;
         uint8 minStake;
         uint8 maxStake;
+        uint defaultIncentive;
     }
 
     struct categoryParams
@@ -73,8 +74,8 @@ contract ProposalCategory is Ownable
 
     function addCategory() internal
     {
-        allCategory.push(category("Uncategorized","",0x00,0,0,0,new uint8[](0),new uint[](0),new uint24[](0),0,0));
-        allCategory.push(category("Add new member role","addNewMemberRole(bytes32)",0x00,0,1,0,new uint8[](0),new uint[](0),new uint24[](0),0,10));
+        allCategory.push(category("Uncategorized","",0x00,0,0,0,new uint8[](0),new uint[](0),new uint24[](0),0,0,0));
+        allCategory.push(category("Add new member role","addNewMemberRole(bytes32)",0x00,0,1,0,new uint8[](0),new uint[](0),new uint24[](0),0,10,0));
     }
 
     function getCategoryData1(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint24[] closingTime,string categoryName,bool functionValue)
@@ -210,8 +211,14 @@ contract ProposalCategory is Ownable
         GD=GovernanceData(GDAddress);
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleSequence.length == _closingTime.length);
         require(_minStake <= _maxStake);
-        allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake));
+        allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake,0));
     }
+    
+    function addCategoryIncentive(uint _categoryId,uint _incentive)
+    {
+        allCategory[_categoryId].defaultIncentive = _incentive;    
+    }
+    
     /// @dev Saving descriptions against various parameters required for category.
     function addCategoryParamsNameAndDesc(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName,string _uintParameterDescHash,string _bytesParameterDescHash,string _addressParameterDescHash) onlyOwner
     {
@@ -254,33 +261,16 @@ contract ProposalCategory is Ownable
         contractAt.call(bytes4(sha3(allCategory[_categoryId].functionName)),_proposalId);
     }
 
-    // /// @dev Change the category parameters name against category. // 
-    // function changeCategoryParametersName(uint _categoryId,bytes32[] _uintParamName,bytes32[] _bytesParamName,bytes32[] _addressParamName) onlyOwner
-    // {   
-    //     uintParam[_categoryId].parameterName=new bytes32[](_uintParamName.length); 
-    //     bytesParam[_categoryId].parameterName=new bytes32[](_bytesParamName.length); 
-    //     addressParam[_categoryId].parameterName=new bytes32[](_addressParamName.length); 
-        
-    //     for(uint i=0; i<_uintParamName.length; i++)
-    //     {
-    //         uintParam[_categoryId].parameterName[i]=_uintParamName[i]; 
-    //     }
-            
-    //     for(i=0; i<_uintParamName.length; i++)
-    //     {
-    //         bytesParam[_categoryId].parameterName[i]=_bytesParamName[i];
-    //     }
-        
-    //     for(i=0; i<_uintParamName.length; i++)
-    //     {
-    //         addressParam[_categoryId].parameterName[i]=_addressParamName[i];
-    //     }
-    // }
-
     function getCatgoryData2(uint _categoryId) constant returns(uint category,bytes32[] intParameter,bytes32[] bytesParameter,bytes32[] addressParameter,string intDesc, string bytesDesc, string addressDesc)
     {
         category = _categoryId;
         return (category,uintParam[_categoryId].parameterName,bytesParam[_categoryId].parameterName,addressParam[_categoryId].parameterName,uintParam[_categoryId].parameterDescHash,bytesParam[_categoryId].parameterDescHash,addressParam[_categoryId].parameterDescHash);
+    }
+
+    function getCategoryIncentive(uint _categoryId)constant returns(uint category,uint incentive)
+    {
+        category = _categoryId;
+        incentive = allCategory[_categoryId].defaultIncentive;
     }
 
 }

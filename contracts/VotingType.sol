@@ -29,12 +29,13 @@ contract VotingType
         uint voterTokens;
         uint voteStakeGBT;
         uint voteValue;
+        uint reward;
     }
 
     struct proposalVoteAndTokenCount 
     {
-        mapping(uint=>mapping(uint=>uint)) totalVoteCount; 
-        mapping(uint=>uint) totalTokenCount; 
+        mapping(uint=>mapping(uint=>uint)) totalVoteCount; //RoleOptionValue
+        mapping(uint=>uint) totalTokenCount; //roleToken
     }
     
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndTokenCount;
@@ -44,12 +45,12 @@ contract VotingType
     uint public allVotesTotal;
     string public votingTypeName;
 
-    function addVerdictOption(uint _proposalId,address _member,uint _votingTypeId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) ;
+    function addVerdictOption(uint _proposalId,address _member,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) ;
 
-     function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) ;
+    function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) ;
 
     function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount) public;
-    function closeProposalVote(uint _proposalId,address _memberAddress) public;
+    function closeProposalVote(uint _proposalId) public;
     function giveReward_afterFinalDecision(uint _proposalId) public;
 
     function getTotalVotes() constant returns (uint votesTotal);
@@ -66,8 +67,44 @@ contract VotingType
         voteId = AddressProposalVote[_memberAddress][_proposalId];
     }
 
-    function getVotesbyOption_againstProposal(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVotes)
+    function getVoteValuebyOption_againstProposal(uint _proposalId,uint _roleId,uint _optionIndex) constant returns(uint totalVoteValue)
     {
-        totalVotes = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[_roleId][_optionIndex];
+        totalVoteValue = allProposalVoteAndTokenCount[_proposalId].totalVoteCount[_roleId][_optionIndex];
     }
+    
+    function getOptionChosenById(uint _voteId) constant returns(uint[] optionChosen)
+    {
+        return (allVotes[_voteId].optionChosen);
+    }
+    
+    function getOptionById(uint _voteId,uint _optionChosenId)constant returns(uint option)
+    {
+        return (allVotes[_voteId].optionChosen[_optionChosenId]);
+    }
+    
+    function getVoterAddress(uint _voteId) constant returns(address _voterAddress)
+    {
+        return (allVotes[_voteId].voter);
+    }
+    
+    function getVoteArrayAgainstRole(uint _proposalId,uint _roleId) constant returns(uint[] totalVotes)
+    {
+        return ProposalRoleVote[_proposalId][_roleId];
+    }
+
+    function getVoteLength(uint _proposalId,uint _roleId)constant returns(uint length)
+    {
+        return ProposalRoleVote[_proposalId][_roleId].length;
+    }
+
+    function setVoteReward(uint _voteId,uint _reward)
+    {
+        allVotes[_voteId].reward = _reward ;
+    }
+
+    function getVoteReward(uint _voteId)constant returns(uint reward)
+    {
+        return (allVotes[_voteId].reward);
+    }
+    
 }

@@ -21,7 +21,7 @@ import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 contract  MemberRoles is Ownable{
 
   bytes32[] memberRole;
-  uint public categorizeAuthRoleid;
+  uint categorizeAuthRoleid;
   string memberRoleDescHash;
   uint8 constructorCheck;
 

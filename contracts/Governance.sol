@@ -29,9 +29,6 @@ import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 import "./zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./zeppelin-solidity/contracts/math/Math.sol";
 
-
-
-
 contract Governance {
     
   using SafeMath for uint;
@@ -43,7 +40,6 @@ contract Governance {
   address BTAddress;
   address P1Address;
   address GBTCAddress;
-  
   GBTController GBTC;
   Master MS;
   MemberRoles MR;
@@ -106,7 +102,7 @@ contract Governance {
       GD =GovernanceData(GDAddress);
       P1 = Pool(P1Address);
 
-      require(GD.getProposalCategory(_proposalId) != 0);
+      require(GD.getProposalCategory(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2);
       require(_TokenAmount >= PC.getMinStake(GD.getProposalCategory(_proposalId)) && _TokenAmount <= PC.getMaxStake(GD.getProposalCategory(_proposalId)));
 
       payableGBTTokens(_TokenAmount);
@@ -163,26 +159,23 @@ contract Governance {
       {
           parameterName = PC.getCategoryParamNameUint(_category,j);
           GD.setParameterDetails1(_proposalId,j,parameterName,_paramInt);
-          // allProposalCategoryParams[_proposalId].optionNameIntValue[j+1][parameterName] = _paramInt[j];
       }
 
       for(j=0; j<paramBytes32; j++)
       {
           parameterName = PC.getCategoryParamNameBytes(_category,j); 
           GD.setParameterDetails2(_proposalId,j,parameterName,_paramBytes32);
-          // allProposalCategoryParams[_proposalId].optionNameBytesValue[j+1][parameterName] = _paramBytes32[j];
       }
 
       for(j=0; j<paramAddress; j++)
       {
           parameterName = PC.getCategoryParamNameAddress(_category,j);
           GD.setParameterDetails3(_proposalId,j,parameterName,_paramAddress); 
-          // allProposalCategoryParams[_proposalId].optionNameAddressValue[j+1][parameterName] = _paramAddress[j];  
       }
   }
 
   /// @dev categorizing proposal to proceed further.
-  function categorizeProposal(uint _proposalId , uint8 _categoryId,uint8 _proposalComplexityLevel,uint[] _levelReward) public
+  function categorizeProposal(uint _proposalId , uint8 _categoryId,uint8 _proposalComplexityLevel,uint _reward) public
   {
       MR = MemberRoles(MRAddress);
       PC = ProposalCategory(PCAddress);
@@ -191,42 +184,44 @@ contract Governance {
       require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
       require(GD.getProposalStatus(_proposalId) == 1 || GD.getProposalStatus(_proposalId) == 0);
 
-      addComplexityLevelAndReward(_proposalId,_categoryId,_proposalComplexityLevel,_levelReward);
+      addComplexityLevelAndReward(_proposalId,_categoryId,_proposalComplexityLevel,_reward);
       GD.addInitialOptionDetails(_proposalId);
       GD.setCategorizedBy(_proposalId,msg.sender);
       GD.setProposalCategory(_proposalId,_categoryId);
   }
 
   /// @dev Proposal's complexity level and reward is added 
-  function addComplexityLevelAndReward(uint _proposalId,uint _category,uint8 _proposalComplexityLevel,uint[] _levelReward) internal
+  function addComplexityLevelAndReward(uint _proposalId,uint _category,uint8 _proposalComplexityLevel,uint _reward) internal
   {
       PC=ProposalCategory(PCAddress);
       uint votingLength = PC.getRoleSequencLength(_category);
-      if(_levelReward.length != 0)
-        require(votingLength == _levelReward.length);
-          GD.setProposalLevel(_proposalId,_proposalComplexityLevel);
-          GD.setProposalPriority(_proposalId,_levelReward); 
+      GD.setProposalLevel(_proposalId,_proposalComplexityLevel);
+      GD.setProposalIncentive(_proposalId,_reward); 
   }
 
  /// @dev Creates a new proposal.
   function createProposal(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _TokenAmount) public
   {
       GD=GovernanceData(GDAddress);
-
+      PC=ProposalCategory(PCAddress);
       require(GD.getBalanceOfMember(msg.sender) != 0);
+
       GD.setMemberReputation(msg.sender,1);
       GD.addTotalProposal(GD.getProposalLength(),msg.sender);
 
       if(_categoryId > 0)
       {
           uint _proposalId = GD.getProposalLength()-1;
-          GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
           openProposalForVoting(_proposalId,_TokenAmount);
           GD.addInitialOptionDetails(_proposalId);
           GD.setCategorizedBy(_proposalId,msg.sender);
+          uint incentive;
+          (,incentive) = PC.getCategoryIncentive(_categoryId);
+          GD.setProposalIncentive(_proposalId,incentive); 
       }
       else
-          GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));          
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));          
   }
   
  /// @dev Creates a new proposal.
@@ -240,12 +235,12 @@ contract Governance {
       
       GD.addTotalProposal(GD.getProposalLength(),msg.sender);
       uint _proposalId = GD.getProposalLength()-1;
-      GD.addNewProposal(_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
+      GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
       openProposalForVoting(_proposalId,_TokenAmount/2);
       GD.addInitialOptionDetails(_proposalId);
       GD.setCategorizedBy(_proposalId,msg.sender);
       VT=VotingType(GD.getVotingTypeAddress(_votingTypeId));
-      VT.addVerdictOption(_proposalId,msg.sender,_votingTypeId,_paramInt,_paramBytes32,_paramAddress,_TokenAmount,_optionDescHash);
+      VT.addVerdictOption(_proposalId,msg.sender,_paramInt,_paramBytes32,_paramAddress,_TokenAmount,_optionDescHash);
   }
   /// @dev AFter the proposal final decision, member reputation will get updated.
   function updateMemberReputation(uint _proposalId,uint _finalVerdict) onlyInternal
@@ -304,6 +299,46 @@ contract Governance {
       
       uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
       if(_roleVoteLength == MR.getAllMemberLength(roleId))
-        P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(category,0));
+        P1.closeProposalOraclise1(_proposalId);
   }
+  
+  function getStatusOfProposalsForMember(uint[] _proposalsIds)constant returns (uint proposalLength,uint draftProposals,uint pendingProposals,uint acceptedProposals,uint rejectedProposals)
+  {
+       GD=GovernanceData(GDAddress);
+       uint proposalStatus;
+
+       for(uint i=0;i<_proposalsIds.length; i++)
+       {
+         proposalStatus=GD.getProposalStatus(_proposalsIds[i]);
+         if(proposalStatus<2)
+             draftProposals++;
+         else if(proposalStatus==2)
+           pendingProposals++;
+         else if(proposalStatus==3)
+           acceptedProposals++;
+         else if(proposalStatus>=4)
+           rejectedProposals++;
+       }
+ }
+ 
+  //get status of proposals
+  function getStatusOfProposals()constant returns (uint _proposalLength,uint _draftProposals,uint _pendingProposals,uint _acceptedProposals,uint _rejectedProposals)
+  {
+    GD=GovernanceData(GDAddress);
+    uint proposalStatus;
+    _proposalLength=GD.getProposalLength();
+
+    for(uint i=0;i<_proposalLength;i++){
+      proposalStatus=GD.getProposalStatus(i);
+      if(proposalStatus<2)
+          _draftProposals++;
+      else if(proposalStatus==2)
+        _pendingProposals++;
+      else if(proposalStatus==3)
+        _acceptedProposals++;
+      else if(proposalStatus>=4)
+        _rejectedProposals++;
+        }
+  }
+ 
 }

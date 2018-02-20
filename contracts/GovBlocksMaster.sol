@@ -25,7 +25,7 @@ contract GovBlocksMaster
   
     struct govBlocksUsers
     {
-      address tokenAddress;
+      string GbUserName;
       address masterAddress;
     }
 
@@ -63,15 +63,14 @@ contract GovBlocksMaster
         MS.GovBlocksOwner();
     }
 
-    function addGovBlocksUser(address _tokenAddress,address _masterAddress) onlyOwner
+    function addGovBlocksUser(string _GbUserName,address _masterAddress) onlyOwner
     {
-        allGovBlocksUsers.push(govBlocksUsers(_tokenAddress,_masterAddress));   
+        allGovBlocksUsers.push(govBlocksUsers(_GbUserName,_masterAddress));   
     }
 
-    function getGovBlocksUserDetails(uint _Id) constant returns(address TokenAddress,address MasterContractAddress)
+    function getGovBlocksUserDetails(uint _Id) constant returns(string GbUserName,address MasterContractAddress)
     {
-        TokenAddress = allGovBlocksUsers[_Id].tokenAddress;
-        MasterContractAddress = allGovBlocksUsers[_Id].masterAddress;
+        return (allGovBlocksUsers[_Id].GbUserName,allGovBlocksUsers[_Id].masterAddress);
     }
 
 }

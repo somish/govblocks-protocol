@@ -83,8 +83,8 @@ contract GBTController {
         GBTS.subFromBalance(_from,_value);
         GBTS.callTransferEvent(_from, address(this), _value);
     }  
-    uint public actual_amount;
     
+    uint public actual_amount;
     function buyTokenGBT(address _to,uint _value) onlyInternal 
     {
         actual_amount = (_value*1000000000000000000)/tokenPrice;  // amount that was sent          
@@ -95,6 +95,7 @@ contract GBTController {
     {
         GBTS=GBTStandardToken(GBTStandardTokenAddress);
         GBTS.addInBalance(_to,_amount);
+        GBTS.addInTotalSupply(_amount);
         GBTS.callTransferEvent(GBTStandardTokenAddress, _to, _amount);
     }
 
