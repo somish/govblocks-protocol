@@ -21,12 +21,12 @@ import "./StandardVotingType.sol";
 import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
 import "./Governance.sol";
-// import "./Math.sol";
-// import "./SafeMath.sol";
+import "./Math.sol";
+import "./SafeMath.sol";
 import "./Master.sol";
 import "./GBTController.sol";
-import "./zeppelin-solidity/contracts/math/Math.sol";
-import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+// import "./zeppelin-solidity/contracts/math/Math.sol";
+// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 contract RankBasedVoting is VotingType
@@ -177,7 +177,7 @@ contract RankBasedVoting is VotingType
         uint8 currentVotingId; uint8 category; uint8 intermediateVerdict;
         uint8 verdictOptions;
         (,category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
-        (,,,verdictOptions) = GD.getProposalOptions(_proposalId);
+        (,,,verdictOptions) = GD.getProposalOptionAll(_proposalId);
 
         require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2);
         require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(category,currentVotingId) && _optionChosen.length <= verdictOptions);
@@ -224,7 +224,7 @@ contract RankBasedVoting is VotingType
         uint[] optionChosen = allVotes[voteId].optionChosen;
 
         uint8 verdictOptions; 
-        (,,,verdictOptions) = GD.getProposalOptions(_proposalId);
+        (,,,verdictOptions) = GD.getProposalOptionAll(_proposalId);
         uint8 currentVotingId;
         (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
 
@@ -400,7 +400,7 @@ contract RankBasedVoting is VotingType
     {
         uint[] _optionChosen = allVotes[voteid].optionChosen;
         uint8 _verdictOptions; 
-        (,,,_verdictOptions) = GD.getProposalOptions(_proposalId);
+        (,,,_verdictOptions) = GD.getProposalOptionAll(_proposalId);
 
         for(uint i=0; i<_optionChosen.length; i++)
         {

@@ -16,8 +16,6 @@
 
 pragma solidity ^0.4.8;
 import "./Master.sol";
-// import "./MemberRoles.sol";
-// import "./ProposalCategory.sol";
 
 contract GovBlocksMaster 
 {

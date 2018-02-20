@@ -19,15 +19,15 @@ import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Master.sol";
-import "./BasicToken.sol";
-import "./SafeMath.sol";
-import "./Math.sol";
+// import "./BasicToken.sol";
+// import "./SafeMath.sol";
+// import "./Math.sol";
 import "./Pool.sol";
 import "./GBTController.sol";
 import "./VotingType.sol";
-// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-// import "./zeppelin-solidity/contracts/math/Math.sol";
+import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+import "./zeppelin-solidity/contracts/math/Math.sol";
 
 contract Governance {
     

@@ -19,7 +19,7 @@ import "./Master.sol";
 import "./Pool.sol";
 import "./GBTStandardToken.sol";
 import "./GBTController.sol";
-
+import "./ProposalCategory.sol";
 
 contract GovernanceData {
     using SafeMath for uint;
@@ -122,8 +122,10 @@ contract GovernanceData {
     address GBTSAddress;
     address PoolAddress;
     // address masterAddress;
+    address PCAddress;
     address owner;
     address GBTCAddress;
+    ProposalCategory PC;
     GBTController GBTC;
     GBTStandardToken GBTS;
     // Master MS;
@@ -235,6 +237,11 @@ contract GovernanceData {
         GBTCAddress = _GBTCAddress;
     }
 
+    function changeProposalCategoryAddress(address _PCAddress)
+    {
+        PCAddress = _PCAddress;
+    }
+    
     /// @dev Set Vote Id against given proposal.
     function setVoteIdAgainstProposal(uint _proposalId,uint _voteId) onlyInternal
     {
@@ -648,27 +655,29 @@ contract GovernanceData {
 
     function getProposalOptionWon(uint _proposalId)constant returns(uint proposalId,uint[] intParam,bytes32[] bytesParam,address[] addressParam)
     {
+        
+        PC=ProposalCategory(PCAddress);
         proposalId = _proposalId;
         uint finalOption = allProposal[_proposalId].finalVerdict;
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
-        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_category);
-      
+        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(allProposal[_proposalId].category);
+        
         for(j=0; j<paramInt; j++)
         {
-            parameterName = PC.getCategoryParamNameUint(_category,j);
-            intParam[j] = getParameterDetails1(_proposalId,_parameterName,finalOption);
+            parameterName = PC.getCategoryParamNameUint(allProposal[_proposalId].category,j);
+            intParam[j] = getParameterDetails1(_proposalId,parameterName,finalOption);
         }
 
         for(j=0; j<paramBytes32; j++)
         {
-            parameterName = PC.getCategoryParamNameBytes(_category,j); 
-            bytesParam[j] = getParameterDetails2(_proposalId,_parameterName,finalOption);
+            parameterName = PC.getCategoryParamNameBytes(allProposal[_proposalId].category,j); 
+            bytesParam[j] = getParameterDetails2(_proposalId,parameterName,finalOption);
         }
 
         for(j=0; j<paramAddress; j++)
         {
-            parameterName = PC.getCategoryParamNameAddress(_category,j);
-            addressParam[j] = getParameterDetails3(_proposalId,_parameterName,finalOption);              
+            parameterName = PC.getCategoryParamNameAddress(allProposal[_proposalId].category,j);
+            addressParam[j] = getParameterDetails3(_proposalId,parameterName,finalOption);              
         }  
     }
 
@@ -793,7 +802,12 @@ contract GovernanceData {
     function getOptionReward(uint _proposalId,uint _optionIndex)constant returns(uint)
     {
         return (allProposalCategory[_proposalId].rewardOption[_optionIndex]);
-    }       
+    }
+
+    function getProposalFinalVerdict(uint _proposalId) constant returns(uint finalOptionIndex)
+    {
+        finalOptionIndex = allProposal[_proposalId].finalVerdict;
+    }
 }  
  
 
