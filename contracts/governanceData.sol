@@ -500,7 +500,7 @@ contract GovernanceData {
     }
 
     /// @dev Get the category parameters given against a proposal after categorizing the proposal.
-    function getProposalOptions(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
+    function getProposalOptionAll(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
     {
         return (allProposalCategory[_proposalId].paramInt,allProposalCategory[_proposalId].paramBytes32,allProposalCategory[_proposalId].paramAddress,allProposalCategory[_proposalId].verdictOptions);
     }
@@ -644,6 +644,32 @@ contract GovernanceData {
         intParameter = getParameterDetails1(_proposalId,_parameterName,_finalVerdict);
         bytesParameter = getParameterDetails2(_proposalId,_parameterName,_finalVerdict);
         addressParameter = getParameterDetails3(_proposalId,_parameterName,_finalVerdict);
+    }
+
+    function getProposalOptionWon(uint _proposalId)constant returns(uint proposalId,uint[] intParam,bytes32[] bytesParam,address[] addressParam)
+    {
+        proposalId = _proposalId;
+        uint finalOption = allProposal[_proposalId].finalVerdict;
+        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
+        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_category);
+      
+        for(j=0; j<paramInt; j++)
+        {
+            parameterName = PC.getCategoryParamNameUint(_category,j);
+            intParam[j] = getParameterDetails1(_proposalId,_parameterName,finalOption);
+        }
+
+        for(j=0; j<paramBytes32; j++)
+        {
+            parameterName = PC.getCategoryParamNameBytes(_category,j); 
+            bytesParam[j] = getParameterDetails2(_proposalId,_parameterName,finalOption);
+        }
+
+        for(j=0; j<paramAddress; j++)
+        {
+            parameterName = PC.getCategoryParamNameAddress(_category,j);
+            addressParam[j] = getParameterDetails3(_proposalId,_parameterName,finalOption);              
+        }  
     }
 
     /// @dev Fetch the Integer parameter details by parameter name against the final option.
