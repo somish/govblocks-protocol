@@ -28,7 +28,7 @@ contract  MemberRoles is Ownable{
   struct memberRoleDetails
   {
     uint memberCounter;
-    mapping(address=>uint)  memberActive; // will set active to 1/0;
+    mapping(address=>uint)  memberActive;
     address[] memberAddress;
   }
 
