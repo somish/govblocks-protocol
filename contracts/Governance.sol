@@ -19,15 +19,15 @@ import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Master.sol";
-// import "./BasicToken.sol";
-// import "./SafeMath.sol";
-// import "./Math.sol";
+import "./BasicToken.sol";
+import "./SafeMath.sol";
+import "./Math.sol";
 import "./Pool.sol";
 import "./GBTController.sol";
 import "./VotingType.sol";
-import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-import "./zeppelin-solidity/contracts/math/Math.sol";
+// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+// import "./zeppelin-solidity/contracts/math/Math.sol";
 
 contract Governance {
     
@@ -283,8 +283,13 @@ contract Governance {
       (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
       uint dateUpdate;
       (,,,,dateUpdate,,) = GD.getProposalDetailsById1(_proposalId);
-      require(SafeMath.add(dateUpdate,PC.getClosingTimeByIndex(category,currentVotingId)) <= now);
-       closeValue=1;
+      address votingTypeAddress;
+      (,,,,,votingTypeAddress) = GD.getProposalDetailsById2(_proposalId);
+      VT=VotingType(votingTypeAddress);
+      uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
+
+      if(SafeMath.add(dateUpdate,PC.getClosingTimeByIndex(category,currentVotingId)) <= now ||   VT.getVoteLength(_proposalId,roleId) == MR.getAllMemberLength(roleId))
+        closeValue=1;
   }
 
  function checkRoleVoteClosing(uint _proposalId,uint _roleVoteLength) 
