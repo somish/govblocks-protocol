@@ -35,13 +35,30 @@ contract GovBlocksProxy
     {
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
-
-        bytes32[] bytesParam;
-        (,,bytesParam,addressParam) = GD.getProposalOptionWon(_proposalId);
-
-        bytes32 roleName = bytesParam[0];
+        
+        bytes32 roleName = GD.getProposalOptionWonById2(_proposalId,0);
         uint finalVerdict;
         (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
-        MR.addNewMemberRole(roleName,GD.getOptionDescByProposalId(_proposalId,finalVerdict));
+        MR.addNewMemberRole(roleName,"");
+    }
+
+    function assignMemberRoleGBP(uint _proposalId)
+    {
+        GD=GovernanceData(GDAddress);
+        MR=MemberRoles(MRAddress);
+
+        uint roleIdToAssign = GD.getProposalOptionWonById1(_proposalId,0);
+        address memberAddress = GD.getProposalOptionWonById3(_proposalId,0);
+        MR.assignMemberRole(memberAddress,roleIdToAssign);
+    }
+
+    function removeMemberRoleGBP(uint _proposalId)
+    {
+        GD=GovernanceData(GDAddress);
+        MR=MemberRoles(MRAddress);
+
+        uint removeFromId = GD.getProposalOptionWonById1(_proposalId,0);
+        address memberAddress = GD.getProposalOptionWonById3(_proposalId,0);
+        MR.removeMember(memberAddress,removeFromId);
     }
 }
