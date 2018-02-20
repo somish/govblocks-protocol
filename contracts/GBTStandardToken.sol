@@ -54,6 +54,14 @@ contract GBTStandardToken is StandardToken
     {
         Transfer(_from, _to, value);
     }
-
-
+    
+    function addInTotalSupply(uint _tokens)
+    {
+        totalSupply = totalSupply + _tokens;
+    }
+    
+    function subFromTotalSupply(uint _tokens)
+    {
+        totalSupply = totalSupply - _tokens;
+    }
 }
