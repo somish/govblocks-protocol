@@ -97,10 +97,11 @@ contract GovernanceData {
     mapping(uint=>uint[]) totalVotesAgainstProposal;
     mapping(address=>bytes32) votingTypeNameByAddress;
     mapping(address=>uint[]) allProposalMember; // Proposal Against Member
-    mapping(address=>uint) allProposalOption; // Total Options against Member
+    mapping(address=>uint[]) allProposalOption; // Total Options against Member, array contains optionindexs;
     mapping(address=>uint) totalOptionStake; // total Optionstake Against member
     mapping(address=>uint) totalVotesAgainstMember; // Total Votes given by member till now..
     mapping(uint=>uint8) initialOptionsAdded;
+    mapping(address=>mapping(uint=>uint)) allOptionDataAgainstMember;
 
     uint public quorumPercentage;
     uint public pendingProposalStart;
@@ -275,8 +276,9 @@ contract GovernanceData {
         allProposalCategory[_proposalId].stakeOnOption.push(_stakeValue);
         allProposalCategory[_proposalId].optionDescHash.push(_optionHash);
         allProposalCategory[_proposalId].optionDateAdd.push(now);
-        allProposalOption[_memberAddress] = SafeMath.add(allProposalOption[_memberAddress],1);
+        allProposalOption[_memberAddress].push(getTotalVerdictOptions(_proposalId)+1); // saving the option index in each index of array
         totalOptionStake[_memberAddress] = SafeMath.add(totalOptionStake[_memberAddress],_stakeValue);
+        allOptionDataAgainstMember[_memberAddress][_proposalId] = getTotalVerdictOptions(_proposalId)+1;
     }
 
     function setProposalCategory(uint _proposalId,uint8 _categoryId)
@@ -310,7 +312,7 @@ contract GovernanceData {
     /// @dev As bydefault first option is alwayd deny option. One time configurable.
     function addInitialOptionDetails(uint _proposalId) 
     {
-        if(initialOptionsAdded[_proposalId] == 0;)
+        if(initialOptionsAdded[_proposalId] == 0)
         {
             allProposalCategory[_proposalId].optionAddedByAddress.push(0x00);
             allProposalCategory[_proposalId].valueOfOption.push(0);
@@ -670,19 +672,19 @@ contract GovernanceData {
         for(j=0; j<paramInt; j++)
         {
             parameterName = PC.getCategoryParamNameUint(allProposal[_proposalId].category,j);
-            intParam[j] = getParameterDetailsById1(_proposalId,parameterName,optionIndex);
+            intParam[j] = getParameterDetailsById1(_proposalId,parameterName,_optionIndex);
         }
 
         for(j=0; j<paramBytes32; j++)
         {
             parameterName = PC.getCategoryParamNameBytes(allProposal[_proposalId].category,j); 
-            bytesParam[j] = getParameterDetailsById2(_proposalId,parameterName,optionIndex);
+            bytesParam[j] = getParameterDetailsById2(_proposalId,parameterName,_optionIndex);
         }
 
         for(j=0; j<paramAddress; j++)
         {
             parameterName = PC.getCategoryParamNameAddress(allProposal[_proposalId].category,j);
-            addressParam[j] = getParameterDetailsById3(_proposalId,parameterName,optionIndex);              
+            addressParam[j] = getParameterDetailsById3(_proposalId,parameterName,_optionIndex);              
         }  
     }
 
@@ -752,7 +754,7 @@ contract GovernanceData {
         memberReputation = allMemberReputationByAddress[_memberAddress];
         totalProposal = allProposalMember[_memberAddress].length;
         proposalStake = getProposalStakeByMember(_memberAddress);
-        totalOption = allProposalOption[_memberAddress];
+        totalOption = allProposalOption[_memberAddress].length;
         optionStake = totalOptionStake[_memberAddress];
         totalVotes = totalVotesAgainstMember[_memberAddress];
     }
@@ -770,9 +772,9 @@ contract GovernanceData {
         }
     }
 
-    function getTotalOption(address _memberAddress)constant returns(uint total)
+    function getTotalOptionAgainstMember(address _memberAddress)constant returns(uint[] allOptions)
     {
-        total = allProposalOption[_memberAddress];
+        return (allProposalOption[_memberAddress]);
     }
 
     function addInTotalVotes(address _memberAddress)
@@ -832,6 +834,41 @@ contract GovernanceData {
         finalOptionIndex = allProposal[_proposalId].finalVerdict;
     }
 
+    function getProposalRewardByMember(address _memberAddress) constant returns(uint[] propStake,uint[] propReward)
+    {
+        propStake = new uint[](allProposalMember[_memberAddress].length);
+        propReward = new uint[](allProposalMember[_memberAddress].length);
+
+        for(uint i=0; i<allProposalMember[_memberAddress].length; i++)
+        {
+            propStake[i] = allProposal[allProposalMember[_memberAddress][i]].proposalStake;
+            propReward[i] = allProposal[allProposalMember[_memberAddress][i]].proposalReward;
+        }
+    }
+
+    function getProposalRewardById(uint _proposalId) constant returns(uint propStake,uint propReward)
+    {
+        return(allProposal[_proposalId].proposalStake,allProposal[_proposalId].proposalReward);
+    }
+
+    function getOptionData(address _memberAddress)constant returns(uint[] optionIndex,uint[] dateAdded,uint[] proposalId)
+    {
+        optionIndex = new uint[](allProposalOption[_memberAddress].length);
+        dateAdded = new uint[](allProposalOption[_memberAddress].length);
+        proposalId = new uint[](allProposalOption[_memberAddress].length);
+
+        for(uint i=0; i<allProposal.length; i++)
+        {
+            require(allOptionDataAgainstMember[_memberAddress][i] != 0);
+            {
+                uint optionId = allOptionDataAgainstMember[_memberAddress][i];
+                
+                optionIndex[i] = allOptionDataAgainstMember[_memberAddress][i];
+                dateAdded[i] = allProposalCategory[i].optionDateAdd[optionId];
+                proposalId[i] = i;
+            }
+        }   
+    }
 
 }  
  
