@@ -19,15 +19,16 @@ import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Master.sol";
-import "./BasicToken.sol";
-import "./SafeMath.sol";
-import "./Math.sol";
+// import "./BasicToken.sol";
+// import "./SafeMath.sol";
+// import "./Math.sol";
 import "./Pool.sol";
 import "./GBTController.sol";
 import "./VotingType.sol";
-// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-// import "./zeppelin-solidity/contracts/math/Math.sol";
+import "./GovBlocksProxy.sol";
+import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+import "./zeppelin-solidity/contracts/math/Math.sol";
 
 contract Governance {
     
@@ -158,19 +159,19 @@ contract Governance {
       for(j=0; j<paramInt; j++)
       {
           parameterName = PC.getCategoryParamNameUint(_category,j);
-          GD.setParameterDetails1(_proposalId,j+1,parameterName,_paramInt);
+          GD.setParameterDetails1(_proposalId,parameterName,_paramInt[j]);
       }
 
       for(j=0; j<paramBytes32; j++)
       {
           parameterName = PC.getCategoryParamNameBytes(_category,j); 
-          GD.setParameterDetails2(_proposalId,j+1,parameterName,_paramBytes32);
+          GD.setParameterDetails2(_proposalId,parameterName,_paramBytes32[j]);
       }
 
       for(j=0; j<paramAddress; j++)
       {
           parameterName = PC.getCategoryParamNameAddress(_category,j);
-          GD.setParameterDetails3(_proposalId,j+1,parameterName,_paramAddress); 
+          GD.setParameterDetails3(_proposalId,parameterName,_paramAddress[j]); 
       }
   }
 
@@ -178,7 +179,6 @@ contract Governance {
   function categorizeProposal(uint _proposalId , uint8 _categoryId,uint8 _proposalComplexityLevel,uint _reward) public
   {
       MR = MemberRoles(MRAddress);
-      PC = ProposalCategory(PCAddress);
       GD = GovernanceData(GDAddress);
 
       require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
@@ -191,10 +191,9 @@ contract Governance {
   }
 
   /// @dev Proposal's complexity level and reward is added 
-  function addComplexityLevelAndReward(uint _proposalId,uint _category,uint8 _proposalComplexityLevel,uint _reward) internal
+  function addComplexityLevelAndReward(uint _proposalId,uint _category,uint8 _proposalComplexityLevel,uint _reward) 
   {
-      PC=ProposalCategory(PCAddress);
-      uint votingLength = PC.getRoleSequencLength(_category);
+      GD=GovernanceData(GDAddress);
       GD.setProposalLevel(_proposalId,_proposalComplexityLevel);
       GD.setProposalIncentive(_proposalId,_reward); 
   }
@@ -278,6 +277,7 @@ contract Governance {
   {
       PC=ProposalCategory(PCAddress);
       GD=GovernanceData(GDAddress);
+      MR=MemberRoles(MRAddress);
       
       uint currentVotingId;uint category;
       (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
