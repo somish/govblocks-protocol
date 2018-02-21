@@ -17,16 +17,20 @@
 pragma solidity ^0.4.8;
 import "./MemberRoles.sol";
 import "./GovernanceData.sol";
+import "./ProposalCategory.sol";
 
 contract GovBlocksProxy
 {
     GovernanceData GD;
     MemberRoles MR;
+    ProposalCategory PC;
+    address PCAddress;
     address GDAddress;
     address MRAddress;
 
-    function changeAllContractAddress(address _GDContractAddress, address _MRContractAddress)
+    function changeAllContractAddress(address _PCContractAddress,address _GDContractAddress, address _MRContractAddress)
     {
+        PCAddress = _PCContractAddress;
         GDAddress = _GDContractAddress;
         MRAddress = _MRContractAddress;
     }
@@ -35,10 +39,13 @@ contract GovBlocksProxy
     {
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
+        PC=ProposalCategory(PCAddress);
         
-        bytes32 roleName = GD.getProposalOptionWonById2(_proposalId,0);
-        uint finalVerdict;
-        (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
+        uint category = GD.getProposalCategory(_proposalId);
+        bytes32 parameterName = PC.getCategoryParamNameBytes(category,0);
+        uint finalOptionIndex = GD.getProposalFinalOption(_proposalId);
+
+        bytes32 roleName = GD.getParameterDetailsById2(_proposalId,parameterName,finalOptionIndex);
         MR.addNewMemberRole(roleName,"");
     }
 
@@ -46,9 +53,19 @@ contract GovBlocksProxy
     {
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
+        PC=ProposalCategory(PCAddress);
 
-        uint roleIdToAssign = GD.getProposalOptionWonById1(_proposalId,0);
-        address memberAddress = GD.getProposalOptionWonById3(_proposalId,0);
+        uint category = GD.getProposalCategory(_proposalId);
+        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(category);
+        uint finalOptionIndex = GD.getProposalFinalOption(_proposalId);
+
+        bytes32 parameterNameUint = PC.getCategoryParamNameUint(category,0);
+        uint roleIdToAssign = GD.getParameterDetailsById1(_proposalId,parameterNameUint,finalOptionIndex);
+
+        bytes32 parameterNameBytes = PC.getCategoryParamNameUint(category,0);
+        address memberAddress = GD.getParameterDetailsById3(_proposalId,parameterNameBytes,finalOptionIndex);
+
         MR.assignMemberRole(memberAddress,roleIdToAssign);
     }
 
@@ -56,9 +73,19 @@ contract GovBlocksProxy
     {
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
+        PC=ProposalCategory(PCAddress);
 
-        uint removeFromId = GD.getProposalOptionWonById1(_proposalId,0);
-        address memberAddress = GD.getProposalOptionWonById3(_proposalId,0);
+        uint category = GD.getProposalCategory(_proposalId);
+        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(category);
+        uint finalOptionIndex = GD.getProposalFinalOption(_proposalId);
+
+        bytes32 parameterNameUint = PC.getCategoryParamNameUint(category,0);
+        uint removeFromId = GD.getParameterDetailsById1(_proposalId,parameterNameUint,finalOptionIndex);
+
+        bytes32 parameterNameBytes = PC.getCategoryParamNameUint(category,0);
+        address memberAddress = GD.getParameterDetailsById3(_proposalId,parameterNameBytes,finalOptionIndex);
+
         MR.removeMember(memberAddress,removeFromId);
     }
 }
