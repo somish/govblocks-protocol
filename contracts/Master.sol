@@ -27,7 +27,6 @@ import "./Pool.sol";
 import "./GBTController.sol";
 import "./GBTStandardToken.sol";
 
-
 contract Master is Ownable {
 
     struct contractDetails{
@@ -327,6 +326,8 @@ contract Master is Ownable {
         uint version = versionLength-1;
         addInContractChangeDate(now,version);
         changeAddressInMaster(version);
+        changeMasterAddress(allContractVersions[version][0].contractAddress);
+        changeOtherAddress();
     }
 
     /// @dev Stores the date when version of contracts get switched.
