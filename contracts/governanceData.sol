@@ -37,7 +37,7 @@ contract GovernanceData {
         address votingTypeAddress;
         uint proposalValue;
         uint proposalStake;
-        uint reward;
+        uint proposalReward;
         uint totalreward;
         uint blocknumber;
     }
@@ -57,9 +57,9 @@ contract GovernanceData {
 
     struct proposalCategoryParams
     {
-        mapping(uint=>mapping(bytes32=>uint)) optionNameIntValue;
-        mapping(uint=>mapping(bytes32=>bytes32)) optionNameBytesValue;
-        mapping(uint=>mapping(bytes32=>address)) optionNameAddressValue;
+        mapping(bytes32=>uint[]) optionNameIntValue;
+        mapping(bytes32=>bytes32[]) optionNameBytesValue;
+        mapping(bytes32=>address[]) optionNameAddressValue;
     }
 
     mapping(uint=>proposalCategoryParams) allProposalCategoryParams;
@@ -313,9 +313,9 @@ contract GovernanceData {
             allProposalCategory[_proposalId].valueOfOption.push(0);
             allProposalCategory[_proposalId].stakeOnOption.push(0);
 
-            allProposalCategoryParams[_proposalId].optionNameIntValue[0]["deny"] = 0;
-            allProposalCategoryParams[_proposalId].optionNameBytesValue[0]["deny"] = "deny";
-            allProposalCategoryParams[_proposalId].optionNameAddressValue[0]["deny"] = 0x00;
+            allProposalCategoryParams[_proposalId].optionNameIntValue["deny"].push(0);
+            allProposalCategoryParams[_proposalId].optionNameBytesValue["deny"].push("deny");
+            allProposalCategoryParams[_proposalId].optionNameAddressValue["deny"].push(0x00);
 
             allProposalCategory[_proposalId].paramInt.push(0);
             allProposalCategory[_proposalId].paramBytes32.push("");
@@ -490,9 +490,9 @@ contract GovernanceData {
     }
    
     /// @dev Get proposal Reward and complexity level Against proposal
-    function getProposalRewardAndComplexity(uint _proposalId) public constant returns (uint reward,uint complexity)
+    function getProposalIncentiveAndComplexity(uint _proposalId) public constant returns (uint incentive,uint complexity)
     {
-        reward = allProposalPriority[_proposalId].commonIncentive;
+        incentive = allProposalPriority[_proposalId].commonIncentive;
         complexity = allProposalPriority[_proposalId].complexityLevel;
     }
 
@@ -504,12 +504,6 @@ contract GovernanceData {
     function getProposalComplexity(uint _proposalId)constant returns(uint level)
     {
         level =  allProposalPriority[_proposalId].complexityLevel;
-    }
-
-    /// @dev Get the category parameters given against a proposal after categorizing the proposal.
-    function getProposalOptionAll(uint _proposalId) constant returns(uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
-    {
-        return (allProposalCategory[_proposalId].paramInt,allProposalCategory[_proposalId].paramBytes32,allProposalCategory[_proposalId].paramAddress,allProposalCategory[_proposalId].verdictOptions);
     }
 
     /// @dev Get Total number of verdict options against proposal.
@@ -529,28 +523,28 @@ contract GovernanceData {
         return allProposal[_proposalId].category;
     }
 
-    /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
-    function getProposalFinalVerdictDetails(uint _proposalId) public returns(uint id,uint paramint, bytes32 parambytes32,address paramaddress)
-    {
-        id = _proposalId;
-        uint category = allProposal[_proposalId].category;
-        uint verdictChosen = allProposal[_proposalId].finalVerdict;
+    // /// @dev fetch the parameter details for the final verdict (Final Verdict - Option having maximum votes)
+    // function getProposalFinalVerdictDetails(uint _proposalId) constant public returns(uint id,uint paramint, bytes32 parambytes32,address paramaddress)
+    // {
+    //     id = _proposalId;
+    //     uint category = allProposal[_proposalId].category;
+    //     uint verdictChosen = allProposal[_proposalId].finalVerdict;
 
-        if(allProposalCategory[_proposalId].paramInt.length != 0)
-        {
-             paramint = allProposalCategory[_proposalId].paramInt[verdictChosen];
-        }
+    //     if(allProposalCategory[_proposalId].paramInt.length != 0)
+    //     {
+    //          paramint = allProposalCategory[_proposalId].paramInt[verdictChosen];
+    //     }
 
-        if(allProposalCategory[_proposalId].paramBytes32.length != 0)
-        {
-            parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChosen];
-        }
+    //     if(allProposalCategory[_proposalId].paramBytes32.length != 0)
+    //     {
+    //         parambytes32 = allProposalCategory[_proposalId].paramBytes32[verdictChosen];
+    //     }
 
-        if(allProposalCategory[_proposalId].paramAddress.length != 0)
-        {
-            paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
-        }  
-    }
+    //     if(allProposalCategory[_proposalId].paramAddress.length != 0)
+    //     {
+    //         paramaddress = allProposalCategory[_proposalId].paramAddress[verdictChosen];
+    //     }  
+    // }
     
     /// @dev Get the number of tokens already distributed among members.
     function getTotalTokenInSupply() constant returns(uint _totalSupplyToken)
@@ -643,129 +637,101 @@ contract GovernanceData {
         voteId = totalVotesAgainstProposal[_proposalId][_voteArrayIndex];
     }
 
-    /// @dev Fetch the parameter details for final option won (Final Verdict) when giving Proposal ID and Parameter Name Against proposal.
-    function getProposalFinalDecisionByParameter(uint _proposalId,bytes32 _parameterName) constant returns (uint id,uint intParameter,bytes32 bytesParameter,address addressParameter)
-    {   
+    /// @dev Get the category parameters given against a proposal after categorizing the proposal.
+    function getProposalOptionAll(uint _proposalId) constant returns(uint id,uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
+    {
         id = _proposalId;
-        uint _finalVerdict = allProposal[_proposalId].finalVerdict;
-        intParameter = getParameterDetails1(_proposalId,_parameterName,_finalVerdict);
-        bytesParameter = getParameterDetails2(_proposalId,_parameterName,_finalVerdict);
-        addressParameter = getParameterDetails3(_proposalId,_parameterName,_finalVerdict);
+        return (id,allProposalCategory[_proposalId].paramInt,allProposalCategory[_proposalId].paramBytes32,allProposalCategory[_proposalId].paramAddress,allProposalCategory[_proposalId].verdictOptions);
     }
 
-    function getProposalOptionWon(uint _proposalId)constant returns(uint proposalId,uint[] intParam,bytes32[] bytesParam,address[] addressParam)
+    /// @dev Fetch the parameter details for final option won (Final Verdict) when giving Proposal ID and Parameter Name Against proposal.
+    function getProposalOptionAllByParameter(uint _proposalId,bytes32 _parameterNameUint,bytes32 _parameterNameBytes,bytes32 _parameterNameAddress) constant returns (uint id,uint[] intParameter,bytes32[] bytesParameter,address[] addressParameter)
+    {   
+        id = _proposalId;
+        intParameter = getParameterDetails1(_proposalId,_parameterNameUint);
+        bytesParameter = getParameterDetails2(_proposalId,_parameterNameBytes);
+        addressParameter = getParameterDetails3(_proposalId,_parameterNameAddress);
+    }
+
+    function getProposalOptionAllById(uint _proposalId,uint _optionIndex)constant returns(uint proposalId,uint[] intParam,bytes32[] bytesParam,address[] addressParam)
     {
         
         PC=ProposalCategory(PCAddress);
         proposalId = _proposalId;
-        uint finalOption = allProposal[_proposalId].finalVerdict;
+        // uint finalOption = allProposal[_proposalId].finalVerdict;
+
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
         (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(allProposal[_proposalId].category);
         
+        intParam=new uint[](paramInt);
+        bytesParam = new bytes32[](paramBytes32);
+        addressParam = new address[](paramAddress);
+
         for(j=0; j<paramInt; j++)
         {
             parameterName = PC.getCategoryParamNameUint(allProposal[_proposalId].category,j);
-            intParam[j] = getParameterDetails1(_proposalId,parameterName,finalOption);
+            intParam[j] = getParameterDetailsById1(_proposalId,parameterName,_optionIndex);
         }
 
         for(j=0; j<paramBytes32; j++)
         {
             parameterName = PC.getCategoryParamNameBytes(allProposal[_proposalId].category,j); 
-            bytesParam[j] = getParameterDetails2(_proposalId,parameterName,finalOption);
+            bytesParam[j] = getParameterDetailsById2(_proposalId,parameterName,_optionIndex);
         }
 
         for(j=0; j<paramAddress; j++)
         {
             parameterName = PC.getCategoryParamNameAddress(allProposal[_proposalId].category,j);
-            addressParam[j] = getParameterDetails3(_proposalId,parameterName,finalOption);              
+            addressParam[j] = getParameterDetailsById3(_proposalId,parameterName,_optionIndex);              
         }  
     }
 
-    function getProposalOptionWon1(uint _proposalId)constant returns(uint[] optionData)
+    function getParameterDetailsById1(uint _proposalId,bytes32 _parameterName,uint _index)constant returns(uint result)
     {   
-        uint8 paramInt;bytes32 parameterName; uint j;
-        (,,,,paramInt,,,,) = PC.getCategoryDetails(allProposal[_proposalId].category);
-        PC=ProposalCategory(PCAddress);
-        uint finalOption = allProposal[_proposalId].finalVerdict;
-        for(j=0; j<paramInt; j++)
-        {
-            parameterName = PC.getCategoryParamNameUint(allProposal[_proposalId].category,j);
-            optionData[j] = getParameterDetails1(_proposalId,parameterName,finalOption);
-        }
+        return (allProposalCategoryParams[_proposalId].optionNameIntValue[_parameterName][_index]);
     }
 
-    function getProposalOptionWon2(uint _proposalId)constant returns(bytes32[] optionData)
+    function getParameterDetailsById2(uint _proposalId,bytes32 _parameterName,uint _index)constant returns(bytes32 result)
     {   
-        uint8 paramBytes32; bytes32 parameterName; uint j;
-        (,,,,,paramBytes32,,,) = PC.getCategoryDetails(allProposal[_proposalId].category);
-        PC=ProposalCategory(PCAddress);
-        uint finalOption = allProposal[_proposalId].finalVerdict;
-        for(j=0; j<paramBytes32; j++)
-        {
-            parameterName = PC.getCategoryParamNameBytes(allProposal[_proposalId].category,j); 
-            optionData[j] = getParameterDetails2(_proposalId,parameterName,finalOption);
-        }
+        return (allProposalCategoryParams[_proposalId].optionNameBytesValue[_parameterName][_index]);
     }
 
-    function getProposalOptionWon3(uint _proposalId)constant returns(address[] optionData)
+    function getParameterDetailsById3(uint _proposalId,bytes32 _parameterName,uint _index)constant returns(address result)
     {   
-        uint8 paramAddress;bytes32 parameterName; uint j;
-        (,,,,,,paramAddress,,) = PC.getCategoryDetails(allProposal[_proposalId].category);
-        PC=ProposalCategory(PCAddress);
-        uint finalOption = allProposal[_proposalId].finalVerdict;
-        for(j=0; j<paramAddress; j++)
-        {
-            parameterName = PC.getCategoryParamNameAddress(allProposal[_proposalId].category,j);
-            optionData[j] = getParameterDetails3(_proposalId,parameterName,finalOption);              
-        } 
-    }
-
-    function getProposalOptionWonById1(uint _proposalId,uint _index)constant returns(uint result)
-    {   
-        result = getProposalOptionWon1(_proposalId)[_index];
-    }
-
-    function getProposalOptionWonById2(uint _proposalId,uint _index)constant returns(bytes32 result)
-    {   
-        result = getProposalOptionWon2(_proposalId)[_index];
-    }
-
-    function getProposalOptionWonById3(uint _proposalId,uint _index)constant returns(address result)
-    {   
-        result = getProposalOptionWon3(_proposalId)[_index];
+        return (allProposalCategoryParams[_proposalId].optionNameAddressValue[_parameterName][_index]);
     }
 
     /// @dev Fetch the Integer parameter details by parameter name against the final option.
-    function getParameterDetails1(uint _proposalId,bytes32 _parameterName,uint finalOption) internal returns (uint intParameter)
+    function getParameterDetails1(uint _proposalId,bytes32 _parameterName) constant returns (uint[] intParameter)
     {   
-        intParameter = allProposalCategoryParams[_proposalId].optionNameIntValue[finalOption][_parameterName];
+        return (allProposalCategoryParams[_proposalId].optionNameIntValue[_parameterName]);
     }
 
     /// @dev Fetch the Bytes parameter details by parameter name against the final option.
-    function getParameterDetails2(uint _proposalId,bytes32 _parameterName,uint finalOption) internal returns (bytes32 bytesParameter)
+    function getParameterDetails2(uint _proposalId,bytes32 _parameterName) constant returns (bytes32[] bytesParameter)
     {   
-        bytesParameter = allProposalCategoryParams[_proposalId].optionNameBytesValue[finalOption][_parameterName];
+        return (allProposalCategoryParams[_proposalId].optionNameBytesValue[_parameterName]);
     }
 
     /// @dev Fetch the Address parameter details by parameter name against the final option.
-    function getParameterDetails3(uint _proposalId,bytes32 _parameterName,uint finalOption) internal returns (address addressParameter)
+    function getParameterDetails3(uint _proposalId,bytes32 _parameterName) constant returns (address[] addressParameter)
     {   
-        addressParameter = allProposalCategoryParams[_proposalId].optionNameAddressValue[finalOption][_parameterName];
+        return (allProposalCategoryParams[_proposalId].optionNameAddressValue[_parameterName]);
     }
 
-    function setParameterDetails1(uint _proposalId,uint index,bytes32 parameterName,uint[] _paramInt)
+    function setParameterDetails1(uint _proposalId,bytes32 parameterName,uint _paramInt)
     {
-        allProposalCategoryParams[_proposalId].optionNameIntValue[index][parameterName] = _paramInt[index];
+        allProposalCategoryParams[_proposalId].optionNameIntValue[parameterName].push(_paramInt);
     }
 
-    function setParameterDetails2(uint _proposalId,uint index,bytes32 parameterName,bytes32[] _paramBytes32)
+    function setParameterDetails2(uint _proposalId,bytes32 parameterName,bytes32 _paramBytes32)
     {
-        allProposalCategoryParams[_proposalId].optionNameBytesValue[index][parameterName] = _paramBytes32[index];
+        allProposalCategoryParams[_proposalId].optionNameBytesValue[parameterName].push(_paramBytes32);
     }
 
-    function setParameterDetails3(uint _proposalId,uint index,bytes32 parameterName,address[] _paramAddress)
+    function setParameterDetails3(uint _proposalId,bytes32 parameterName,address _paramAddress)
     {
-        allProposalCategoryParams[_proposalId].optionNameAddressValue[index][parameterName] = _paramAddress[index];  
+        allProposalCategoryParams[_proposalId].optionNameAddressValue[parameterName].push(_paramAddress);  
     }
 
     function getProposalLength()constant returns(uint)
@@ -840,7 +806,7 @@ contract GovernanceData {
     {
         allProposal[_proposalId].totalreward = _totalTokenToDistribute;
         allProposal[_proposalId].blocknumber = _blockNumber;
-        allProposal[_proposalId].reward = _reward;
+        allProposal[_proposalId].proposalReward = _reward;
     }
 
     function setOptionReward(uint _proposalId,uint _reward,uint _optionIndex)
@@ -850,7 +816,7 @@ contract GovernanceData {
 
     function getProposalReward(uint _proposalId)constant returns(uint totalTokenToDistribute,uint numberBlock,uint propReward)
     {
-        return(allProposal[_proposalId].totalreward,allProposal[_proposalId].blocknumber,allProposal[_proposalId].reward);
+        return(allProposal[_proposalId].totalreward,allProposal[_proposalId].blocknumber,allProposal[_proposalId].proposalReward);
     }
 
     function getOptionReward(uint _proposalId,uint _optionIndex)constant returns(uint)
@@ -858,10 +824,11 @@ contract GovernanceData {
         return (allProposalCategory[_proposalId].rewardOption[_optionIndex]);
     }
 
-    function getProposalFinalVerdict(uint _proposalId) constant returns(uint finalOptionIndex)
+    function getProposalFinalOption(uint _proposalId) constant returns(uint finalOptionIndex)
     {
         finalOptionIndex = allProposal[_proposalId].finalVerdict;
     }
+
 }  
  
 
