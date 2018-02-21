@@ -52,6 +52,7 @@ contract GovernanceData {
         uint[] valueOfOption;
         uint[] stakeOnOption;
         string[] optionDescHash;
+        uint[] optionDateAdd;
         mapping(uint=>uint) rewardOption;
     }
 
@@ -99,6 +100,7 @@ contract GovernanceData {
     mapping(address=>uint) allProposalOption; // Total Options against Member
     mapping(address=>uint) totalOptionStake; // total Optionstake Against member
     mapping(address=>uint) totalVotesAgainstMember; // Total Votes given by member till now..
+    mapping(uint=>uint8) initialOptionsAdded;
 
     uint public quorumPercentage;
     uint public pendingProposalStart;
@@ -272,6 +274,7 @@ contract GovernanceData {
         allProposalCategory[_proposalId].valueOfOption.push(_optionValue);
         allProposalCategory[_proposalId].stakeOnOption.push(_stakeValue);
         allProposalCategory[_proposalId].optionDescHash.push(_optionHash);
+        allProposalCategory[_proposalId].optionDateAdd.push(now);
         allProposalOption[_memberAddress] = SafeMath.add(allProposalOption[_memberAddress],1);
         totalOptionStake[_memberAddress] = SafeMath.add(totalOptionStake[_memberAddress],_stakeValue);
     }
@@ -305,17 +308,13 @@ contract GovernanceData {
     }
 
     /// @dev As bydefault first option is alwayd deny option. One time configurable.
-    function addInitialOptionDetails(uint _proposalId) onlyInternal
+    function addInitialOptionDetails(uint _proposalId) 
     {
-        if(allProposalCategory[_proposalId].optionAddedByAddress.length == 0)
+        if(initialOptionsAdded[_proposalId] == 0;)
         {
             allProposalCategory[_proposalId].optionAddedByAddress.push(0x00);
             allProposalCategory[_proposalId].valueOfOption.push(0);
             allProposalCategory[_proposalId].stakeOnOption.push(0);
-
-            allProposalCategoryParams[_proposalId].optionNameIntValue["deny"].push(0);
-            allProposalCategoryParams[_proposalId].optionNameBytesValue["deny"].push("deny");
-            allProposalCategoryParams[_proposalId].optionNameAddressValue["deny"].push(0x00);
 
             allProposalCategory[_proposalId].paramInt.push(0);
             allProposalCategory[_proposalId].paramBytes32.push("");
@@ -323,6 +322,7 @@ contract GovernanceData {
             allProposalCategory[_proposalId].optionDescHash.push("");
             allProposalCategory[_proposalId].rewardOption[0] = 0;
             allProposalCategory[_proposalId].verdictOptions = allProposalCategory[_proposalId].verdictOptions +1;
+            initialOptionsAdded[_proposalId] =1;
         }
     }
 
@@ -670,51 +670,54 @@ contract GovernanceData {
         for(j=0; j<paramInt; j++)
         {
             parameterName = PC.getCategoryParamNameUint(allProposal[_proposalId].category,j);
-            intParam[j] = getParameterDetailsById1(_proposalId,parameterName,_optionIndex);
+            intParam[j] = getParameterDetailsById1(_proposalId,parameterName,optionIndex);
         }
 
         for(j=0; j<paramBytes32; j++)
         {
             parameterName = PC.getCategoryParamNameBytes(allProposal[_proposalId].category,j); 
-            bytesParam[j] = getParameterDetailsById2(_proposalId,parameterName,_optionIndex);
+            bytesParam[j] = getParameterDetailsById2(_proposalId,parameterName,optionIndex);
         }
 
         for(j=0; j<paramAddress; j++)
         {
             parameterName = PC.getCategoryParamNameAddress(allProposal[_proposalId].category,j);
-            addressParam[j] = getParameterDetailsById3(_proposalId,parameterName,_optionIndex);              
+            addressParam[j] = getParameterDetailsById3(_proposalId,parameterName,optionIndex);              
         }  
     }
 
     function getParameterDetailsById1(uint _proposalId,bytes32 _parameterName,uint _index)constant returns(uint result)
     {   
-        return (allProposalCategoryParams[_proposalId].optionNameIntValue[_parameterName][_index]);
+        uint optionIndex = _index-1;
+        return (allProposalCategoryParams[_proposalId].optionNameIntValue[_parameterName][optionIndex]);
     }
 
     function getParameterDetailsById2(uint _proposalId,bytes32 _parameterName,uint _index)constant returns(bytes32 result)
     {   
-        return (allProposalCategoryParams[_proposalId].optionNameBytesValue[_parameterName][_index]);
+        uint optionIndex = _index-1;
+        return (allProposalCategoryParams[_proposalId].optionNameBytesValue[_parameterName][optionIndex]);
     }
 
     function getParameterDetailsById3(uint _proposalId,bytes32 _parameterName,uint _index)constant returns(address result)
     {   
-        return (allProposalCategoryParams[_proposalId].optionNameAddressValue[_parameterName][_index]);
+        uint optionIndex = _index-1;
+        return (allProposalCategoryParams[_proposalId].optionNameAddressValue[_parameterName][optionIndex]);
     }
 
     /// @dev Fetch the Integer parameter details by parameter name against the final option.
-    function getParameterDetails1(uint _proposalId,bytes32 _parameterName) constant returns (uint[] intParameter)
+    function getParameterDetails1(uint _proposalId,bytes32 _parameterName) internal returns (uint[] intParameter)
     {   
         return (allProposalCategoryParams[_proposalId].optionNameIntValue[_parameterName]);
     }
 
     /// @dev Fetch the Bytes parameter details by parameter name against the final option.
-    function getParameterDetails2(uint _proposalId,bytes32 _parameterName) constant returns (bytes32[] bytesParameter)
+    function getParameterDetails2(uint _proposalId,bytes32 _parameterName) internal returns (bytes32[] bytesParameter)
     {   
         return (allProposalCategoryParams[_proposalId].optionNameBytesValue[_parameterName]);
     }
 
     /// @dev Fetch the Address parameter details by parameter name against the final option.
-    function getParameterDetails3(uint _proposalId,bytes32 _parameterName) constant returns (address[] addressParameter)
+    function getParameterDetails3(uint _proposalId,bytes32 _parameterName) internal returns (address[] addressParameter)
     {   
         return (allProposalCategoryParams[_proposalId].optionNameAddressValue[_parameterName]);
     }
@@ -828,6 +831,7 @@ contract GovernanceData {
     {
         finalOptionIndex = allProposal[_proposalId].finalVerdict;
     }
+
 
 }  
  
