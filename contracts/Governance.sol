@@ -19,16 +19,16 @@ import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Master.sol";
-// import "./BasicToken.sol";
-// import "./SafeMath.sol";
-// import "./Math.sol";
+import "./BasicToken.sol";
+import "./SafeMath.sol";
+import "./Math.sol";
 import "./Pool.sol";
 import "./GBTController.sol";
 import "./VotingType.sol";
 import "./GovBlocksProxy.sol";
-import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-import "./zeppelin-solidity/contracts/math/Math.sol";
+// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
+// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
+// import "./zeppelin-solidity/contracts/math/Math.sol";
 
 contract Governance {
     
@@ -364,7 +364,7 @@ contract Governance {
         proposalId = _proposalId;
 
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
-        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(allProposal[_proposalId].category);
+        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(GD.getProposalCategory(_proposalId));
         
         intParam=new uint[](paramInt);
         bytesParam = new bytes32[](paramBytes32);
