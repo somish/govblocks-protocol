@@ -303,9 +303,9 @@ contract RankBasedVoting is VotingType
         (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
 
-        for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
+        for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++)
         {
-            uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
+            uint voteid = GD.getVoteIdById(_proposalId,i);
 
             if(getOptionById(voteid,0) == finalVerdict)
             {
@@ -371,9 +371,9 @@ contract RankBasedVoting is VotingType
             G1.transferBackGBTtoken(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),transferToken);
         }
 
-        for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
+        for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++)
         {
-            uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
+            uint voteid = GD.getVoteIdById(_proposalId,i);
 
             // for(uint j=0; j<allVotes[voteid].optionChosen.length; j++)
             // {
