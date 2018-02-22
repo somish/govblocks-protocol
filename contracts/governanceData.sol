@@ -411,7 +411,7 @@ contract GovernanceData {
         allProposal[_id].versionNum = allProposal[_id].versionNum+1;
     }
      
-    function setProposalCategoryParams1(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) onlyInternal
+    function setProposalCategoryParams1(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) onlyInternal
     {
       uint i;
       allProposalCategory[_proposalId].verdictOptions = allProposalCategory[_proposalId].verdictOptions + 1;
@@ -808,6 +808,14 @@ contract GovernanceData {
     {
         return (allProposal[_proposalId].proposalDescHash);
     }  
+    
+    /// @dev Get points to proceed with updating the member reputation level.
+    function getMemberReputationPoints() constant returns(uint addProposalOwnPoints,uint addOptionOwnPoints,uint addMemPoints,uint subProposalOwnPoints,uint subOptionOwnPoints,uint subMemPoints)
+    {
+        return (addProposalOwnerPoints,addOptionOwnerPoints,addMemberPoints,subProposalOwnerPoints,subOptionOwnerPoints,subMemberPoints);
+    } 
+
+    
 }  
  
 
