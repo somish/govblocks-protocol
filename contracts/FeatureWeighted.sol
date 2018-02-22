@@ -211,7 +211,7 @@ contract FeatureWeighted is VotingType
             AddressProposalVote[msg.sender][_proposalId] = voteLength;
             ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(voteLength);
             GD.setVoteIdAgainstProposal(_proposalId,voteLength);
-            GD.addInTotalVotes(msg.sender);
+            GD.addInTotalVotes(msg.sender,voteLength);
             
             G1.checkRoleVoteClosing(_proposalId,getVoteLength(_proposalId,PC.getRoleSequencAtIndex(category,currentVotingId)));
             addInAllVotes(_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);

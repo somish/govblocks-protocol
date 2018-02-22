@@ -87,5 +87,5 @@ contract GovBlocksProxy
         address memberAddress = GD.getParameterDetailsById3(_proposalId,parameterNameBytes,finalOptionIndex);
 
         MR.removeMember(memberAddress,removeFromId);
-    }
+    } 
 }

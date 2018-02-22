@@ -127,7 +127,7 @@ contract Governance {
   {
       GD=GovernanceData(GDAddress);
       GD.storeProposalVersion(_proposalId);
-      GD.updateProposal(_proposalId,_proposalDescHash);
+      GD.updateProposalDetails1(_proposalId,_proposalDescHash);
       GD.changeProposalStatus(_proposalId,1);
       
       require(GD.getProposalCategory(_proposalId) > 0);
@@ -147,11 +147,11 @@ contract Governance {
       GD.setProposalValue(_proposalId,finalProposalValue);
   }
 
-  function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint8 _verdictOptions) onlyInternal
+  function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) onlyInternal
   {
       GD=GovernanceData(GDAddress);
       PC=ProposalCategory(PCAddress);
-      GD.setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress,_verdictOptions);
+      GD.setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress);
 
       uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
       (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_category);
@@ -345,5 +345,49 @@ contract Governance {
         _rejectedProposals++;
         }
   }
+
+  function getVoteDetailById(address _memberAddress,address _votingTypeAddress,uint _voteId)constant returns(uint id, uint proposalId,uint dateAdded,uint voteStake,uint voteReward)
+  {
+      id = _voteId;
+      VT=VotingType(_votingTypeAddress);
+
+      require(VT.getVoterAddress(_voteId) == _memberAddress);
+        (,proposalId,,dateAdded,,voteStake,) = VT.getVoteDetailByid(_voteId);
+        voteReward = VT.getVoteReward(_voteId); 
+  } 
+
+    function getProposalOptionAllById(uint _proposalId,uint _optionIndex)constant returns(uint proposalId,uint[] intParam,bytes32[] bytesParam,address[] addressParam)
+    {
+        
+        PC=ProposalCategory(PCAddress);
+        GD=GovernanceData(GDAddress);
+        proposalId = _proposalId;
+
+        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
+        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(allProposal[_proposalId].category);
+        
+        intParam=new uint[](paramInt);
+        bytesParam = new bytes32[](paramBytes32);
+        addressParam = new address[](paramAddress);
+
+        for(j=0; j<paramInt; j++)
+        {
+            parameterName = PC.getCategoryParamNameUint(GD.getProposalCategory(_proposalId),j);
+            intParam[j] = GD.getParameterDetailsById1(_proposalId,parameterName,_optionIndex);
+        }
+
+        for(j=0; j<paramBytes32; j++)
+        {
+            parameterName = PC.getCategoryParamNameBytes(GD.getProposalCategory(_proposalId),j); 
+            bytesParam[j] = GD.getParameterDetailsById2(_proposalId,parameterName,_optionIndex);
+        }
+
+        for(j=0; j<paramAddress; j++)
+        {
+            parameterName = PC.getCategoryParamNameAddress(GD.getProposalCategory(_proposalId),j);
+            addressParam[j] = GD.getParameterDetailsById3(_proposalId,parameterName,_optionIndex);              
+        }  
+    }
+
 
 }

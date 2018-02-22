@@ -147,12 +147,12 @@ contract StandardVotingType
 
     function addVerdictOptionSVT1(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionDescHash) internal
     {
-        GD.setOptionAddressAndStake(_proposalId,_memberAddress,_GBTPayableTokenAmount,setOptionValue_givenByMemberSVT(_memberAddress,_proposalId,_GBTPayableTokenAmount),_optionDescHash);
+        GD.setOptionDetails(_proposalId,_memberAddress,_GBTPayableTokenAmount,setOptionValue_givenByMemberSVT(_memberAddress,_proposalId,_GBTPayableTokenAmount),_optionDescHash);
     }
     function addVerdictOptionSVT2(uint _proposalId,uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) internal
     {
         G1=Governance(G1Address);
-        G1.setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress,GD.getTotalVerdictOptions(_proposalId)+1); // MAKE +1 IN go
+        G1.setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress;
     }
     
     uint public testValue;

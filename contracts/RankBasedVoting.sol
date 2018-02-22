@@ -203,7 +203,7 @@ contract RankBasedVoting is VotingType
             AddressProposalVote[msg.sender][_proposalId] = votelength;
             verdictOptionsByVoteId[votelength] = verdictOptions;
             GD.setVoteIdAgainstProposal(_proposalId,votelength);
-            GD.addInTotalVotes(msg.sender);
+            GD.addInTotalVotes(msg.sender,votelength);
             
             G1.checkRoleVoteClosing(_proposalId,getVoteLength(_proposalId,PC.getRoleSequencAtIndex(category,currentVotingId)));  
             addInAllVotes(_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
