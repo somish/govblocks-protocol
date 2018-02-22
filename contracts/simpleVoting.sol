@@ -241,9 +241,9 @@ contract SimpleVoting is VotingType
         uint finalVerdict;
         (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
         
-        for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++) 
+        for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++) 
         {
-            uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
+            uint voteid = GD.getVoteIdById(_proposalId,i);
             
             if(getOptionById(voteid,0) == finalVerdict)
             {   
@@ -300,9 +300,9 @@ contract SimpleVoting is VotingType
             GD.setOptionReward(_proposalId,reward3,finalVerdict);
         }
 
-        for(uint i=0; i<GD.getTotalVoteLengthAgainstProposal(_proposalId); i++)
+        for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++)
         {
-            uint voteid = GD.getVoteIdByProposalId(_proposalId,i); 
+            uint voteid = GD.getVoteIdById(_proposalId,i); 
             if(allVotes[voteid].optionChosen[0] == finalVerdict)
             {
                 reward = SafeMath.div(SafeMath.mul(allVotes[voteid].voteValue,_totalTokenToDistribute),_totalVoteValue);
