@@ -311,8 +311,9 @@ contract GovernanceData {
             allProposalCategory[_proposalId].paramAddress.push(0x00);
             allProposalCategory[_proposalId].optionDescHash.push("");
             allProposalCategory[_proposalId].rewardOption[0] = 0;
+            allProposalCategory[_proposalId].optionDateAdd.push(now);
             allProposalCategory[_proposalId].verdictOptions = allProposalCategory[_proposalId].verdictOptions +1;
-            initialOptionsAdded[_proposalId] =1;
+            initialOptionsAdded[_proposalId]=1;
         }
     }
 
