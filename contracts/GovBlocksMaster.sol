@@ -22,18 +22,11 @@ contract GovBlocksMaster
     
     Master MS;
     address public owner;
-  
-    struct govBlocksUsers
-    {
-      string GbUserName;
-      address masterAddress;
-    }
     address GBTControllerAddress;
     address GBTAddress;
 
     mapping(bytes32=>address) govBlocksDapps;
     bytes32[] allGovBlocksUsers;
-
 
     function GovBlocksMasterInit(address _GBTControllerAddress,address _GBTAddress) 
     {
@@ -41,7 +34,6 @@ contract GovBlocksMaster
       owner = msg.sender; 
       GBTControllerAddress=_GBTControllerAddress;
       GBTAddress = _GBTAddress;
-      
     } 
     
     modifier onlyOwner() 
@@ -58,12 +50,12 @@ contract GovBlocksMaster
     function updateGBTAddress(address _GBTContractAddress) onlyOwner
     {
         GBTAddress=_GBTContractAddress;
-        for(uint i=0;i<allGovBlocksUsers.length; i++){
-        address masterAddress = govBlocksDapps[allGovBlocksUsers[i]];
-        MS=Master(masterAddress);
-        MS.changeGBTAddress(_GBTContractAddress);
-        }
-       
+        for(uint i=0;i<allGovBlocksUsers.length; i++)
+        {
+          address masterAddress = govBlocksDapps[allGovBlocksUsers[i]];
+          MS=Master(masterAddress);
+          MS.changeGBTAddress(_GBTContractAddress);
+        }  
     }
 
      function updateGBTControllerAddress(address _GBTConrollerAddress) onlyOwner
@@ -84,21 +76,14 @@ contract GovBlocksMaster
         MS.GovBlocksOwner();
     }
 
-    address public _proposalCategoryAddress,_newMemberRoleAddress;
     function addGovBlocksUser(bytes32 _gbUserName) onlyOwner
     {
         require(govBlocksDapps[_gbUserName]==0x00);
-         address _newMasterAddress = new Master();
+        address _newMasterAddress = new Master();
         allGovBlocksUsers.push(_gbUserName);  
         govBlocksDapps[_gbUserName] = _newMasterAddress;
-        // address _newMemberRoleAddress = new MemberRoles();
-        // _proposalCategoryAddress = new ProposalCategory();
         MS=Master(_newMasterAddress);
-
-        // MS.addNewVersion([address(0),_newMemberRoleAddress,_proposalCategoryAddress,address(0),address(0),address(0),address(0),address(0),address(0),GBTControllerAddress,GBTAddress]);
-        // MS.switchToRecentVersion();
-        // MS.changeOtherAddress();
-
+        MS.setOwner(msg.sender);
     }
     
 

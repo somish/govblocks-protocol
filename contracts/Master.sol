@@ -110,29 +110,10 @@ contract Master is Ownable {
             check=1;
     }
     
-    
-    function generate_PC_MR_Pool() onlyOwner
+    function setOwner(address _memberaddress)
     {
-        proposalCategoryAddress = new ProposalCategory();
-        memberRolesAddress = new MemberRoles();
-        poolAddress = new Pool();
+        owner = _memberaddress;
     }
-    
-    function generate_SVT_SV() onlyOwner{
-        standardVotingTypeAddress = new StandardVotingType();
-        simpleVotingAddress = new SimpleVoting();
-    }
-    
-    function generate_GD() onlyOwner{
-        governanceDataAddress = new GovernanceData();
-    }
-    
-    function generate_G1() onlyOwner
-    {
-        governanceAddress = new Governance();
-    }
-    
-
     
     /// @dev Creates a new version of contract addresses.
     function addNewVersion(address[11] _contractAddresses) onlyOwner
