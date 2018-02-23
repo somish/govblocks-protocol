@@ -264,7 +264,7 @@ contract GovernanceData {
         allProposalCategory[_proposalId].stakeOnOption.push(_stakeValue);
         allProposalCategory[_proposalId].optionDescHash.push(_optionHash);
         allProposalCategory[_proposalId].optionDateAdd.push(now);
-        allProposalOption[_memberAddress].push(allProposalCategory[_proposalId].verdictOptions); // saving the option index in each index of array
+        allProposalOption[_memberAddress].push(_proposalId); // saving the option index in each index of array
         totalOptionStake[_memberAddress] = SafeMath.add(totalOptionStake[_memberAddress],_stakeValue);
         allOptionDataAgainstMember[_memberAddress][_proposalId] = getTotalVerdictOptions(_proposalId);
     }
@@ -597,22 +597,16 @@ contract GovernanceData {
         return (id,optionid,optionStake,optionValue,memberAddress,allProposalCategory[_proposalId].optionDescHash[_optionIndex],optionReward);
     }
 
-    function getOptionDetailsByAddress(address _memberAddress,uint _optionIndex) constant returns(uint id,uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
+    function getOptionDetailsByAddress(uint _proposalId,address _memberAddress) constant returns(uint optionIndex,uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
     {
-        id = _optionIndex;
-        for(uint i=0; i<getProposalLength(); i++)
-        {
-            if(getOptionIndexAgainstProposal(i,_memberAddress) == _optionIndex)
-            {  
-                optionStake = allProposalCategory[i].stakeOnOption[_optionIndex];
-                optionReward = allProposalCategory[i].rewardOption[_optionIndex];
-                dateAdded = allProposalCategory[i].rewardOption[_optionIndex];
-                proposalId = i;
-            }
-        }    
+        optionIndex = getOptionIndexAgainstProposal(_proposalId,_memberAddress);
+        optionStake = allProposalCategory[_proposalId].stakeOnOption[optionIndex];
+        optionReward = allProposalCategory[_proposalId].rewardOption[optionIndex];
+        dateAdded = allProposalCategory[_proposalId].optionDateAdd[optionIndex];
+        proposalId = _proposalId;  
     }
 
-    function getTotalOptionAgainstMember(address _memberAddress)constant returns(uint[])
+    function getTotalOptionAgainstMember(address _memberAddress)constant returns(uint[] proposalIdArray) // ProposalIds to which solutions being provided
     {
         return (allProposalOption[_memberAddress]);
     }
