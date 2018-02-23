@@ -210,7 +210,7 @@ contract Governance {
 
       if(_categoryId > 0)
       {
-          uint _proposalId = GD.getProposalLength()-1;
+          uint _proposalId = GD.getProposalLength();
           GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
           openProposalForVoting(_proposalId,_TokenAmount);
           GD.addInitialOptionDetails(_proposalId);
@@ -231,9 +231,9 @@ contract Governance {
       require(GD.getBalanceOfMember(msg.sender) != 0);
       require(_categoryId != 0);
       GD.setMemberReputation(msg.sender,1);
-      
-      GD.addTotalProposal(GD.getProposalLength(),msg.sender);
       uint _proposalId = GD.getProposalLength();
+      
+      GD.addTotalProposal(_proposalId,msg.sender);
       GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
       openProposalForVoting(_proposalId,_TokenAmount/2);
       GD.addInitialOptionDetails(_proposalId);
