@@ -15,15 +15,19 @@
 
 
 pragma solidity ^0.4.8;
+import "./Master.sol";
 // import "./Ownable.sol";
 import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract  MemberRoles is Ownable{
+contract  MemberRoles
+{
 
   bytes32[] memberRole;
   uint categorizeAuthRoleid;
   string memberRoleDescHash;
   uint8 constructorCheck;
+  Master M1; 
+  address masterAddress;
 
   struct memberRoleDetails
   {
@@ -42,6 +46,31 @@ contract  MemberRoles is Ownable{
         memberRole.push("Advisory Board");
         categorizeAuthRoleid=1;
         constructorCheck =1;
+  }
+
+  modifier onlyInternal {
+      M1=Master(masterAddress);
+      require(M1.isInternal(msg.sender) == 1);
+      _; 
+  }
+  
+  modifier onlyOwner {
+      M1=Master(masterAddress);
+      require(M1.isOwner(msg.sender) == 1);
+      _; 
+  }
+  
+  /// @dev Change master's contract address
+  function changeMasterAddress(address _masterContractAddress) 
+  {
+      if(masterAddress == 0x000)
+          masterAddress = _masterContractAddress;
+      else
+      {
+          MS=Master(masterAddress);
+          require(MS.isInternal(msg.sender) == 1);
+              masterAddress = _masterContractAddress;
+      }
   }
 
   function getRoleDescHash()constant returns(string)

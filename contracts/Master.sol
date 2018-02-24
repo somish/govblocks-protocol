@@ -193,11 +193,11 @@ contract Master is Ownable {
         SV=SimpleVoting(simpleVotingAddress);
         SV.changeMasterAddress(_masterAddress);
 
-        RB=RankBasedVoting(rankBasedVotingAddress);
-        RB.changeMasterAddress(_masterAddress);
+        // RB=RankBasedVoting(rankBasedVotingAddress);
+        // RB.changeMasterAddress(_masterAddress);
 
-        FW=FeatureWeighted(featureWeightedAddress);
-        FW.changeMasterAddress(_masterAddress);
+        // FW=FeatureWeighted(featureWeightedAddress);
+        // FW.changeMasterAddress(_masterAddress);
 
         SVT=StandardVotingType(standardVotingTypeAddress);
         SVT.changeMasterAddress(_masterAddress);
@@ -210,6 +210,12 @@ contract Master is Ownable {
 
         GBTC=GBTController(GBTCAddress);
         GBTC.changeMasterAddress(_masterAddress);
+
+        PC=ProposalCategory(proposalCategoryAddress);
+        PC.changeMasterAddress(_masterAddress);
+
+        MR=MemberRoles(memberRolesAddress);
+        MR.changeMasterAddress(_masterAddress);
     }
 
    /// @dev Link contracts to one another.
@@ -219,43 +225,42 @@ contract Master is Ownable {
         changeGBTControllerAddress(GBTCAddress);
         
         GD=GovernanceData(governanceDataAddress);
-        GD.changeAllContractsAddress(poolAddress);
-        GD.editVotingType(0,simpleVotingAddress);
-        GD.editVotingType(1,rankBasedVotingAddress);
-        GD.editVotingType(2,featureWeightedAddress);
-        
-        
-        SV=SimpleVoting(simpleVotingAddress);
-        SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
-        SV.changeGBTControllerAddress(GBTCAddress);
-        SV.changeGovernanceAddress(governanceAddress);
+        GD.changeAllContractsAddress(poolAddress,proposalCategoryAddress);
 
-        RB=RankBasedVoting(rankBasedVotingAddress);
-        RB.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
-        RB.changeGBTControllerAddress(GBTCAddress);
-        RB.changeGovernanceAddress(governanceAddress);
+        // if(GD.getVotingTypeLength() == 0)
+        // {
+        //     GD.setVotingTypeDetails("Simple Voting",simpleVotingAddress);
+        //     GD.setVotingTypeDetails("Rank Based Voting",rankBasedVotingAddress);
+        //     GD.setVotingTypeDetails("Feature Weighted Voting",featureWeightedAddress);
+        // }
+        // else 
+        // {
+            GD.editVotingType(0,simpleVotingAddress);
+            GD.editVotingType(1,rankBasedVotingAddress);
+            GD.editVotingType(2,featureWeightedAddress);
+        // }
+
+        SV=SimpleVoting(simpleVotingAddress);
+        SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
+
+        // RB=RankBasedVoting(rankBasedVotingAddress);
+        // RB.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
         
-        FW=FeatureWeighted(featureWeightedAddress);
-        FW.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
-        FW.changeGBTControllerAddress(GBTCAddress);
-        FW.changeGovernanceAddress(governanceAddress);
+        // FW=FeatureWeighted(featureWeightedAddress);
+        // FW.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
         
         SVT=StandardVotingType(standardVotingTypeAddress);
-        SVT.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
+        SVT.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress,poolAddress);
         SVT.changeOtherContractAddress(simpleVotingAddress,rankBasedVotingAddress,featureWeightedAddress);
-        SVT.changeOtherContractAddress1(governanceAddress,poolAddress);
 
         G1=Governance(governanceAddress);
-        G1.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress);
-        G1.changePoolAddress(poolAddress);
-        G1.changeGBTControllerAddress(GBTCAddress);
+        G1.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress,poolAddress);
         
         PC=ProposalCategory(proposalCategoryAddress);
         PC.changeAllContractsAddress(memberRolesAddress,governanceDataAddress);
 
         P1=Pool(poolAddress);
         P1.changeAllContractsAddress(governanceDataAddress,simpleVotingAddress);
-        P1.changeGBTControllerAddress(GBTCAddress);
    }
 
     /// @dev Change GBT token address all contracts
@@ -263,18 +268,6 @@ contract Master is Ownable {
     {
         GD=GovernanceData(governanceDataAddress);
         GD.changeGBTtokenAddress(_tokenAddress);
-        
-        // SV=SimpleVoting(simpleVotingAddress);
-        // SV.changeGBTtokenAddress(_tokenAddress);
-
-        // RB=RankBasedVoting(rankBasedVotingAddress);
-        // RB.changeGBTtokenAddress(_tokenAddress);
-
-        // FW=FeatureWeighted(featureWeightedAddress);
-        // FW.changeGBTtokenAddress(_tokenAddress);
-
-        // SVT=StandardVotingType(standardVotingTypeAddress);
-        // SVT.changeGBTtokenAddress(_tokenAddress);
 
         GBTC=GBTController(GBTCAddress);
         GBTC.changeGBTtokenAddress(_tokenAddress);
@@ -291,11 +284,11 @@ contract Master is Ownable {
         SV=SimpleVoting(simpleVotingAddress);
         SV.changeGBTControllerAddress(_controllerAddress);
 
-        RB=RankBasedVoting(rankBasedVotingAddress);
-        RB.changeGBTControllerAddress(_controllerAddress);
+        // RB=RankBasedVoting(rankBasedVotingAddress);
+        // RB.changeGBTControllerAddress(_controllerAddress);
 
-        FW=FeatureWeighted(featureWeightedAddress);
-        FW.changeGBTControllerAddress(_controllerAddress);
+        // FW=FeatureWeighted(featureWeightedAddress);
+        // FW.changeGBTControllerAddress(_controllerAddress);
         
         P1=Pool(poolAddress);
         P1.changeGBTControllerAddress(_controllerAddress);

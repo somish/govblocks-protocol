@@ -14,11 +14,12 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity ^0.4.8;
 // import "./Ownable.sol";
+import "./Master.sol";
 import "./MemberRoles.sol";
 import "./GovernanceData.sol";
 import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract ProposalCategory is Ownable
+contract ProposalCategory
 {
     uint8 constructorCheck;
     struct category{
@@ -50,9 +51,36 @@ contract ProposalCategory is Ownable
 
     mapping(uint=>uint8) parametersAdded;
     MemberRoles MR;
+    Master M1;
     address MRAddress;
+    address masterAddress;
     address GDAddress;
     GovernanceData GD;
+
+    modifier onlyInternal {
+        M1=Master(masterAddress);
+        require(M1.isInternal(msg.sender) == 1);
+        _; 
+    }
+    
+     modifier onlyOwner {
+        M1=Master(masterAddress);
+        require(M1.isOwner(msg.sender) == 1);
+        _; 
+    }
+
+    /// @dev Change master's contract address
+    function changeMasterAddress(address _masterContractAddress) 
+    {
+        if(masterAddress == 0x000)
+            masterAddress = _masterContractAddress;
+        else
+        {
+            MS=Master(masterAddress);
+            require(MS.isInternal(msg.sender) == 1);
+                masterAddress = _masterContractAddress;
+        }
+    }
 
     function changeAllContractsAddress(address _MRContractAddress,address _GDContractAddress)
     {

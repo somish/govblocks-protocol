@@ -93,10 +93,10 @@ contract GovBlocksMaster
                  govBlocksDapps[_gbUserName] = _newMasterAddress;
      else
       {            
-                if(msg.sender ==  govBlocksDapps[_gbUserName])
-                     govBlocksDapps[_gbUserName] = _newMasterAddress;
-                else
-                    throw;
+          if(msg.sender ==  govBlocksDapps[_gbUserName])
+               govBlocksDapps[_gbUserName] = _newMasterAddress;
+          else
+              throw;
       }   
     }
 
