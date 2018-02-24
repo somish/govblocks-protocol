@@ -202,9 +202,9 @@ contract GovernanceData {
             setGlobalParameters();
             addStatus();
             addMemberReputationPoints();
-            GD.setVotingTypeDetails("Simple Voting",0x54e741a0fa3d730382da31c3ecf9740cb4909261);
-            GD.setVotingTypeDetails("Rank Based Voting",0xe67e2ad4f9fa99d916100faca93b4d01b378a8ab);
-            GD.setVotingTypeDetails("Feature Weighted Voting",0xb09361753359460091e0fd61f07477523bf8c3b0);
+            setVotingTypeDetails("Simple Voting",0x54e741a0fa3d730382da31c3ecf9740cb4909261);
+            setVotingTypeDetails("Rank Based Voting",0xe67e2ad4f9fa99d916100faca93b4d01b378a8ab);
+            setVotingTypeDetails("Feature Weighted Voting",0xb09361753359460091e0fd61f07477523bf8c3b0);
             constructorCheck=1;
     }
 
