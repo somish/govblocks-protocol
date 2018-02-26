@@ -273,7 +273,7 @@ contract SimpleVoting is VotingType
                 
                 G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward));
                 G1.updateMemberReputation1("VoteOwner Favour",_proposalId,GD.getVoterAddress(voteid),repPoints);
-                GD.setVoteReward(voteid,SafeMath.add(GD.getVoteStake(voteid),reward));
+                GD.setVoteReward(voteid,reward));
                 GD.callRewardEvent(_memberAddress,_proposalId,"VoteOwner Reward",reward);
             }
             else
