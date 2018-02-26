@@ -91,11 +91,8 @@ contract StandardVotingType
     function setOptionValue_givenByMemberSVT(address _memberAddress,uint _proposalId,uint _memberStake) internal returns (uint finalOptionValue)
     {
         GD=GovernanceData(GDAddress);
-        uint reputation = GD.getMemberReputation(_memberAddress);
-        if(reputation==0)
-            reputation=1;
 
-        uint memberLevel = Math.max256(reputation,1);
+        uint memberLevel = Math.max256(GD.getMemberReputation(_memberAddress),1);
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(_memberAddress),100),100)),GD.getTotalTokenInSupply());
         uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
 
@@ -105,13 +102,10 @@ contract StandardVotingType
     function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)
     {
         GD=GovernanceData(GDAddress);
-        uint reputation = GD.getMemberReputation(_memberAddress);
-        if(reputation==0)
-            reputation=1;
             
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(_memberAddress),100),100)),GD.getTotalTokenInSupply());
         uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
-        finalVoteValue = SafeMath.mul(reputation,value);
+        finalVoteValue = SafeMath.mul(GD.getMemberReputation(_memberAddress),value);
     }  
     
     function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionDescHash) onlyInternal
@@ -143,8 +137,57 @@ contract StandardVotingType
     }
     function addVerdictOptionSVT2(uint _proposalId,uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) internal
     {
-        G1=Governance(G1Address);
-        G1.setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress);
+        setProposalCategoryParams(_categoryId,_proposalId,_paramInt,_paramBytes32,_paramAddress);
+    }
+    
+    function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) internal
+    {
+      GD=GovernanceData(GDAddress);
+      PC=ProposalCategory(PCAddress);
+      setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress);
+
+      uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
+      (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(_category);
+      
+      for(j=0; j<paramInt; j++)
+      {
+          parameterName = PC.getCategoryParamNameUint(_category,j);
+          GD.setParameterDetails1(_proposalId,parameterName,_paramInt[j]);
+      }
+
+      for(j=0; j<paramBytes32; j++)
+      {
+          parameterName = PC.getCategoryParamNameBytes(_category,j); 
+          GD.setParameterDetails2(_proposalId,parameterName,_paramBytes32[j]);
+      }
+
+      for(j=0; j<paramAddress; j++)
+      {
+          parameterName = PC.getCategoryParamNameAddress(_category,j);
+          GD.setParameterDetails3(_proposalId,parameterName,_paramAddress[j]); 
+      }
+    }
+    
+    function setProposalCategoryParams1(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) internal
+    {
+        GD=GovernanceData(GDAddress);
+        uint i;
+        GD.setTotalOptions(_proposalId);
+
+        for(i=0;i<_paramInt.length;i++)
+        {
+            GD.setOptionIntParameter(_proposalId,_paramInt[i]);
+        }
+
+        for(i=0;i<_paramBytes32.length;i++)
+        {
+            GD.setOptionBytesParameter(_proposalId,_paramBytes32[i]);
+        }
+
+        for(i=0;i<_paramAddress.length;i++)
+        {
+            GD.setOptionAddressParameter(_proposalId,_paramAddress[i]); 
+        }   
     }
 
     function closeProposalVoteSVT(uint _proposalId) 
