@@ -186,7 +186,7 @@ contract SimpleVoting is VotingType
     function closeProposalVote(uint _proposalId)
     {
         SVT=StandardVotingType(SVTAddress);
-        SVT.closeProposalVoteSVT(_proposalId);
+        SVT.closeProposalVoteSVT(_proposalId,msg.sender);
     }
 
     uint public voteValueFavour; uint public voterStake; uint public wrongOptionStake; uint public returnTokens;
@@ -273,7 +273,7 @@ contract SimpleVoting is VotingType
                 
                 G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward));
                 G1.updateMemberReputation1("VoteOwner Favour",_proposalId,GD.getVoterAddress(voteid),repPoints);
-                GD.setVoteReward(voteid,reward));
+                GD.setVoteReward(voteid,reward);
                 GD.callRewardEvent(_memberAddress,_proposalId,"VoteOwner Reward",reward);
             }
             else
