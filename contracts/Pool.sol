@@ -45,7 +45,6 @@ contract Pool is usingOraclize
     struct apiId
     {
         bytes8 type_of;
-        bytes4 currency;
         uint id;
         uint64 dateAdd;
         uint64 dateUpd;
@@ -105,21 +104,21 @@ contract Pool is usingOraclize
 
     function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
     {
-        bytes32 myid2 = oraclize_query(_closingTime,"","",4000000);
+        bytes32 myid2 = oraclize_query(_closingTime,"","",0);
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
 
     function closeProposalOraclise1(uint _proposalId) 
     {
-        bytes32 myid2 = oraclize_query("","",4000000);
+        bytes32 myid2 = oraclize_query("","",0);
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
 
     function saveApiDetails(bytes32 myid,bytes8 _typeof,uint id) internal
     {
-        allAPIid[myid] = apiId(_typeof,"",id,uint64(now),uint64(now));
+        allAPIid[myid] = apiId(_typeof,id,uint64(now),uint64(now));
     }
 
     function addInAllApiCall(bytes32 myid) internal
@@ -137,9 +136,9 @@ contract Pool is usingOraclize
         return allAPIcall.length;
     }
 
-    function getApiCallDetails(bytes32 myid)constant returns(bytes8 _typeof,bytes4 curr,uint id,uint64 dateAdd,uint64 dateUpd)
+    function getApiCallDetails(bytes32 myid)constant returns(bytes8 _typeof,uint id,uint64 dateAdd,uint64 dateUpd)
     {
-        return(allAPIid[myid].type_of,allAPIid[myid].currency,allAPIid[myid].id,allAPIid[myid].dateAdd,allAPIid[myid].dateUpd);
+        return(allAPIid[myid].type_of,allAPIid[myid].id,allAPIid[myid].dateAdd,allAPIid[myid].dateUpd);
     }
 
     function getApiIdTypeOf(bytes32 myid)constant returns(bytes16 _typeof)
@@ -151,25 +150,12 @@ contract Pool is usingOraclize
     {
         id1 = allAPIid[myid].id;
     }
-
-    function delegateCallBack(bytes32 myid, string res) public
-    {
-        if(getApiIdTypeOf(myid) =="PRO")
-        {
-            GD=GovernanceData(GDAddress);
-            uint proposalId = getIdOfApiId(myid);
-            address votingTypeAddress;
-            (,,,,,votingTypeAddress) = GD.getProposalDetailsById2(proposalId);
-            SV=SimpleVoting(votingTypeAddress);
-            SV.closeProposalVote(proposalId); 
-        }  
-    }
     
     function __callback(bytes32 myid, string res) 
     {
         M1=Master(masterAddress);
         if(msg.sender != oraclize_cbAddress() && M1.isOwner(msg.sender)!=1) throw;
-        delegateCallBack(myid,res);
+        allAPIid[myid].dateUpd = uint64(now);
     }
     
     function transferBackEther(uint256 amount) onlyOwner
