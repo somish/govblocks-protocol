@@ -209,25 +209,25 @@ contract Governance {
 
     if(_finalVerdict>0)
     {
-        GD.setMemberReputation("ProposalOwner Accepted",_proposalId,_proposalOwner,SafeMath.add(GD.getMemberReputation(_proposalOwner),addProposalOwnerPoints));
-        GD.setMemberReputation("OptionOwner Favour",_proposalId,_finalOptionOwner,SafeMath.add(GD.getMemberReputation(_finalOptionOwner),addOptionOwnerPoints)); 
+        GD.setMemberReputation("Reputation credit for proposal owner - Accepted",_proposalId,_proposalOwner,SafeMath.add(GD.getMemberReputation(_proposalOwner),addProposalOwnerPoints),addProposalOwnerPoints,"C");
+        GD.setMemberReputation("Reputation credit for option owner - Final option selected by majority voting",_proposalId,_finalOptionOwner,SafeMath.add(GD.getMemberReputation(_finalOptionOwner),addOptionOwnerPoints),addOptionOwnerPoints,"C"); 
     }
     else
     {
-        GD.setMemberReputation("ProposalOwner Rejected",_proposalId,_proposalOwner,SafeMath.sub(GD.getMemberReputation(_proposalOwner),subProposalOwnerPoints));
+        GD.setMemberReputation("Reputation debit for proposal owner - Rejected",_proposalId,_proposalOwner,SafeMath.sub(GD.getMemberReputation(_proposalOwner),subProposalOwnerPoints),subProposalOwnerPoints,"D");
         for(uint i=0; i<GD.getOptionAddedAddressLength(_proposalId); i++)
         {
             address memberAddress = GD.getOptionAddressByProposalId(_proposalId,i);
-            GD.setMemberReputation("OptionOwner Against",_proposalId,memberAddress,SafeMath.sub(GD.getMemberReputation(memberAddress),subOptionOwnerPoints));
+            GD.setMemberReputation("Reputation debit for option owner - Rejected by majority voting",_proposalId,memberAddress,SafeMath.sub(GD.getMemberReputation(memberAddress),subOptionOwnerPoints),subOptionOwnerPoints,"D");
         }
     }   
   }
 
   /// @dev Afer proposal Final Decision, Member reputation will get updated.
-  function updateMemberReputation1(string _desc,uint _proposalId,address _voterAddress,uint _voterPoints) onlyInternal
+  function updateMemberReputation1(string _desc,uint _proposalId,address _voterAddress,uint _voterPoints,uint _repPointsEvent,bytes4 _typeOf) onlyInternal
   {
      GD=GovernanceData(GDAddress);
-     GD.setMemberReputation(_desc,_proposalId,_voterAddress,_voterPoints);
+     GD.setMemberReputation(_desc,_proposalId,_voterAddress,0,_repPointsEvent,_typeOf);
   }
 
   function checkProposalVoteClosing(uint _proposalId) onlyInternal constant returns(uint8 closeValue) 
@@ -346,19 +346,19 @@ contract Governance {
         }  
     }
 
-    // /// @dev Get the Value, stake and Address of the member whosoever added that verdict option.
-    // function getOptionDetailsById(uint _proposalId,uint _optionIndex) constant returns(uint id, uint optionid,uint optionStake,uint optionValue,address memberAddress,uint optionReward)
-    // {
-    //     GD=GovernanceData(GDAddress);
-
-    //     id = _proposalId;
-    //     optionid = _optionIndex;
-    //     optionStake = GD.getOptionStakeById(_proposalId,_optionIndex);
-    //     optionValue = GD.getOptionValueByProposalId(_proposalId,_optionIndex);
-    //     memberAddress = GD.getOptionAddressByProposalId(_proposalId,_optionIndex);
-    //     optionReward = GD.getOptionReward(_proposalId,_optionIndex);
-    //     return (_proposalId,optionid,optionStake,optionValue,memberAddress,optionReward);
-    // }
+    /// @dev Get the Value, stake and Address of the member whosoever added that verdict option.
+    function getOptionDetailsById(uint _proposalId,uint _optionIndex) constant returns(uint id, uint optionid,uint optionStake,uint optionValue,address memberAddress,uint optionReward)
+    {
+        GD=GovernanceData(GDAddress);
+`
+        id = _proposalId;
+        optionid = _optionIndex;
+        optionStake = GD.getOptionStakeById(_proposalId,_optionIndex);
+        optionValue = GD.getOptionValueByProposalId(_proposalId,_optionIndex);
+        memberAddress = GD.getOptionAddressByProposalId(_proposalId,_optionIndex);
+        optionReward = GD.getOptionReward(_proposalId,_optionIndex);
+        return (_proposalId,optionid,optionStake,optionValue,memberAddress,optionReward);
+    }
 
     function getOptionDetailsByAddress(uint _proposalId,address _memberAddress) constant returns(uint id,uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
     {
