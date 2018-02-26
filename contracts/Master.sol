@@ -26,6 +26,7 @@ import "./Governance.sol";
 import "./Pool.sol";
 import "./GBTController.sol";
 import "./GBTStandardToken.sol";
+import "./GovBlocksMaster.sol";
 
 contract Master is Ownable {
 
@@ -57,6 +58,8 @@ contract Master is Ownable {
     address poolAddress;
     address GBTCAddress;
     address GBTSAddress;
+    address public GBMAddress;
+    GovBlocksMaster GBM;
     GBTController GBTC;
     GBTStandardToken GBTS;
     Pool P1;
@@ -70,12 +73,13 @@ contract Master is Ownable {
     StandardVotingType SVT;
 
     /// @dev Constructor
-    function Master()
+    function Master(address _GovBlocksMasterAddress)
     {
         masterAddress=address(this);
         contracts_active[masterAddress]=0;
         contracts_active[address(this)]=1;
         versionLength =0;
+        GBMAddress = _GovBlocksMasterAddress;
     }
    
     modifier onlyGBTOwner
@@ -216,6 +220,12 @@ contract Master is Ownable {
 
         MR=MemberRoles(memberRolesAddress);
         MR.changeMasterAddress(_masterAddress);
+    }
+
+    function changeMasterInGBM(bytes32 _gbUserName,address _newMasterAddress)
+    {
+        GBM=GovBlocksMaster(GBMAddress);
+        GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
     }
 
    /// @dev Link contracts to one another.
