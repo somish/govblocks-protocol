@@ -354,34 +354,34 @@ contract Governance {
     function getProposalOptionAllById(uint _proposalId,uint _optionIndex)constant returns(uint proposalId,uint[] intParam,bytes32[] bytesParam,address[] addressParam)
     {
         
-        // PC=ProposalCategory(PCAddress);
-        // GD=GovernanceData(GDAddress);
-        // proposalId = _proposalId;
+        PC=ProposalCategory(PCAddress);
+        GD=GovernanceData(GDAddress);
+        proposalId = _proposalId;
 
-        // uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
-        // (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(GD.getProposalCategory(_proposalId));
+        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
+        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(GD.getProposalCategory(_proposalId));
         
-        // intParam=new uint[](paramInt);
-        // bytesParam = new bytes32[](paramBytes32);
-        // addressParam = new address[](paramAddress);
+        intParam=new uint[](paramInt);
+        bytesParam = new bytes32[](paramBytes32);
+        addressParam = new address[](paramAddress);
 
-        // for(j=0; j<paramInt; j++)
-        // {
-        //     parameterName = PC.getCategoryParamNameUint(GD.getProposalCategory(_proposalId),j);
-        //     intParam[j] = GD.getParameterDetailsById1(_proposalId,parameterName,_optionIndex);
-        // }
+        for(j=0; j<paramInt; j++)
+        {
+            parameterName = PC.getCategoryParamNameUint(GD.getProposalCategory(_proposalId),j);
+            intParam[j] = GD.getParameterDetailsById1(_proposalId,parameterName,_optionIndex);
+        }
 
-        // for(j=0; j<paramBytes32; j++)
-        // {
-        //     parameterName = PC.getCategoryParamNameBytes(GD.getProposalCategory(_proposalId),j); 
-        //     bytesParam[j] = GD.getParameterDetailsById2(_proposalId,parameterName,_optionIndex);
-        // }
+        for(j=0; j<paramBytes32; j++)
+        {
+            parameterName = PC.getCategoryParamNameBytes(GD.getProposalCategory(_proposalId),j); 
+            bytesParam[j] = GD.getParameterDetailsById2(_proposalId,parameterName,_optionIndex);
+        }
 
-        // for(j=0; j<paramAddress; j++)
-        // {
-        //     parameterName = PC.getCategoryParamNameAddress(GD.getProposalCategory(_proposalId),j);
-        //     addressParam[j] = GD.getParameterDetailsById3(_proposalId,parameterName,_optionIndex);              
-        // }  
+        for(j=0; j<paramAddress; j++)
+        {
+            parameterName = PC.getCategoryParamNameAddress(GD.getProposalCategory(_proposalId),j);
+            addressParam[j] = GD.getParameterDetailsById3(_proposalId,parameterName,_optionIndex);              
+        }  
     }
 
     /// @dev Get the Value, stake and Address of the member whosoever added that verdict option.
