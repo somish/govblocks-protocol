@@ -108,11 +108,24 @@ contract StandardVotingType
         finalVoteValue = SafeMath.mul(GD.getMemberReputation(_memberAddress),value);
     }  
     
+    function checkForOption(uint _proposalId,address _memberAddress) internal constant returns(uint check)
+    {
+        GD=GovernanceData(GDAddress);
+        for(uint i=0; i<GD.getProposalAnsLength(_memberAddress); i++)
+        {
+            if(GD.getProposalAnsId(_memberAddress,i) == _proposalId)
+                check = 1;
+            else 
+                check = 0;
+        }
+    }
+
     function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionDescHash) onlyInternal
     {
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
+        checkForOption(_proposalId,_memberAddress);
 
         uint currentVotingId;
         (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
@@ -190,7 +203,7 @@ contract StandardVotingType
         }   
     }
 
-    function closeProposalVoteSVT(uint _proposalId,address _memberAddress) 
+    function closeProposalVoteSVT(uint _proposalId) 
     {   
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
@@ -241,7 +254,7 @@ contract StandardVotingType
                             G1.updateProposalDetails(_proposalId,currentVotingId,max,max);
                             GD.changeProposalStatus(_proposalId,3);
                             // PC.actionAfterProposalPass(_proposalId ,category);
-                            VT.giveReward_afterFinalDecision(_proposalId,_memberAddress);
+                            VT.giveReward_afterFinalDecision(_proposalId);
                         }
                     }
                     else
