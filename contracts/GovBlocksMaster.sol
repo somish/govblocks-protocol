@@ -81,7 +81,7 @@ contract GovBlocksMaster
     function addGovBlocksUser(bytes32 _gbUserName) onlyOwner
     {
         require(govBlocksDapps[_gbUserName]==0x00);
-        address _newMasterAddress = new Master();
+        address _newMasterAddress = new Master(address(this));
         allGovBlocksUsers.push(_gbUserName);  
         govBlocksDapps[_gbUserName] = _newMasterAddress;
         MS=Master(_newMasterAddress);
