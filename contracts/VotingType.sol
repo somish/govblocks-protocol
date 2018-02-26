@@ -26,5 +26,5 @@ contract VotingType
     function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) ;
     function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount) public;
     function closeProposalVote(uint _proposalId) public;
-    function giveReward_afterFinalDecision(uint _proposalId,address _memberAddress) public;   
+    function giveReward_afterFinalDecision(uint _proposalId) public;   
 }
