@@ -27,6 +27,8 @@ contract GovBlocksMaster
 
     mapping(bytes32=>address) govBlocksDapps;
     bytes32[] allGovBlocksUsers;
+    bytes32 byteCodeHash;
+    bytes32 contractsAbiHash;
 
     function GovBlocksMasterInit(address _GBTControllerAddress,address _GBTAddress) 
     {
@@ -99,10 +101,16 @@ contract GovBlocksMaster
               throw;
       }   
     }
-
-    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address MasterContractAddress)
+    
+    function setByteCodeAndAbi(bytes32 _byteCodeHash,bytes32 _abiHash)
     {
-        return (_gbUserName,govBlocksDapps[_gbUserName]);
+        byteCodeHash = _byteCodeHash;
+        contractsAbiHash = _abiHash;
+    }
+
+    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address MasterContractAddress,bytes32 byteCode,bytes32 contractsAbi)
+    {
+        return (_gbUserName,govBlocksDapps[_gbUserName],byteCodeHash,contractsAbiHash);
     }
      function getGovBlocksUserDetailsByIndex(uint _index) constant returns(uint index,bytes32 GbUserName,address MasterContractAddress)
     {
