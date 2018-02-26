@@ -23,14 +23,14 @@ import "./ProposalCategory.sol";
 
 contract GovernanceData {
   
-    event Reputation(address indexed from,uint256 indexed proposalId, string description, uint reputationPoints);
+    event Reputation(address indexed from,uint256 indexed proposalId, string description, uint reputationPoints,bytes4 typeOf);
     event Vote(address indexed from,address indexed votingTypeAddress,uint256 voteId);
     event Reward(address indexed to,uint256 indexed proposalId,string description,uint256 amount);
     
 
-    function callReputationEvent(address _from,uint256 _proposalId,string _description,uint _reputationPoints) 
+    function callReputationEvent(address _from,uint256 _proposalId,string _description,uint _reputationPoints,bytes4 _typeOf) 
     {
-        Reputation(_from, _proposalId, _description,_reputationPoints);
+        Reputation(_from, _proposalId, _description,_reputationPoints,_typeOf);
     }
     
     function callVoteEvent(address _from,address _votingTypeAddress,uint256 _voteId) 
@@ -205,6 +205,8 @@ contract GovernanceData {
             setVotingTypeDetails("Simple Voting",0x54e741a0fa3d730382da31c3ecf9740cb4909261);
             setVotingTypeDetails("Rank Based Voting",0xe67e2ad4f9fa99d916100faca93b4d01b378a8ab);
             setVotingTypeDetails("Feature Weighted Voting",0xb09361753359460091e0fd61f07477523bf8c3b0);
+            uint[] optionChosen;
+            addInVote(msg.sender,0,optionChosen,0,0);
             constructorCheck=1;
     }
 
@@ -556,7 +558,7 @@ contract GovernanceData {
     function setInitialOptionsAdded(uint _proposalId)
     {
         require (initialOptionsAdded[_proposalId] == 0);
-            initialOptionsAdded[_proposalId] = 0;
+            initialOptionsAdded[_proposalId] = 1;
     }
 
     function getInitialOptionsAdded(uint _proposalId) constant returns (uint)
@@ -637,10 +639,10 @@ contract GovernanceData {
         allProposal[_proposalId].finalVerdict = _finalVerdict;
     }
 
-    function setMemberReputation(string _description,uint _proposalId,address _memberAddress,uint _repPoints)
+    function setMemberReputation(string _description,uint _proposalId,address _memberAddress,uint _repPoints,uint _repPointsEventLog,bytes4 _typeOf)
     {
         allMemberReputationByAddress[_memberAddress] = _repPoints;
-        Reputation(_memberAddress, _proposalId, _description,_repPoints);
+        Reputation(_memberAddress, _proposalId, _description,_repPointsEventLog,_typeOf);
     }
 
     /// @dev Stores the information of a given version number of a given proposal. Maintains the record of all the versions of a proposal.
