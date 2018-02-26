@@ -76,8 +76,8 @@ contract ProposalCategory
             masterAddress = _masterContractAddress;
         else
         {
-            MS=Master(masterAddress);
-            require(MS.isInternal(msg.sender) == 1);
+            M1=Master(masterAddress);
+            require(M1.isInternal(msg.sender) == 1);
                 masterAddress = _masterContractAddress;
         }
     }
