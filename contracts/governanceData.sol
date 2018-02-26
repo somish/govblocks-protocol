@@ -754,7 +754,10 @@ contract GovernanceData {
     /// @dev Member Reputation is set according to if Member's Decision is Final decision.
     function getMemberReputation(address _memberAddress) constant returns(uint memberPoints)
     {
-        memberPoints = allMemberReputationByAddress[_memberAddress];
+        if(allMemberReputationByAddress[_memberAddress] == 0)
+            memberPoints = 1;
+        else
+            memberPoints = allMemberReputationByAddress[_memberAddress];
     }
 
     /// @dev Get proposal Value when given proposal Id.
