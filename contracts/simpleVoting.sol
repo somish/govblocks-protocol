@@ -44,7 +44,7 @@ contract SimpleVoting is VotingType
     GovernanceData GD;
     StandardVotingType SVT;
     Master MS;
-    uint constructorCheck;
+    uint public constructorCheck;
 
     modifier onlyInternal {
         MS=Master(masterAddress);
@@ -54,12 +54,9 @@ contract SimpleVoting is VotingType
 
     function SimpleVotingInitiate()
     {
-        GD=GovernanceData(GDAddress);
         require(constructorCheck == 0);
-        uint[] optionChosen;
-        GD.addInVote(msg.sender,0,optionChosen,0,0);
         votingTypeName = "Simple Voting";
-        constructorCheck =1;
+        constructorCheck=1;
     }
     
     /// @dev Change master's contract address
@@ -108,6 +105,7 @@ contract SimpleVoting is VotingType
     function addVerdictOption(uint _proposalId,address _member,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) onlyInternal
     {
         SVT=StandardVotingType(SVTAddress);
+
         SVT.addVerdictOptionSVT(_proposalId,_member,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
         payableGBTTokensSimpleVoting(_member,_GBTPayableTokenAmount);
     }
@@ -186,13 +184,14 @@ contract SimpleVoting is VotingType
     function closeProposalVote(uint _proposalId)
     {
         SVT=StandardVotingType(SVTAddress);
-        SVT.closeProposalVoteSVT(_proposalId,msg.sender);
+        SVT.closeProposalVoteSVT(_proposalId);
     }
 
     uint public voteValueFavour; uint public voterStake; uint public wrongOptionStake; uint public returnTokens;
     uint public totalVoteValue; uint public totalTokenToDistribute; 
     uint reward; uint public reward1; uint public reward2; uint public reward3;
-    function giveReward_afterFinalDecision(uint _proposalId,address _memberAddress) 
+
+    function giveReward_afterFinalDecision(uint _proposalId) 
     {
         GD=GovernanceData(GDAddress);
         G1=Governance(G1Address);
@@ -217,7 +216,7 @@ contract SimpleVoting is VotingType
                 returnTokens = SafeMath.sub(GD.getVoteStake(voteid),SafeMath.div(GD.getVoteStake(voteid),GD.globalRiskFactor()));
                 
                 G1.transferBackGBTtoken(GD.getVoterAddress(voteid),returnTokens);
-                GD.callRewardEvent(_memberAddress,_proposalId,"VoteOwner Burned",returnTokens);
+                GD.callRewardEvent(GD.getVoterAddress(voteid),_proposalId,"Burned Token Reward for voting other than final option",returnTokens);
                 GD.setVoteReward(voteid,returnTokens);
             }
         }
@@ -238,10 +237,10 @@ contract SimpleVoting is VotingType
             totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,GD.getProposalStake(_proposalId)); // denied
 
         totalTokenToDistribute = totalTokenToDistribute + GD.getProposalIncentive(_proposalId);
-        distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue,_memberAddress);
+        distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue);
     }
     
-    function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue,address _memberAddress) 
+    function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue) 
     {
         GD=GovernanceData(GDAddress);
         G1=Governance(G1Address);
@@ -255,12 +254,12 @@ contract SimpleVoting is VotingType
             reward1 = SafeMath.div(SafeMath.mul(GD.getProposalValue(_proposalId),_totalTokenToDistribute),_totalVoteValue);
             G1.transferBackGBTtoken(GD.getProposalOwner(_proposalId),SafeMath.add(GD.getProposalStake(_proposalId),reward1));
             G1.setProposalDetails(_proposalId,_totalTokenToDistribute,block.number,reward1);
-            GD.callRewardEvent(_memberAddress,_proposalId,"ProposalOwner Reward",reward1);
+            GD.callRewardEvent(GD.getProposalOwner(_proposalId),_proposalId,"Reward for proposal owner - Accepted ",reward1);
 
             reward3 = SafeMath.div(SafeMath.mul(GD.getOptionValueByProposalId(_proposalId,finalVerdict),_totalTokenToDistribute),_totalVoteValue);
             G1.transferBackGBTtoken(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),SafeMath.add(GD.getOptionStakeById(_proposalId,finalVerdict),reward3));
             GD.setOptionReward(_proposalId,reward3,finalVerdict);
-            GD.callRewardEvent(_memberAddress,_proposalId,"OptionOwner Reward",reward3);
+            GD.callRewardEvent(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),_proposalId,"Reward for option owner - Final option by majority voting",reward3);
         }
 
         for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++)
@@ -272,13 +271,13 @@ contract SimpleVoting is VotingType
                 uint repPoints = GD.getMemberReputation(GD.getVoterAddress(voteid))+addMemberPoints;
                 
                 G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward));
-                G1.updateMemberReputation1("VoteOwner Favour",_proposalId,GD.getVoterAddress(voteid),repPoints);
+                G1.updateMemberReputation1("Reputation credit after voted in favour of final option",_proposalId,GD.getVoterAddress(voteid),repPoints,addMemberPoints,"C");
                 GD.setVoteReward(voteid,reward);
-                GD.callRewardEvent(_memberAddress,_proposalId,"VoteOwner Reward",reward);
+                GD.callRewardEvent(GD.getVoterAddress(voteid),_proposalId,"Reward for Voting in favour of final option",reward);
             }
             else
             {
-                G1.updateMemberReputation1("VoteOwner Against",_proposalId,GD.getVoterAddress(voteid),(GD.getMemberReputation(GD.getVoterAddress(voteid))-subMemberPoints));
+                G1.updateMemberReputation1("Reputation debit after voted other than final option",_proposalId,GD.getVoterAddress(voteid),(GD.getMemberReputation(GD.getVoterAddress(voteid))-subMemberPoints),subMemberPoints,"D");
             }     
         } 
         G1.updateMemberReputation(_proposalId,finalVerdict);
