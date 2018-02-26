@@ -190,7 +190,7 @@ contract StandardVotingType
         }   
     }
 
-    function closeProposalVoteSVT(uint _proposalId) 
+    function closeProposalVoteSVT(uint _proposalId,address _memberAddress) 
     {   
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
@@ -241,7 +241,7 @@ contract StandardVotingType
                             G1.updateProposalDetails(_proposalId,currentVotingId,max,max);
                             GD.changeProposalStatus(_proposalId,3);
                             // PC.actionAfterProposalPass(_proposalId ,category);
-                            VT.giveReward_afterFinalDecision(_proposalId,msg.sender);
+                            VT.giveReward_afterFinalDecision(_proposalId,_memberAddress);
                         }
                     }
                     else
