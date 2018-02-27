@@ -227,7 +227,7 @@ contract Governance {
   function updateMemberReputation1(string _desc,uint _proposalId,address _voterAddress,uint _voterPoints,uint _repPointsEvent,bytes4 _typeOf) onlyInternal
   {
      GD=GovernanceData(GDAddress);
-     GD.setMemberReputation(_desc,_proposalId,_voterAddress,0,_repPointsEvent,_typeOf);
+     GD.setMemberReputation(_desc,_proposalId,_voterAddress,_voterPoints,_repPointsEvent,_typeOf);
   }
 
   function checkProposalVoteClosing(uint _proposalId) onlyInternal constant returns(uint8 closeValue) 
