@@ -206,6 +206,8 @@ contract GovernanceData {
             setVotingTypeDetails("Rank Based Voting",0xe67e2ad4f9fa99d916100faca93b4d01b378a8ab);
             setVotingTypeDetails("Feature Weighted Voting",0xb09361753359460091e0fd61f07477523bf8c3b0);
             allVotes.push(proposalVote(0X00,0,new uint[](0),0,0,0,0,0));
+            uint _totalVotes = SafeMath.add(allVotesTotal,1);  
+            allVotesTotal=_totalVotes;
             constructorCheck=1;
     }
 
