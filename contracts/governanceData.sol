@@ -924,7 +924,7 @@ contract GovernanceData {
         allProposal[_proposalId].blocknumber = _blockNumber;
     }
 
-    function steProposalReward(uint _proposalId,uint _reward)
+    function setProposalReward(uint _proposalId,uint _reward)
     {
         allProposal[_proposalId].proposalReward = _reward;
     }
