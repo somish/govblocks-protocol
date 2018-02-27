@@ -359,15 +359,13 @@ contract Governance {
         return (_proposalId,optionid,optionStake,optionValue,memberAddress,optionReward);
     }
 
-    function getOptionDetailsByAddress(uint _proposalId,address _memberAddress) constant returns(uint id,uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
+    function getOptionDetailsByAddress(uint _proposalId,address _memberAddress) constant returns(uint optionIndex,uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
     {
         GD=GovernanceData(GDAddress);
-
-        id = _optionIndex;
-        uint _optionIndex = GD.getOptionIdByAddress(_proposalId,_memberAddress);
-        optionStake = GD.getOptionStakeById(_proposalId,_optionIndex);
-        optionReward = GD.getOptionReward(_proposalId,_optionIndex);
-        dateAdded = GD.getOptionDateAdded(_proposalId,_optionIndex);
+        optionIndex = GD.getOptionIdByAddress(_proposalId,_memberAddress);
+        optionStake = GD.getOptionStakeById(_proposalId,optionIndex);
+        optionReward = GD.getOptionReward(_proposalId,optionIndex);
+        dateAdded = GD.getOptionDateAdded(_proposalId,optionIndex);
         proposalId = _proposalId;    
     }
 
@@ -404,7 +402,7 @@ contract Governance {
        GD=GovernanceData(GDAddress);
        GD.setProposalTotalToken(_proposalId,_totaltoken);
        GD.setProposalBlockNo(_proposalId,_blockNumber);
-       GD.steProposalReward(_proposalId,_reward);
+       GD.setProposalReward(_proposalId,_reward);
     }
 
     function getMemberDetails(address _memberAddress) constant returns(uint memberReputation, uint totalProposal,uint proposalStake,uint totalOption,uint optionStake,uint totalVotes)
