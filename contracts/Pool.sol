@@ -104,14 +104,14 @@ contract Pool is usingOraclize
 
     function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
     {
-        bytes32 myid2 = oraclize_query(_closingTime,"","",0);
+        bytes32 myid2 = oraclize_query(_closingTime,"","");
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
 
     function closeProposalOraclise1(uint _proposalId) 
     {
-        bytes32 myid2 = oraclize_query("","",0);
+        bytes32 myid2 = oraclize_query("","");
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
