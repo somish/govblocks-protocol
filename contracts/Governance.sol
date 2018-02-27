@@ -350,7 +350,6 @@ contract Governance {
     function getOptionDetailsById(uint _proposalId,uint _optionIndex) constant returns(uint id, uint optionid,uint optionStake,uint optionValue,address memberAddress,uint optionReward)
     {
         GD=GovernanceData(GDAddress);
-`
         id = _proposalId;
         optionid = _optionIndex;
         optionStake = GD.getOptionStakeById(_proposalId,_optionIndex);
