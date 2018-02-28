@@ -18,10 +18,10 @@
  */
 
 pragma solidity ^0.4.8;
-import "./SimpleVoting.sol";
+import "./simpleVoting.sol";
 import "./RankBasedVoting.sol";
 import "./FeatureWeighted.sol";
-import "./GovernanceData.sol";
+import "./governanceData.sol";
 import "./VotingType.sol";
 import "./Pool.sol";
 import "./Master.sol";
@@ -43,12 +43,12 @@ contract StandardVotingType
     Master MS;
     Pool P1;
     Governance G1;
-    MemberRoles MR;
+    memberRoles MR;
     ProposalCategory PC;
-    GovernanceData  GD;
+    governanceData  GD;
     BasicToken BT;
     StandardVotingType SVT;
-    SimpleVoting SV;
+    simpleVoting SV;
     RankBasedVoting RB;
     FeatureWeighted FW;
     VotingType VT;
@@ -90,7 +90,7 @@ contract StandardVotingType
 
     function setOptionValue_givenByMemberSVT(address _memberAddress,uint _proposalId,uint _memberStake) internal returns (uint finalOptionValue)
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
 
         uint memberLevel = Math.max256(GD.getMemberReputation(_memberAddress),1);
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(_memberAddress),100),100)),GD.getTotalTokenInSupply());
@@ -101,7 +101,7 @@ contract StandardVotingType
 
     function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
             
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GD.getBalanceOfMember(_memberAddress),100),100)),GD.getTotalTokenInSupply());
         uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
@@ -110,7 +110,7 @@ contract StandardVotingType
     
     function checkForOption(uint _proposalId,address _memberAddress) internal constant returns(uint check)
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         for(uint i=0; i<GD.getProposalAnsLength(_memberAddress); i++)
         {
             if(GD.getProposalAnsId(_memberAddress,i) == _proposalId)
@@ -122,8 +122,8 @@ contract StandardVotingType
 
     function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionDescHash) onlyInternal
     {
-        GD=GovernanceData(GDAddress);
-        MR=MemberRoles(MRAddress);
+        GD=governanceData(GDAddress);
+        MR=memberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
         checkForOption(_proposalId,_memberAddress);
 
@@ -155,7 +155,7 @@ contract StandardVotingType
     
     function setProposalCategoryParams(uint _category,uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) internal
     {
-      GD=GovernanceData(GDAddress);
+      GD=governanceData(GDAddress);
       PC=ProposalCategory(PCAddress);
       setProposalCategoryParams1(_proposalId,_paramInt,_paramBytes32,_paramAddress);
 
@@ -183,7 +183,7 @@ contract StandardVotingType
     
     function setProposalCategoryParams1(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) internal
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         uint i;
         GD.setTotalOptions(_proposalId);
 
@@ -205,8 +205,8 @@ contract StandardVotingType
     uint _closingTime;
     function closeProposalVoteSVT(uint _proposalId) 
     {   
-        GD=GovernanceData(GDAddress);
-        MR=MemberRoles(MRAddress);
+        GD=governanceData(GDAddress);
+        MR=memberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
         G1=Governance(G1Address);
         
@@ -284,7 +284,7 @@ contract StandardVotingType
       /// @dev Set the Deatils of added verdict i.e. Verdict Stake, Verdict value and Address of the member whoever added the verdict.
     function setOptionDetails(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue,string _optionHash) internal
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         GD.setOptionAddress(_proposalId,_memberAddress);
         GD.setOptionStake(_proposalId,_stakeValue);
         GD.setOptionValue(_proposalId,_optionValue);

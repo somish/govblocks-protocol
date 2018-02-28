@@ -15,11 +15,11 @@
     
 pragma solidity ^0.4.8;
 
-import "./GovernanceData.sol";
-import "./SimpleVoting.sol";
+import "./governanceData.sol";
+import "./simpleVoting.sol";
 import "./RankBasedVoting.sol";
 import "./FeatureWeighted.sol";
-import "./MemberRoles.sol";
+import "./memberRoles.sol";
 import "./ProposalCategory.sol";
 import "./StandardVotingType.sol";
 import "./Governance.sol";
@@ -64,10 +64,10 @@ contract Master is Ownable {
     GBTStandardToken GBTS;
     Pool P1;
     Governance G1;
-    GovernanceData GD;
-    MemberRoles MR;
+    governanceData GD;
+    memberRoles MR;
     ProposalCategory PC;
-    SimpleVoting SV;
+    simpleVoting SV;
     RankBasedVoting RB;
     FeatureWeighted FW;
     StandardVotingType SVT;
@@ -193,10 +193,10 @@ contract Master is Ownable {
     /// @dev Links all contracts to master.sol by passing address of Master contract to the functions of other contracts.
     function changeMasterAddress(address _masterAddress) onlyOwner
     {
-        GD=GovernanceData(governanceDataAddress);
+        GD=governanceData(governanceDataAddress);
         GD.changeMasterAddress(_masterAddress);
                              
-        SV=SimpleVoting(simpleVotingAddress);
+        SV=simpleVoting(simpleVotingAddress);
         SV.changeMasterAddress(_masterAddress);
 
         // RB=RankBasedVoting(rankBasedVotingAddress);
@@ -220,7 +220,7 @@ contract Master is Ownable {
         PC=ProposalCategory(proposalCategoryAddress);
         PC.changeMasterAddress(_masterAddress);
 
-        MR=MemberRoles(memberRolesAddress);
+        MR=memberRoles(memberRolesAddress);
         MR.changeMasterAddress(_masterAddress);
     }
 
@@ -244,7 +244,7 @@ contract Master is Ownable {
             GD.editVotingType(2,featureWeightedAddress);
         // }
 
-        SV=SimpleVoting(simpleVotingAddress);
+        SV=simpleVoting(simpleVotingAddress);
         SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
 
         // RB=RankBasedVoting(rankBasedVotingAddress);
@@ -267,7 +267,7 @@ contract Master is Ownable {
     /// @dev Change GBT token address all contracts
     function changeGBTAddress(address _tokenAddress) onlyGBTOwner
     {
-        GD=GovernanceData(governanceDataAddress);
+        GD=governanceData(governanceDataAddress);
         GD.changeGBTtokenAddress(_tokenAddress);
 
         GBTC=GBTController(GBTCAddress);
@@ -282,7 +282,7 @@ contract Master is Ownable {
         G1=Governance(governanceAddress);
         G1.changeGBTControllerAddress(_controllerAddress);
 
-        SV=SimpleVoting(simpleVotingAddress);
+        SV=simpleVoting(simpleVotingAddress);
         SV.changeGBTControllerAddress(_controllerAddress);
 
         // RB=RankBasedVoting(rankBasedVotingAddress);

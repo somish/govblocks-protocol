@@ -15,9 +15,9 @@
 
 
 pragma solidity ^0.4.8;
-import "./GovernanceData.sol";
+import "./governanceData.sol";
 import "./ProposalCategory.sol";
-import "./MemberRoles.sol";
+import "./memberRoles.sol";
 import "./Master.sol";
 import "./BasicToken.sol";
 import "./SafeMath.sol";
@@ -43,9 +43,9 @@ contract Governance {
   address GBTCAddress;
   GBTController GBTC;
   Master MS;
-  MemberRoles MR;
+  memberRoles MR;
   ProposalCategory PC;
-  GovernanceData GD;
+  governanceData GD;
   BasicToken BT;
   Pool P1;
   VotingType VT;
@@ -96,7 +96,7 @@ contract Governance {
   function openProposalForVoting(uint _proposalId,uint _TokenAmount) public
   {
       PC = ProposalCategory(PCAddress);
-      GD =GovernanceData(GDAddress);
+      GD =governanceData(GDAddress);
       P1 = Pool(P1Address);
 
       require(GD.getProposalCategory(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2);
@@ -114,7 +114,7 @@ contract Governance {
   function payableGBTTokens(uint _TokenAmount) internal
   {
       GBTC=GBTController(GBTCAddress);
-      GD=GovernanceData(GDAddress);
+      GD=governanceData(GDAddress);
       require(_TokenAmount >= GD.GBTStakeValue());
       GBTC.receiveGBT(msg.sender,_TokenAmount);
   }
@@ -122,7 +122,7 @@ contract Governance {
   /// @dev Edits a proposal and Only owner of a proposal can edit it.
   function editProposal(uint _proposalId ,string _proposalDescHash) onlyOwner public
   {
-      GD=GovernanceData(GDAddress);
+      GD=governanceData(GDAddress);
       GD.storeProposalVersion(_proposalId);
       updateProposalDetails1(_proposalId,_proposalDescHash);
       GD.changeProposalStatus(_proposalId,1);
@@ -134,7 +134,7 @@ contract Governance {
   /// @dev Calculate the proposal value to distribute it later - Distribute amount depends upon the final decision against proposal.
   function setProposalValue(uint _proposalId,uint _memberStake) internal
   {
-      GD=GovernanceData(GDAddress);
+      GD=governanceData(GDAddress);
       GD.setProposalStake(_proposalId,_memberStake);
 
       uint memberLevel = Math.max256(GD.getMemberReputation(msg.sender),1);
@@ -148,8 +148,8 @@ contract Governance {
   /// @dev categorizing proposal to proceed further.
   function categorizeProposal(uint _proposalId , uint8 _categoryId,uint8 _proposalComplexityLevel,uint _reward) public
   {
-      MR = MemberRoles(MRAddress);
-      GD = GovernanceData(GDAddress);
+      MR = memberRoles(MRAddress);
+      GD = governanceData(GDAddress);
 
       require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
       require(GD.getProposalStatus(_proposalId) == 1 || GD.getProposalStatus(_proposalId) == 0);
@@ -163,7 +163,7 @@ contract Governance {
   /// @dev Proposal's complexity level and reward is added 
   function addComplexityLevelAndIncentive(uint _proposalId,uint _category,uint8 _proposalComplexityLevel,uint _reward) internal
   {
-      GD=GovernanceData(GDAddress);
+      GD=governanceData(GDAddress);
       GD.setProposalLevel(_proposalId,_proposalComplexityLevel);
       GD.setProposalIncentive(_proposalId,_reward); 
   }
@@ -171,7 +171,7 @@ contract Governance {
  /// @dev Creates a new proposal.
   function createProposal(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _TokenAmount) public
   {
-      GD=GovernanceData(GDAddress);
+      GD=governanceData(GDAddress);
       PC=ProposalCategory(PCAddress);
       require(GD.getBalanceOfMember(msg.sender) != 0);
 
@@ -203,7 +203,7 @@ contract Governance {
   /// @dev AFter the proposal final decision, member reputation will get updated.
   function updateMemberReputation(uint _proposalId,uint _finalVerdict) onlyInternal
   {
-    GD=GovernanceData(GDAddress);
+    GD=governanceData(GDAddress);
     address _proposalOwner =  GD.getProposalOwner(_proposalId);
     address _finalOptionOwner = GD.getOptionAddressByProposalId(_proposalId,_finalVerdict);
     uint addProposalOwnerPoints; uint addOptionOwnerPoints; uint subProposalOwnerPoints; uint subOptionOwnerPoints;
@@ -228,15 +228,15 @@ contract Governance {
   /// @dev Afer proposal Final Decision, Member reputation will get updated.
   function updateMemberReputation1(string _desc,uint _proposalId,address _voterAddress,uint _voterPoints,uint _repPointsEvent,bytes4 _typeOf) onlyInternal
   {
-     GD=GovernanceData(GDAddress);
+     GD=governanceData(GDAddress);
      GD.setMemberReputation(_desc,_proposalId,_voterAddress,_voterPoints,_repPointsEvent,_typeOf);
   }
 
   function checkProposalVoteClosing(uint _proposalId) onlyInternal constant returns(uint8 closeValue) 
   {
       PC=ProposalCategory(PCAddress);
-      GD=GovernanceData(GDAddress);
-      MR=MemberRoles(MRAddress);
+      GD=governanceData(GDAddress);
+      MR=memberRoles(MRAddress);
       
       uint currentVotingId;uint category;
       (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
@@ -254,8 +254,8 @@ contract Governance {
  function checkRoleVoteClosing(uint _proposalId,uint _roleVoteLength) 
   {
      PC=ProposalCategory(PCAddress);
-     GD=GovernanceData(GDAddress);
-     MR=MemberRoles(MRAddress);
+     GD=governanceData(GDAddress);
+     MR=memberRoles(MRAddress);
      P1=Pool(P1Address);
 
       uint currentVotingId;uint category;
@@ -263,13 +263,13 @@ contract Governance {
       
       uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
       if(_roleVoteLength == MR.getAllMemberLength(roleId))
-        P1.closeProposalOraclise1(_proposalId);
+        P1.closeProposalOraclise(_proposalId,0);
         GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),0);
   }
   
     function getStatusOfProposalsForMember(uint[] _proposalsIds)constant returns (uint proposalLength,uint draftProposals,uint pendingProposals,uint acceptedProposals,uint rejectedProposals)
     {
-         GD=GovernanceData(GDAddress);
+         GD=governanceData(GDAddress);
          uint proposalStatus;
          
          for(uint i=0;i<_proposalsIds.length; i++)
@@ -289,7 +289,7 @@ contract Governance {
   //get status of proposals
   function getStatusOfProposals()constant returns (uint _proposalLength,uint _draftProposals,uint _pendingProposals,uint _acceptedProposals,uint _rejectedProposals)
   {
-    GD=GovernanceData(GDAddress);
+    GD=governanceData(GDAddress);
     uint proposalStatus;
     _proposalLength=GD.getProposalLength();
 
@@ -310,7 +310,7 @@ contract Governance {
     {
         id = _voteId;
         VT=VotingType(_votingTypeAddress);
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         require(GD.getVoterAddress(_voteId) == _memberAddress);
           (,proposalId,,dateAdded,,voteStake,) = GD.getVoteDetailByid(_voteId);
           voteReward = GD.getVoteReward(_voteId); 
@@ -320,7 +320,7 @@ contract Governance {
     {
         
         PC=ProposalCategory(PCAddress);
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         proposalId = _proposalId;
 
         uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
@@ -352,7 +352,7 @@ contract Governance {
     /// @dev Get the Value, stake and Address of the member whosoever added that verdict option.
     function getOptionDetailsById(uint _proposalId,uint _optionIndex) constant returns(uint id, uint optionid,uint optionStake,uint optionValue,address memberAddress,uint optionReward)
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         id = _proposalId;
         optionid = _optionIndex;
         optionStake = GD.getOptionStakeById(_proposalId,_optionIndex);
@@ -364,7 +364,7 @@ contract Governance {
 
     function getOptionDetailsByAddress(uint _proposalId,address _memberAddress) constant returns(uint optionIndex,uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         optionIndex = GD.getOptionIdByAddress(_proposalId,_memberAddress);
         optionStake = GD.getOptionStakeById(_proposalId,optionIndex);
         optionReward = GD.getOptionReward(_proposalId,optionIndex);
@@ -402,7 +402,7 @@ contract Governance {
 
     function setProposalDetails(uint _proposalId,uint _totaltoken,uint _blockNumber,uint _reward)
     {
-       GD=GovernanceData(GDAddress);
+       GD=governanceData(GDAddress);
        GD.setProposalTotalToken(_proposalId,_totaltoken);
        GD.setProposalBlockNo(_proposalId,_blockNumber);
        GD.setProposalReward(_proposalId,_reward);
@@ -410,7 +410,7 @@ contract Governance {
 
     function getMemberDetails(address _memberAddress) constant returns(uint memberReputation, uint totalProposal,uint proposalStake,uint totalOption,uint optionStake,uint totalVotes)
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         memberReputation = GD.getMemberReputation(_memberAddress);
         totalProposal = GD.getTotalProposal(_memberAddress);
         proposalStake = getProposalStakeByMember(_memberAddress);
@@ -422,7 +422,7 @@ contract Governance {
     /// @dev As bydefault first option is alwayd deny option. One time configurable.
     function addInitialOptionDetails(uint _proposalId,address _memberAddress) internal
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         if(GD.getInitialOptionsAdded(_proposalId) == 0)
         {
             GD.setOptionAddress(_proposalId,_memberAddress);
@@ -441,7 +441,7 @@ contract Governance {
     /// @dev Change pending proposal start variable
     function changePendingProposalStart() onlyInternal
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         uint pendingPS = GD.pendingProposalStart();
         for(uint j=pendingPS; j<GD.getProposalLength(); j++)
         {
@@ -458,7 +458,7 @@ contract Governance {
     /// @dev Updating proposal's Major details (Called from close proposal Vote).
     function updateProposalDetails(uint _proposalId,uint8 _currVotingStatus, uint8 _intermediateVerdict,uint8 _finalVerdict) onlyInternal 
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         GD.setProposalCurrentVotingId(_proposalId,_currVotingStatus);
         GD.setProposalIntermediateVerdict(_proposalId,_intermediateVerdict);
         GD.setProposalFinalVerdict(_proposalId,_finalVerdict);
@@ -467,7 +467,7 @@ contract Governance {
     /// @dev Edits the details of an existing proposal and creates new version.
     function updateProposalDetails1(uint _proposalId,string _proposalDescHash) internal
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         GD.setProposalDesc(_proposalId,_proposalDescHash);
         GD.setProposalDateUpd(_proposalId);
         GD.setProposalVersion(_proposalId);

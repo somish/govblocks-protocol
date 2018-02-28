@@ -19,11 +19,12 @@ pragma solidity ^0.4.8;
 import "./VotingType.sol";
 import "./Master.sol";
 import "./StandardVotingType.sol";
-import "./GovernanceData.sol";
+import "./governanceData.sol";
 import "./GBTController.sol";
 import "./Governance.sol";
+import "./memberRoles.sol";
 
-contract SimpleVoting is VotingType
+contract simpleVoting is VotingType
 {
     using SafeMath for uint;
     using Math for uint;
@@ -37,11 +38,11 @@ contract SimpleVoting is VotingType
     address SVTAddress;
     address GBTCAddress;
     GBTController GBTC;
-    MemberRoles MR;
+    memberRoles MR;
     Governance G1;
     BasicToken BT;
     ProposalCategory PC;
-    GovernanceData GD;
+    governanceData GD;
     StandardVotingType SVT;
     Master MS;
     uint public constructorCheck;
@@ -76,7 +77,7 @@ contract SimpleVoting is VotingType
     function payableGBTTokensSimpleVoting(address _member,uint _TokenAmount) internal
     {
         GBTC=GBTController(GBTCAddress);
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         require(_TokenAmount >= GD.GBTStakeValue());
         GBTC.receiveGBT(_member,_TokenAmount);
     }
@@ -117,8 +118,8 @@ contract SimpleVoting is VotingType
 
     function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount) 
     {
-        GD=GovernanceData(GDAddress);
-        MR=MemberRoles(MRAddress);
+        GD=governanceData(GDAddress);
+        MR=memberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
         SVT=StandardVotingType(SVTAddress);
         G1=Governance(G1Address);
@@ -163,9 +164,9 @@ contract SimpleVoting is VotingType
 
     function changeMemberVote(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount) internal
     {
-        MR=MemberRoles(MRAddress);
+        MR=memberRoles(MRAddress);
         G1=Governance(G1Address);
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         SVT=StandardVotingType(SVTAddress);
 
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
@@ -193,7 +194,7 @@ contract SimpleVoting is VotingType
 
     function giveReward_afterFinalDecision(uint _proposalId) 
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         G1=Governance(G1Address);
         
          voteValueFavour=0;  voterStake=0;  wrongOptionStake=0;  returnTokens=0;
@@ -242,7 +243,7 @@ contract SimpleVoting is VotingType
     
     function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue) 
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         G1=Governance(G1Address);
         
          reward=0;

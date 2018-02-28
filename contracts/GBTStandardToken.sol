@@ -15,8 +15,8 @@
     
 pragma solidity ^0.4.8;
 import "./StandardToken.sol";
-// import "./SafeMath.sol";
-import "./zeppelin-solidity/contracts/token/StandardToken.sol";
+import "./SafeMath.sol";
+// import "./zeppelin-solidity/contracts/token/StandardToken.sol";
 
 
 contract GBTStandardToken is StandardToken

@@ -16,7 +16,7 @@
 
 pragma solidity ^0.4.8;
 import "./VotingType.sol";
-import "./GovernanceData.sol";
+import "./governanceData.sol";
 import "./StandardVotingType.sol";
 import "./Master.sol";
 import "./Governance.sol";
@@ -35,9 +35,9 @@ contract FeatureWeighted is VotingType
     address GBTCAddress;
     GBTController GBTC;
     Governance G1;
-    MemberRoles MR;
+    memberRoles MR;
     ProposalCategory PC;
-    GovernanceData GD;
+    governanceData GD;
     StandardVotingType SVT;
     Master MS;
     uint8 constructorCheck;

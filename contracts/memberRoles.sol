@@ -16,10 +16,10 @@
 
 pragma solidity ^0.4.8;
 import "./Master.sol";
-// import "./Ownable.sol";
-import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./Ownable.sol";
+// import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract  MemberRoles
+contract  memberRoles
 {
 
   bytes32[] memberRole;

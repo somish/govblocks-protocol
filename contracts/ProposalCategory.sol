@@ -13,11 +13,11 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity ^0.4.8;
-// import "./Ownable.sol";
+import "./Ownable.sol";
 import "./Master.sol";
-import "./MemberRoles.sol";
-import "./GovernanceData.sol";
-import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./memberRoles.sol";
+import "./governanceData.sol";
+// import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ProposalCategory
 {
@@ -50,12 +50,12 @@ contract ProposalCategory
     categoryParams[] addressParam;
 
     mapping(uint=>uint8) parametersAdded;
-    MemberRoles MR;
+    memberRoles MR;
     Master M1;
     address MRAddress;
     address masterAddress;
     address GDAddress;
-    GovernanceData GD;
+    governanceData GD;
 
     modifier onlyInternal {
         M1=Master(masterAddress);
@@ -108,7 +108,7 @@ contract ProposalCategory
 
     function getCategoryData1(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint24[] closingTime,string categoryName,bool functionValue)
     {
-        MR=MemberRoles(MRAddress);
+        MR=memberRoles(MRAddress);
         category = _categoryId;
         roleName=new bytes32[]( allCategory[_categoryId].memberRoleSequence.length);
         for(uint8 i=0; i < allCategory[_categoryId].memberRoleSequence.length; i++)
@@ -236,7 +236,7 @@ contract ProposalCategory
     /// @dev Adds a new category and Category Function Parameter names..
     function addNewCategory(string _categoryName,string _functionName,address _contractAt,uint8 _paramInt,uint8 _paramBytes32,uint8 _paramAddress,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake) onlyOwner
     {
-        GD=GovernanceData(GDAddress);
+        GD=governanceData(GDAddress);
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleSequence.length == _closingTime.length);
         require(_minStake <= _maxStake);
         allCategory.push(category(_categoryName,_functionName,_contractAt,_paramInt,_paramBytes32,_paramAddress,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake,0));

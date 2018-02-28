@@ -18,7 +18,7 @@ pragma solidity ^0.4.8;
 import "./SafeMath.sol";
 import "./GBTStandardToken.sol";
 
-contract GovernanceData {
+contract governanceData {
   
     event Reputation(address indexed from,uint256 indexed proposalId, string description, uint reputationPoints,bytes4 typeOf);
     event Vote(address indexed from,address indexed votingTypeAddress,uint256 voteId);

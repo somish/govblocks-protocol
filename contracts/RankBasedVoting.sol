@@ -16,9 +16,9 @@
 
 pragma solidity ^0.4.8;
 import "./VotingType.sol";
-import "./GovernanceData.sol";
+import "./governanceData.sol";
 import "./StandardVotingType.sol";
-import "./MemberRoles.sol";
+import "./memberRoles.sol";
 import "./ProposalCategory.sol";
 import "./Governance.sol";
 import "./Math.sol";
@@ -41,11 +41,11 @@ contract RankBasedVoting is VotingType
     address SVTAddress;
     address GBTCAddress;
     GBTController GBTC;
-    MemberRoles MR;
+    memberRoles MR;
     Governance G1;
     BasicToken BT;
     ProposalCategory PC;
-    GovernanceData  GD;
+    governanceData  GD;
     StandardVotingType SVT;
     uint8 constructorCheck;
     Master MS;

@@ -16,7 +16,8 @@
 pragma solidity ^0.4.8;
 
 import "./Master.sol";
-import "github.com/oraclize/ethereum-api/oraclizeAPI_0.4.sol";
+// import "github.com/oraclize/ethereum-api/oraclizeAPI_0.4.sol";
+import "./oraclizeAPI_0.4.sol";
 import "./GBTStandardToken.sol";
 import "./GBTController.sol";
 
@@ -91,14 +92,12 @@ contract Pool is usingOraclize
 
     function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
     {
-        bytes32 myid2 = oraclize_query(_closingTime,"URL","https://a1.govblocks.io/");
-        saveApiDetails(myid2,"PRO",_proposalId);
-        addInAllApiCall(myid2);
-    }
-
-    function closeProposalOraclise1(uint _proposalId) 
-    {
-        bytes32 myid2 = oraclize_query("URL","https://a1.govblocks.io/");
+        uint index = getApilCall_length() - 1; bytes32 myid2;
+        if (_closingTime == 0)
+            myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",uint2str(index)));
+        else
+            myid2 = oraclize_query(_closingTime,"URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",uint2str(index)));
+        
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }

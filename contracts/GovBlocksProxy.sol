@@ -15,14 +15,14 @@
 
 
 pragma solidity ^0.4.8;
-import "./MemberRoles.sol";
-import "./GovernanceData.sol";
+import "./memberRoles.sol";
+import "./governanceData.sol";
 import "./ProposalCategory.sol";
 
 contract GovBlocksProxy
 {
-    GovernanceData GD;
-    MemberRoles MR;
+    governanceData GD;
+    memberRoles MR;
     ProposalCategory PC;
     address PCAddress;
     address GDAddress;
@@ -37,8 +37,8 @@ contract GovBlocksProxy
 
     function addNewMemberRoleGBP(uint _proposalId)
     {
-        GD=GovernanceData(GDAddress);
-        MR=MemberRoles(MRAddress);
+        GD=governanceData(GDAddress);
+        MR=memberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
         
         uint category = GD.getProposalCategory(_proposalId);
@@ -51,8 +51,8 @@ contract GovBlocksProxy
 
     function assignMemberRoleGBP(uint _proposalId)
     {
-        GD=GovernanceData(GDAddress);
-        MR=MemberRoles(MRAddress);
+        GD=governanceData(GDAddress);
+        MR=memberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
 
         uint category = GD.getProposalCategory(_proposalId);
@@ -71,8 +71,8 @@ contract GovBlocksProxy
 
     function removeMemberRoleGBP(uint _proposalId)
     {
-        GD=GovernanceData(GDAddress);
-        MR=MemberRoles(MRAddress);
+        GD=governanceData(GDAddress);
+        MR=memberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
 
         uint category = GD.getProposalCategory(_proposalId);
