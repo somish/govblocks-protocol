@@ -15,18 +15,16 @@
 
 
 pragma solidity ^0.4.8;
-import "./Master.sol";
-import "./Pool.sol";
+import "./SafeMath.sol";
 import "./GBTStandardToken.sol";
-import "./GBTController.sol";
-import "./ProposalCategory.sol";
 
 contract GovernanceData {
   
     event Reputation(address indexed from,uint256 indexed proposalId, string description, uint reputationPoints,bytes4 typeOf);
     event Vote(address indexed from,address indexed votingTypeAddress,uint256 voteId);
     event Reward(address indexed to,uint256 indexed proposalId,string description,uint256 amount);
-    
+    event Penalty(address indexed to,uint256 indexed proposalId,string description,uint256 amount);
+    event OraclizeCall(address indexed proposalOwner,uint256 indexed proposalId,uint256 dateAdd,uint256 closingTime);    
 
     function callReputationEvent(address _from,uint256 _proposalId,string _description,uint _reputationPoints,bytes4 _typeOf) 
     {
@@ -41,6 +39,16 @@ contract GovernanceData {
     function callRewardEvent(address _to,uint256 _proposalId,string _description,uint256 _amount) 
     {
         Reward(_to, _proposalId, _description,_amount);
+    }
+
+    function callPenaltyEvent(address _to,uint256 _proposalId,string _description,uint256 _amount) 
+    {
+        Penalty(_to, _proposalId, _description,_amount);
+    }
+
+    function callOraclizeCallEvent(uint256 _proposalId,uint256 _dateAdd,uint256 _closingTime) 
+    {
+        OraclizeCall(allProposal[_proposalId].owner, _proposalId, _dateAdd,_closingTime);
     }
     
     using SafeMath for uint;
@@ -157,17 +165,11 @@ contract GovernanceData {
     proposalVote[] allVotes;
     votingTypeDetails[] allVotingTypeDetails;
 
-    address GBTSAddress;
-    address PoolAddress;
-    address PCAddress;
-    address owner;
-    address GBTCAddress;
-    ProposalCategory PC;
-    GBTController GBTC;
-    Pool P1;
-    GBTStandardToken GBTS;
+
     // Master MS;
+    GBTStandardToken GBTS;
     // address masterAddress;
+    address GBTSAddress;
 
 
     modifier onlyInternal {
@@ -211,22 +213,10 @@ contract GovernanceData {
             constructorCheck=1;
     }
 
-    /// @dev change all contract's addresses.
-    function changeAllContractsAddress(address _poolAddress,address _PCAddress) onlyInternal
-    {
-        PoolAddress = _poolAddress;
-        PCAddress = _PCAddress;
-    }
-
     /// @dev Changes GBT contract Address. //NEW
     function changeGBTtokenAddress(address _GBTcontractAddress) onlyInternal
     {
         GBTSAddress = _GBTcontractAddress;
-    }
-
-    function changeGBTControllerAddress(address _GBTCAddress)
-    {
-        GBTCAddress = _GBTCAddress;
     }
 
     function addInVote(address _memberAddress,uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _finalVoteValue)
@@ -709,6 +699,16 @@ contract GovernanceData {
         return (_proposalId,proposalVersions[_proposalId][_versionNum].versionNum,proposalVersions[_proposalId][_versionNum].proposalDescHash,proposalVersions[_proposalId][_versionNum].date_add);
     }
    
+    function getProposalDateAdd(uint _proposalId)constant returns(uint)
+    {
+        return allProposal[_proposalId].date_add;
+    }
+
+    function getProposalDateUpd(uint _proposalId)constant returns(uint)
+    {
+        return allProposal[_proposalId].date_upd;
+    }
+
     /// @dev Get member address who created the proposal.
     function getProposalOwner(uint _proposalId) public constant returns(address)
     {
@@ -732,9 +732,9 @@ contract GovernanceData {
     }
 
     /// @dev Get Current Status of proposal when given proposal Id
-    function getProposalStatus(uint _proposalId) constant returns (uint proposalStatus)
+    function getProposalStatus(uint _proposalId) constant returns (uint propStatus)
     {
-        proposalStatus = allProposal[_proposalId].propStatus;
+        propStatus = allProposal[_proposalId].propStatus;
     }
 
     function getProposalVotingType(uint _proposalId)constant returns(address)
