@@ -106,6 +106,8 @@ contract Governance {
       setProposalValue(_proposalId,_TokenAmount);
       GD.changeProposalStatus(_proposalId,2);
       P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0));
+      uint closingTime = SafeMath.add(PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0),GD.getProposalDateUpd(_proposalId));
+      GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),closingTime);
   }
   
  /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
@@ -262,6 +264,7 @@ contract Governance {
       uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
       if(_roleVoteLength == MR.getAllMemberLength(roleId))
         P1.closeProposalOraclise1(_proposalId);
+        GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),0);
   }
   
     function getStatusOfProposalsForMember(uint[] _proposalsIds)constant returns (uint proposalLength,uint draftProposals,uint pendingProposals,uint acceptedProposals,uint rejectedProposals)
