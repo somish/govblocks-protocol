@@ -112,15 +112,19 @@ contract GovBlocksMaster
         contractsAbiHash = _abiHash;
     }
     
-     function getByteCodeAndAbi()constant returns(bytes32 byteCodeHash, bytes32 abiHash)
+    function getByteCodeAndAbi()constant returns(bytes32 byteCodeHash, bytes32 abiHash)
     {
        return(byteCodeHash,contractsAbiHash);
     }
 
-
     function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,bytes32 byteCode,bytes32 contractsAbi)
     {
         return (_gbUserName,govBlocksDapps[_gbUserName],byteCodeHash,contractsAbiHash);
+    }
+
+    function getGovBlocksUserDetailsByIndex(uint _index) constant returns(uint index,bytes32 GbUserName,address MasterContractAddress)
+    {
+       return (_index,allGovBlocksUsers[_index],govBlocksDapps[allGovBlocksUsers[_index]]);
     }
 
     // function changeDappGDAddress(bytes32 _gbUserName,address _GDAddress) 
