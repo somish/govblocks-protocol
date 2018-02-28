@@ -202,13 +202,14 @@ contract StandardVotingType
             GD.setOptionAddressParameter(_proposalId,_paramAddress[i]); 
         }   
     }
-
+    uint _closingTime;
     function closeProposalVoteSVT(uint _proposalId) 
     {   
         GD=GovernanceData(GDAddress);
         MR=MemberRoles(MRAddress);
         PC=ProposalCategory(PCAddress);
         G1=Governance(G1Address);
+        
           address votingTypeAddress;
         (,,,,,votingTypeAddress) = GD.getProposalDetailsById2(_proposalId);
         VT=VotingType(votingTypeAddress);
@@ -248,6 +249,8 @@ contract StandardVotingType
                             G1.updateProposalDetails(_proposalId,currentVotingId,max,0);
                             P1=Pool(P1Address);
                             P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(category,currentVotingId));
+                            _closingTime = PC.getClosingTimeByIndex(category,currentVotingId);  
+                            GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),_closingTime);
                         } 
                         else
                         {
