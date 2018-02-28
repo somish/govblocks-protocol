@@ -119,12 +119,14 @@ contract Master is Ownable {
         owner = _memberaddress;
     }
     
+
     /// @dev Creates a new version of contract addresses.
-    function addNewVersion(address[11] _contractAddresses) onlyOwner
+    function addNewVersion(address[11] _contractAddresses,bytes32 _gbUserName) onlyOwner
     {
         uint versionNo = versionLength;
         setVersionLength(versionNo+1);
-        
+        // GBM=GovBlocksMaster(GBMAddress);
+
         addContractDetails(versionNo,"Master",masterAddress);
         addContractDetails(versionNo,"GovernanceData",_contractAddresses[0]);
         addContractDetails(versionNo,"MemberRoles",_contractAddresses[1]);
@@ -222,20 +224,12 @@ contract Master is Ownable {
         MR.changeMasterAddress(_masterAddress);
     }
 
-    function changeMasterInGBM(bytes32 _gbUserName,address _newMasterAddress)
-    {
-        GBM=GovBlocksMaster(GBMAddress);
-        GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
-    }
-
    /// @dev Link contracts to one another.
    function changeOtherAddress() 
    {  
         changeGBTAddress(GBTSAddress);
         changeGBTControllerAddress(GBTCAddress);
         
-        GD=GovernanceData(governanceDataAddress);
-        GD.changeAllContractsAddress(poolAddress,proposalCategoryAddress);
 
         // if(GD.getVotingTypeLength() == 0)
         // {
@@ -268,9 +262,6 @@ contract Master is Ownable {
         
         PC=ProposalCategory(proposalCategoryAddress);
         PC.changeAllContractsAddress(memberRolesAddress,governanceDataAddress);
-
-        P1=Pool(poolAddress);
-        P1.changeAllContractsAddress(governanceDataAddress,simpleVotingAddress);
    }
 
     /// @dev Change GBT token address all contracts
@@ -332,8 +323,8 @@ contract Master is Ownable {
        masterAddress = allContractVersions[versionNo][0].contractAddress;
    }
 
-   function getLatestVersionData(uint _versionNo)constant returns(uint versionNo,bytes32[] contractsName, address[] contractsAddress)
-   {
+    function getLatestVersionData(uint _versionNo)constant returns(uint versionNo,bytes32[] contractsName, address[] contractsAddress)
+    {
        versionNo = _versionNo;
        contractsName=new bytes32[](allContractVersions[versionNo].length);
        contractsAddress=new address[](allContractVersions[versionNo].length);
@@ -343,6 +334,30 @@ contract Master is Ownable {
            contractsName[i]=allContractVersions[versionNo][i].name;
            contractsAddress[i] = allContractVersions[versionNo][i].contractAddress;
        }
-   }
+    }
+
+    // function changeMasterin_GBM(bytes32 _gbUserName,address _newMasterAddress)
+    // {
+    //   GBM=GovBlocksMaster(GBMAddress);
+    //   GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
+    // }
+
+    // function changeGDin_GBM(bytes32 _gbUserName,address _GDAddress)
+    // {
+    //   GBM=GovBlocksMaster(GBMAddress);
+    //   GBM.changeDappGDAddress(_gbUserName,_GDAddress);
+    // }
+
+    // function changeMRin_GBM(bytes32 _gbUserName,address _MRAddress)
+    // {
+    //   GBM=GovBlocksMaster(GBMAddress);
+    //   GBM.changeDappMRAddress(_gbUserName,_MRAddress);
+    // }
+
+    // function changePCin_GBM(bytes32 _gbUserName,address _PCAddress)
+    // {
+    //   GBM=GovBlocksMaster(GBMAddress);
+    //   GBM.changeDappPCAddress(_gbUserName,_PCAddress);
+    // }
 
 }
