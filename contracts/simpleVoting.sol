@@ -216,7 +216,7 @@ contract SimpleVoting is VotingType
                 returnTokens = SafeMath.sub(GD.getVoteStake(voteid),SafeMath.div(GD.getVoteStake(voteid),GD.globalRiskFactor()));
                 
                 G1.transferBackGBTtoken(GD.getVoterAddress(voteid),returnTokens);
-                GD.callRewardEvent(GD.getVoterAddress(voteid),_proposalId,"Burned Token Reward for voting other than final option",returnTokens);
+                GD.callPenaltyEvent(GD.getVoterAddress(voteid),_proposalId,"Penalty for voting other than final option -  Token burned",burnedTokens);
                 GD.setVoteReward(voteid,returnTokens);
             }
         }
@@ -244,6 +244,7 @@ contract SimpleVoting is VotingType
     {
         GD=GovernanceData(GDAddress);
         G1=Governance(G1Address);
+        
          reward=0;
         uint addMemberPoints; uint subMemberPoints; uint finalVerdict; 
         (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
@@ -273,7 +274,7 @@ contract SimpleVoting is VotingType
                 G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward));
                 G1.updateMemberReputation1("Reputation credit after voted in favour of final option",_proposalId,GD.getVoterAddress(voteid),repPoints,addMemberPoints,"C");
                 GD.setVoteReward(voteid,reward);
-                GD.callRewardEvent(GD.getVoterAddress(voteid),_proposalId,"Reward for Voting in favour of final option",reward);
+                GD.callRewardEvent(GD.getVoterAddress(voteid),_proposalId,"Reward for voting in favour of final option",reward);
             }
             else
             {
