@@ -24,6 +24,7 @@ contract GovBlocksMaster
     address public owner;
     address GBTControllerAddress;
     address GBTAddress;
+    // address PCMRAddress;
 
     mapping(bytes32=>address) govBlocksDapps;
     bytes32[] allGovBlocksUsers;
@@ -60,16 +61,20 @@ contract GovBlocksMaster
         }  
     }
 
-     function updateGBTControllerAddress(address _GBTConrollerAddress) onlyOwner
+    function updateGBTControllerAddress(address _GBTConrollerAddress) onlyOwner
     {
         GBTControllerAddress=_GBTConrollerAddress;
         for(uint i=0;i<allGovBlocksUsers.length; i++){
         address masterAddress = govBlocksDapps[allGovBlocksUsers[i]];
         MS=Master(masterAddress);
         MS.changeGBTControllerAddress(_GBTConrollerAddress);
-        }
-       
+        } 
     }
+
+    // function updatePCMRAddress(address _PCMRAddress) onlyOwner
+    // {
+    //     PCMRAddress=_PCMRAddress;  
+    // }
 
     function setGovBlocksOwnerInMaster(uint _masterId) onlyOwner
     {
@@ -87,19 +92,18 @@ contract GovBlocksMaster
         MS=Master(_newMasterAddress);
         MS.setOwner(msg.sender);
     }
-    
 
     function changeDappMasterAddress(bytes32 _gbUserName,address _newMasterAddress)
     {
-     if( govBlocksDapps[_gbUserName] == 0x000)
+       if( govBlocksDapps[_gbUserName] == 0x000)
+                   govBlocksDapps[_gbUserName] = _newMasterAddress;
+       else
+        {            
+            if(msg.sender ==  govBlocksDapps[_gbUserName])
                  govBlocksDapps[_gbUserName] = _newMasterAddress;
-     else
-      {            
-          if(msg.sender ==  govBlocksDapps[_gbUserName])
-               govBlocksDapps[_gbUserName] = _newMasterAddress;
-          else
-              throw;
-      }   
+            else
+                throw;
+        }   
     }
     
     function setByteCodeAndAbi(bytes32 _byteCodeHash,bytes32 _abiHash)
@@ -108,13 +112,38 @@ contract GovBlocksMaster
         contractsAbiHash = _abiHash;
     }
 
-    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address MasterContractAddress,bytes32 byteCode,bytes32 contractsAbi)
+    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,bytes32 byteCode,bytes32 contractsAbi)
     {
         return (_gbUserName,govBlocksDapps[_gbUserName],byteCodeHash,contractsAbiHash);
     }
-     function getGovBlocksUserDetailsByIndex(uint _index) constant returns(uint index,bytes32 GbUserName,address MasterContractAddress)
-    {
-        return (_index,allGovBlocksUsers[_index],govBlocksDapps[allGovBlocksUsers[_index]]);
-    }
+
+    // function changeDappGDAddress(bytes32 _gbUserName,address _GDAddress) 
+    // {
+    //     require(govBlocksDapps[_gbUserName][0]!=0x00 || (msg.sender ==  govBlocksDapps[_gbUserName][0] && govBlocksDapps[_gbUserName][0]==0x00));
+    //     MS=Master(govBlocksDapps[_gbUserName][0]);
+    //     require(MS.isOwner(msg.sender) == 1);        
+    //     govBlocksDapps[_gbUserName][1] = _GDAddress;
+    // }
+
+    // function changeDappMRAddress(bytes32 _gbUserName,address _MRAddress) 
+    // {
+    //     require(govBlocksDapps[_gbUserName][0]!=0x00);
+    //     MS=Master(govBlocksDapps[_gbUserName][0]);
+    //     require(MS.isOwner(msg.sender) == 1);        
+    //     govBlocksDapps[_gbUserName][2] = _MRAddress;
+    // }
+
+    // function changeDappPCAddress(bytes32 _gbUserName,address _PCAddress) 
+    // {
+    //     require(govBlocksDapps[_gbUserName][0]!=0x00);
+    //     MS=Master(govBlocksDapps[_gbUserName][0]);
+    //     require(MS.isOwner(msg.sender) == 1);        
+    //     govBlocksDapps[_gbUserName][3] = _PCAddress;
+    // }
+    
+    // function getDappVersionData(bytes32 _gbUserName,uint _addressIndex)constant returns(address contractAddress)
+    // {
+    //     return (govBlocksDapps[_gbUserName][_addressIndex]);
+    // }
 
 }
