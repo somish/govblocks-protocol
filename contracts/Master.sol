@@ -336,11 +336,11 @@ contract Master is Ownable {
        }
     }
 
-    // function changeMasterin_GBM(bytes32 _gbUserName,address _newMasterAddress)
-    // {
-    //   GBM=GovBlocksMaster(GBMAddress);
-    //   GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
-    // }
+    function changeMasterin_GBM(bytes32 _gbUserName,address _newMasterAddress)
+    {
+      GBM=GovBlocksMaster(GBMAddress);
+      GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
+    }
 
     // function changeGDin_GBM(bytes32 _gbUserName,address _GDAddress)
     // {
