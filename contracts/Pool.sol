@@ -15,27 +15,20 @@
 
 pragma solidity ^0.4.8;
 
-import "./GovernanceData.sol";
 import "./Master.sol";
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.4.sol";
-// import "./oraclizeAPI_0.4.sol";
-import "./SimpleVoting.sol";
 import "./GBTStandardToken.sol";
 import "./GBTController.sol";
 
 contract Pool is usingOraclize
 {
     using SafeMath for uint;
-    address GDAddress;
     address masterAddress;
     address GBTOwner;
-    address SVAddress;
     address GBTControllerAddress;
     address GBTStandardTokenAddress;
     GBTController GBTC;
-    SimpleVoting SV;
     GBTStandardToken GBTS;
-    GovernanceData GD;
     Master M1;
     // uint public tokenPrice;
 
@@ -45,7 +38,7 @@ contract Pool is usingOraclize
     struct apiId
     {
         bytes8 type_of;
-        uint id;
+        uint proposalId;
         uint64 dateAdd;
         uint64 dateUpd;
     }
@@ -79,12 +72,6 @@ contract Pool is usingOraclize
         _; 
     }
      
-    function changeAllContractsAddress(address _GDContractAddress,address _SVContractAddress) 
-    {
-        GDAddress = _GDContractAddress;
-        SVAddress = _SVContractAddress;
-    }
-
     function changeGBTtokenAddress(address _GBTSContractAddress)
     {
         GBTStandardTokenAddress = _GBTSContractAddress;
@@ -104,14 +91,14 @@ contract Pool is usingOraclize
 
     function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
     {
-        bytes32 myid2 = oraclize_query(_closingTime,"","");
+        bytes32 myid2 = oraclize_query(_closingTime,"URL","https://a1.govblocks.io/");
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
 
     function closeProposalOraclise1(uint _proposalId) 
     {
-        bytes32 myid2 = oraclize_query("","");
+        bytes32 myid2 = oraclize_query("URL","https://a1.govblocks.io/");
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
@@ -138,7 +125,7 @@ contract Pool is usingOraclize
 
     function getApiCallDetails(bytes32 myid)constant returns(bytes8 _typeof,uint id,uint64 dateAdd,uint64 dateUpd)
     {
-        return(allAPIid[myid].type_of,allAPIid[myid].id,allAPIid[myid].dateAdd,allAPIid[myid].dateUpd);
+        return(allAPIid[myid].type_of,allAPIid[myid].proposalId,allAPIid[myid].dateAdd,allAPIid[myid].dateUpd);
     }
 
     function getApiIdTypeOf(bytes32 myid)constant returns(bytes16 _typeof)
@@ -148,7 +135,7 @@ contract Pool is usingOraclize
 
     function getIdOfApiId(bytes32 myid)constant returns(uint id1)
     {
-        id1 = allAPIid[myid].id;
+        id1 = allAPIid[myid].proposalId;
     }
     
     function __callback(bytes32 myid, string res) 
