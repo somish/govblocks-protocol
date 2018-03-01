@@ -119,7 +119,7 @@ contract GovBlocksMaster
        return (byteCodeHash,contractsAbiHash);
     }
 
-    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,bytes32 byteCode,bytes32 contractsAbi)
+    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,string byteCode,string contractsAbi)
     {
         return (_gbUserName,govBlocksDapps[_gbUserName],byteCodeHash,contractsAbiHash);
     }
