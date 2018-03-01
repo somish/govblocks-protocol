@@ -88,7 +88,7 @@ contract ProposalCategory
         GDAddress = _GDContractAddress;
     }
 
-    function ProposalCategoryInitiate()
+    function ProposalCategoryInitiate(address _MRAddress)
     {
         require(constructorCheck == 0);
         require(uintParam.length == 0 && bytesParam.length == 0 && addressParam.length == 0);
@@ -96,14 +96,17 @@ contract ProposalCategory
         uintParam.push(categoryParams(new bytes32[](0),""));
         bytesParam.push(categoryParams(new bytes32[](0),""));
         addressParam.push(categoryParams(new bytes32[](0),""));
-        addCategory();
+        addCategory(_MRAddress);
         constructorCheck =1;
     }
 
-    function addCategory() internal
+    function addCategory(address _mraddress) internal
     {
         allCategory.push(category("Uncategorized","",0x00,0,0,0,new uint8[](0),new uint[](0),new uint24[](0),0,0,0));
-        allCategory.push(category("Add new member role","addNewMemberRole(bytes32)",0x00,0,1,0,new uint8[](0),new uint[](0),new uint24[](0),0,10,0));
+        allCategory.push(category("Add new member role","addNewMemberRole(bytes32,string)",_mraddress,0,1,0,new uint8[](0),new uint[](0),new uint24[](0),1,10,5));
+        setClosingTime(1,300);
+        setRoleSequence(1,1);
+        setMajorityVote(1,50);
     }
 
     function getCategoryData1(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint24[] closingTime,string categoryName,bool functionValue)
@@ -301,4 +304,18 @@ contract ProposalCategory
         incentive = allCategory[_categoryId].defaultIncentive;
     }
 
+    function setClosingTime(uint _categoryId,uint24 _time)
+    {
+        allCategory[_categoryId].closingTime.push(_time);
+    }
+
+    function setRoleSequence(uint _categoryId,uint8 _roleSequence)
+    {
+        allCategory[_categoryId].memberRoleSequence.push(_roleSequence);
+    }
+
+    function setMajorityVote(uint _categoryId,uint _majorityVote)
+    {
+        allCategory[_categoryId].memberRoleMajorityVote.push(_majorityVote);
+    }
 }
