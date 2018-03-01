@@ -138,6 +138,7 @@ contract StandardVotingType
 
         if(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length)
         {
+            GD.setTotalOptions(_proposalId);
             addVerdictOptionSVT1(_proposalId,_memberAddress,_GBTPayableTokenAmount,_optionDescHash);
             addVerdictOptionSVT2(_proposalId,GD.getProposalCategory(_proposalId),_paramInt,_paramBytes32,_paramAddress);
         } 
@@ -185,7 +186,6 @@ contract StandardVotingType
     {
         GD=governanceData(GDAddress);
         uint i;
-        GD.setTotalOptions(_proposalId);
 
         for(i=0;i<_paramInt.length;i++)
         {
