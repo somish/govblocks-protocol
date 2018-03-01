@@ -269,9 +269,10 @@ contract Governance {
   
     function getStatusOfProposalsForMember(uint[] _proposalsIds)constant returns (uint proposalLength,uint draftProposals,uint pendingProposals,uint acceptedProposals,uint rejectedProposals)
     {
-         GD=governanceData(GDAddress);
-         uint proposalStatus;
-         
+        GD=governanceData(GDAddress);
+        uint proposalStatus;
+        proposalLength=GD.getProposalLength();
+
          for(uint i=0;i<_proposalsIds.length; i++)
          {
            proposalStatus=GD.getProposalStatus(_proposalsIds[i]);
@@ -374,6 +375,7 @@ contract Governance {
 
     function getProposalRewardByMember(address _memberAddress) constant returns(uint[] propStake,uint[] propReward)
     {
+        GD=governanceData(GDAddress);
         propStake = new uint[](GD.getTotalProposal(_memberAddress));
         propReward = new uint[](GD.getTotalProposal(_memberAddress));
 
@@ -384,8 +386,9 @@ contract Governance {
         }
     }
 
-    function getProposalStakeByMember(address _memberAddress) returns(uint stakeValueProposal)
+    function getProposalStakeByMember(address _memberAddress) constant returns(uint stakeValueProposal)
     {
+        GD=governanceData(GDAddress);
         for(uint i=0; i<GD.getTotalProposal(_memberAddress); i++)
         {
             stakeValueProposal = stakeValueProposal + GD.getProposalStake(GD.getProposalIdByAddress(_memberAddress,i));
@@ -394,6 +397,7 @@ contract Governance {
 
     function getOptionStakeByMember(address _memberAddress)constant returns(uint stakeValueOption)
     {
+        GD=governanceData(GDAddress);
         for(uint i=0; i<GD.getProposalAnsLength(_memberAddress); i++)
         {
             stakeValueOption = stakeValueOption + GD.getOptionStakeById(i,GD.getOptionIdByAddress(i,_memberAddress));
@@ -471,6 +475,15 @@ contract Governance {
         GD.setProposalDesc(_proposalId,_proposalDescHash);
         GD.setProposalDateUpd(_proposalId);
         GD.setProposalVersion(_proposalId);
+    }
+
+    function getTotalIncentiveByDapp()constant returns (uint allIncentive)
+    {
+        GD=governanceData(GDAddress);
+        for(uint i=0; i<GD.getProposalLength(); i++)
+        {
+            allIncentive =  allIncentive + GD.getProposalIncentive(i);
+        }
     }
 
 }
