@@ -92,7 +92,7 @@ contract Pool is usingOraclize
 
     function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
     {
-        uint index = getApilCall_length() - 1; bytes32 myid2;
+        uint index = getApilCall_length(); bytes32 myid2;
         if (_closingTime == 0)
             myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",uint2str(index)));
         else
