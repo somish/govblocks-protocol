@@ -93,10 +93,12 @@ contract Pool is usingOraclize
     function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
     {
         uint index = getApilCall_length(); bytes32 myid2;
+        M1=Master(masterAddress);
+
         if (_closingTime == 0)
-            myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",uint2str(index)));
+            myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",bytes32ToString(M1.DappName()),uint2str(index)));
         else
-            myid2 = oraclize_query(_closingTime,"URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",uint2str(index)));
+            myid2 = oraclize_query(_closingTime,"URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",bytes32ToString(M1.DappName()),uint2str(index)));
         
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
@@ -149,5 +151,22 @@ contract Pool is usingOraclize
         address _add=msg.sender;
         bool succ = _add.send(amount);  
     }
+
+   function bytes32ToString(bytes32 x) constant returns (string) {
+    bytes memory bytesString = new bytes(32);
+    uint charCount = 0;
+    for (uint j = 0; j < 32; j++) {
+        byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+        if (char != 0) {
+            bytesString[charCount] = char;
+            charCount++;
+        }
+    }
+    bytes memory bytesStringTrimmed = new bytes(charCount);
+    for (j = 0; j < charCount; j++) {
+        bytesStringTrimmed[j] = bytesString[j];
+    }
+    return string(bytesStringTrimmed);
+}
 
 }
