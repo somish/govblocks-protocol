@@ -24,7 +24,7 @@ contract GovBlocksMaster
     address public owner;
     address GBTControllerAddress;
     address GBTAddress;
-    // address PCMRAddress;
+    address public authGBOwner;
 
     mapping(bytes32=>address) govBlocksDapps;
     mapping (address=>string) govBlocksUser;
@@ -32,6 +32,12 @@ contract GovBlocksMaster
     bytes32[] allGovBlocksUsers;
     string byteCodeHash;
     string contractsAbiHash;
+
+    modifier onlyOwner() 
+    {
+      require(msg.sender == owner);
+      _;
+    }
 
     function GovBlocksMasterInit(address _GBTControllerAddress,address _GBTAddress) 
     {
@@ -41,11 +47,21 @@ contract GovBlocksMaster
       GBTAddress = _GBTAddress;
     } 
     
-    modifier onlyOwner() 
+
+    function changeAuthorizedGB(address _memberAddress)
     {
-      require(msg.sender == owner);
-      _;
+      if(authGBOwner == 0x00)
+        authGBOwner = _memberAddress;
+      else
+        require(msg.sender == authGBOwner);
+        authGBOwner = _memberAddress;
     }
+
+    function isAuthorizedGBOwner(address _memberAddress)constant returns(uint auth)
+    {
+       if(authGBOwner == _memberAddress)
+          auth = 1;
+    } 
 
     function transferOwnership(address _newOwner) onlyOwner  
     {
@@ -73,11 +89,6 @@ contract GovBlocksMaster
         } 
     }
 
-    // function updatePCMRAddress(address _PCMRAddress) onlyOwner
-    // {
-    //     PCMRAddress=_PCMRAddress;  
-    // }
-
     function setGovBlocksOwnerInMaster(uint _masterId) onlyOwner
     {
         address masterAddress = govBlocksDapps[allGovBlocksUsers[_masterId]];
@@ -88,7 +99,7 @@ contract GovBlocksMaster
     function addGovBlocksUser(bytes32 _gbUserName) onlyOwner
     {
         require(govBlocksDapps[_gbUserName]==0x00);
-        address _newMasterAddress = new Master(address(this));
+        address _newMasterAddress = new Master(address(this),_gbUserName);
         allGovBlocksUsers.push(_gbUserName);  
         govBlocksDapps[_gbUserName] = _newMasterAddress;
         MS=Master(_newMasterAddress);
@@ -114,6 +125,11 @@ contract GovBlocksMaster
         contractsAbiHash = _abiHash;
     }
     
+    function getGBTandGBTC() constant returns(address _GBTController,address _GBToken)
+    {
+       return (GBTControllerAddress,GBTAddress);
+    }
+
     function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
     {
        return (byteCodeHash,contractsAbiHash);
