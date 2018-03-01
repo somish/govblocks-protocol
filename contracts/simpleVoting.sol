@@ -129,7 +129,7 @@ contract simpleVoting is VotingType
         uint verdictOptions;
         (,,,verdictOptions) = GD.getProposalOptionAll(_proposalId); //3
         
-        require(msg.sender != GD.getOptionAddressByProposalId(_proposalId,_optionChosen[0]));
+        require(PC.getClosingTimeByIndex(category,currentVotingId) >= now && msg.sender != GD.getOptionAddressByProposalId(_proposalId,_optionChosen[0]));
         require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _optionChosen.length == 1);
 
         if(currentVotingId == 0)
