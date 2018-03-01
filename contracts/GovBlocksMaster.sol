@@ -27,9 +27,11 @@ contract GovBlocksMaster
     // address PCMRAddress;
 
     mapping(bytes32=>address) govBlocksDapps;
+    mapping (address=>string) govBlocksUser;
+    
     bytes32[] allGovBlocksUsers;
-    bytes32 byteCodeHash;
-    bytes32 contractsAbiHash;
+    string byteCodeHash;
+    string contractsAbiHash;
 
     function GovBlocksMasterInit(address _GBTControllerAddress,address _GBTAddress) 
     {
@@ -106,15 +108,15 @@ contract GovBlocksMaster
         }   
     }
     
-    function setByteCodeAndAbi(bytes32 _byteCodeHash,bytes32 _abiHash)
+    function setByteCodeAndAbi(string _byteCodeHash,string _abiHash)
     {
         byteCodeHash = _byteCodeHash;
         contractsAbiHash = _abiHash;
     }
     
-    function getByteCodeAndAbi()constant returns(bytes32 byteCodeHash, bytes32 abiHash)
+    function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
     {
-       return(byteCodeHash,contractsAbiHash);
+       return (byteCodeHash,contractsAbiHash);
     }
 
     function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,bytes32 byteCode,bytes32 contractsAbi)
@@ -125,6 +127,31 @@ contract GovBlocksMaster
     function getGovBlocksUserDetailsByIndex(uint _index) constant returns(uint index,bytes32 GbUserName,address MasterContractAddress)
     {
        return (_index,allGovBlocksUsers[_index],govBlocksDapps[allGovBlocksUsers[_index]]);
+    }
+
+    function getAllDappLength()constant returns(uint)
+    {
+       return (allGovBlocksUsers.length);
+    }
+
+    function getAllDappById(uint _gbIndex)constant returns (bytes32 _gbUserName)
+    {
+       return (allGovBlocksUsers[_gbIndex]);
+    }
+
+    function getAllDappArray()constant returns(bytes32[])
+    {
+       return (allGovBlocksUsers);
+    }
+
+    function setDappUser(address _memberAddress,string _hash)
+    {
+       govBlocksUser[_memberAddress] = _hash;
+    }
+
+    function getDappUser(address _memberAddress)constant returns (string)
+    {
+       return (govBlocksUser[_memberAddress]);
     }
 
     // function changeDappGDAddress(bytes32 _gbUserName,address _GDAddress) 
