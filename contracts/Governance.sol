@@ -93,20 +93,23 @@ contract Governance {
       GBTC.transferGBT(_memberAddress,_value);
   }
 
-  function openProposalForVoting(uint _proposalId,uint _TokenAmount) public
+  function openProposalForVoting(uint _proposalId,uint _TokenAmount,uint24 _closeTime) public
   {
       PC = ProposalCategory(PCAddress);
       GD =governanceData(GDAddress);
       P1 = Pool(P1Address);
 
       require(GD.getProposalCategory(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2);
-      require(_TokenAmount >= PC.getMinStake(GD.getProposalCategory(_proposalId)) && _TokenAmount <= PC.getMaxStake(GD.getProposalCategory(_proposalId)));
+      // require(_TokenAmount >= PC.getMinStake(GD.getProposalCategory(_proposalId)) && _TokenAmount <= PC.getMaxStake(GD.getProposalCategory(_proposalId)));
 
       payableGBTTokens(_TokenAmount);
       setProposalValue(_proposalId,_TokenAmount);
       GD.changeProposalStatus(_proposalId,2);
-      P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0));
-      uint closingTime = SafeMath.add(PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0),GD.getProposalDateUpd(_proposalId));
+      // P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0));
+      // uint closingTime = SafeMath.add(PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0),GD.getProposalDateUpd(_proposalId));
+      
+      P1.closeProposalOraclise(_proposalId,_closeTime);
+      uint closingTime = SafeMath.add(_closeTime,GD.getProposalDateUpd(_proposalId));
       GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),closingTime);
   }
   
@@ -169,7 +172,7 @@ contract Governance {
   }
 
  /// @dev Creates a new proposal.
-  function createProposal(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _TokenAmount) public
+  function createProposal(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _categoryIncentive,uint _TokenAmount,uint24 _closeTime) public
   {
       GD=governanceData(GDAddress);
       PC=ProposalCategory(PCAddress);
@@ -181,25 +184,35 @@ contract Governance {
       {
           uint _proposalId = GD.getProposalLength();
           GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
-          openProposalForVoting(_proposalId,_TokenAmount);
+          openProposalForVoting(_proposalId,_TokenAmount,_closeTime);
           addInitialOptionDetails(_proposalId,msg.sender);
           GD.setCategorizedBy(_proposalId,msg.sender);
-          uint incentive;
-          (,incentive) = PC.getCategoryIncentive(_categoryId);
-          GD.setProposalIncentive(_proposalId,incentive); 
+          GD.setProposalIncentive(_proposalId,_categoryIncentive); 
       }
       else
           GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));          
   }
   
- /// @dev Creates a new proposal.
-  function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _TokenAmount,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,string _optionDescHash) public
+ // /// @dev Creates a new proposal.
+ //  function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _TokenAmount,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,string _optionDescHash) public
+ //  {
+ //      createProposal(_proposalDescHash,_votingTypeId,_categoryId,_TokenAmount);
+ //      VT=VotingType(GD.getVotingTypeAddress(_votingTypeId));
+ //      uint _proposalId = GD.getProposalLength()-1;
+ //      VT.addVerdictOption(_proposalId,msg.sender,_paramInt,_paramBytes32,_paramAddress,_TokenAmount,_optionDescHash);
+ //  }
+
+  /// @dev Creates a new proposal.
+  function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _categoryIncentive,uint _TokenAmount,string _optionHash,uint24 _closeTime) public
   {
-      createProposal(_proposalDescHash,_votingTypeId,_categoryId,_TokenAmount);
-      VT=VotingType(GD.getVotingTypeAddress(_votingTypeId));
+      GD=governanceData(GDAddress);
+      createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime);
       uint _proposalId = GD.getProposalLength()-1;
-      VT.addVerdictOption(_proposalId,msg.sender,_paramInt,_paramBytes32,_paramAddress,_TokenAmount,_optionDescHash);
+      GD.setOptionHash(_proposalId,_optionHash);
   }
+
+
+
   /// @dev AFter the proposal final decision, member reputation will get updated.
   function updateMemberReputation(uint _proposalId,uint _finalVerdict) onlyInternal
   {
@@ -232,37 +245,43 @@ contract Governance {
      GD.setMemberReputation(_desc,_proposalId,_voterAddress,_voterPoints,_repPointsEvent,_typeOf);
   }
 
-  function checkProposalVoteClosing(uint _proposalId) onlyInternal constant returns(uint8 closeValue) 
+  // function checkProposalVoteClosing(uint _proposalId) onlyInternal constant returns(uint8 closeValue) 
+  // {
+  //     PC=ProposalCategory(PCAddress);
+  //     GD=governanceData(GDAddress);
+  //     MR=memberRoles(MRAddress);
+      
+  //     uint currentVotingId;uint category;
+  //     (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+  //     uint dateUpdate;
+  //     (,,,,dateUpdate,,) = GD.getProposalDetailsById1(_proposalId);
+  //     address votingTypeAddress;
+  //     (,,,,,votingTypeAddress) = GD.getProposalDetailsById2(_proposalId);
+  //     VT=VotingType(votingTypeAddress);
+  //     uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
+
+  //     if(SafeMath.add(dateUpdate,PC.getClosingTimeByIndex(category,currentVotingId)) <= now || GD.getVoteLength(_proposalId,roleId) == MR.getAllMemberLength(roleId))
+  //       closeValue=1;
+  // }
+
+  function checkProposalVoteClosing(uint _proposalId,uint _roleId,uint _closingTime) onlyInternal constant returns(uint8 closeValue) 
   {
-      PC=ProposalCategory(PCAddress);
       GD=governanceData(GDAddress);
       MR=memberRoles(MRAddress);
       
-      uint currentVotingId;uint category;
-      (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
       uint dateUpdate;
       (,,,,dateUpdate,,) = GD.getProposalDetailsById1(_proposalId);
-      address votingTypeAddress;
-      (,,,,,votingTypeAddress) = GD.getProposalDetailsById2(_proposalId);
-      VT=VotingType(votingTypeAddress);
-      uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
 
-      if(SafeMath.add(dateUpdate,PC.getClosingTimeByIndex(category,currentVotingId)) <= now || GD.getVoteLength(_proposalId,roleId) == MR.getAllMemberLength(roleId))
+      if(SafeMath.add(dateUpdate,_closingTime) <= now || GD.getVoteLength(_proposalId,_roleId) == MR.getAllMemberLength(_roleId))
         closeValue=1;
   }
 
- function checkRoleVoteClosing(uint _proposalId,uint _roleVoteLength) 
+ function checkRoleVoteClosing(uint _proposalId,uint _roleVoteLength,uint _authRoleId) 
   {
-     PC=ProposalCategory(PCAddress);
      GD=governanceData(GDAddress);
-     MR=memberRoles(MRAddress);
      P1=Pool(P1Address);
-
-      uint currentVotingId;uint category;
-      (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
       
-      uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
-      if(_roleVoteLength == MR.getAllMemberLength(roleId))
+      if(_roleVoteLength == MR.getAllMemberLength(_authRoleId))
         P1.closeProposalOraclise(_proposalId,0);
         GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),0);
   }
@@ -316,39 +335,6 @@ contract Governance {
           (,proposalId,,dateAdded,,voteStake,) = GD.getVoteDetailByid(_voteId);
           voteReward = GD.getVoteReward(_voteId); 
     } 
-
-    function getProposalOptionAllById(uint _proposalId,uint _optionIndex)constant returns(uint proposalId,uint[] intParam,bytes32[] bytesParam,address[] addressParam)
-    {
-        
-        PC=ProposalCategory(PCAddress);
-        GD=governanceData(GDAddress);
-        proposalId = _proposalId;
-
-        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;bytes32 parameterName; uint j;
-        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(GD.getProposalCategory(_proposalId));
-        
-        intParam=new uint[](paramInt);
-        bytesParam = new bytes32[](paramBytes32);
-        addressParam = new address[](paramAddress);
-
-        for(j=0; j<paramInt; j++)
-        {
-            parameterName = PC.getCategoryParamNameUint(GD.getProposalCategory(_proposalId),j);
-            intParam[j] = GD.getParameterDetailsById1(_proposalId,parameterName,_optionIndex);
-        }
-
-        for(j=0; j<paramBytes32; j++)
-        {
-            parameterName = PC.getCategoryParamNameBytes(GD.getProposalCategory(_proposalId),j); 
-            bytesParam[j] = GD.getParameterDetailsById2(_proposalId,parameterName,_optionIndex);
-        }
-
-        for(j=0; j<paramAddress; j++)
-        {
-            parameterName = PC.getCategoryParamNameAddress(GD.getProposalCategory(_proposalId),j);
-            addressParam[j] = GD.getParameterDetailsById3(_proposalId,parameterName,_optionIndex);              
-        }  
-    }
 
     /// @dev Get the Value, stake and Address of the member whosoever added that verdict option.
     function getOptionDetailsById(uint _proposalId,uint _optionIndex) constant returns(uint id, uint optionid,uint optionStake,uint optionValue,address memberAddress,uint optionReward)
@@ -432,12 +418,9 @@ contract Governance {
             GD.setOptionAddress(_proposalId,_memberAddress);
             GD.setOptionStake(_proposalId,0);
             GD.setOptionValue(_proposalId,0);
-            GD.setOptionDesc(_proposalId,"");
+            GD.setOptionHash(_proposalId,"");
             GD.setOptionDateAdded(_proposalId);
             GD.setTotalOptions(_proposalId);
-            GD.setOptionIntParameter(_proposalId,0);
-            GD.setOptionBytesParameter(_proposalId,"");
-            GD.setOptionAddressParameter(_proposalId,0x00);
             GD.setInitialOptionsAdded(_proposalId);
         }
     }
