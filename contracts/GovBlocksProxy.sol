@@ -35,57 +35,57 @@ contract GovBlocksProxy
         MRAddress = _MRContractAddress;
     }
 
-    function addNewMemberRoleGBP(uint _proposalId)
-    {
-        GD=governanceData(GDAddress);
-        MR=memberRoles(MRAddress);
-        PC=ProposalCategory(PCAddress);
+    // function addNewMemberRoleGBP(uint _proposalId)
+    // {
+    //     GD=governanceData(GDAddress);
+    //     MR=memberRoles(MRAddress);
+    //     PC=ProposalCategory(PCAddress);
         
-        uint category = GD.getProposalCategory(_proposalId);
-        bytes32 parameterName = PC.getCategoryParamNameBytes(category,0);
-        uint finalOptionIndex = GD.getProposalFinalOption(_proposalId);
+    //     uint category = GD.getProposalCategory(_proposalId);
+    //     bytes32 parameterName = PC.getCategoryParamNameBytes(category,0);
+    //     uint finalOptionIndex = GD.getProposalFinalOption(_proposalId);
 
-        bytes32 roleName = GD.getParameterDetailsById2(_proposalId,parameterName,finalOptionIndex);
-        MR.addNewMemberRole(roleName,"");
-    }
+    //     bytes32 roleName = GD.getParameterDetailsById2(_proposalId,parameterName,finalOptionIndex);
+    //     MR.addNewMemberRole(roleName,"");
+    // }
 
-    function assignMemberRoleGBP(uint _proposalId)
-    {
-        GD=governanceData(GDAddress);
-        MR=memberRoles(MRAddress);
-        PC=ProposalCategory(PCAddress);
+    // function assignMemberRoleGBP(uint _proposalId)
+    // {
+    //     GD=governanceData(GDAddress);
+    //     MR=memberRoles(MRAddress);
+    //     PC=ProposalCategory(PCAddress);
 
-        uint category = GD.getProposalCategory(_proposalId);
-        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(category);
-        uint finalOptionIndex = GD.getProposalFinalOption(_proposalId);
+    //     uint category = GD.getProposalCategory(_proposalId);
+    //     uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+    //     (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(category);
+    //     uint finalOptionIndex = GD.getProposalFinalOption(_proposalId);
 
-        bytes32 parameterNameUint = PC.getCategoryParamNameUint(category,0);
-        uint roleIdToAssign = GD.getParameterDetailsById1(_proposalId,parameterNameUint,finalOptionIndex);
+    //     bytes32 parameterNameUint = PC.getCategoryParamNameUint(category,0);
+    //     uint roleIdToAssign = GD.getParameterDetailsById1(_proposalId,parameterNameUint,finalOptionIndex);
 
-        bytes32 parameterNameBytes = PC.getCategoryParamNameUint(category,0);
-        address memberAddress = GD.getParameterDetailsById3(_proposalId,parameterNameBytes,finalOptionIndex);
+    //     bytes32 parameterNameBytes = PC.getCategoryParamNameUint(category,0);
+    //     address memberAddress = GD.getParameterDetailsById3(_proposalId,parameterNameBytes,finalOptionIndex);
 
-        MR.assignMemberRole(memberAddress,roleIdToAssign);
-    }
+    //     MR.assignMemberRole(memberAddress,roleIdToAssign);
+    // }
 
-    function removeMemberRoleGBP(uint _proposalId)
-    {
-        GD=governanceData(GDAddress);
-        MR=memberRoles(MRAddress);
-        PC=ProposalCategory(PCAddress);
+    // function removeMemberRoleGBP(uint _proposalId)
+    // {
+    //     GD=governanceData(GDAddress);
+    //     MR=memberRoles(MRAddress);
+    //     PC=ProposalCategory(PCAddress);
 
-        uint category = GD.getProposalCategory(_proposalId);
-        uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
-        (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(category);
-        uint finalOptionIndex = GD.getProposalFinalOption(_proposalId);
+    //     uint category = GD.getProposalCategory(_proposalId);
+    //     uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+    //     (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(category);
+    //     uint finalOptionIndex = GD.getProposalFinalOption(_proposalId);
 
-        bytes32 parameterNameUint = PC.getCategoryParamNameUint(category,0);
-        uint removeFromId = GD.getParameterDetailsById1(_proposalId,parameterNameUint,finalOptionIndex);
+    //     bytes32 parameterNameUint = PC.getCategoryParamNameUint(category,0);
+    //     uint removeFromId = GD.getParameterDetailsById1(_proposalId,parameterNameUint,finalOptionIndex);
 
-        bytes32 parameterNameBytes = PC.getCategoryParamNameUint(category,0);
-        address memberAddress = GD.getParameterDetailsById3(_proposalId,parameterNameBytes,finalOptionIndex);
+    //     bytes32 parameterNameBytes = PC.getCategoryParamNameUint(category,0);
+    //     address memberAddress = GD.getParameterDetailsById3(_proposalId,parameterNameBytes,finalOptionIndex);
 
-        MR.removeMember(memberAddress,removeFromId);
-    } 
+    //     MR.removeMember(memberAddress,removeFromId);
+    // } 
 }
