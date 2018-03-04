@@ -137,7 +137,7 @@ contract GovBlocksMaster
     function changeAllAddress1(address _GBTControllerAddress,address _GBTokenAddress) onlyOwner
     {
         GBTControllerAddress = _GBTControllerAddress;
-       _GBToken = _GBTokenAddress;
+        GBTAddress = _GBTokenAddress;
     }
     
     function setDappUser(address _memberAddress,string _hash) onlyOwner
