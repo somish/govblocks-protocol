@@ -76,23 +76,13 @@ contract governanceData {
 
     struct proposalCategory{
         address categorizedBy;
-        uint[] paramInt;
-        bytes32[] paramBytes32;
-        address[] paramAddress;
         uint8 verdictOptions;
         address[] optionAddedByAddress;
         uint[] valueOfOption;
         uint[] stakeOnOption;
-        string[] optionDescHash;
+        string[] optionHash;
         uint[] optionDateAdd;
         mapping(uint=>uint) rewardOption;
-    }
-
-    struct proposalCategoryParams
-    {
-        mapping(bytes32=>uint[]) optionNameIntValue;
-        mapping(bytes32=>bytes32[]) optionNameBytesValue;
-        mapping(bytes32=>address[]) optionNameAddressValue;
     }
 
     struct proposalVersionData{
@@ -133,7 +123,6 @@ contract governanceData {
     mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;
     mapping(address=>mapping(uint=>uint)) AddressProposalVote; 
 
-    mapping(uint=>proposalCategoryParams) allProposalCategoryParams;
     mapping(uint=>proposalCategory) allProposalCategory;
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping(uint=>Status[]) proposalStatus;
@@ -488,9 +477,9 @@ contract governanceData {
         allProposalCategory[_proposalId].valueOfOption.push(_optionValue);
     }
 
-    function setOptionDesc(uint _proposalId,string _optionHash)
+    function setOptionHash(uint _proposalId,string _optionHash)
     {
-        allProposalCategory[_proposalId].optionDescHash.push(_optionHash);
+        allProposalCategory[_proposalId].optionHash.push(_optionHash);
     }
 
     function setOptionDateAdded(uint _proposalId)
@@ -503,21 +492,6 @@ contract governanceData {
         return (allProposalCategory[_proposalId].optionDateAdd[_optionIndex]);
     }
 
-    function setOptionIntParameter(uint _proposalId,uint _param)
-    {
-        allProposalCategory[_proposalId].paramInt.push(_param);
-    }
-    
-    function setOptionBytesParameter(uint _proposalId,bytes32 _param)
-    {
-        allProposalCategory[_proposalId].paramBytes32.push(_param);
-    }   
-    
-    function setOptionAddressParameter(uint _proposalId,address _param)
-    {
-        allProposalCategory[_proposalId].paramAddress.push(_param);
-    }
-       
     function setProposalCategory(uint _proposalId,uint8 _categoryId)
     {
         allProposal[_proposalId].category = _categoryId;
@@ -725,6 +699,11 @@ contract governanceData {
         level =  allProposal[_proposalId].complexityLevel;
     }
 
+    function getProposalCurrentVotingId(uint _proposalId)constant returns(uint8 _currVotingStatus)
+    {
+        return (allProposal[_proposalId].currVotingStatus);
+    }
+
     /// @dev Get Total number of verdict options against proposal.
     function getTotalVerdictOptions(uint _proposalId) constant returns(uint8 verdictOptions)
     {
@@ -786,9 +765,9 @@ contract governanceData {
         return  allProposalCategory[_proposalId].optionAddedByAddress.length;
     }
 
-    function getOptionDescByProposalId(uint _proposalId,uint _optionIndex) constant returns(string)
+    function getOptionHashByProposalId(uint _proposalId,uint _optionIndex) constant returns(string)
     {
-        return allProposalCategory[_proposalId].optionDescHash[_optionIndex];
+        return allProposalCategory[_proposalId].optionHash[_optionIndex];
     }
 
     /// @dev Get the Stake of verdict when given Proposal Id and Verdict index.
@@ -808,72 +787,6 @@ contract governanceData {
     {
         memberAddress = allProposalCategory[_proposalId].optionAddedByAddress[_optionIndex];
     }
-
-    /// @dev Get the category parameters given against a proposal after categorizing the proposal.
-    function getProposalOptionAll(uint _proposalId) constant returns(uint id,uint[] paramsInt,bytes32[] paramsBytes,address[] paramsAddress,uint8 verdictOptions)
-    {
-        id = _proposalId;
-        return (id,allProposalCategory[_proposalId].paramInt,allProposalCategory[_proposalId].paramBytes32,allProposalCategory[_proposalId].paramAddress,allProposalCategory[_proposalId].verdictOptions);
-    }
-    
-    /// @dev Fetch the parameter details for final option won (Final Verdict) when giving Proposal ID and Parameter Name Against proposal.
-    function getProposalOptionAllByParameter(uint _proposalId,bytes32 _parameterNameUint,bytes32 _parameterNameBytes,bytes32 _parameterNameAddress) constant returns (uint id,uint[] intParameter,bytes32[] bytesParameter,address[] addressParameter)
-    {   
-        id = _proposalId;
-        return (id,getParameterDetails1(_proposalId,_parameterNameUint),getParameterDetails2(_proposalId,_parameterNameBytes),getParameterDetails3(_proposalId,_parameterNameAddress));
-    }
-
-    function getParameterDetailsById1(uint _proposalId,bytes32 _parameterName,uint _index)constant returns(uint result)
-    {   
-        uint optionIndex = _index-1;
-        return (allProposalCategoryParams[_proposalId].optionNameIntValue[_parameterName][optionIndex]);
-    }
-
-    function getParameterDetailsById2(uint _proposalId,bytes32 _parameterName,uint _index)constant returns(bytes32 result)
-    {   
-        uint optionIndex = _index-1;
-        return (allProposalCategoryParams[_proposalId].optionNameBytesValue[_parameterName][optionIndex]);
-    }
-
-    function getParameterDetailsById3(uint _proposalId,bytes32 _parameterName,uint _index)constant returns(address result)
-    {   
-        uint optionIndex = _index-1;
-        return (allProposalCategoryParams[_proposalId].optionNameAddressValue[_parameterName][optionIndex]);
-    }
-
-    /// @dev Fetch the Integer parameter details by parameter name against the final option.
-    function getParameterDetails1(uint _proposalId,bytes32 _parameterName)  constant returns (uint[] intParameter)
-    {   
-        return (allProposalCategoryParams[_proposalId].optionNameIntValue[_parameterName]);
-    }
-
-    /// @dev Fetch the Bytes parameter details by parameter name against the final option.
-    function getParameterDetails2(uint _proposalId,bytes32 _parameterName) constant returns (bytes32[] bytesParameter)
-    {   
-        return (allProposalCategoryParams[_proposalId].optionNameBytesValue[_parameterName]);
-    }
-
-    /// @dev Fetch the Address parameter details by parameter name against the final option.
-    function getParameterDetails3(uint _proposalId,bytes32 _parameterName) constant returns (address[] addressParameter)
-    {   
-        return (allProposalCategoryParams[_proposalId].optionNameAddressValue[_parameterName]);
-    }
-
-    function setParameterDetails1(uint _proposalId,bytes32 parameterName,uint _paramInt)
-    {
-        allProposalCategoryParams[_proposalId].optionNameIntValue[parameterName].push(_paramInt);
-    }
-
-    function setParameterDetails2(uint _proposalId,bytes32 parameterName,bytes32 _paramBytes32)
-    {
-        allProposalCategoryParams[_proposalId].optionNameBytesValue[parameterName].push(_paramBytes32);
-    }
-
-    function setParameterDetails3(uint _proposalId,bytes32 parameterName,address _paramAddress)
-    {
-        allProposalCategoryParams[_proposalId].optionNameAddressValue[parameterName].push(_paramAddress);  
-    }
-
     function getProposalLength()constant returns(uint)
     {  
         return (allProposal.length);
