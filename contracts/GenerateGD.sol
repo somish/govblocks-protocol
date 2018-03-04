@@ -19,6 +19,7 @@ import "./Governance.sol";
 
 contract GenerateGD
 {
+    // create governanceData Contract
     mapping(bytes32=>address) contractAddress;
     function getAddress(bytes32 _gbUserName)constant returns(address)
     {
