@@ -123,24 +123,44 @@ contract  memberRoles
       }
   }
 
-  /// @dev Assign role to a member when giving member address and role id
-  function assignMemberRole(address _memberAddress,uint _memberRoleId) onlyOwner
+  function updateMemberRole(address _memberAddress,uint _memberRoleId,uint8 _typeOf)
   {
-      require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 0);
-      memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter+1;
-      memberRoleData[_memberRoleId].memberActive[_memberAddress] = 1;
-      memberAddressToMemberRole[_memberAddress] = _memberRoleId;
-      memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
+      if(_typeOf == 1)
+      {
+        require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 0);
+        memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter+1;
+        memberRoleData[_memberRoleId].memberActive[_memberAddress] = 1;
+        memberAddressToMemberRole[_memberAddress] = _memberRoleId;
+        memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
+      }
+      else
+      {
+        require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 0);
+        memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter+1;
+        memberRoleData[_memberRoleId].memberActive[_memberAddress] = 1;
+        memberAddressToMemberRole[_memberAddress] = _memberRoleId;
+        memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
+      }
   }
 
-  function removeMember(address _memberAddress,uint _memberRoleId) onlyOwner
-  {
-      require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 1);
-      memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter-1;
-      memberRoleData[_memberRoleId].memberActive[_memberAddress] = 0;
-      memberAddressToMemberRole[_memberAddress] = 0;
-      // memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
-  }
+  // /// @dev Assign role to a member when giving member address and role id
+  // function assignMemberRole(address _memberAddress,uint _memberRoleId) onlyOwner
+  // {
+  //     require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 0);
+  //     memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter+1;
+  //     memberRoleData[_memberRoleId].memberActive[_memberAddress] = 1;
+  //     memberAddressToMemberRole[_memberAddress] = _memberRoleId;
+  //     memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
+  // }
+
+  // function removeMember(address _memberAddress,uint _memberRoleId) onlyOwner
+  // {
+  //     require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 1);
+  //     memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter-1;
+  //     memberRoleData[_memberRoleId].memberActive[_memberAddress] = 0;
+  //     memberAddressToMemberRole[_memberAddress] = 0;
+  //     // memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
+  // }
 
   /// @dev Get the role id which is authorized to categorize a proposal.
   function getAuthorizedMemberId() public constant returns(uint roleId)
