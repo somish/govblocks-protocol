@@ -25,7 +25,6 @@ import "./Math.sol";
 import "./Pool.sol";
 import "./GBTController.sol";
 import "./VotingType.sol";
-import "./GovBlocksProxy.sol";
 // import "./zeppelin-solidity/contracts/token/BasicToken.sol";
 // import "./zeppelin-solidity/contracts/math/SafeMath.sol";
 // import "./zeppelin-solidity/contracts/math/Math.sol";
