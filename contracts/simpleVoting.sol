@@ -116,16 +116,15 @@ contract simpleVoting is VotingType
         addVerdictOption(_proposalId,msg.sender, _GBTPayableTokenAmount, _optionHash);
     }
 
-    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _authRole,uint _closingTime) 
+    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _authRole,uint24 _closingTime) 
     {
         GD=governanceData(GDAddress);
         MR=memberRoles(MRAddress);
-        PC=ProposalCategory(PCAddress);
         SVT=StandardVotingType(SVTAddress);
         G1=Governance(G1Address);
 
-        uint currentVotingId; uint category; uint intermediateVerdict;
-        (,category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId); //1,0,0
+        uint currentVotingId;uint intermediateVerdict;
+        (,,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId); //1,0,0
         uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId);
         
         require(SafeMath.add(GD.getProposalDateUpd(_proposalId),_closingTime) >= now && msg.sender != GD.getOptionAddressByProposalId(_proposalId,_optionChosen[0]));
