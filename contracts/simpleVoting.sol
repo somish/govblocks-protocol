@@ -103,20 +103,20 @@ contract simpleVoting is VotingType
             GBTC.receiveGBT(msg.sender,_memberStake);
     }
 
-    function addVerdictOption(uint _proposalId,address _member,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) onlyInternal
+    function addVerdictOption(uint _proposalId,address _member,uint _GBTPayableTokenAmount,string _optionHash) onlyInternal
     {
         SVT=StandardVotingType(SVTAddress);
 
-        SVT.addVerdictOptionSVT(_proposalId,_member,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
+        SVT.addVerdictOptionSVT(_proposalId,_member,_GBTPayableTokenAmount,_optionHash);
         payableGBTTokensSimpleVoting(_member,_GBTPayableTokenAmount);
     }
      
-    function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) 
+    function initiateVerdictOption(uint _proposalId,uint _GBTPayableTokenAmount,string _optionHash) 
     {
-        addVerdictOption(_proposalId,msg.sender,_paramInt,_paramBytes32,_paramAddress, _GBTPayableTokenAmount, _optionHash);
+        addVerdictOption(_proposalId,msg.sender, _GBTPayableTokenAmount, _optionHash);
     }
 
-    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount) 
+    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _authRole,uint _closingTime) 
     {
         GD=governanceData(GDAddress);
         MR=memberRoles(MRAddress);
@@ -126,10 +126,9 @@ contract simpleVoting is VotingType
 
         uint currentVotingId; uint category; uint intermediateVerdict;
         (,category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId); //1,0,0
-        uint verdictOptions;
-        (,,,verdictOptions) = GD.getProposalOptionAll(_proposalId); //3
+        uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId);
         
-        require(PC.getClosingTimeByIndex(category,currentVotingId) >= now && msg.sender != GD.getOptionAddressByProposalId(_proposalId,_optionChosen[0]));
+        require(SafeMath.add(GD.getProposalDateUpd(_proposalId),_closingTime) >= now && msg.sender != GD.getOptionAddressByProposalId(_proposalId,_optionChosen[0]));
         require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _optionChosen.length == 1);
 
         if(currentVotingId == 0)
@@ -138,7 +137,9 @@ contract simpleVoting is VotingType
             require(_optionChosen[0]==intermediateVerdict || _optionChosen[0]==0);
             
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-        require(roleId == PC.getRoleSequencAtIndex(category,currentVotingId));
+        // require(roleId == PC.getRoleSequencAtIndex(category,currentVotingId));
+
+        require(roleId == _authRole);
 
         if(GD.getVoteId_againstMember(msg.sender,_proposalId) == 0)
         {
@@ -153,7 +154,7 @@ contract simpleVoting is VotingType
             GD.setVoteIdAgainstProposal(_proposalId,votelength);
             GD.addInTotalVotes(msg.sender,votelength);
             
-            G1.checkRoleVoteClosing(_proposalId,GD.getVoteLength(_proposalId,roleId));
+            G1.checkRoleVoteClosing(_proposalId,GD.getVoteLength(_proposalId,roleId),_authRole);
             GD.addInVote(msg.sender,_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
             GD.callVoteEvent(msg.sender,GD.getProposalVotingType(_proposalId),votelength);
             transferVoteStakeSV(_GBTPayableTokenAmount);
@@ -182,10 +183,16 @@ contract simpleVoting is VotingType
         // allVotes[voteId].voteValue = finalVoteValue;
     }
 
-    function closeProposalVote(uint _proposalId)
+    // function closeProposalVote(uint _proposalId)
+    // {
+    //     SVT=StandardVotingType(SVTAddress);
+    //     SVT.closeProposalVoteSVT(_proposalId);
+    // }
+
+    function closeProposalVote(uint _proposalId,uint _roleId,uint24 _closingTime,uint _majorityVote,uint _roleSequenceLength)
     {
         SVT=StandardVotingType(SVTAddress);
-        SVT.closeProposalVoteSVT(_proposalId);
+        SVT.closeProposalVoteSVT(_proposalId,_roleId,_closingTime,_majorityVote,_roleSequenceLength);
     }
 
     uint public voteValueFavour; uint public voterStake; uint public wrongOptionStake; uint public returnTokens;
