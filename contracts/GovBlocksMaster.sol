@@ -24,6 +24,9 @@ contract GovBlocksMaster
     address public owner;
     address GBTControllerAddress;
     address GBTAddress;
+    address GDAddress;
+    address SVAddress;
+    address GOVAddress;
     address public authGBOwner;
 
     mapping(bytes32=>address) govBlocksDapps;
@@ -46,7 +49,6 @@ contract GovBlocksMaster
       GBTControllerAddress=_GBTControllerAddress;
       GBTAddress = _GBTAddress;
     } 
-    
 
     function changeAuthorizedGB(address _memberAddress)
     {
@@ -119,15 +121,58 @@ contract GovBlocksMaster
         }   
     }
     
-    function setByteCodeAndAbi(string _byteCodeHash,string _abiHash)
+    function setByteCodeAndAbi(string _byteCodeHash,string _abiHash) onlyOwner
     {
         byteCodeHash = _byteCodeHash;
         contractsAbiHash = _abiHash;
     }
+
+    function changeAllAddress(address _GDAddress,address _SVAddress,address _GOVAddress) onlyOwner
+    {
+       GDAddress = _GDAddress;
+       SVAddress = _SVAddress;
+       GOVAddress = _GOVAddress;
+    }
+
+    function changeAllAddress1(address _GBTControllerAddress,address _GBTokenAddress) onlyOwner
+    {
+        GBTControllerAddress = _GBTControllerAddress;
+       _GBToken = _GBTokenAddress;
+    }
     
+    function setDappUser(address _memberAddress,string _hash) onlyOwner
+    {
+       govBlocksUser[_memberAddress] = _hash;
+    }
+
     function getGBTandGBTC() constant returns(address _GBTController,address _GBToken)
     {
        return (GBTControllerAddress,GBTAddress);
+    }
+
+    function getGBTAddress()constant returns(address)
+    {
+       return GBTAddress;
+    }
+
+    function getGBTCAddress()constant returns(address)
+    {
+       return GBTControllerAddress;
+    }
+
+    function getGDAddress()constant returns(address)
+    {
+      return GDAddress;
+    }
+
+    function getSVAddress()constant returns(address)
+    {
+       return SVAddress;
+    }
+
+    function getGOVAddress()constant returns(address)
+    {
+      return GOVAddress;
     }
 
     function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
@@ -160,11 +205,6 @@ contract GovBlocksMaster
        return (allGovBlocksUsers);
     }
 
-    function setDappUser(address _memberAddress,string _hash)
-    {
-       govBlocksUser[_memberAddress] = _hash;
-    }
-
     function getDappUser(address _memberAddress)constant returns (string)
     {
        return (govBlocksUser[_memberAddress]);
@@ -178,20 +218,20 @@ contract GovBlocksMaster
     //     govBlocksDapps[_gbUserName][1] = _GDAddress;
     // }
 
-    // function changeDappMRAddress(bytes32 _gbUserName,address _MRAddress) 
+    // function changeDappSVAddress(bytes32 _gbUserName,address _SVAddress) 
     // {
     //     require(govBlocksDapps[_gbUserName][0]!=0x00);
     //     MS=Master(govBlocksDapps[_gbUserName][0]);
     //     require(MS.isOwner(msg.sender) == 1);        
-    //     govBlocksDapps[_gbUserName][2] = _MRAddress;
+    //     govBlocksDapps[_gbUserName][2] = _SVAddress;
     // }
 
-    // function changeDappPCAddress(bytes32 _gbUserName,address _PCAddress) 
+    // function changeDappGOVAddress(bytes32 _gbUserName,address _GOVAddress) 
     // {
     //     require(govBlocksDapps[_gbUserName][0]!=0x00);
     //     MS=Master(govBlocksDapps[_gbUserName][0]);
     //     require(MS.isOwner(msg.sender) == 1);        
-    //     govBlocksDapps[_gbUserName][3] = _PCAddress;
+    //     govBlocksDapps[_gbUserName][3] = _GOVAddress;
     // }
     
     // function getDappVersionData(bytes32 _gbUserName,uint _addressIndex)constant returns(address contractAddress)
