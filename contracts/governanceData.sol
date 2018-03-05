@@ -147,7 +147,7 @@ contract governanceData {
     uint subProposalOwnerPoints;
     uint subOptionOwnerPoints;
     uint subMemberPoints;
-    uint constructorCheck;
+    uint public constructorCheck;
 
     string[]  status;
     proposal[] allProposal;
