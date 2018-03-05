@@ -25,7 +25,7 @@ contract  memberRoles
   bytes32[] memberRole;
   uint categorizeAuthRoleid;
   string memberRoleDescHash;
-  uint8 constructorCheck;
+  uint8 public constructorCheck;
   Master M1; 
   address masterAddress;
 
