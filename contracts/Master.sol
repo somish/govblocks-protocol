@@ -54,7 +54,6 @@ contract Master is Ownable {
     address featureWeightedAddress;
     address masterAddress;
     address standardVotingTypeAddress;
-    address GBTOwner;
     address governanceAddress;
     address poolAddress;
     address GBTCAddress;
@@ -84,18 +83,11 @@ contract Master is Ownable {
         DappName = _gbUserName;
     }
    
-    modifier onlyGBTOwner
+    function changeGBMAddress(address _contractAddress)
     {
-      require(msg.sender == owner || msg.sender == GBTOwner);
-      _;
+        GBMAddress = _contractAddress;
     }
 
-    modifier onlyInternal 
-    {
-        require(contracts_active[msg.sender] == 1 || owner==msg.sender);
-        _; 
-    }
-    
     modifier onlyAuthorizedGB
     {
         GBM=GovBlocksMaster(GBMAddress);
@@ -103,10 +95,10 @@ contract Master is Ownable {
         _;
     }
 
-    function GovBlocksOwner()
+    modifier onlyInternal 
     {
-        require(GBTOwner == 0x00);
-        GBTOwner = msg.sender;
+        require(contracts_active[msg.sender] == 1 || owner==msg.sender);
+        _; 
     }
 
     function isInternal(address _contractAdd) constant returns(uint check)
@@ -128,6 +120,7 @@ contract Master is Ownable {
         owner = _memberaddress;
     }
     
+
     function getGBTCAddress()constant returns(address _GBTCAddress)
     {
         GBM=GovBlocksMaster(GBMAddress);
@@ -167,6 +160,8 @@ contract Master is Ownable {
     {
         allContractVersions[_versionNo].push(contractDetails(_contractName,_contractAddresse));        
     }
+
+
 
     /// @dev Changes all reference contract addresses in master 
     function changeAddressInMaster(uint _version) internal
@@ -246,11 +241,12 @@ contract Master is Ownable {
     }
 
    /// @dev Link contracts to one another.
-   function changeOtherAddress() internal
+   function changeOtherAddress(address _memberaddress) internal
    {  
-        changeGBTAddress(GBTSAddress);
-        changeGBTControllerAddress(GBTCAddress);
+        changeGBTAddress(GBTSAddress,_memberaddress);
+        changeGBTControllerAddress(GBTCAddress,_memberaddress);
         
+        GD=governanceData(governanceDataAddress);
 
         // if(GD.getVotingTypeLength() == 0)
         // {
@@ -286,47 +282,74 @@ contract Master is Ownable {
    }
 
     /// @dev Change GBT token address all contracts
-    function changeGBTAddress(address _tokenAddress) onlyGBTOwner
+    function changeGBTAddress(address _tokenAddress,address _memberaddress) 
     {
-        GD=governanceData(governanceDataAddress);
-        GD.changeGBTtokenAddress(_tokenAddress);
+        GBM=GovBlocksMaster(GBMAddress);
+        if(GBM.isAuthorizedGBOwner(_memberaddress) == 1)
+        {
+            GD=governanceData(governanceDataAddress);
+            GD.changeGBTtokenAddress(_tokenAddress);
 
-        GBTC=GBTController(GBTCAddress);
-        GBTC.changeGBTtokenAddress(_tokenAddress);
+            GBTC=GBTController(GBTCAddress);
+            GBTC.changeGBTtokenAddress(_tokenAddress);
 
-        P1=Pool(poolAddress);
-        P1.changeGBTtokenAddress(_tokenAddress);  
+            P1=Pool(poolAddress);
+            P1.changeGBTtokenAddress(_tokenAddress);  
+        }
     }
 
-    function changeGBTControllerAddress(address _controllerAddress) onlyGBTOwner
+    function changeGBTControllerAddress(address _controllerAddress,address _memberaddress) 
     {
-        G1=Governance(governanceAddress);
-        G1.changeGBTControllerAddress(_controllerAddress);
+        GBM=GovBlocksMaster(GBMAddress);
+        if(GBM.isAuthorizedGBOwner(_memberaddress) == 1)
+        {
+            G1=Governance(governanceAddress);
+            G1.changeGBTControllerAddress(_controllerAddress);
 
-        SV=simpleVoting(simpleVotingAddress);
-        SV.changeGBTControllerAddress(_controllerAddress);
+            SV=simpleVoting(simpleVotingAddress);
+            SV.changeGBTControllerAddress(_controllerAddress);
 
-        // RB=RankBasedVoting(rankBasedVotingAddress);
-        // RB.changeGBTControllerAddress(_controllerAddress);
+            // RB=RankBasedVoting(rankBasedVotingAddress);
+            // RB.changeGBTControllerAddress(_controllerAddress);
 
-        // FW=FeatureWeighted(featureWeightedAddress);
-        // FW.changeGBTControllerAddress(_controllerAddress);
-        
-        P1=Pool(poolAddress);
-        P1.changeGBTControllerAddress(_controllerAddress);
+            // FW=FeatureWeighted(featureWeightedAddress);
+            // FW.changeGBTControllerAddress(_controllerAddress);
+            
+            P1=Pool(poolAddress);
+            P1.changeGBTControllerAddress(_controllerAddress);
+        }
     }
 
     /// @dev Switch to the recent version of contracts. (Last one)
-    function switchToRecentVersion() 
+    function switchToRecentVersion(address _memberaddress) 
     {
         uint version = versionLength-1;
         GBM=GovBlocksMaster(GBMAddress);
-        require((version == 0 && msg.sender == owner) || GBM.isAuthorizedGBOwner(msg.sender) == 1);
-
+        require((version == 0 && _memberaddress == owner) || GBM.isAuthorizedGBOwner(_memberaddress) == 1);
+    
         addInContractChangeDate(now,version);
         changeAddressInMaster(version);
         changeMasterAddress(allContractVersions[version][0].contractAddress);
-        changeOtherAddress();
+        if(version == 0)
+            callConstructorGDMRPC(version);
+
+        changeOtherAddress(_memberaddress);
+    }
+
+    function callConstructorGDMRPC(uint version) internal
+    {
+        GD=governanceData(governanceDataAddress);
+        MR=memberRoles(memberRolesAddress);
+        PC=ProposalCategory(proposalCategoryAddress);
+
+        if(GD.constructorCheck() == 0)
+            GD.GovernanceDataInitiate();
+
+        if(MR.constructorCheck() == 0)
+            MR.MemberRolesInitiate();
+            
+        if(PC.constructorCheck() == 0)
+            PC.ProposalCategoryInitiate(memberRolesAddress);
     }
 
     /// @dev Stores the date when version of contracts get switched.
@@ -372,16 +395,16 @@ contract Master is Ownable {
     //   GBM.changeDappGDAddress(_gbUserName,_GDAddress);
     // }
 
-    // function changeMRin_GBM(bytes32 _gbUserName,address _MRAddress)
+    // function changeSVin_GBM(bytes32 _gbUserName,address _SVAddress)
     // {
     //   GBM=GovBlocksMaster(GBMAddress);
-    //   GBM.changeDappMRAddress(_gbUserName,_MRAddress);
+    //   GBM.changeDappSVAddress(_gbUserName,_MRAddress);
     // }
 
-    // function changePCin_GBM(bytes32 _gbUserName,address _PCAddress)
+    // function changeGOVin_GBM(bytes32 _gbUserName,address _GOVAddress)
     // {
     //   GBM=GovBlocksMaster(GBMAddress);
-    //   GBM.changeDappPCAddress(_gbUserName,_PCAddress);
+    //   GBM.changeDappGOVAddress(_gbUserName,_PCAddress);
     // }
 
 }
