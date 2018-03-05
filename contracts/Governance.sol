@@ -207,7 +207,8 @@ contract Governance {
       GD=governanceData(GDAddress);
       createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime);
       uint _proposalId = GD.getProposalLength()-1;
-      GD.setOptionHash(_proposalId,_optionHash);
+      VT=VotingType(GD.getVotingTypeAddress(_proposalId));
+      VT.addVerdictOption(_proposalId,msg.sender,_TokenAmount,_optionHash); 
   }
 
 
