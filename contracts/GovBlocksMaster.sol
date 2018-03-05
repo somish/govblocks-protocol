@@ -30,7 +30,7 @@ contract GovBlocksMaster
     address public authGBOwner;
 
     mapping(bytes32=>address) govBlocksDapps;
-    mapping (address=>string) govBlocksUser;
+    mapping(address=>string) govBlocksUser;
     
     bytes32[] allGovBlocksUsers;
     string byteCodeHash;
@@ -77,7 +77,7 @@ contract GovBlocksMaster
         {
           address masterAddress = govBlocksDapps[allGovBlocksUsers[i]];
           MS=Master(masterAddress);
-          MS.changeGBTAddress(_GBTContractAddress);
+          MS.changeGBTAddress(_GBTContractAddress,msg.sender);
         }  
     }
 
@@ -87,15 +87,8 @@ contract GovBlocksMaster
         for(uint i=0;i<allGovBlocksUsers.length; i++){
         address masterAddress = govBlocksDapps[allGovBlocksUsers[i]];
         MS=Master(masterAddress);
-        MS.changeGBTControllerAddress(_GBTConrollerAddress);
+        MS.changeGBTControllerAddress(_GBTConrollerAddress,msg.sender);
         } 
-    }
-
-    function setGovBlocksOwnerInMaster(uint _masterId) onlyOwner
-    {
-        address masterAddress = govBlocksDapps[allGovBlocksUsers[_masterId]];
-        MS=Master(masterAddress);
-        MS.GovBlocksOwner();
     }
 
     function addGovBlocksUser(bytes32 _gbUserName) onlyOwner
@@ -180,7 +173,7 @@ contract GovBlocksMaster
        return (byteCodeHash,contractsAbiHash);
     }
 
-    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,string byteCode,string contractsAbi)
+    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,string allContractsbyteCodeHash,string allCcontractsAbiHash)
     {
         return (_gbUserName,govBlocksDapps[_gbUserName],byteCodeHash,contractsAbiHash);
     }
