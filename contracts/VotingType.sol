@@ -23,7 +23,7 @@ contract VotingType
 {
     string public votingTypeName;
     function addVerdictOption(uint _proposalId,address _member,uint _GBTPayableTokenAmount,string _optionHash);
-    function initiateVerdictOption(uint _proposalId,uint _GBTPayableTokenAmount,string _optionHash) ;
+    function initiateVerdictOption(uint _proposalId,uint _GBTPayableTokenAmount,string _optionHash);
     function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _authRole,uint24 _closingTime) public;
     function closeProposalVote(uint _proposalId,uint _roleId,uint24 _closingTime,uint _majorityVote,uint _roleSequenceLength) public;
     function giveReward_afterFinalDecision(uint _proposalId) public;   
