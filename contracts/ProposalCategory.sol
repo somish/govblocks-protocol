@@ -21,7 +21,7 @@ import "./governanceData.sol";
 
 contract ProposalCategory
 {
-    uint8 constructorCheck;
+    uint8 public constructorCheck;
     mapping(uint=>string) allCategoryData;
     string[] allCategory;
 
@@ -93,14 +93,18 @@ contract ProposalCategory
 
     function ProposalCategoryInitiate(address _MRAddress)
     {
-        // require(constructorCheck == 0);
+        require(constructorCheck == 0);
+        addNewCategory("QmagD6FdzXMqnuxprkMCB5JK6THxg1tgsNCdSpDT7tFVHq");
+        addNewCategory("QmNzmHVjSrM4F9StDZppFJhNYDojhM9hhWn1rA2ZrSfZ3E");
+        addNewCategory("QmeH6onSScyCawqiY3T7eKKx3oTjcbVKbTTyTJs8eTannZ");
+        addNewCategory("QmSFG2ARL1kmSAkmit4UAZkZFt8QPJrCoJgTxdAfFZfHSH");
         // require(uintParam.length == 0 && bytesParam.length == 0 && addressParam.length == 0);
         // parametersAdded[0] = 1;
         // uintParam.push(categoryParams(new bytes32[](0),""));
         // bytesParam.push(categoryParams(new bytes32[](0),""));
         // addressParam.push(categoryParams(new bytes32[](0),""));
         // addCategory(_MRAddress);
-        // constructorCheck =1;
+        constructorCheck =1;
     }
 
     function getCategoryLength()constant returns(uint)
