@@ -164,7 +164,7 @@ contract Master is Ownable {
 
 
     /// @dev Changes all reference contract addresses in master 
-    function changeAddressInMaster(uint _version) internal
+    function changeAddressInMaster(uint _version) 
     {
         changeAllAddress(_version);
         governanceDataAddress = allContractVersions[_version][1].contractAddress;
@@ -207,7 +207,7 @@ contract Master is Ownable {
     }
 
     /// @dev Links all contracts to master.sol by passing address of Master contract to the functions of other contracts.
-    function changeMasterAddress(address _masterAddress) internal
+    function changeMasterAddress(address _masterAddress) 
     {
         GD=governanceData(governanceDataAddress);
         GD.changeMasterAddress(_masterAddress);
@@ -241,7 +241,7 @@ contract Master is Ownable {
     }
 
    /// @dev Link contracts to one another.
-   function changeOtherAddress(address _memberaddress) internal
+   function changeOtherAddress(address _memberaddress) 
    {  
         changeGBTAddress(GBTSAddress,_memberaddress);
         changeGBTControllerAddress(GBTCAddress,_memberaddress);
@@ -336,7 +336,7 @@ contract Master is Ownable {
         changeOtherAddress(_memberaddress);
     }
 
-    function callConstructorGDMRPC(uint version) internal
+    function callConstructorGDMRPC(uint version) 
     {
         GD=governanceData(governanceDataAddress);
         MR=memberRoles(memberRolesAddress);
@@ -353,7 +353,7 @@ contract Master is Ownable {
     }
 
     /// @dev Stores the date when version of contracts get switched.
-    function addInContractChangeDate(uint _date , uint _versionNo) internal
+    function addInContractChangeDate(uint _date , uint _versionNo) 
     {
         contractChangeDate.push(changeVersion(_date,_versionNo));
     }

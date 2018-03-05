@@ -16,6 +16,9 @@
 
 pragma solidity ^0.4.8;
 import "./Master.sol";
+import "./GenerateGD.sol";
+import "./GenerateSV.sol";
+import "./GenerateGOV.sol";
 
 contract GovBlocksMaster 
 {
