@@ -182,7 +182,8 @@ contract Governance {
       if(_categoryId > 0)
       {
           uint _proposalId = GD.getProposalLength();
-          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));
+          address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress);
           openProposalForVoting(_proposalId,_TokenAmount,_closeTime);
           addInitialOptionDetails(_proposalId,msg.sender);
           GD.setCategorizedBy(_proposalId,msg.sender);
@@ -207,7 +208,7 @@ contract Governance {
       GD=governanceData(GDAddress);
       createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime);
       uint _proposalId = GD.getProposalLength()-1;
-      VT=VotingType(GD.getVotingTypeAddress(_proposalId));
+      VT=VotingType(GD.getProposalVotingType(_proposalId));
       VT.addVerdictOption(_proposalId,msg.sender,_TokenAmount,_optionHash); 
   }
 
@@ -410,7 +411,7 @@ contract Governance {
     }
 
     /// @dev As bydefault first option is alwayd deny option. One time configurable.
-    function addInitialOptionDetails(uint _proposalId,address _memberAddress) internal
+    function addInitialOptionDetails(uint _proposalId,address _memberAddress) 
     {
         GD=governanceData(GDAddress);
         if(GD.getInitialOptionsAdded(_proposalId) == 0)
