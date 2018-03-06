@@ -83,12 +83,7 @@ contract Pool is usingOraclize
         GBTControllerAddress = _GBTCAddress;
     }
     
-    /// @dev User can buy the GBTToken equivalent to the amount paid by the user.
-    function buyToken(address _memberAddress) payable 
-    {
-        GBTC=GBTController(GBTControllerAddress);
-        GBTC.buyTokenGBT(_memberAddress,msg.value);
-    }
+    function () payable {}
 
     function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
     {
