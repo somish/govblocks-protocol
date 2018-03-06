@@ -80,7 +80,7 @@ contract GovBlocksMaster
         {
           address masterAddress = govBlocksDapps[allGovBlocksUsers[i]];
           MS=Master(masterAddress);
-          MS.changeGBTAddress(_GBTContractAddress,msg.sender);
+          MS.changeGBTAddress(_GBTContractAddress);
         }  
     }
 
@@ -90,7 +90,7 @@ contract GovBlocksMaster
         for(uint i=0;i<allGovBlocksUsers.length; i++){
         address masterAddress = govBlocksDapps[allGovBlocksUsers[i]];
         MS=Master(masterAddress);
-        MS.changeGBTControllerAddress(_GBTConrollerAddress,msg.sender);
+        MS.changeGBTControllerAddress(_GBTConrollerAddress);
         } 
     }
 
