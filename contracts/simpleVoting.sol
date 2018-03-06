@@ -103,7 +103,7 @@ contract simpleVoting is VotingType
             GBTC.receiveGBT(msg.sender,_memberStake);
     }
 
-    function addVerdictOption(uint _proposalId,address _member,uint _GBTPayableTokenAmount,string _optionHash) onlyInternal
+    function addVerdictOption(uint _proposalId,address _member,uint _GBTPayableTokenAmount,string _optionHash)
     {
         SVT=StandardVotingType(SVTAddress);
 
