@@ -101,6 +101,13 @@ contract Master is Ownable {
         _; 
     }
 
+    function isAuthGB(address _memberaddress) constant returns(uint check)
+    {
+        GBM=GovBlocksMaster(GBMAddress);
+        require(GBM.isAuthorizedGBOwner(_memberaddress) == 1);
+            check = 1;
+    }
+
     function isInternal(address _contractAdd) constant returns(uint check)
     {
         check=0;
@@ -241,10 +248,10 @@ contract Master is Ownable {
     }
 
    /// @dev Link contracts to one another.
-   function changeOtherAddress(address _memberaddress) 
+   function changeOtherAddress() 
    {  
-        changeGBTAddress(GBTSAddress,_memberaddress);
-        changeGBTControllerAddress(GBTCAddress,_memberaddress);
+        changeGBTAddress(GBTSAddress);
+        changeGBTControllerAddress(GBTCAddress);
         
         GD=governanceData(governanceDataAddress);
 
@@ -282,10 +289,10 @@ contract Master is Ownable {
    }
 
     /// @dev Change GBT token address all contracts
-    function changeGBTAddress(address _tokenAddress,address _memberaddress) 
+    function changeGBTAddress(address _tokenAddress) 
     {
         GBM=GovBlocksMaster(GBMAddress);
-        if(GBM.isAuthorizedGBOwner(_memberaddress) == 1)
+        if(msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(msg.sender) == 1)
         {
             GD=governanceData(governanceDataAddress);
             GD.changeGBTtokenAddress(_tokenAddress);
@@ -298,10 +305,10 @@ contract Master is Ownable {
         }
     }
 
-    function changeGBTControllerAddress(address _controllerAddress,address _memberaddress) 
+    function changeGBTControllerAddress(address _controllerAddress) 
     {
         GBM=GovBlocksMaster(GBMAddress);
-        if(GBM.isAuthorizedGBOwner(_memberaddress) == 1)
+        if(msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(msg.sender) == 1)
         {
             G1=Governance(governanceAddress);
             G1.changeGBTControllerAddress(_controllerAddress);
@@ -321,11 +328,11 @@ contract Master is Ownable {
     }
 
     /// @dev Switch to the recent version of contracts. (Last one)
-    function switchToRecentVersion(address _memberaddress) 
+    function switchToRecentVersion() 
     {
         uint version = versionLength-1;
         GBM=GovBlocksMaster(GBMAddress);
-        require((version == 0 && _memberaddress == owner) || GBM.isAuthorizedGBOwner(_memberaddress) == 1);
+        require((version == 0 && msg.sender== owner) || GBM.isAuthorizedGBOwner(msg.sender) == 1);
     
         addInContractChangeDate(now,version);
         changeAddressInMaster(version);
@@ -333,7 +340,7 @@ contract Master is Ownable {
         if(version == 0)
             callConstructorGDMRPC(version);
 
-        changeOtherAddress(_memberaddress);
+        changeOtherAddress();
     }
 
     function callConstructorGDMRPC(uint version) 
@@ -349,7 +356,7 @@ contract Master is Ownable {
             MR.MemberRolesInitiate();
             
         if(PC.constructorCheck() == 0)
-            PC.ProposalCategoryInitiate(memberRolesAddress);
+            PC.ProposalCategoryInitiate();
     }
 
     /// @dev Stores the date when version of contracts get switched.
