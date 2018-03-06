@@ -91,7 +91,7 @@ contract ProposalCategory
         // GDAddress = _GDContractAddress;
     }
 
-    function ProposalCategoryInitiate(address _MRAddress)
+    function ProposalCategoryInitiate()
     {
         require(constructorCheck == 0);
         addNewCategory("QmagD6FdzXMqnuxprkMCB5JK6THxg1tgsNCdSpDT7tFVHq");
@@ -118,14 +118,18 @@ contract ProposalCategory
     }
 
     /// @dev Adds a new category and Category Function Parameter names..
-    function addNewCategory(string _categoryData) onlyOwner
+    function addNewCategory(string _categoryData) 
     {
-        allCategory.push(_categoryData);
+        M1=Master(masterAddress);
+        require(msg.sender == masterAddress || M1.isAuthGB(msg.sender) == 1);
+            allCategory.push(_categoryData);
     }
     
-    function updateCategory(uint _categoryId,string _categoryData) onlyOwner
+    function updateCategory(uint _categoryId,string _categoryData) 
     {
-        allCategory[_categoryId] = _categoryData;
+        M1=Master(masterAddress);
+        require(M1.isAuthGB(msg.sender) == 1);
+            allCategory[_categoryId] = _categoryData;
     }
 
     // function addCategory(address _mraddress) internal
