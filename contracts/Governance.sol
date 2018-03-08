@@ -157,7 +157,7 @@ contract Governance {
       require(GD.getProposalStatus(_proposalId) == 1 || GD.getProposalStatus(_proposalId) == 0);
 
       addComplexityLevelAndIncentive(_proposalId,_categoryId,_proposalComplexityLevel,_reward);
-      addInitialOptionDetails(_proposalId,msg.sender);
+      addInitialOptionDetails(_proposalId);
       GD.setCategorizedBy(_proposalId,msg.sender);
       GD.setProposalCategory(_proposalId,_categoryId);
   }
@@ -181,16 +181,17 @@ contract Governance {
 
       if(_categoryId > 0)
       {
+          uint nowDate = now;
           uint _proposalId = GD.getProposalLength();
           address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
-          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress);
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress,nowDate);
           openProposalForVoting(_proposalId,_TokenAmount,_closeTime);
-          addInitialOptionDetails(_proposalId,msg.sender);
+          addInitialOptionDetails(_proposalId);
           GD.setCategorizedBy(_proposalId,msg.sender);
           GD.setProposalIncentive(_proposalId,_categoryIncentive); 
       }
       else
-          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId));          
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId),nowDate);          
   }
   
  // /// @dev Creates a new proposal.
@@ -411,12 +412,12 @@ contract Governance {
     }
 
     /// @dev As bydefault first option is alwayd deny option. One time configurable.
-    function addInitialOptionDetails(uint _proposalId,address _memberAddress) 
+    function addInitialOptionDetails(uint _proposalId) 
     {
         GD=governanceData(GDAddress);
         if(GD.getInitialOptionsAdded(_proposalId) == 0)
         {
-            GD.setOptionAddress(_proposalId,_memberAddress);
+            GD.setOptionAddress(_proposalId,0x00);
             GD.setOptionStake(_proposalId,0);
             GD.setOptionValue(_proposalId,0);
             GD.setOptionHash(_proposalId,"");
