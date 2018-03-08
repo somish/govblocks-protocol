@@ -59,6 +59,7 @@ contract ProposalCategory
     address masterAddress;
     address GDAddress;
     governanceData GD;
+    address GBMAddress;
 
     modifier onlyInternal {
         M1=Master(masterAddress);
@@ -91,9 +92,10 @@ contract ProposalCategory
         // GDAddress = _GDContractAddress;
     }
 
-    function ProposalCategoryInitiate()
+    function ProposalCategoryInitiate(address _GBMAddress)
     {
         require(constructorCheck == 0);
+        GBMAddress = _GBMAddress;
         addNewCategory("QmagD6FdzXMqnuxprkMCB5JK6THxg1tgsNCdSpDT7tFVHq");
         addNewCategory("QmNzmHVjSrM4F9StDZppFJhNYDojhM9hhWn1rA2ZrSfZ3E");
         addNewCategory("QmeH6onSScyCawqiY3T7eKKx3oTjcbVKbTTyTJs8eTannZ");
@@ -120,15 +122,15 @@ contract ProposalCategory
     /// @dev Adds a new category and Category Function Parameter names..
     function addNewCategory(string _categoryData) 
     {
-        M1=Master(masterAddress);
-        require(msg.sender == masterAddress || M1.isAuthGB(msg.sender) == 1);
+        // M1=Master(masterAddress);
+        // require(msg.sender == GBMAddress || M1.isAuthGB(msg.sender) == 1);
             allCategory.push(_categoryData);
     }
     
     function updateCategory(uint _categoryId,string _categoryData) 
     {
-        M1=Master(masterAddress);
-        require(M1.isAuthGB(msg.sender) == 1);
+        // M1=Master(masterAddress);
+        // require(msg.sender == GBMAddress || M1.isAuthGB(msg.sender) == 1);
             allCategory[_categoryId] = _categoryData;
     }
 
