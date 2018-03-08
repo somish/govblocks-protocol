@@ -85,9 +85,9 @@ contract GBTController {
     }  
     
     uint public actual_amount;
-    function buyTokenGBT(address _to,uint _value) onlyInternal 
+    function buyTokenGBT(address _to) payable 
     {
-        actual_amount = (_value*1000000000000000000)/tokenPrice;  // amount that was sent          
+        actual_amount = (msg.value/tokenPrice);  // amount that was sent          
         rewardToken(_to,actual_amount);
     }
 
