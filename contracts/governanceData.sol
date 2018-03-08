@@ -562,28 +562,28 @@ contract governanceData {
     }
 
     /// @dev Change Variables that helps in Calculation of reward distribution. Risk Factor, GBT Stak Value, Scaling Factor,Scaling weight.
-    function changeGlobalRiskFactor(uint _riskFactor) onlyOwner
+    function changeGlobalRiskFactor(uint _riskFactor) 
     {
         globalRiskFactor = _riskFactor;
     }
 
-    function changeGBTStakeValue(uint _GBTStakeValue) onlyOwner
+    function changeGBTStakeValue(uint _GBTStakeValue) 
     {
         GBTStakeValue = _GBTStakeValue;
     }
 
-    function changeMembershipScalingFator(uint _membershipScalingFactor) onlyOwner
+    function changeMembershipScalingFator(uint _membershipScalingFactor) 
     {
         membershipScalingFactor = _membershipScalingFactor;
     }
 
-    function changeScalingWeight(uint _scalingWeight) onlyOwner
+    function changeScalingWeight(uint _scalingWeight) 
     {
         scalingWeight = _scalingWeight;
     }
 
     /// @dev Change quoram percentage. Value required to proposal pass.
-    function changeQuorumPercentage(uint _quorumPercentage) onlyOwner
+    function changeQuorumPercentage(uint _quorumPercentage) 
     {
         quorumPercentage = _quorumPercentage;
     }
@@ -903,9 +903,9 @@ contract governanceData {
         subMemberPoints = _repPoints;
     }  
 
-    function addNewProposal(address _memberAddress,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress)
+    function addNewProposal(address _memberAddress,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress,uint _date)
     {
-        allProposal.push(proposal(_memberAddress,_proposalDescHash,now,now,0,0,0,_categoryId,0,0,_votingTypeAddress,0,0,0,0,0,0,0));               
+        allProposal.push(proposal(_memberAddress,_proposalDescHash,_date,now,0,0,0,_categoryId,0,0,_votingTypeAddress,0,0,0,0,0,0,0));               
     }  
     
     function changePendingProposalStart(uint _value)
