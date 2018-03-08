@@ -15,7 +15,7 @@
 
 pragma solidity ^0.4.8;
 
-import "./Governance.sol";
+import "./governanceData.sol";
 
 contract GenerateGD
 {
