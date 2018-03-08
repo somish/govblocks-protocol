@@ -45,6 +45,9 @@ contract  memberRoles
         memberRole.push("Member");
         memberRole.push("Advisory Board");
         categorizeAuthRoleid=1;
+        M1=Master(masterAddress);
+        address ownAddress = M1.owner();
+        updateMemberRole(ownAddress,1,1);
         constructorCheck =1;
   }
 
@@ -97,7 +100,7 @@ contract  memberRoles
   }
   
   /// @dev Add new member role for governance.
-  function addNewMemberRole(bytes32 _newRoleName,string _newDescHash) onlyOwner
+  function addNewMemberRole(bytes32 _newRoleName,string _newDescHash) 
   {
       memberRole.push(_newRoleName);
       memberRoleDescHash = _newDescHash;  
