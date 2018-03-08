@@ -356,7 +356,7 @@ contract Master is Ownable {
             MR.MemberRolesInitiate();
             
         if(PC.constructorCheck() == 0)
-            PC.ProposalCategoryInitiate();
+            PC.ProposalCategoryInitiate(GBMAddress);
     }
 
     /// @dev Stores the date when version of contracts get switched.
