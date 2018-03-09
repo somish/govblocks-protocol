@@ -103,17 +103,17 @@ contract simpleVoting is VotingType
             GBTC.receiveGBT(msg.sender,_memberStake);
     }
 
-    function addVerdictOption(uint _proposalId,address _member,uint _GBTPayableTokenAmount,string _optionHash)
+    function addVerdictOption(uint _proposalId,address _member,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd)
     {
         SVT=StandardVotingType(SVTAddress);
 
-        SVT.addVerdictOptionSVT(_proposalId,_member,_GBTPayableTokenAmount,_optionHash);
+        SVT.addVerdictOptionSVT(_proposalId,_member,_GBTPayableTokenAmount,_optionHash,_dateAdd);
         payableGBTTokensSimpleVoting(_member,_GBTPayableTokenAmount);
     }
      
-    function initiateVerdictOption(uint _proposalId,uint _GBTPayableTokenAmount,string _optionHash) 
+    function initiateVerdictOption(uint _proposalId,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) 
     {
-        addVerdictOption(_proposalId,msg.sender, _GBTPayableTokenAmount, _optionHash);
+        addVerdictOption(_proposalId,msg.sender, _GBTPayableTokenAmount, _optionHash,_dateAdd);
     }
 
     function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _authRole,uint24 _closingTime) 
