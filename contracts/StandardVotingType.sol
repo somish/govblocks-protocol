@@ -121,7 +121,7 @@ contract StandardVotingType
     }
 
     // function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionDescHash) onlyInternal
-    function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash) onlyInternal
+    function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) onlyInternal
     {
         GD=governanceData(GDAddress);
         MR=memberRoles(MRAddress);
@@ -139,14 +139,14 @@ contract StandardVotingType
 
         // require(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length);
             // addVerdictOptionSVT2(_proposalId,GD.getProposalCategory(_proposalId),_paramInt,_paramBytes32,_paramAddress);
-            addVerdictOptionSVT1(_proposalId,_memberAddress,_GBTPayableTokenAmount,_optionHash);
+            addVerdictOptionSVT1(_proposalId,_memberAddress,_GBTPayableTokenAmount,_optionHash,_dateAdd);
     }
 
-    function addVerdictOptionSVT1(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash) internal
+    function addVerdictOptionSVT1(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) internal
     {
         GD=governanceData(GDAddress);
         GD.setTotalOptions(_proposalId);
-        setOptionDetails(_proposalId,_memberAddress,_GBTPayableTokenAmount,setOptionValue_givenByMemberSVT(_memberAddress,_proposalId,_GBTPayableTokenAmount),_optionHash);
+        setOptionDetails(_proposalId,_memberAddress,_GBTPayableTokenAmount,setOptionValue_givenByMemberSVT(_memberAddress,_proposalId,_GBTPayableTokenAmount),_optionHash,_dateAdd);
     }
 
     // function addVerdictOptionSVT2(uint _proposalId,uint _categoryId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress) internal
@@ -280,14 +280,19 @@ contract StandardVotingType
         }
     }
       /// @dev Set the Deatils of added verdict i.e. Verdict Stake, Verdict value and Address of the member whoever added the verdict.
-    function setOptionDetails(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue,string _optionHash) internal
+    function setOptionDetails(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue,string _optionHash,uint _dateAdd) internal
     {
-        GD=governanceData(GDAddress);
+        GD=governanceData(GDAddress); uint currentDate;
+        if(_dateAdd == 0)
+            currentDate = now;
+        else
+            currentDate = _dateAdd;
+
         GD.setOptionAddress(_proposalId,_memberAddress);
         GD.setOptionStake(_proposalId,_stakeValue);
         GD.setOptionValue(_proposalId,_optionValue);
         GD.setOptionHash(_proposalId,_optionHash);
-        GD.setOptionDateAdded(_proposalId);
+        GD.setOptionDateAdded(_proposalId,currentDate);
         GD.setProposalAnsByAddress(_proposalId,_memberAddress); // Saving proposal id against memebr to which solution is provided
         GD.setOptionIdByAddress(_proposalId,_memberAddress);
     }
