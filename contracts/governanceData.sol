@@ -482,9 +482,9 @@ contract governanceData {
         allProposalCategory[_proposalId].optionHash.push(_optionHash);
     }
 
-    function setOptionDateAdded(uint _proposalId)
+    function setOptionDateAdded(uint _proposalId,uint _dateAdd)
     {
-        allProposalCategory[_proposalId].optionDateAdd.push(now);
+        allProposalCategory[_proposalId].optionDateAdd.push(_dateAdd);
     }
 
     function getOptionDateAdded(uint _proposalId,uint _optionIndex)constant returns(uint)
