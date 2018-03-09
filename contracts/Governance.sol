@@ -171,27 +171,25 @@ contract Governance {
   }
 
  /// @dev Creates a new proposal.
-  function createProposal(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _categoryIncentive,uint _TokenAmount,uint24 _closeTime) public
+  function createProposal(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _categoryIncentive,uint _TokenAmount,uint24 _closeTime,uint _dateAdd) public
   {
       GD=governanceData(GDAddress);
       PC=ProposalCategory(PCAddress);
       require(GD.getBalanceOfMember(msg.sender) != 0);
-
       GD.addTotalProposal(GD.getProposalLength(),msg.sender);
 
       if(_categoryId > 0)
       {
-          uint nowDate = now;
           uint _proposalId = GD.getProposalLength();
           address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
-          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress,nowDate);
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress,_dateAdd);
           openProposalForVoting(_proposalId,_TokenAmount,_closeTime);
           addInitialOptionDetails(_proposalId);
           GD.setCategorizedBy(_proposalId,msg.sender);
           GD.setProposalIncentive(_proposalId,_categoryIncentive); 
       }
       else
-          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId),nowDate);          
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId),now);          
   }
   
  // /// @dev Creates a new proposal.
@@ -207,10 +205,11 @@ contract Governance {
   function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _categoryIncentive,uint _TokenAmount,string _optionHash,uint24 _closeTime) public
   {
       GD=governanceData(GDAddress);
-      createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime);
+      uint nowDate = now;
+      createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime,nowDate);
       uint _proposalId = GD.getProposalLength()-1;
       VT=VotingType(GD.getProposalVotingType(_proposalId));
-      VT.addVerdictOption(_proposalId,msg.sender,_TokenAmount,_optionHash); 
+      VT.addVerdictOption(_proposalId,msg.sender,_TokenAmount,_optionHash,nowDate); 
   }
 
 
@@ -421,7 +420,7 @@ contract Governance {
             GD.setOptionStake(_proposalId,0);
             GD.setOptionValue(_proposalId,0);
             GD.setOptionHash(_proposalId,"");
-            GD.setOptionDateAdded(_proposalId);
+            GD.setOptionDateAdded(_proposalId,0);
             GD.setTotalOptions(_proposalId);
             GD.setInitialOptionsAdded(_proposalId);
         }
