@@ -195,7 +195,7 @@ contract Governance {
  // /// @dev Creates a new proposal.
  //  function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _TokenAmount,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,string _optionDescHash) public
  //  {
- //      createProposal(_proposalDescHash,_votingTypeId,_categoryId,_TokenAmount);
+ //      createProposal(_proposalIdDescHash,_votingTypeId,_categoryId,_TokenAmount);
  //      VT=VotingType(GD.getVotingTypeAddress(_votingTypeId));
  //      uint _proposalId = GD.getProposalLength()-1;
  //      VT.addVerdictOption(_proposalId,msg.sender,_paramInt,_paramBytes32,_paramAddress,_TokenAmount,_optionDescHash);
@@ -350,9 +350,9 @@ contract Governance {
         return (_proposalId,optionid,optionStake,optionValue,memberAddress,optionReward);
     }
 
-    function getOptionDetailsByAddress(uint _proposalId,address _memberAddress) constant returns(uint optionIndex,uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
+    function getOptionDetailsByAddress(uint _proposalId,address _memberAddress) constant returns(uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
     {
-        GD=governanceData(GDAddress);
+        GD=governanceData(GDAddress); uint optionIndex;
         optionIndex = GD.getOptionIdByAddress(_proposalId,_memberAddress);
         optionStake = GD.getOptionStakeById(_proposalId,optionIndex);
         optionReward = GD.getOptionReward(_proposalId,optionIndex);
@@ -384,10 +384,14 @@ contract Governance {
 
     function getOptionStakeByMember(address _memberAddress)constant returns(uint stakeValueOption)
     {
-        GD=governanceData(GDAddress);
+        GD=governanceData(GDAddress); stakeValueOption;
+
         for(uint i=0; i<GD.getProposalAnsLength(_memberAddress); i++)
         {
-            stakeValueOption = stakeValueOption + GD.getOptionStakeById(i,GD.getOptionIdByAddress(i,_memberAddress));
+            uint _proposalId = GD.getProposalAnsId(_memberAddress,i);
+            uint _optionId = GD.getOptionIdByAddress(_proposalId,_memberAddress);
+            uint stake = GD.getOptionStakeById(_proposalId,_optionId);
+            stakeValueOption = stakeValueOption + stake;
         }
     }
 
@@ -468,6 +472,15 @@ contract Governance {
         {
             allIncentive =  allIncentive + GD.getProposalIncentive(i);
         }
+    }
+
+    function submitProposalWithOption(uint _proposalId,uint _TokenAmount,uint24 _closeTime,string _optionHash)
+    {
+        GD=governanceData(GDAddress);
+        openProposalForVoting(_proposalId,_TokenAmount,_closeTime);
+        VT=VotingType(GD.getProposalVotingType(_proposalId));
+        uint nowDate = GD.getProposalDateAdd(_proposalId);
+        VT.addVerdictOption(_proposalId,msg.sender,_TokenAmount,_optionHash,nowDate); 
     }
 
 }
