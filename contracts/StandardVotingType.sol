@@ -145,7 +145,6 @@ contract StandardVotingType
     function addVerdictOptionSVT1(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) internal
     {
         GD=governanceData(GDAddress);
-        GD.setTotalOptions(_proposalId);
         setOptionDetails(_proposalId,_memberAddress,_GBTPayableTokenAmount,setOptionValue_givenByMemberSVT(_memberAddress,_proposalId,_GBTPayableTokenAmount),_optionHash,_dateAdd);
     }
 
@@ -295,6 +294,7 @@ contract StandardVotingType
         GD.setOptionDateAdded(_proposalId,currentDate);
         GD.setProposalAnsByAddress(_proposalId,_memberAddress); // Saving proposal id against memebr to which solution is provided
         GD.setOptionIdByAddress(_proposalId,_memberAddress);
+        GD.setTotalOptions(_proposalId);
     }
 }
 
