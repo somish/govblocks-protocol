@@ -86,39 +86,40 @@ contract Governance {
   }
   
   /// @dev Transfer reward after Final Proposal Decision.
-  function transferBackGBTtoken(address _memberAddress, uint _value) onlyInternal
+  function transferBackGBTtoken(address _memberAddress, uint _value,string _description) onlyInternal
   {
       GBTC=GBTController(GBTCAddress);
-      GBTC.transferGBT(_memberAddress,_value);
+      GBTC.transferGBT(_memberAddress,_value,_description);
   }
 
   function openProposalForVoting(uint _proposalId,uint _TokenAmount,uint24 _closeTime) public
   {
       PC = ProposalCategory(PCAddress);
-      GD =governanceData(GDAddress);
+      GD = governanceData(GDAddress);
       P1 = Pool(P1Address);
 
       require(GD.getProposalCategory(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2);
       // require(_TokenAmount >= PC.getMinStake(GD.getProposalCategory(_proposalId)) && _TokenAmount <= PC.getMaxStake(GD.getProposalCategory(_proposalId)));
 
-      payableGBTTokens(_TokenAmount);
+      uint closingTime = SafeMath.add(_closeTime,GD.getProposalDateUpd(_proposalId));
+      payableGBTTokens(_TokenAmount,"Payable GBT Stake to submit proposal for voting");
       setProposalValue(_proposalId,_TokenAmount);
-      GD.changeProposalStatus(_proposalId,2);
       // P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0));
       // uint closingTime = SafeMath.add(PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0),GD.getProposalDateUpd(_proposalId));
       
+      transferGBTtoPool(GD.getProposalIncentive(_proposalId));
+      GD.changeProposalStatus(_proposalId,2);
       P1.closeProposalOraclise(_proposalId,_closeTime);
-      uint closingTime = SafeMath.add(_closeTime,GD.getProposalDateUpd(_proposalId));
       GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),closingTime);
   }
   
  /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-  function payableGBTTokens(uint _TokenAmount) internal
+  function payableGBTTokens(uint _TokenAmount,string _description) internal
   {
       GBTC=GBTController(GBTCAddress);
       GD=governanceData(GDAddress);
       require(_TokenAmount >= GD.GBTStakeValue());
-      GBTC.receiveGBT(msg.sender,_TokenAmount);
+      GBTC.receiveGBT(msg.sender,_TokenAmount,_description);
   }
 
   /// @dev Edits a proposal and Only owner of a proposal can edit it.
@@ -147,8 +148,8 @@ contract Governance {
       GD.setProposalValue(_proposalId,finalProposalValue);
   }
   
-  /// @dev categorizing proposal to proceed further.
-  function categorizeProposal(uint _proposalId , uint8 _categoryId,uint8 _proposalComplexityLevel,uint _reward) public
+  /// @dev categorizing proposal to proceed further. _reward is the company incentive to distribute to End Members.
+  function categorizeProposal(uint _proposalId , uint8 _categoryId,uint8 _proposalComplexityLevel,uint _dappIncentive) public
   {
       MR = memberRoles(MRAddress);
       GD = governanceData(GDAddress);
@@ -156,7 +157,7 @@ contract Governance {
       require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
       require(GD.getProposalStatus(_proposalId) == 1 || GD.getProposalStatus(_proposalId) == 0);
 
-      addComplexityLevelAndIncentive(_proposalId,_categoryId,_proposalComplexityLevel,_reward);
+      addComplexityLevelAndIncentive(_proposalId,_categoryId,_proposalComplexityLevel,_dappIncentive);
       addInitialOptionDetails(_proposalId);
       GD.setCategorizedBy(_proposalId,msg.sender);
       GD.setProposalCategory(_proposalId,_categoryId);
@@ -186,10 +187,19 @@ contract Governance {
           openProposalForVoting(_proposalId,_TokenAmount,_closeTime);
           addInitialOptionDetails(_proposalId);
           GD.setCategorizedBy(_proposalId,msg.sender);
-          GD.setProposalIncentive(_proposalId,_categoryIncentive); 
+          GD.setProposalIncentive(_proposalId,_categoryIncentive);
+          transferGBTtoPool(_categoryIncentive); 
+          // payableGBTTokens(_categoryIncentive);
       }
       else
           GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId),now);          
+  }
+
+  function transferGBTtoPool(uint _TokenAmount) internal
+  {
+     P1=Pool(P1Address);
+     GD=governanceData(GDAddress);
+     P1.transferGBTtoController(_TokenAmount,"Dapp incentive to be distributed in GBT");
   }
   
  // /// @dev Creates a new proposal.
@@ -211,7 +221,6 @@ contract Governance {
       VT=VotingType(GD.getProposalVotingType(_proposalId));
       VT.addVerdictOption(_proposalId,msg.sender,_TokenAmount,_optionHash,nowDate); 
   }
-
 
 
   /// @dev AFter the proposal final decision, member reputation will get updated.
@@ -350,9 +359,9 @@ contract Governance {
         return (_proposalId,optionid,optionStake,optionValue,memberAddress,optionReward);
     }
 
-    function getOptionDetailsByAddress(uint _proposalId,address _memberAddress) constant returns(uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
+    function getOptionDetailsByAddress(uint _proposalId,address _memberAddress) constant returns(uint optionIndex,uint optionStake,uint optionReward,uint dateAdded,uint proposalId)
     {
-        GD=governanceData(GDAddress); uint optionIndex;
+        GD=governanceData(GDAddress);
         optionIndex = GD.getOptionIdByAddress(_proposalId,_memberAddress);
         optionStake = GD.getOptionStakeById(_proposalId,optionIndex);
         optionReward = GD.getOptionReward(_proposalId,optionIndex);
