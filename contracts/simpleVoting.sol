@@ -74,12 +74,12 @@ contract simpleVoting is VotingType
     }
     
     /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender
-    function payableGBTTokensSimpleVoting(address _member,uint _TokenAmount) internal
+    function payableGBTTokensSimpleVoting(address _member,uint _TokenAmount,string _description) internal
     {
         GBTC=GBTController(GBTCAddress);
         GD=governanceData(GDAddress);
         require(_TokenAmount >= GD.GBTStakeValue());
-        GBTC.receiveGBT(_member,_TokenAmount);
+        GBTC.receiveGBT(_member,_TokenAmount,_description);
     }
     
     function changeAllContractsAddress(address _StandardVotingAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _G1ContractAddress) onlyInternal
@@ -100,7 +100,7 @@ contract simpleVoting is VotingType
     {
         GBTC=GBTController(GBTCAddress);
         if(_memberStake != 0)
-            GBTC.receiveGBT(msg.sender,_memberStake);
+            GBTC.receiveGBT(msg.sender,_memberStake,"Payable GBT Stake for voting against proposal");
     }
 
     function addVerdictOption(uint _proposalId,address _member,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd)
@@ -108,7 +108,7 @@ contract simpleVoting is VotingType
         SVT=StandardVotingType(SVTAddress);
 
         SVT.addVerdictOptionSVT(_proposalId,_member,_GBTPayableTokenAmount,_optionHash,_dateAdd);
-        payableGBTTokensSimpleVoting(_member,_GBTPayableTokenAmount);
+        payableGBTTokensSimpleVoting(_member,_GBTPayableTokenAmount,"Payable GBT Stake for adding solution against proposal");
     }
      
     function initiateVerdictOption(uint _proposalId,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) 
@@ -201,7 +201,7 @@ contract simpleVoting is VotingType
     function giveReward_afterFinalDecision(uint _proposalId) 
     {
         GD=governanceData(GDAddress);
-        G1=Governance(G1Address);
+        G1=Governance(G1Address);        
         
          voteValueFavour=0;  voterStake=0;  wrongOptionStake=0;  returnTokens=0;
          totalVoteValue=0;  totalTokenToDistribute=0; 
@@ -222,7 +222,7 @@ contract simpleVoting is VotingType
                 voterStake = SafeMath.add(voterStake,burnedTokens);
                 returnTokens = SafeMath.sub(GD.getVoteStake(voteid),SafeMath.div(GD.getVoteStake(voteid),GD.globalRiskFactor()));
                 
-                G1.transferBackGBTtoken(GD.getVoterAddress(voteid),returnTokens);
+                G1.transferBackGBTtoken(GD.getVoterAddress(voteid),returnTokens,"Transfer Back GBT after penalty for voting other than final option -  Token Returned");
                 GD.callPenaltyEvent(GD.getVoterAddress(voteid),_proposalId,"Penalty for voting other than final option -  Token burned",burnedTokens);
                 GD.setVoteReward(voteid,returnTokens);
             }
@@ -260,12 +260,12 @@ contract simpleVoting is VotingType
         if(finalVerdict > 0) 
         {
             reward1 = SafeMath.div(SafeMath.mul(GD.getProposalValue(_proposalId),_totalTokenToDistribute),_totalVoteValue);
-            G1.transferBackGBTtoken(GD.getProposalOwner(_proposalId),SafeMath.add(GD.getProposalStake(_proposalId),reward1));
+            G1.transferBackGBTtoken(GD.getProposalOwner(_proposalId),SafeMath.add(GD.getProposalStake(_proposalId),reward1),"GBT Stake Returned for being Proposal owner - Accepted");
             G1.setProposalDetails(_proposalId,_totalTokenToDistribute,block.number,reward1);
             GD.callRewardEvent(GD.getProposalOwner(_proposalId),_proposalId,"Reward for proposal owner - Accepted ",reward1);
 
             reward3 = SafeMath.div(SafeMath.mul(GD.getOptionValueByProposalId(_proposalId,finalVerdict),_totalTokenToDistribute),_totalVoteValue);
-            G1.transferBackGBTtoken(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),SafeMath.add(GD.getOptionStakeById(_proposalId,finalVerdict),reward3));
+            G1.transferBackGBTtoken(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),SafeMath.add(GD.getOptionStakeById(_proposalId,finalVerdict),reward3),"GBT Stake Returned for being Final Solution owner - Accepted");
             GD.setOptionReward(_proposalId,reward3,finalVerdict);
             GD.callRewardEvent(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),_proposalId,"Reward for option owner - Final option by majority voting",reward3);
         }
@@ -278,7 +278,7 @@ contract simpleVoting is VotingType
                 reward = SafeMath.div(SafeMath.mul(GD.getVoteValue(voteid),_totalTokenToDistribute),_totalVoteValue);
                 uint repPoints = GD.getMemberReputation(GD.getVoterAddress(voteid))+addMemberPoints;
                 
-                G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward));
+                G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward),"Voting stake and reward earned after voted in favour of final option");
                 G1.updateMemberReputation1("Reputation credit after voted in favour of final option",_proposalId,GD.getVoterAddress(voteid),repPoints,addMemberPoints,"C");
                 GD.setVoteReward(voteid,reward);
                 GD.callRewardEvent(GD.getVoterAddress(voteid),_proposalId,"Reward for voting in favour of final option",reward);
