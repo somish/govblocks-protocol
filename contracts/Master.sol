@@ -348,6 +348,7 @@ contract Master is Ownable {
         GD=governanceData(governanceDataAddress);
         MR=memberRoles(memberRolesAddress);
         PC=ProposalCategory(proposalCategoryAddress);
+        P1=Pool(poolAddress);
 
         if(GD.constructorCheck() == 0)
             GD.GovernanceDataInitiate();
@@ -357,6 +358,9 @@ contract Master is Ownable {
             
         if(PC.constructorCheck() == 0)
             PC.ProposalCategoryInitiate(GBMAddress);
+
+        if(P1.constructorCheck() == 0)
+            P1.poolInitiate(GBMAddress);
     }
 
     /// @dev Stores the date when version of contracts get switched.
