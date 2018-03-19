@@ -153,12 +153,16 @@ contract Governance {
   {
       MR = memberRoles(MRAddress);
       GD = governanceData(GDAddress);
+      P1 = Pool(P1Address);
 
       require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
       require(GD.getProposalStatus(_proposalId) == 1 || GD.getProposalStatus(_proposalId) == 0);
-
+      
       addComplexityLevelAndIncentive(_proposalId,_categoryId,_proposalComplexityLevel,_dappIncentive);
       addInitialOptionDetails(_proposalId);
+      if(_dappIncentive != 0)
+        P1.buyGBT(_dappIncentive);
+        
       GD.setCategorizedBy(_proposalId,msg.sender);
       GD.setProposalCategory(_proposalId,_categoryId);
   }
