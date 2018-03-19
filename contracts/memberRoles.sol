@@ -17,6 +17,7 @@
 pragma solidity ^0.4.8;
 import "./Master.sol";
 import "./Ownable.sol";
+import "./governanceData.sol";
 // import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract  memberRoles
@@ -28,6 +29,8 @@ contract  memberRoles
   uint8 public constructorCheck;
   Master M1; 
   address masterAddress;
+  address GDAddress;
+  governanceData GD;
 
   struct memberRoleDetails
   {
@@ -42,7 +45,8 @@ contract  memberRoles
   function MemberRolesInitiate()
   {
     require(constructorCheck == 0);
-        memberRole.push("Member");
+        memberRole.push("");
+        memberRole.push("Token Holder");
         memberRole.push("Advisory Board");
         categorizeAuthRoleid=1;
         M1=Master(masterAddress);
@@ -76,6 +80,11 @@ contract  memberRoles
       }
   }
 
+  function changeAllContractAddress(address _GDAddress)
+  {
+    GDAddress = _GDAddress;
+  }
+
   function getRoleDescHash()constant returns(string)
   {
     return memberRoleDescHash;
@@ -84,7 +93,14 @@ contract  memberRoles
   /// @dev Get the role id assigned to a member when giving memberAddress
   function getMemberRoleIdByAddress(address _memberAddress) public constant returns(uint memberRoleId)
   {
-     memberRoleId = memberAddressToMemberRole[_memberAddress];
+      GD = governanceData(GDAddress);
+
+      if(memberRoleId >=1)
+          memberRoleId = memberAddressToMemberRole[_memberAddress];
+      else if(GD.getBalanceOfMember(_memberAddress) <= 0)
+          memberRoleId = memberAddressToMemberRole[_memberAddress];
+      else
+          memberRoleId = 2;
   }
 
   /// @dev Get that member address assigned as a specific role when giving member role Id.
