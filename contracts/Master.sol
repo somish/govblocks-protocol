@@ -286,6 +286,9 @@ contract Master is Ownable {
         
         PC=ProposalCategory(proposalCategoryAddress);
         PC.changeAllContractsAddress(memberRolesAddress,governanceDataAddress);
+   
+        MR=memberRoles(memberRolesAddress);
+        MR.changeAllContractAddress(governanceDataAddress);
    }
 
     /// @dev Change GBT token address all contracts
