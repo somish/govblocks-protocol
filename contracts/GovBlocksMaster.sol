@@ -16,6 +16,7 @@
 
 pragma solidity ^0.4.8;
 import "./Master.sol";
+import "./Pool.sol";
 import "./GenerateGD.sol";
 import "./GenerateSV.sol";
 import "./GenerateGOV.sol";
@@ -30,12 +31,14 @@ contract GovBlocksMaster
     memberRoles MR;
     ProposalCategory PC;
     governanceData GD;
+    Pool P1;
     address public owner;
     address GBTControllerAddress;
     address GBTAddress;
     address GDAddress;
     address SVAddress;
     address GOVAddress;
+    address P1Address;
     address public authGBOwner;
 
     struct GBDapps
@@ -165,9 +168,9 @@ contract GovBlocksMaster
         GBTAddress = _GBTokenAddress;
     }
     
-    function setDappUser(address _memberAddress,string _hash) onlyOwner
+    function setDappUser(string _hash)
     {
-       govBlocksUser[_memberAddress] = _hash;
+       govBlocksUser[msg.sender] = _hash;
     }
 
     function getGBTandGBTC() constant returns(address _GBTController,address _GBToken)
@@ -253,10 +256,7 @@ contract GovBlocksMaster
     }
 
 
-
-
     // ACTION AFTER PROPOSAL PASS function
-
 
     function addNewMemberRoleGB(bytes32 _gbUserName,bytes32 _newRoleName,string _newDescHash) 
     {
@@ -352,7 +352,15 @@ contract GovBlocksMaster
         }
     }
 
-
+    // function buyGBTforDapp(bytes32 _gbUserName,uint _amount)
+    // {
+    //     address master = govBlocksDapps[_gbUserName].masterAddress; address P1Address;
+    //     MS=Master(master);
+    //     uint versionNo = MS.versionLength()-1; 
+    //     (,P1Address) = MS.allContractVersions(versionNo,9);
+    //     P1=Pool(P1Address);
+    //     P1.buyGBT(_amount);
+    // }
 
 
 
