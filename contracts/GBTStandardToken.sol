@@ -21,9 +21,10 @@ import "./SafeMath.sol";
 
 contract GBTStandardToken is StandardToken
 {
+    event TransferGBT(address indexed from, address indexed to, uint256 value,string description);
+
     using SafeMath for uint;
     uint public tokenPrice;
-
     string public name;
     string public symbol;
     uint8 public decimals;
@@ -50,9 +51,15 @@ contract GBTStandardToken is StandardToken
         balances[_Address] = SafeMath.sub(balances[_Address],_value);
     }
 
-    function callTransferEvent(address _from,address _to,uint value) 
+    function callTransferEvent(address _from,address _to,uint _value,string _description) 
     {
-        Transfer(_from, _to, value);
+        callTransferGBTEvent(_from,_to,_value,_description);
+        Transfer(_from, _to, _value);
+    }
+
+    function callTransferGBTEvent(address _from, address _to, uint256 _value,string _description)
+    {
+        TransferGBT(_from,_to,_value,_description);
     }
     
     function addInTotalSupply(uint _tokens)
