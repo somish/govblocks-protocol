@@ -31,8 +31,6 @@ contract Pool is usingOraclize
     GBTController GBTC;
     GBTStandardToken GBTS;
     Master M1;
-    address GBMAddress;
-    uint8 public constructorCheck;
     // uint public tokenPrice;
 
     mapping(bytes32=>apiId) public allAPIid;
@@ -75,13 +73,6 @@ contract Pool is usingOraclize
         _; 
     }
      
-    function poolInitiate(address _GBMAddress)
-    {
-        require(constructorCheck == 0);
-        GBMAddress = _GBMAddress;
-        constructorCheck = 1;
-    }
-
     function changeGBTtokenAddress(address _GBTSContractAddress)
     {
         GBTStandardTokenAddress = _GBTSContractAddress;
@@ -94,13 +85,10 @@ contract Pool is usingOraclize
     
     function () payable {}
 
-    function buyGBT(uint _amount) 
+    function buyGBT(uint _amount) onlyInternal
     {
-        M1=Master(masterAddress);
-        require(msg.sender == GBMAddress || M1.isAuthGB(msg.sender) == 1);
-
         GBTC=GBTController(GBTControllerAddress);
-        GBTC.buyTokenGBT.value(_amount)(address(tfhis),"Buy GBT for the company");
+        GBTC.buyTokenGBT.value(_amount)(address(this),"Buy GBT for the company");
     }
 
     function transferGBTtoController(uint _amount,string _description) onlyInternal
