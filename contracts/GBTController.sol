@@ -64,39 +64,40 @@ contract GBTController {
         GBTStandardTokenAddress = _Address;
     }
 
-    function transferGBT(address _to, uint256 _value)   onlyInternal
+    function transferGBT(address _to, uint256 _value,string _description) onlyInternal
     {
         GBTS=GBTStandardToken(GBTStandardTokenAddress);
 
         require(_value <= GBTS.balanceOf(address(this)));
         GBTS.addInBalance(_to,_value);
         GBTS.subFromBalance(address(this),_value);
-        GBTS.callTransferEvent(address(this), _to, _value);
+        GBTS.callTransferEvent(address(this), _to, _value, _description);
     }
     
-    function receiveGBT(address _from,uint _value) onlyInternal
+    function receiveGBT(address _from,uint _value, string _description) onlyInternal
     {
         GBTS=GBTStandardToken(GBTStandardTokenAddress);
 
         require(_value <= GBTS.balanceOf(_from));
         GBTS.addInBalance(address(this),_value);
         GBTS.subFromBalance(_from,_value);
-        GBTS.callTransferEvent(_from, address(this), _value);
+        GBTS.callTransferEvent(_from, address(this), _value, _description);
     }  
     
     uint public actual_amount;
-    function buyTokenGBT(address _to) payable 
+    
+    function buyTokenGBT(address _to,string _description) payable 
     {
         actual_amount = (msg.value/tokenPrice);  // amount that was sent          
-        rewardToken(_to,actual_amount);
+        rewardToken(_to,actual_amount,_description);
     }
 
-    function rewardToken(address _to,uint _amount)  onlyInternal  
+    function rewardToken(address _to,uint _amount,string _description)  onlyInternal  
     {
         GBTS=GBTStandardToken(GBTStandardTokenAddress);
         GBTS.addInBalance(_to,_amount);
         GBTS.addInTotalSupply(_amount);
-        GBTS.callTransferEvent(GBTStandardTokenAddress, _to, _amount);
+        GBTS.callTransferEvent(GBTStandardTokenAddress, _to, _amount, _description);
     }
 
     function changeTokenPrice(uint _price)
