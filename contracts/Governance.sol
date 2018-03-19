@@ -99,6 +99,7 @@ contract Governance {
       P1 = Pool(P1Address);
 
       require(GD.getProposalCategory(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2);
+      require(GD.getProposalOwner(_proposalId) == msg.sender);
       // require(_TokenAmount >= PC.getMinStake(GD.getProposalCategory(_proposalId)) && _TokenAmount <= PC.getMaxStake(GD.getProposalCategory(_proposalId)));
 
       uint closingTime = SafeMath.add(_closeTime,GD.getProposalDateUpd(_proposalId));
