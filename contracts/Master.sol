@@ -400,6 +400,13 @@ contract Master is Ownable {
       GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
     }
 
+    function getDappTokenAddress()constant returns(address dappTokenAddress)
+    {
+        GBM=GovBlocksMaster(GBMAddress);
+        (,,dappTokenAddress,,,)=GBM.getGovBlocksUserDetails1(DappName);
+        return (dappTokenAddress);
+    }
+
     // function changeGDin_GBM(bytes32 _gbUserName,address _GDAddress)
     // {
     //   GBM=GovBlocksMaster(GBMAddress);
