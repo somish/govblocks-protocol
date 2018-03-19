@@ -211,9 +211,12 @@ contract GovBlocksMaster
     function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,string allContractsbyteCodeHash,string allCcontractsAbiHash,uint versionNo)
     {
         address master = govBlocksDapps[_gbUserName].masterAddress;
-        MS=Master(master);
-        versionNo = MS.versionLength();
-        return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,byteCodeHash,contractsAbiHash,versionNo);
+        if(master == 0x00)
+            return(GbUserName,0x00,"","",0);
+        else
+            MS=Master(master);
+            versionNo = MS.versionLength();
+            return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,byteCodeHash,contractsAbiHash,versionNo);
     }
 
     function getGovBlocksUserDetailsByIndex(uint _index) constant returns(uint index,bytes32 GbUserName,address MasterContractAddress)
@@ -244,9 +247,12 @@ contract GovBlocksMaster
     function getGovBlocksUserDetails1(bytes32 _gbUserName)constant returns(bytes32 GbUserName,address masterContractAddress,address dappTokenAddress,string allContractsbyteCodeHash,string allCcontractsAbiHash,uint versionNo)
     {
         address master = govBlocksDapps[_gbUserName].masterAddress;
-        MS=Master(master);
-        versionNo = MS.versionLength();
-        return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,govBlocksDapps[_gbUserName].tokenAddress,byteCodeHash,contractsAbiHash,versionNo);
+        if(master == 0x00)
+            return(GbUserName,0x00,0x00,"","",0);
+        else
+            MS=Master(master);
+            versionNo = MS.versionLength();
+            return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,govBlocksDapps[_gbUserName].tokenAddress,byteCodeHash,contractsAbiHash,versionNo);
     }
 
     function getGovBlocksUserDetails2(address _masterOrtokenAddress)constant returns(bytes32 dappName,address masterContractAddress,address dappTokenAddress)
@@ -254,6 +260,7 @@ contract GovBlocksMaster
        dappName = govBlocksDappByAddress[_masterOrtokenAddress];
        return (dappName,govBlocksDapps[dappName].masterAddress,govBlocksDapps[dappName].tokenAddress);
     }
+
 
 
     // ACTION AFTER PROPOSAL PASS function
