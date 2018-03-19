@@ -31,6 +31,8 @@ contract Pool is usingOraclize
     GBTController GBTC;
     GBTStandardToken GBTS;
     Master M1;
+    address GBMAddress;
+    uint8 public constructorCheck;
     // uint public tokenPrice;
 
     mapping(bytes32=>apiId) public allAPIid;
@@ -73,6 +75,13 @@ contract Pool is usingOraclize
         _; 
     }
      
+    function poolInitiate(address _GBMAddress)
+    {
+        require(constructorCheck == 0);
+        GBMAddress = _GBMAddress;
+        constructorCheck = 1;
+    }
+
     function changeGBTtokenAddress(address _GBTSContractAddress)
     {
         GBTStandardTokenAddress = _GBTSContractAddress;
@@ -84,6 +93,21 @@ contract Pool is usingOraclize
     }
     
     function () payable {}
+
+    function buyGBT(uint _amount) 
+    {
+        M1=Master(masterAddress);
+        require(msg.sender == GBMAddress || M1.isAuthGB(msg.sender) == 1);
+
+        GBTC=GBTController(GBTControllerAddress);
+        GBTC.buyTokenGBT.value(_amount)(address(tfhis),"Buy GBT for the company");
+    }
+
+    function transferGBTtoController(uint _amount,string _description) onlyInternal
+    {
+        GBTC=GBTController(GBTControllerAddress);
+        GBTC.receiveGBT(address(this),_amount,_description);
+    }
 
     function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
     {
@@ -148,20 +172,22 @@ contract Pool is usingOraclize
     }
 
    function bytes32ToString(bytes32 x) constant returns (string) {
-    bytes memory bytesString = new bytes(32);
-    uint charCount = 0;
-    for (uint j = 0; j < 32; j++) {
-        byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
-        if (char != 0) {
-            bytesString[charCount] = char;
-            charCount++;
+        bytes memory bytesString = new bytes(32);
+        uint charCount = 0;
+        for (uint j = 0; j < 32; j++) {
+            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+            if (char != 0) {
+                bytesString[charCount] = char;
+                charCount++;
+            }
         }
+        bytes memory bytesStringTrimmed = new bytes(charCount);
+        for (j = 0; j < charCount; j++) {
+            bytesStringTrimmed[j] = bytesString[j];
+        }
+        return string(bytesStringTrimmed);
     }
-    bytes memory bytesStringTrimmed = new bytes(charCount);
-    for (j = 0; j < charCount; j++) {
-        bytesStringTrimmed[j] = bytesString[j];
-    }
-    return string(bytesStringTrimmed);
-}
+
+
 
 }
