@@ -134,11 +134,13 @@ contract StandardVotingType
         require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GD.getBalanceOfMember(_memberAddress) != 0);
         require(GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0 && _GBTPayableTokenAmount > 0);
         
+        GD.setOptionIdByAddress(_proposalId,_memberAddress);
+        
         // uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
         // (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(GD.getProposalCategory(_proposalId));
 
         // require(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length);
-            // addVerdictOptionSVT2(_proposalId,GD.getProposalCategory(_proposalId),_paramInt,_paramBytes32,_paramAddress);
+        // addVerdictOptionSVT2(_proposalId,GD.getProposalCategory(_proposalId),_paramInt,_paramBytes32,_paramAddress);
             addVerdictOptionSVT1(_proposalId,_memberAddress,_GBTPayableTokenAmount,_optionHash,_dateAdd);
     }
 
@@ -210,6 +212,7 @@ contract StandardVotingType
         GD=governanceData(GDAddress);
         MR=memberRoles(MRAddress);
         G1=Governance(G1Address);
+        P1=Pool(P1Address);
     
         VT=VotingType(GD.getProposalVotingType(_proposalId));
         
@@ -245,7 +248,6 @@ contract StandardVotingType
                         if(currentVotingId < _roleSequenceLength)
                         {
                             G1.updateProposalDetails(_proposalId,currentVotingId,max,0);
-                            P1=Pool(P1Address);
                             P1.closeProposalOraclise(_proposalId,_closingTime); 
                             GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),_closingTime);
                         } 
@@ -253,7 +255,6 @@ contract StandardVotingType
                         {
                             G1.updateProposalDetails(_proposalId,currentVotingId,max,max);
                             GD.changeProposalStatus(_proposalId,3);
-                            // PC.actionAfterProposalPass(_proposalId ,category);
                             VT.giveReward_afterFinalDecision(_proposalId);
                         }
                     }
@@ -293,7 +294,6 @@ contract StandardVotingType
         GD.setOptionHash(_proposalId,_optionHash);
         GD.setOptionDateAdded(_proposalId,currentDate);
         GD.setProposalAnsByAddress(_proposalId,_memberAddress); // Saving proposal id against memebr to which solution is provided
-        GD.setOptionIdByAddress(_proposalId,_memberAddress);
         GD.setTotalOptions(_proposalId);
     }
 }
