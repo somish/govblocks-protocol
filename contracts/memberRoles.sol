@@ -98,7 +98,8 @@ contract  memberRoles
   {
       M1=Master(masterAddress); address tokenAddress;
       tokenAddress=M1.getDappTokenAddress();
-
+      BT=BasicToken(tokenAddress);
+      
       if(memberRoleId >=1)
           memberRoleId = memberAddressToMemberRole[_memberAddress];
       else if(BT.balanceOf(_memberAddress) <= 0)
