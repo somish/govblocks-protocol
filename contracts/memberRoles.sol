@@ -105,7 +105,7 @@ contract  memberRoles
       else if(BT.balanceOf(_memberAddress) <= 0)
           memberRoleId = memberAddressToMemberRole[_memberAddress];
       else
-          memberRoleId = 2;
+          memberRoleId = 1;
   }
 
   /// @dev Get that member address assigned as a specific role when giving member role Id.

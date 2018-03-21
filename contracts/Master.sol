@@ -169,7 +169,6 @@ contract Master is Ownable {
     }
 
 
-
     /// @dev Changes all reference contract addresses in master 
     function changeAddressInMaster(uint _version) 
     {
@@ -327,6 +326,7 @@ contract Master is Ownable {
             
             P1=Pool(poolAddress);
             P1.changeGBTControllerAddress(_controllerAddress);
+            
         }
     }
 
@@ -376,10 +376,10 @@ contract Master is Ownable {
     }
 
     function getCurrentVersion() constant returns(uint versionNo, address masterAddress)
-   {
+    {
        versionNo = versionLength - 1;
        masterAddress = allContractVersions[versionNo][0].contractAddress;
-   }
+    }
 
     function getLatestVersionData(uint _versionNo)constant returns(uint versionNo,bytes32[] contractsName, address[] contractsAddress)
     {
@@ -400,29 +400,16 @@ contract Master is Ownable {
       GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
     }
 
+    function changeDappTokenAddressin_GBM(bytes32 _gbUserName,address _newTokenAddress)
+    {
+      GBM=GovBlocksMaster(GBMAddress);
+      GBM.changeDappTokenAddress(_gbUserName,_newTokenAddress);
+    }
+
     function getDappTokenAddress()constant returns(address dappTokenAddress)
     {
         GBM=GovBlocksMaster(GBMAddress);
-        (,,dappTokenAddress,,,)=GBM.getGovBlocksUserDetails1(DappName);
+        dappTokenAddress=GBM.getDappTokenAddress(DappName);
         return (dappTokenAddress);
     }
-
-    // function changeGDin_GBM(bytes32 _gbUserName,address _GDAddress)
-    // {
-    //   GBM=GovBlocksMaster(GBMAddress);
-    //   GBM.changeDappGDAddress(_gbUserName,_GDAddress);
-    // }
-
-    // function changeSVin_GBM(bytes32 _gbUserName,address _SVAddress)
-    // {
-    //   GBM=GovBlocksMaster(GBMAddress);
-    //   GBM.changeDappSVAddress(_gbUserName,_MRAddress);
-    // }
-
-    // function changeGOVin_GBM(bytes32 _gbUserName,address _GOVAddress)
-    // {
-    //   GBM=GovBlocksMaster(GBMAddress);
-    //   GBM.changeDappGOVAddress(_gbUserName,_PCAddress);
-    // }
-
 }

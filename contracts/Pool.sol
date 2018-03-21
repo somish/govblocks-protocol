@@ -88,7 +88,7 @@ contract Pool is usingOraclize
     function buyGBT(uint _amount) onlyInternal
     {
         GBTC=GBTController(GBTControllerAddress);
-        GBTC.buyTokenGBT.value(_amount)(address(this),"Buy GBT for the company");
+        GBTC.buyTokenGBT.value(_amount)(address(this));
     }
 
     function transferGBTtoController(uint _amount,string _description) onlyInternal

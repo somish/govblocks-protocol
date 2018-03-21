@@ -126,11 +126,18 @@ contract GovBlocksMaster
     function changeDappMasterAddress(bytes32 _gbUserName,address _newMasterAddress)
     {
        if( govBlocksDapps[_gbUserName].masterAddress == 0x000)
-                   govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
+        {       
+            govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
+            govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
+        }
+
        else
         {            
             if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
-                 govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
+                {
+                    govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
+                govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
+            }
             else
                 throw;
         }   
@@ -139,11 +146,17 @@ contract GovBlocksMaster
     function changeDappTokenAddress(bytes32 _gbUserName,address _dappTokenAddress)
     {
        if( govBlocksDapps[_gbUserName].tokenAddress == 0x000)
-                   govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
+       {
+            govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
+            govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
+        }
        else
         {            
             if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
-                 govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
+                {
+                    govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
+                govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
+            }
             else
                 throw;
         }   
@@ -173,9 +186,82 @@ contract GovBlocksMaster
        govBlocksUser[msg.sender] = _hash;
     }
 
+    function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
+    {
+       return (byteCodeHash,contractsAbiHash);
+    }
+
+    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,string allContractsbyteCodeHash,string allCcontractsAbiHash,uint versionNo)
+    {
+        address master = govBlocksDapps[_gbUserName].masterAddress;
+        if(master == 0x00)
+            return(GbUserName,0x00,"","",0);
+        else
+            MS=Master(master);
+            versionNo = MS.versionLength();
+            return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,byteCodeHash,contractsAbiHash,versionNo);
+    }
+
+    function getGovBlocksUserDetailsByIndex(uint _index) constant returns(uint index,bytes32 GbUserName,address MasterContractAddress)
+    {
+       return (_index,allGovBlocksUsers[_index],govBlocksDapps[allGovBlocksUsers[_index]].masterAddress);
+    }
+
+    function getGovBlocksUserDetails1(bytes32 _gbUserName)constant returns(bytes32 GbUserName,address masterContractAddress,address dappTokenAddress,string allContractsbyteCodeHash,string allCcontractsAbiHash,uint versionNo)
+    {
+        address master = govBlocksDapps[_gbUserName].masterAddress;
+        if(master == 0x00)
+            return(GbUserName,0x00,0x00,"","",0);
+        else
+            MS=Master(master);
+            versionNo = MS.versionLength();
+            return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,govBlocksDapps[_gbUserName].tokenAddress,byteCodeHash,contractsAbiHash,versionNo);
+    }
+
+    function getGovBlocksUserDetails2(address _Address)constant returns(bytes32 dappName,address masterContractAddress,address dappTokenAddress)
+    {
+       dappName = govBlocksDappByAddress[_Address];
+       return (dappName,govBlocksDapps[dappName].masterAddress,govBlocksDapps[dappName].tokenAddress);
+    }
+
+    function getAllDappLength()constant returns(uint)
+    {
+       return (allGovBlocksUsers.length);
+    }
+
+    function getAllDappById(uint _gbIndex)constant returns (bytes32 _gbUserName)
+    {
+       return (allGovBlocksUsers[_gbIndex]);
+    }
+
+    function getAllDappArray()constant returns(bytes32[])
+    {
+       return (allGovBlocksUsers);
+    }
+
+    function getDappUser()constant returns (string)
+    {
+       return (govBlocksUser[msg.sender]);
+    }
+
+    function getDappMasterAddress(bytes32 _gbUserName)constant returns(address masterAddress)
+    {
+        return (govBlocksDapps[_gbUserName].masterAddress);
+    }
+
+    function getDappTokenAddress(bytes32 _gbUserName)constant returns(address tokenAddres)
+    {
+        return (govBlocksDapps[_gbUserName].tokenAddress);
+    }
+
+    function getDappNameByAddress(address _contractAddress)constant returns(bytes32)
+    {
+            return govBlocksDappByAddress[_contractAddress];
+    }
+
     function getGBTandGBTC() constant returns(address _GBTController,address _GBToken)
     {
-       return (GBTControllerAddress,GBTAddress);
+        return (GBTControllerAddress,GBTAddress);
     }
 
     function getGBTAddress()constant returns(address)
@@ -201,64 +287,6 @@ contract GovBlocksMaster
     function getGOVAddress()constant returns(address)
     {
       return GOVAddress;
-    }
-
-    function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
-    {
-       return (byteCodeHash,contractsAbiHash);
-    }
-
-    function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,string allContractsbyteCodeHash,string allCcontractsAbiHash,uint versionNo)
-    {
-        address master = govBlocksDapps[_gbUserName].masterAddress;
-        if(master == 0x00)
-            return(GbUserName,0x00,"","",0);
-        else
-            MS=Master(master);
-            versionNo = MS.versionLength();
-            return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,byteCodeHash,contractsAbiHash,versionNo);
-    }
-
-    function getGovBlocksUserDetailsByIndex(uint _index) constant returns(uint index,bytes32 GbUserName,address MasterContractAddress)
-    {
-       return (_index,allGovBlocksUsers[_index],govBlocksDapps[allGovBlocksUsers[_index]].masterAddress);
-    }
-
-    function getAllDappLength()constant returns(uint)
-    {
-       return (allGovBlocksUsers.length);
-    }
-
-    function getAllDappById(uint _gbIndex)constant returns (bytes32 _gbUserName)
-    {
-       return (allGovBlocksUsers[_gbIndex]);
-    }
-
-    function getAllDappArray()constant returns(bytes32[])
-    {
-       return (allGovBlocksUsers);
-    }
-
-    function getDappUser(address _memberAddress)constant returns (string)
-    {
-       return (govBlocksUser[_memberAddress]);
-    }
-
-    function getGovBlocksUserDetails1(bytes32 _gbUserName)constant returns(bytes32 GbUserName,address masterContractAddress,address dappTokenAddress,string allContractsbyteCodeHash,string allCcontractsAbiHash,uint versionNo)
-    {
-        address master = govBlocksDapps[_gbUserName].masterAddress;
-        if(master == 0x00)
-            return(GbUserName,0x00,0x00,"","",0);
-        else
-            MS=Master(master);
-            versionNo = MS.versionLength();
-            return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,govBlocksDapps[_gbUserName].tokenAddress,byteCodeHash,contractsAbiHash,versionNo);
-    }
-
-    function getGovBlocksUserDetails2(address _masterOrtokenAddress)constant returns(bytes32 dappName,address masterContractAddress,address dappTokenAddress)
-    {
-       dappName = govBlocksDappByAddress[_masterOrtokenAddress];
-       return (dappName,govBlocksDapps[dappName].masterAddress,govBlocksDapps[dappName].tokenAddress);
     }
 
 
@@ -315,11 +343,11 @@ contract GovBlocksMaster
 
         if(_typeOf == "APO")
         {
-           GD.changeProposalOwnerAdd(_value);
+          GD.changeProposalOwnerAdd(_value);
         }
         else if(_typeOf == "AOO")
         {
-           GD.changeOptionOwnerAdd(_value);
+          GD.changeOptionOwnerAdd(_value);
         }
         else if(_typeOf == "AVM")
         {
@@ -339,11 +367,11 @@ contract GovBlocksMaster
         }//
         else if(_typeOf == "GBTS")
         {
-           GD.changeGBTStakeValue(_value);
+          GD.changeGBTStakeValue(_value);
         }
         else if(_typeOf == "RF")
         {
-           GD.changeGlobalRiskFactor(_value);
+          GD.changeGlobalRiskFactor(_value);
         }
          else if(_typeOf == "MSF")
         {
