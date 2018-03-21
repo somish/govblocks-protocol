@@ -92,7 +92,7 @@ contract GBTController {
         rewardToken(_to,actual_amount,_description);
     }
 
-    function rewardToken(address _to,uint _amount,string _description)  onlyInternal  
+    function rewardToken(address _to,uint _amount,string _description)  internal  
     {
         GBTS=GBTStandardToken(GBTStandardTokenAddress);
         GBTS.addInBalance(_to,_amount);
