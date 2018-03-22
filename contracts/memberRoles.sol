@@ -49,8 +49,8 @@ contract  memberRoles
   {
     require(constructorCheck == 0);
         memberRole.push("");
-        memberRole.push("Token Holder");
         memberRole.push("Advisory Board");
+        memberRole.push("Token Holder");
         categorizeAuthRoleid=1;
         M1=Master(masterAddress);
         address ownAddress = M1.owner();
@@ -105,7 +105,7 @@ contract  memberRoles
       else if(BT.balanceOf(_memberAddress) <= 0)
           memberRoleId = memberAddressToMemberRole[_memberAddress];
       else
-          memberRoleId = 1;
+          memberRoleId = 2;
   }
 
   /// @dev Get that member address assigned as a specific role when giving member role Id.
