@@ -97,11 +97,11 @@ contract ProposalCategory
         require(constructorCheck == 0);
         GBMAddress = _GBMAddress;
         addNewCategory("QmcEP2ELejTFsaLCeiukMNS9HSg6mxitFubHEuuLDSLbYt");
-        addNewCategory("QmNVY7Z5NqMtbGwBqsaPJzLnz5fpcZzBAEJfu3WBLWf1R3");
-        addNewCategory("QmSYYARHcqaimcZV1vh5He5cKh8wBdYbFehJQZqCeLgrg9");
-        addNewCategory("QmTXBaAPSia1XLK18VscLMtAivucY53TUFfDFDvBdW97Dq");
-        addNewCategory("QmPtd2fqh4EYxyhwW19hAE3GdVrHDWrLVsJrmaAPApk22Q");
-        addNewCategory("QmSLoyYfyjNA6smpKLRbMkUejNEiiTVF5HQeH5BqJMzquG");
+        addNewCategory("QmWCvo6vbFg3s8pcoYYRVArJ8kHYu9yDUnitChYPMcphJx");
+        addNewCategory("QmVUzcTpWxWZpHg9xVgcpykYR9nDL8wHwv8FbWHBTk1dZG");
+        addNewCategory("QmPNSRyY1GGCgrNHWfT4h2Swixv8GrjpfyhFre6gArsmAL");
+        addNewCategory("QmTrnWVi9W6cQ5VqoznrXHbVKPNzjPugrumVPjQtT3ykTn");
+        addNewCategory("QmW9FchyLSCA247peD236Q1pZDfsvQyWs1a4WQjx5hGn6r");
         addNewCategory("QmeFzZaydytUXrDPgdJCsYHQzXKjRgmRdLXLo5bC4serRV");
 
         // require(uintParam.length == 0 && bytesParam.length == 0 && addressParam.length == 0);

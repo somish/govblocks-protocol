@@ -55,6 +55,7 @@ contract  memberRoles
         M1=Master(masterAddress);
         address ownAddress = M1.owner();
         updateMemberRole(ownAddress,1,1);
+        setRoleDescHash("QmTDisHekKVCBc4JNHfdiiZNgFRqdPoNn69QbD2vwTeo9L");
         constructorCheck =1;
   }
 
@@ -125,6 +126,11 @@ contract  memberRoles
   {
       memberRole.push(_newRoleName);
       memberRoleDescHash = _newDescHash;  
+  }
+
+  function setRoleDescHash(string _newDescHash)
+  {
+     memberRoleDescHash = _newDescHash;
   }
   
   /// @dev Get the role name whem giving role Id.
