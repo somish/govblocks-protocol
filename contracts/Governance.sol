@@ -182,11 +182,13 @@ contract Governance {
       GD=governanceData(GDAddress);
       PC=ProposalCategory(PCAddress);
       require(GD.getBalanceOfMember(msg.sender) != 0);
-      GD.addTotalProposal(GD.getProposalLength(),msg.sender);
+      uint _proposalId = GD.getProposalLength();
+      address votingAddress = GD.getVotingTypeAddress(_votingTypeId);
+
+      GD.addTotalProposal(_proposalId,msg.sender);
 
       if(_categoryId > 0)
       {
-          uint _proposalId = GD.getProposalLength();
           address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
           GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress,_dateAdd);
           openProposalForVoting(_proposalId,_TokenAmount,_closeTime);
@@ -197,7 +199,7 @@ contract Governance {
           // payableGBTTokens(_categoryIncentive);
       }
       else
-          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,GD.getVotingTypeAddress(_votingTypeId),now);          
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,votingAddress,now);          
   }
 
   function transferGBTtoPool(uint _TokenAmount) internal
