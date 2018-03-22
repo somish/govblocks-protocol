@@ -100,7 +100,7 @@ contract  memberRoles
       M1=Master(masterAddress); address tokenAddress;
       tokenAddress=M1.getDappTokenAddress();
       BT=BasicToken(tokenAddress);
-      // memberRoleId = memberAddressToMemberRole[_memberAddress];
+      memberRoleId = memberAddressToMemberRole[_memberAddress];
       
       if(memberRoleId >=1)
           memberRoleId = memberAddressToMemberRole[_memberAddress];
