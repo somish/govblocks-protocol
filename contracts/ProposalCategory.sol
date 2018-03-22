@@ -101,7 +101,7 @@ contract ProposalCategory
         addNewCategory("QmVUzcTpWxWZpHg9xVgcpykYR9nDL8wHwv8FbWHBTk1dZG");
         addNewCategory("QmPNSRyY1GGCgrNHWfT4h2Swixv8GrjpfyhFre6gArsmAL");
         addNewCategory("QmTrnWVi9W6cQ5VqoznrXHbVKPNzjPugrumVPjQtT3ykTn");
-        addNewCategory("QmW9FchyLSCA247peD236Q1pZDfsvQyWs1a4WQjx5hGn6r");
+        addNewCategory("QmXHkn8tPWMPy7xQfaZCBx1VgnApm17FjBnJ7r4RZqq2mA");
         addNewCategory("QmeFzZaydytUXrDPgdJCsYHQzXKjRgmRdLXLo5bC4serRV");
 
         // require(uintParam.length == 0 && bytesParam.length == 0 && addressParam.length == 0);

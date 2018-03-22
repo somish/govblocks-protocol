@@ -161,8 +161,11 @@ contract Governance {
       
       addComplexityLevelAndIncentive(_proposalId,_categoryId,_proposalComplexityLevel,_dappIncentive);
       addInitialOptionDetails(_proposalId);
-      if(_dappIncentive != 0)
-        P1.buyGBT(_dappIncentive);
+      
+      GD.setProposalIncentive(_proposalId,_dappIncentive);
+
+      // if(_dappIncentive != 0)
+      //   P1.buyGBT(_dappIncentive);
         
       GD.setCategorizedBy(_proposalId,msg.sender);
       GD.setProposalCategory(_proposalId,_categoryId);
