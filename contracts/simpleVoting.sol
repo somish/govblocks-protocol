@@ -96,7 +96,7 @@ contract simpleVoting is VotingType
         GBTCAddress = _GBTCAddress;
     }
 
-    function transferVoteStakeSV(uint _memberStake) onlyInternal
+    function transferVoteStakeSV(uint _memberStake) 
     {
         GBTC=GBTController(GBTCAddress);
         if(_memberStake != 0)
