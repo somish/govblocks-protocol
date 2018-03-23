@@ -162,11 +162,12 @@ contract Governance {
       addComplexityLevelAndIncentive(_proposalId,_categoryId,_proposalComplexityLevel,_dappIncentive);
       addInitialOptionDetails(_proposalId);
       
-       if(_dappIncentive != 0)
-         uint gbtBalanceOfPool = GD.getBalanceOfMember(P1Address);
-         require (gbtBalanceOfPool > _dappIncentive);
-         
-      GD.setProposalIncentive(_proposalId,_dappIncentive);
+
+     if(_dappIncentive != 0)
+        uint gbtBalanceOfPool = GD.getBalanceOfMember(P1Address);
+        require (gbtBalanceOfPool > _dappIncentive);
+       
+     GD.setProposalIncentive(_proposalId,_dappIncentive);
       GD.setCategorizedBy(_proposalId,msg.sender);
       GD.setProposalCategory(_proposalId,_categoryId);
   }
