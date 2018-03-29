@@ -48,6 +48,8 @@ contract Governance {
   BasicToken BT;
   Pool P1;
   VotingType VT;
+  uint8 public checkCPWO;
+
 
     modifier onlyInternal {
         MS=Master(masterAddress);
@@ -100,17 +102,18 @@ contract Governance {
 
       require(GD.getProposalCategory(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2);
       require(GD.getProposalOwner(_proposalId) == msg.sender);
-      // require(_TokenAmount >= PC.getMinStake(GD.getProposalCategory(_proposalId)) && _TokenAmount <= PC.getMaxStake(GD.getProposalCategory(_proposalId)));
-
       uint closingTime = SafeMath.add(_closeTime,GD.getProposalDateUpd(_proposalId));
-      payableGBTTokens(_TokenAmount,"Payable GBT Stake to submit proposal for voting");
       setProposalValue(_proposalId,_TokenAmount);
-      // P1.closeProposalOraclise(_proposalId,PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0));
-      // uint closingTime = SafeMath.add(PC.getClosingTimeByIndex(GD.getProposalCategory(_proposalId),0),GD.getProposalDateUpd(_proposalId));
+
+      if(_TokenAmount != 0)
+        require(GD.getBalanceOfMember(msg.sender) != 0);
+    
+      if(checkCPWO == 0)
+        payableGBTTokens(_TokenAmount,"Payable GBT Stake to submit proposal for voting");    
       
       transferGBTtoPool(GD.getProposalIncentive(_proposalId));
-      GD.changeProposalStatus(_proposalId,2);
       P1.closeProposalOraclise(_proposalId,_closeTime);
+      GD.changeProposalStatus(_proposalId,2);
       GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),closingTime);
   }
   
@@ -185,7 +188,7 @@ contract Governance {
   {
       GD=governanceData(GDAddress);
       PC=ProposalCategory(PCAddress);
-      require(GD.getBalanceOfMember(msg.sender) != 0);
+      // require(GD.getBalanceOfMember(msg.sender) != 0);
       uint _proposalId = GD.getProposalLength();
       address votingAddress = GD.getVotingTypeAddress(_votingTypeId);
 
@@ -199,11 +202,12 @@ contract Governance {
           addInitialOptionDetails(_proposalId);
           GD.setCategorizedBy(_proposalId,msg.sender);
           GD.setProposalIncentive(_proposalId,_categoryIncentive);
-          transferGBTtoPool(_categoryIncentive); 
+          // transferGBTtoPool(_categoryIncentive); 
           // payableGBTTokens(_categoryIncentive);
       }
       else
-          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,votingAddress,now);          
+          {checkCPWO =0;
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,votingAddress,now); }
   }
 
   function transferGBTtoPool(uint _TokenAmount) internal
@@ -226,6 +230,7 @@ contract Governance {
   function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _categoryIncentive,uint _TokenAmount,string _optionHash,uint24 _closeTime) public
   {
       GD=governanceData(GDAddress);
+      checkCPWO =1;
       uint nowDate = now;
       createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime,nowDate);
       uint _proposalId = GD.getProposalLength()-1;
@@ -543,5 +548,19 @@ contract Governance {
           uint stake = GD.getOptionStakeById(_proposalId,i);
           totalOptionStake = totalOptionStake + stake;
         }
+    }
+
+    /// @dev Get the Value, stake and Address of the member whosoever added that verdict option.
+    function getOptionDetailsById1(uint _proposalId,uint _optionIndex) constant returns(uint propId, uint optionid,uint optionStake,uint optionValue,address memberAddress,uint optionReward,uint dateAdded)
+    {
+        GD=governanceData(GDAddress);
+        propId = _proposalId;
+        optionid = _optionIndex;
+        optionStake = GD.getOptionStakeById(_proposalId,_optionIndex);
+        optionValue = GD.getOptionValueByProposalId(_proposalId,_optionIndex);
+        memberAddress = GD.getOptionAddressByProposalId(_proposalId,_optionIndex);
+        optionReward = GD.getOptionReward(_proposalId,_optionIndex);
+        dateAdded = GD.getOptionDateAdded(_proposalId,_optionIndex);
+        return (_proposalId,optionid,optionStake,optionValue,memberAddress,optionReward,dateAdded);
     }
 }
