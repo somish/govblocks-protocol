@@ -330,7 +330,7 @@ contract Master is Ownable {
         }
     }
 
-    /// @dev Switch to the recent version of contracts. (Last one)
+    /// @dev Switch to the recent version of contracts.
     function switchToRecentVersion() 
     {
         uint version = versionLength-1;

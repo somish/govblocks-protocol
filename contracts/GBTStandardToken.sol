@@ -51,11 +51,6 @@ contract GBTStandardToken is StandardToken
         balances[_Address] = SafeMath.sub(balances[_Address],_value);
     }
 
-    function callTransferEvent(address _from,address _to,uint _value) 
-    {
-        Transfer(_from, _to, _value);
-    }
-
     function callTransferGBTEvent(address _from, address _to, uint256 _value,string _description)
     {
         TransferGBT(_from,_to,_value,_description);

@@ -23,6 +23,8 @@ import "./GBTController.sol";
 
 contract Pool is usingOraclize
 {
+    event closeProposal(uint256 indexed proposalId,uint256 closingTime,string URL);
+
     using SafeMath for uint;
     address masterAddress;
     address GBTOwner;
@@ -85,11 +87,19 @@ contract Pool is usingOraclize
     
     function () payable {}
 
-    function buyGBT(uint _amount) 
+    // function buyGBT(uint _amount) 
+    // {
+    //     GBTC=GBTController(GBTControllerAddress);
+    //     GBTC.buyTokenGBT.value(_amount)(address(this));
+    // }
+
+
+    function buyGBT() payable
     {
         GBTC=GBTController(GBTControllerAddress);
-        GBTC.buyTokenGBT.value(_amount)(address(this));
+        GBTC.buyTokenGBT.value(msg.value)(address(this));
     }
+
 
     function transferGBTtoController(uint _amount,string _description) 
     {
@@ -103,10 +113,12 @@ contract Pool is usingOraclize
         M1=Master(masterAddress);
 
         if (_closingTime == 0)
-            myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",bytes32ToString(M1.DappName()),uint2str(index)));
+            myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
         else
-            myid2 = oraclize_query(_closingTime,"URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",bytes32ToString(M1.DappName()),uint2str(index)));
+            myid2 = oraclize_query(_closingTime,"URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
         
+        uint closeTime = now + _closingTime;
+        closeProposal(_proposalId,closeTime,strConcat("http://a1.govblocks.io/closeProposalVoting.js/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
@@ -141,7 +153,7 @@ contract Pool is usingOraclize
         _typeof=allAPIid[myid].type_of;
     }
 
-    function getIdOfApiId(bytes32 myid)constant returns(uint id1)
+    function getProposalIdOfApiId(bytes32 myid)constant returns(uint id1)
     {
         id1 = allAPIid[myid].proposalId;
     }
@@ -176,6 +188,16 @@ contract Pool is usingOraclize
         return string(bytesStringTrimmed);
     }
 
-
+    function getMyIndexByProposalId(uint _proposalId) constant returns(uint myIndexId)
+    {
+        uint length = getApilCall_length();
+        for(uint i=0; i<length; i++)
+        {
+            bytes32 myid = getApiCall_Index(i);
+            uint propId = getProposalIdOfApiId(myid);
+            if(_proposalId == propId)
+                myIndexId = i;
+        }
+    }
 
 }

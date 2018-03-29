@@ -221,7 +221,7 @@ contract StandardVotingType
         (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
         uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId);
 
-        require(G1.checkProposalVoteClosing(_proposalId,_roleId,_closingTime)==1); //1
+        require(G1.checkProposalVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote)==1); //1
         // uint roleId = PC.getRoleSequencAtIndex(category,currentVotingId);
     
         max=0;  

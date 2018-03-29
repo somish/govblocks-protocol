@@ -131,7 +131,7 @@ contract Governance {
       updateProposalDetails1(_proposalId,_proposalDescHash);
       GD.changeProposalStatus(_proposalId,1);
       
-      require(GD.getProposalCategory(_proposalId) > 0);
+      if(GD.getProposalCategory(_proposalId) > 0)
         GD.setProposalCategory(_proposalId,0);
   }
 
@@ -285,16 +285,28 @@ contract Governance {
   //       closeValue=1;
   // }
 
-  function checkProposalVoteClosing(uint _proposalId,uint _roleId,uint _closingTime) onlyInternal constant returns(uint8 closeValue) 
+  function checkProposalVoteClosing(uint _proposalId,uint _roleId,uint _closingTime,uint _majorityVote) onlyInternal constant returns(uint8 closeValue) 
   {
       GD=governanceData(GDAddress);
       MR=memberRoles(MRAddress);
       
       uint dateUpdate;
       (,,,,dateUpdate,,) = GD.getProposalDetailsById1(_proposalId);
+      uint totalVotes = ((GD.getVoteLength(_proposalId,_roleId)*100)/MR.getAllMemberLength(_roleId));
 
-      if(SafeMath.add(dateUpdate,_closingTime) <= now || GD.getVoteLength(_proposalId,_roleId) == MR.getAllMemberLength(_roleId))
-        closeValue=1;
+      if(GD.getProposalStatus(_proposalId) == 2)
+      {
+        if(SafeMath.add(dateUpdate,_closingTime) <= now || GD.getVoteLength(_proposalId,_roleId) == MR.getAllMemberLength(_roleId) || totalVotes >= _majorityVote)
+            closeValue=1;
+      }
+      else if(GD.getProposalStatus(_proposalId) > 2)
+      {
+         closeValue=2;
+      }
+      else
+      {
+        closeValue=0;
+      }
   }
 
  function checkRoleVoteClosing(uint _proposalId,uint _roleVoteLength,uint _authRoleId) 
@@ -504,4 +516,32 @@ contract Governance {
         VT.addVerdictOption(_proposalId,msg.sender,_TokenAmount,_optionHash,nowDate); 
     }
 
+    function getTotalStakeAgainstProposal(uint _proposalId)constant returns(uint totalStake)
+    {
+       totalStake = getVoteStakeById(_proposalId) + getOptionStakeByProposalId(_proposalId);
+    }
+
+    function getVoteStakeById(uint _proposalId)constant returns (uint totalVoteStake)
+    {
+       GD=governanceData(GDAddress);
+
+       uint length = GD.getVoteLengthById(_proposalId);
+       for(uint i=0;i< length; i++ )
+       {
+          uint _voteId = GD.getVoteIdById(_proposalId,i);
+          uint voterStake = GD.getVoteStake(_voteId);
+          totalVoteStake = totalVoteStake + voterStake;
+       }
+    }
+
+    function getOptionStakeByProposalId(uint _proposalId)constant returns(uint totalOptionStake)
+    {
+       GD=governanceData(GDAddress);
+       uint8 totalOptions = GD.getTotalVerdictOptions(_proposalId);
+       for(uint i =0; i< totalOptions; i++)
+       {
+          uint stake = GD.getOptionStakeById(_proposalId,i);
+          totalOptionStake = totalOptionStake + stake;
+        }
+    }
 }
