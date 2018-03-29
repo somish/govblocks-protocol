@@ -48,8 +48,6 @@ contract Governance {
   BasicToken BT;
   Pool P1;
   VotingType VT;
-  uint8 public checkCPWO;
-
 
     modifier onlyInternal {
         MS=Master(masterAddress);
@@ -103,14 +101,11 @@ contract Governance {
       require(GD.getProposalCategory(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2);
       require(GD.getProposalOwner(_proposalId) == msg.sender);
       uint closingTime = SafeMath.add(_closeTime,GD.getProposalDateUpd(_proposalId));
-      setProposalValue(_proposalId,_TokenAmount);
 
       if(_TokenAmount != 0)
         require(GD.getBalanceOfMember(msg.sender) != 0);
     
-      if(checkCPWO == 0)
-        payableGBTTokens(_TokenAmount,"Payable GBT Stake to submit proposal for voting");    
-      
+      payableGBTTokens(_TokenAmount,"Payable GBT Stake to submit proposal for voting");    
       transferGBTtoPool(GD.getProposalIncentive(_proposalId));
       P1.closeProposalOraclise(_proposalId,_closeTime);
       GD.changeProposalStatus(_proposalId,2);
@@ -183,31 +178,32 @@ contract Governance {
       GD.setProposalIncentive(_proposalId,_reward); 
   }
 
+  uint gbtTransfer;
  /// @dev Creates a new proposal.
   function createProposal(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _categoryIncentive,uint _TokenAmount,uint24 _closeTime,uint _dateAdd) public
   {
       GD=governanceData(GDAddress);
       PC=ProposalCategory(PCAddress);
-      // require(GD.getBalanceOfMember(msg.sender) != 0);
       uint _proposalId = GD.getProposalLength();
-      address votingAddress = GD.getVotingTypeAddress(_votingTypeId);
+      address votingAddress = GD.getVotingTypeAddress(_votingTypeId); 
 
       GD.addTotalProposal(_proposalId,msg.sender);
 
       if(_categoryId > 0)
       {
+          gbtTransfer=0;
+          if(_TokenAmount!=0)
+            gbtTransfer = SafeMath.div(_TokenAmount,2);
+          
           address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
           GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress,_dateAdd);
-          openProposalForVoting(_proposalId,_TokenAmount,_closeTime);
+          openProposalForVoting(_proposalId,gbtTransfer,_closeTime);
           addInitialOptionDetails(_proposalId);
           GD.setCategorizedBy(_proposalId,msg.sender);
           GD.setProposalIncentive(_proposalId,_categoryIncentive);
-          // transferGBTtoPool(_categoryIncentive); 
-          // payableGBTTokens(_categoryIncentive);
       }
       else
-          {checkCPWO =0;
-          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,votingAddress,now); }
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,votingAddress,now);          
   }
 
   function transferGBTtoPool(uint _TokenAmount) internal
@@ -230,12 +226,12 @@ contract Governance {
   function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _categoryIncentive,uint _TokenAmount,string _optionHash,uint24 _closeTime) public
   {
       GD=governanceData(GDAddress);
-      checkCPWO =1;
       uint nowDate = now;
       createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime,nowDate);
       uint _proposalId = GD.getProposalLength()-1;
       VT=VotingType(GD.getProposalVotingType(_proposalId));
-      VT.addVerdictOption(_proposalId,msg.sender,_TokenAmount,_optionHash,nowDate); 
+      uint amount = _TokenAmount - gbtTransfer;
+      VT.addVerdictOption(_proposalId,msg.sender,amount,_optionHash,nowDate); 
   }
 
 
