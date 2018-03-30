@@ -92,9 +92,9 @@ contract GBTController {
         tokenPrice = _price;
     }
 
-    // function getTokenPrice() constant returns(uint tokenPrice)
-    // {
-    //     return tokenPrice;
-    // }
+    function getTokenPrice() constant returns(uint tokenPrice)
+    {
+        return tokenPrice;
+    }
  
 }
