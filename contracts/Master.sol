@@ -221,12 +221,6 @@ contract Master is Ownable {
         SV=simpleVoting(simpleVotingAddress);
         SV.changeMasterAddress(_masterAddress);
 
-        // RB=RankBasedVoting(rankBasedVotingAddress);
-        // RB.changeMasterAddress(_masterAddress);
-
-        // FW=FeatureWeighted(featureWeightedAddress);
-        // FW.changeMasterAddress(_masterAddress);
-
         SVT=StandardVotingType(standardVotingTypeAddress);
         SVT.changeMasterAddress(_masterAddress);
 
@@ -253,29 +247,13 @@ contract Master is Ownable {
         changeGBTControllerAddress(GBTCAddress);
         
         GD=governanceData(governanceDataAddress);
-
-        // if(GD.getVotingTypeLength() == 0)
-        // {
-        //     GD.setVotingTypeDetails("Simple Voting",simpleVotingAddress);
-        //     GD.setVotingTypeDetails("Rank Based Voting",rankBasedVotingAddress);
-        //     GD.setVotingTypeDetails("Feature Weighted Voting",featureWeightedAddress);
-        // }
-        // else 
-        // {
-            GD.editVotingType(0,simpleVotingAddress);
-            GD.editVotingType(1,rankBasedVotingAddress);
-            GD.editVotingType(2,featureWeightedAddress);
-        // }
+        GD.editVotingType(0,simpleVotingAddress);
+        GD.editVotingType(1,rankBasedVotingAddress);
+        GD.editVotingType(2,featureWeightedAddress);
 
         SV=simpleVoting(simpleVotingAddress);
         SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
 
-        // RB=RankBasedVoting(rankBasedVotingAddress);
-        // RB.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
-        
-        // FW=FeatureWeighted(featureWeightedAddress);
-        // FW.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
-        
         SVT=StandardVotingType(standardVotingTypeAddress);
         SVT.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress,poolAddress);
         SVT.changeOtherContractAddress(simpleVotingAddress,rankBasedVotingAddress,featureWeightedAddress);
@@ -318,12 +296,6 @@ contract Master is Ownable {
             SV=simpleVoting(simpleVotingAddress);
             SV.changeGBTControllerAddress(_controllerAddress);
 
-            // RB=RankBasedVoting(rankBasedVotingAddress);
-            // RB.changeGBTControllerAddress(_controllerAddress);
-
-            // FW=FeatureWeighted(featureWeightedAddress);
-            // FW.changeGBTControllerAddress(_controllerAddress);
-            
             P1=Pool(poolAddress);
             P1.changeGBTControllerAddress(_controllerAddress);
             
@@ -404,6 +376,12 @@ contract Master is Ownable {
     {
       GBM=GovBlocksMaster(GBMAddress);
       GBM.changeDappTokenAddress(_gbUserName,_newTokenAddress);
+    }
+
+    function changeDappDescIn_GBM(bytes32 _gbUserName,string _dappDescHash)
+    {
+      GBM=GovBlocksMaster(GBMAddress);
+      GBM.changeDappDescHash(_gbUserName,_dappDescHash);
     }
 
     function getDappTokenAddress()constant returns(address dappTokenAddress)
