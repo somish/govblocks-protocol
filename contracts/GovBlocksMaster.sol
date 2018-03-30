@@ -45,6 +45,7 @@ contract GovBlocksMaster
     {
       address masterAddress;
       address tokenAddress;
+      string dappDescHash;
     }
 
     mapping(address=>bytes32) govBlocksDappByAddress;
@@ -110,13 +111,14 @@ contract GovBlocksMaster
         } 
     }
 
-    function addGovBlocksUser(bytes32 _gbUserName,address _dappTokenAddress) 
+    function addGovBlocksUser(bytes32 _gbUserName,address _dappTokenAddress,string _dappDescriptionHash) 
     {
         require(govBlocksDapps[_gbUserName].masterAddress==0x00);
         address _newMasterAddress = new Master(address(this),_gbUserName);
         allGovBlocksUsers.push(_gbUserName);  
         govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
         govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
+        govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
         MS=Master(_newMasterAddress);
@@ -155,12 +157,23 @@ contract GovBlocksMaster
             if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
                 {
                     govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
-                govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
+                    govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
             }
             else
                 throw;
         }   
     }
+
+    function changeDappDescHash(bytes32 _gbUserName,string _dappDescriptionHash)
+    { 
+        if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
+        {
+            govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
+        }
+        else
+            throw;
+    }
+
     
     function setByteCodeAndAbi(string _byteCodeHash,string _abiHash) onlyOwner
     {
@@ -222,6 +235,11 @@ contract GovBlocksMaster
     {
        dappName = govBlocksDappByAddress[_Address];
        return (dappName,govBlocksDapps[dappName].masterAddress,govBlocksDapps[dappName].tokenAddress);
+    }
+
+    function getDappDescHash(bytes32 _gbUserName)constant returns(string)
+    {
+        return govBlocksDapps[_gbUserName].dappDescHash;
     }
 
     function getAllDappLength()constant returns(uint)
