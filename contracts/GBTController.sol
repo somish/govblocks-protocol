@@ -25,7 +25,7 @@ contract GBTController {
     address public GBTStandardTokenAddress;
     address public owner;
     GBTStandardToken GBTS;
-    uint tokenPrice;
+    uint public tokenPrice;
 
     function changeMasterAddress(address _masterContractAddress) 
     {
@@ -40,10 +40,11 @@ contract GBTController {
     }
 
    
-    function GBTController() 
+    function GBTController(address _GBTAddress) 
     {
         owner = msg.sender;
         tokenPrice = 1*10**15;
+        GBTStandardTokenAddress = _GBTAddress;
     }
 
     function changeGBTtokenAddress(address _Address) 
@@ -89,10 +90,11 @@ contract GBTController {
 
     function changeTokenPrice(uint _price)
     {
-        tokenPrice = _price;
+        uint _tokenPrice = _price;
+        tokenPrice = _tokenPrice;
     }
 
-    function getTokenPrice() constant returns(uint tokenPrice)
+    function getTokenPrice() constant returns(uint)
     {
         return tokenPrice;
     }

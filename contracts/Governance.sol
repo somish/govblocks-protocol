@@ -107,6 +107,7 @@ contract Governance {
     
       payableGBTTokens(_TokenAmount,"Payable GBT Stake to submit proposal for voting");    
       transferGBTtoPool(GD.getProposalIncentive(_proposalId));
+      setProposalValue(_proposalId,_TokenAmount);
       P1.closeProposalOraclise(_proposalId,_closeTime);
       GD.changeProposalStatus(_proposalId,2);
       GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),closingTime);
@@ -165,7 +166,7 @@ contract Governance {
         uint gbtBalanceOfPool = GD.getBalanceOfMember(P1Address);
         require (gbtBalanceOfPool > _dappIncentive);
        
-     GD.setProposalIncentive(_proposalId,_dappIncentive);
+      GD.setProposalIncentive(_proposalId,_dappIncentive);
       GD.setCategorizedBy(_proposalId,msg.sender);
       GD.setProposalCategory(_proposalId,_categoryId);
   }
@@ -194,13 +195,13 @@ contract Governance {
           gbtTransfer=0;
           if(_TokenAmount!=0)
             gbtTransfer = SafeMath.div(_TokenAmount,2);
-          
+
+          GD.setProposalIncentive(_proposalId,_categoryIncentive);
           address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
           GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress,_dateAdd);
           openProposalForVoting(_proposalId,gbtTransfer,_closeTime);
           addInitialOptionDetails(_proposalId);
           GD.setCategorizedBy(_proposalId,msg.sender);
-          GD.setProposalIncentive(_proposalId,_categoryIncentive);
       }
       else
           GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,votingAddress,now);          
@@ -212,15 +213,6 @@ contract Governance {
      GD=governanceData(GDAddress);
      P1.transferGBTtoController(_TokenAmount,"Dapp incentive to be distributed in GBT");
   }
-  
- // /// @dev Creates a new proposal.
- //  function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _TokenAmount,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,string _optionDescHash) public
- //  {
- //      createProposal(_proposalIdDescHash,_votingTypeId,_categoryId,_TokenAmount);
- //      VT=VotingType(GD.getVotingTypeAddress(_votingTypeId));
- //      uint _proposalId = GD.getProposalLength()-1;
- //      VT.addVerdictOption(_proposalId,msg.sender,_paramInt,_paramBytes32,_paramAddress,_TokenAmount,_optionDescHash);
- //  }
 
   /// @dev Creates a new proposal.
   function createProposalwithOption(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _categoryIncentive,uint _TokenAmount,string _optionHash,uint24 _closeTime) public
@@ -511,10 +503,15 @@ contract Governance {
     function submitProposalWithOption(uint _proposalId,uint _TokenAmount,uint24 _closeTime,string _optionHash)
     {
         GD=governanceData(GDAddress);
-        openProposalForVoting(_proposalId,_TokenAmount,_closeTime);
+        gbtTransfer=0;
+        if(_TokenAmount!=0)
+            gbtTransfer = SafeMath.div(_TokenAmount,2);
+
+        openProposalForVoting(_proposalId,gbtTransfer,_closeTime);
         VT=VotingType(GD.getProposalVotingType(_proposalId));
         uint nowDate = GD.getProposalDateAdd(_proposalId);
-        VT.addVerdictOption(_proposalId,msg.sender,_TokenAmount,_optionHash,nowDate); 
+        uint amount = _TokenAmount - gbtTransfer;
+        VT.addVerdictOption(_proposalId,msg.sender,amount,_optionHash,nowDate); 
     }
 
     function getTotalStakeAgainstProposal(uint _proposalId)constant returns(uint totalStake)

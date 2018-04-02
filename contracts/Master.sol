@@ -272,7 +272,8 @@ contract Master is Ownable {
     function changeGBTAddress(address _tokenAddress) 
     {
         GBM=GovBlocksMaster(GBMAddress);
-        if(msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(msg.sender) == 1)
+        uint version = versionLength-1;
+        if((version == 0 && msg.sender== owner) || msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(msg.sender) == 1)
         {
             GD=governanceData(governanceDataAddress);
             GD.changeGBTtokenAddress(_tokenAddress);
@@ -288,7 +289,8 @@ contract Master is Ownable {
     function changeGBTControllerAddress(address _controllerAddress) 
     {
         GBM=GovBlocksMaster(GBMAddress);
-        if(msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(msg.sender) == 1)
+        uint version = versionLength-1;
+        if((version == 0 && msg.sender== owner) || msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(msg.sender) == 1)
         {
             G1=Governance(governanceAddress);
             G1.changeGBTControllerAddress(_controllerAddress);
