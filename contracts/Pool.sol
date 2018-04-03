@@ -113,12 +113,12 @@ contract Pool is usingOraclize
         M1=Master(masterAddress);
 
         if (_closingTime == 0)
-            myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/42/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
+            myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/4/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
         else
-            myid2 = oraclize_query(_closingTime,"URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/42",bytes32ToString(M1.DappName()),"/",uint2str(index)));
+            myid2 = oraclize_query(_closingTime,"URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/4",bytes32ToString(M1.DappName()),"/",uint2str(index)));
         
         uint closeTime = now + _closingTime;
-        closeProposal(_proposalId,closeTime,strConcat("http://a1.govblocks.io/closeProposalVoting.js/42/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
+        closeProposal(_proposalId,closeTime,strConcat("http://a1.govblocks.io/closeProposalVoting.js/4/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
