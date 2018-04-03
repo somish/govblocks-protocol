@@ -262,6 +262,7 @@ contract StandardVotingType
                     {
                         G1.updateProposalDetails(_proposalId,currentVotingId,max,max);
                         GD.changeProposalStatus(_proposalId,4);
+                        VT.giveReward_afterFinalDecision(_proposalId);
                         G1.changePendingProposalStart();
                     }      
                 } 
