@@ -290,7 +290,7 @@ contract Governance {
       if(GD.getProposalStatus(_proposalId) == 2)
       {
         if(SafeMath.add(dateUpdate,_closingTime) <= now || GD.getVoteLength(_proposalId,_roleId) == MR.getAllMemberLength(_roleId) || totalVotes >= _majorityVote)
-            closeValue=1;
+              closeValue=1;
       }
       else if(GD.getProposalStatus(_proposalId) > 2)
       {
@@ -302,16 +302,18 @@ contract Governance {
       }
   }
 
- function checkRoleVoteClosing(uint _proposalId,uint _roleVoteLength,uint _authRoleId) 
+  function checkRoleVoteClosing(uint _proposalId,uint _roleId,uint _closingTime,uint _majorityVote) 
   {
      GD=governanceData(GDAddress);
      P1=Pool(P1Address);
      MR = memberRoles(MRAddress);
-      
-      if(_roleVoteLength == MR.getAllMemberLength(_authRoleId))
-        P1.closeProposalOraclise(_proposalId,0);
-        GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),0);
+    
+      if(checkProposalVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote)==1)
+        {P1.closeProposalOraclise(_proposalId,0);
+        GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateAdd(_proposalId),0);}
   }
+
+
   
     function getStatusOfProposalsForMember(uint[] _proposalsIds)constant returns (uint proposalLength,uint draftProposals,uint pendingProposals,uint acceptedProposals,uint rejectedProposals)
     {
@@ -516,7 +518,10 @@ contract Governance {
 
     function getTotalStakeAgainstProposal(uint _proposalId)constant returns(uint totalStake)
     {
-       totalStake = getVoteStakeById(_proposalId) + getOptionStakeByProposalId(_proposalId);
+       GD=governanceData(GDAddress);
+
+       uint Stake = getVoteStakeById(_proposalId) + getOptionStakeByProposalId(_proposalId);
+       totalStake = GD.getProposalStake(_proposalId) + Stake;
     }
 
     function getVoteStakeById(uint _proposalId)constant returns (uint totalVoteStake)
