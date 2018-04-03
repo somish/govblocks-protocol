@@ -116,7 +116,7 @@ contract simpleVoting is VotingType
         addVerdictOption(_proposalId,msg.sender, _GBTPayableTokenAmount, _optionHash,_dateAdd);
     }
 
-    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _authRole,uint24 _closingTime) 
+    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _authRole,uint24 _closingTime,uint _majorityVote) 
     {
         GD=governanceData(GDAddress);
         MR=memberRoles(MRAddress);
@@ -124,9 +124,9 @@ contract simpleVoting is VotingType
         G1=Governance(G1Address);
 
         uint currentVotingId;uint intermediateVerdict;
-        (,,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId); //0,0
-        uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId); //2
-        uint _proposalDateUpd = GD.getProposalDateUpd(_proposalId); //1521782597
+        (,,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
+        uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId); 
+        uint _proposalDateUpd = GD.getProposalDateUpd(_proposalId); 
         require(SafeMath.add(_proposalDateUpd,_closingTime) >= now && msg.sender != GD.getOptionAddressByProposalId(_proposalId,_optionChosen[0]));
         require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _optionChosen.length == 1);
 
@@ -135,35 +135,36 @@ contract simpleVoting is VotingType
         else
             require(_optionChosen[0]==intermediateVerdict || _optionChosen[0]==0);
             
-        uint roleId = MR.getMemberRoleIdByAddress(msg.sender); //2
+        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
         // require(roleId == PC.getRoleSequencAtIndex(category,currentVotingId));
 
         require(roleId == _authRole);
-        castVote(_proposalId,_optionChosen,_GBTPayableTokenAmount,_authRole,roleId);
+        castVote(_proposalId,_optionChosen,_GBTPayableTokenAmount,roleId,_closingTime,_majorityVote);
         
     }
 
-    function castVote(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _authRole,uint roleId) internal
+    function castVote(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _roleId,uint _closingTime,uint _majorityVote) internal
     {
          GD=governanceData(GDAddress);
          SVT=StandardVotingType(SVTAddress);
+         G1=Governance(G1Address);
 
         if(GD.getVoteId_againstMember(msg.sender,_proposalId) == 0)
         {
             uint votelength = GD.allVotesTotal(); //1
             uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
             
-            GD.setProposalVoteCount(_proposalId,roleId,_optionChosen[0],finalVoteValue);
-            GD.setProposalTokenCount(_proposalId,roleId,msg.sender);
+            GD.setProposalVoteCount(_proposalId,_roleId,_optionChosen[0],finalVoteValue);
+            GD.setProposalTokenCount(_proposalId,_roleId,msg.sender);
             
             GD.setVoteId_againstMember(msg.sender,_proposalId,votelength);
-            GD.setVoteIdAgainstProposalRole(_proposalId,roleId,votelength);
+            GD.setVoteIdAgainstProposalRole(_proposalId,_roleId,votelength);
             GD.setVoteIdAgainstProposal(_proposalId,votelength);
             GD.addInTotalVotes(msg.sender,votelength);
             
-            uint _voteLength = GD.getVoteLength(_proposalId,roleId);
+            uint _voteLength = GD.getVoteLength(_proposalId,_roleId);
             address _voteAddress = GD.getProposalVotingType(_proposalId);
-            G1.checkRoleVoteClosing(_proposalId,_voteLength,_authRole);
+            G1.checkRoleVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote);
             GD.addInVote(msg.sender,_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
             GD.callVoteEvent(msg.sender,_voteAddress,votelength);
             transferVoteStakeSV(_GBTPayableTokenAmount);
@@ -287,7 +288,7 @@ contract simpleVoting is VotingType
                 reward = SafeMath.div(SafeMath.mul(GD.getVoteValue(voteid),_totalTokenToDistribute),_totalVoteValue);
                 uint repPoints = GD.getMemberReputation(GD.getVoterAddress(voteid))+addMemberPoints;
                 
-                G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward),"Voting stake and reward earned after voted in favour of final option");
+                G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward),"GBT Stake Returned for voting in favour of final option");
                 G1.updateMemberReputation1("Reputation credit after voted in favour of final option",_proposalId,GD.getVoterAddress(voteid),repPoints,addMemberPoints,"C");
                 GD.setVoteReward(voteid,reward);
                 GD.callRewardEvent(GD.getVoterAddress(voteid),_proposalId,"Reward for voting in favour of final option",reward);
