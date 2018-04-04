@@ -219,9 +219,9 @@ contract Governance {
   {
       GD=governanceData(GDAddress);
       uint nowDate = now;
-      createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime,nowDate);
-      uint _proposalId = GD.getProposalLength()-1;
+      uint _proposalId = GD.getProposalLength();
       VT=VotingType(GD.getProposalVotingType(_proposalId));
+      createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime,nowDate);
       uint amount = _TokenAmount - gbtTransfer;
       VT.addVerdictOption(_proposalId,msg.sender,amount,_optionHash,nowDate); 
   }
