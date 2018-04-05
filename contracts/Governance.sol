@@ -196,9 +196,10 @@ contract Governance {
           if(_TokenAmount!=0)
             gbtTransfer = SafeMath.div(_TokenAmount,2);
 
+          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress,_dateAdd);
           GD.setProposalIncentive(_proposalId,_categoryIncentive);
           address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
-          GD.addNewProposal(msg.sender,_proposalDescHash,_categoryId,VTAddress,_dateAdd);
+          
           openProposalForVoting(_proposalId,gbtTransfer,_closeTime);
           addInitialOptionDetails(_proposalId);
           GD.setCategorizedBy(_proposalId,msg.sender);
@@ -220,7 +221,8 @@ contract Governance {
       GD=governanceData(GDAddress);
       uint nowDate = now;
       uint _proposalId = GD.getProposalLength();
-      VT=VotingType(GD.getProposalVotingType(_proposalId));
+      address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
+      VT=VotingType(VTAddress);
       createProposal(_proposalDescHash,_votingTypeId,_categoryId,_categoryIncentive,_TokenAmount,_closeTime,nowDate);
       uint amount = _TokenAmount - gbtTransfer;
       VT.addVerdictOption(_proposalId,msg.sender,amount,_optionHash,nowDate); 
