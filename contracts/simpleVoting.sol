@@ -265,7 +265,7 @@ contract simpleVoting is VotingType
         GD=governanceData(GDAddress);
         G1=Governance(G1Address);
         
-        reward=0;
+        reward=0;reward1=0;reward3=0;
         uint addMemberPoints; uint subMemberPoints; uint finalVerdict; 
         (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
         (,,addMemberPoints,,,subMemberPoints)=GD.getMemberReputationPoints();
