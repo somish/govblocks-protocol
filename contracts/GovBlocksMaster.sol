@@ -39,12 +39,13 @@ contract GovBlocksMaster
     address SVAddress;
     address GOVAddress;
     address P1Address;
-    address public authGBOwner;
+    mapping public authGBOwner;
 
     struct GBDapps
     {
       address masterAddress;
       address tokenAddress;
+      address authGBAddress;
       string dappDescHash;
     }
 
@@ -70,18 +71,18 @@ contract GovBlocksMaster
       GBTAddress = _GBTAddress;
     } 
 
-    function changeAuthorizedGB(address _memberAddress)
+    function changeAuthorizedGB(bytes32 dAppName,address _memberAddress)
     {
       if(authGBOwner == 0x00)
         authGBOwner = _memberAddress;
       else
-        require(msg.sender == authGBOwner);
-        authGBOwner = _memberAddress;
+        require(msg.sender == govBlocksDapps[dAppName].authGBAddress);
+        govBlocksDapps[dAppName].authGBAddress = _memberAddress;
     }
 
-    function isAuthorizedGBOwner(address _memberAddress)constant returns(uint auth)
+    function isAuthorizedGBOwner(bytes32 dAppName,address _memberAddress)constant returns(uint auth)
     {
-       if(authGBOwner == _memberAddress)
+       if(govBlocksDapps[dAppName].authGBAddress == _memberAddress)
           auth = 1;
     } 
 
