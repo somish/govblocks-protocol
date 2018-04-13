@@ -15,41 +15,52 @@
     
 pragma solidity ^0.4.8;
 
+import "./VotingType.sol";
+import "./Governance.sol";
+import "./ProposalCategory.sol";
 import "./GBTStandardToken.sol";
+import "./GovBlocksMaster.sol";
+import "./governanceData.sol";
+import "./Master.sol";
 
-contract GBTController {
-
-    // event Transfer(address indexed from, address indexed to, uint256 value);
-    // event Approval(address indexed _owner, address indexed _spender, uint256 _value);
-    // event Burn(address indexed _of,bytes16 eventName , uint coverId ,uint tokens);
-    address public GBTStandardTokenAddress;
+contract GBTController 
+{
+    using SafeMath for uint;
+    address public GBMAddress;
     address public owner;
+    address M1Address;
+    address GBTStandardTokenAddress;
+    governanceData GD;
+    Master MS;
+    GovBlocksMaster GBM;
     GBTStandardToken GBTS;
+    VotingType VT;
+    Governance G1;
+    ProposalCategory PC;
     uint public tokenPrice;
+    uint public actual_amount;
 
-    function changeMasterAddress(address _masterContractAddress) 
+    modifier onlyGBM
     {
-        // if(masterAddress == 0x000)
-        //     masterAddress = _masterContractAddress;
-        // else
-        // {
-        //     MS=Master(masterAddress);
-        //     require(MS.isInternal(msg.sender) == 1);
-        //         masterAddress = _masterContractAddress;
-        // }
+        require(msg.sender == GBMAddress);
+        _;
     }
-
-   
-    function GBTController(address _GBTAddress) 
+    
+    function GBTController(address _GBMAddress) 
     {
         owner = msg.sender;
         tokenPrice = 1*10**15;
-        GBTStandardTokenAddress = _GBTAddress;
+        GBMAddress = _GBMAddress;
     }
 
-    function changeGBTtokenAddress(address _Address) 
+    function changeGBTtokenAddress(address _Address) onlyGBM
     {
         GBTStandardTokenAddress = _Address;
+    }
+
+    function changeGBMAddress(address _GBMAddress) onlyGBM
+    {
+        GBMAddress = _GBMAddress;
     }
 
     function transferGBT(address _to, uint256 _value,string _description) 
@@ -62,25 +73,34 @@ contract GBTController {
         GBTS.callTransferGBTEvent(address(this), _to, _value, _description);
     }
     
-    function receiveGBT(address _from,uint _value, string _description) 
+    // function receiveGBT(address _from,uint _value, string _description) 
+    // {
+    //     GBTS=GBTStandardToken(GBTStandardTokenAddress);
+
+    //     require(_value <= GBTS.balanceOf(_from));
+    //     GBTS.addInBalance(address(this),_value);
+    //     GBTS.subFromBalance(_from,_value);
+    //     GBTS.callTransferGBTEvent(_from, address(this), _value, _description);
+    // }  
+
+     function receiveGBT(uint _value, string _description) internal
     {
         GBTS=GBTStandardToken(GBTStandardTokenAddress);
 
-        require(_value <= GBTS.balanceOf(_from));
+        require(_value <= GBTS.balanceOf(msg.sender));
         GBTS.addInBalance(address(this),_value);
-        GBTS.subFromBalance(_from,_value);
-        GBTS.callTransferGBTEvent(_from, address(this), _value, _description);
+        GBTS.subFromBalance(msg.sender,_value);
+        GBTS.callTransferGBTEvent(msg.sender, address(this), _value, _description);
     }  
-    
-    uint public actual_amount;
     
     function buyTokenGBT(address _to) payable 
     {
-        actual_amount = (msg.value/tokenPrice);  // amount that was sent          
+        GBTS=GBTStandardToken(GBTStandardTokenAddress);
+        actual_amount = SafeMath.mul(SafeMath.div(msg.value,tokenPrice),10**GBTS.decimals());         
         rewardToken(_to,actual_amount);
     }
 
-    function rewardToken(address _to,uint _amount)    
+    function rewardToken(address _to,uint _amount) internal  
     {
         GBTS=GBTStandardToken(GBTStandardTokenAddress);
         GBTS.addInBalance(_to,_amount);
@@ -98,5 +118,86 @@ contract GBTController {
     {
         return tokenPrice;
     }
- 
+
+   function openProposalForVoting(bytes32 _gbUserName,uint _proposalId,uint _TokenAmount) public
+   {
+        GBM=GovBlocksMaster(GBMAddress);
+        address master = GBM.getDappMasterAddress(_gbUserName); address G1Address;address GDAddress;
+        MS=Master(master);
+        uint versionNo = MS.versionLength()-1; 
+        (,G1Address) = MS.allContractVersions(versionNo,8);
+        (,GDAddress) = MS.allContractVersions(versionNo,1);
+
+        G1=Governance(G1Address);
+        GD=governanceData(GDAddress);
+        receiveGBT(_TokenAmount,"Payable GBT Stake to submit proposal for voting");
+        receiveGBT(GD.getProposalIncentive(_proposalId),"Dapp incentive to be distributed in GBT");
+        G1.setProposalValue(_proposalId,_TokenAmount);
+        G1.openProposalForVoting(_proposalId,msg.sender,GD.getProposalCategory(_proposalId));
+   }
+
+   function createProposalwithOption(bytes32 _gbUserName,string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _TokenAmount,string _optionHash) public
+   {
+        GBM=GovBlocksMaster(GBMAddress);
+        address master = GBM.getDappMasterAddress(_gbUserName); address G1Address;address PCAddress;
+        MS=Master(master);
+        uint versionNo = MS.versionLength()-1; 
+        (,G1Address) = MS.allContractVersions(versionNo,8);
+        (,PCAddress) = MS.allContractVersions(versionNo,3);
+        PC=ProposalCategory(PCAddress);
+        receiveStakeInGbt(_TokenAmount,PC.getCatIncentive(_categoryId));
+    
+        G1=Governance(G1Address); 
+        G1.createProposalwithOption(_proposalDescHash,msg.sender,_TokenAmount,_votingTypeId,_categoryId,_optionHash);
+   }
+
+   function submitProposalWithOption(bytes32 _gbUserName,uint _proposalId,uint _TokenAmount,string _optionHash) public
+   {
+        GBM=GovBlocksMaster(GBMAddress);
+        address master = GBM.getDappMasterAddress(_gbUserName); address G1Address;
+        MS=Master(master);
+        uint versionNo = MS.versionLength()-1; 
+        (,G1Address) = MS.allContractVersions(versionNo,8);
+        receiveStakeInGbt(_TokenAmount,GD.getProposalIncentive(_proposalId));
+
+        G1=Governance(G1Address);
+        G1.submitProposalWithOption(_proposalId,msg.sender,_TokenAmount,_optionHash);     
+    }
+
+    function receiveStakeInGbt(uint _TokenAmount,uint _Incentive) internal
+    {
+        uint gbtTransfer = SafeMath.div(_TokenAmount,2);
+        receiveGBT(gbtTransfer,"Payable GBT Stake to submit proposal for voting");
+        uint amount = _TokenAmount - gbtTransfer;
+        receiveGBT(amount,"Payable GBT Stake for adding solution against proposal");
+        receiveGBT(_Incentive,"Dapp incentive to be distributed in GBT");
+    }
+
+    function initiateVerdictOption(bytes32 _gbUserName,uint _proposalId,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) public
+    {
+        GBM=GovBlocksMaster(GBMAddress);
+        address master = GBM.getDappMasterAddress(_gbUserName); address GDAddress;
+        MS=Master(master);
+        uint versionNo = MS.versionLength()-1; 
+        (,GDAddress) = MS.allContractVersions(versionNo,1);
+        GD=governanceData(GDAddress);
+
+        receiveGBT(_GBTPayableTokenAmount,"Payable GBT Stake for adding solution against proposal");
+        VT=VotingType(GD.getProposalVotingType(_proposalId));
+        VT.initiateVerdictOption(_proposalId,msg.sender,_GBTPayableTokenAmount,_optionHash,_dateAdd);
+    }
+
+    function proposalVoting(bytes32 _gbUserName,uint _GBTPayableTokenAmount,uint _proposalId,uint[] _optionChosen) public
+    {
+        GBM=GovBlocksMaster(GBMAddress);
+        address master = GBM.getDappMasterAddress(_gbUserName); address GDAddress;
+        MS=Master(master);
+        uint versionNo = MS.versionLength()-1; 
+        (,GDAddress) = MS.allContractVersions(versionNo,1);
+        GD=governanceData(GDAddress);
+
+        receiveGBT(_GBTPayableTokenAmount,"Payable GBT Stake for voting against proposal");
+        VT=VotingType(GD.getProposalVotingType(_proposalId));
+        VT.proposalVoting(_proposalId,_optionChosen,msg.sender,_GBTPayableTokenAmount);
+    }
 }
