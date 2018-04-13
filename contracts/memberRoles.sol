@@ -16,14 +16,10 @@
 
 pragma solidity ^0.4.8;
 import "./Master.sol";
-import "./Ownable.sol";
-import "./governanceData.sol";
 import "./BasicToken.sol";
-// import "./zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract  memberRoles
 {
-
   bytes32[] memberRole;
   uint categorizeAuthRoleid;
   string memberRoleDescHash;
@@ -32,8 +28,8 @@ contract  memberRoles
   address masterAddress;
   address GDAddress;
   address BTAddress;
+  address GBMAddress;
   BasicToken BT;
-  governanceData GD;
 
   struct memberRoleDetails
   {
@@ -45,7 +41,7 @@ contract  memberRoles
   mapping(uint=>memberRoleDetails) memberRoleData;
   mapping (address=>uint) memberAddressToMemberRole;
 
-  function MemberRolesInitiate()
+  function MemberRolesInitiate(address _GBMAddress)
   {
     require(constructorCheck == 0);
         memberRole.push("");
@@ -55,20 +51,35 @@ contract  memberRoles
         M1=Master(masterAddress);
         address ownAddress = M1.owner();
         updateMemberRole(ownAddress,1,1);
-        setRoleDescHash("QmTDisHekKVCBc4JNHfdiiZNgFRqdPoNn69QbD2vwTeo9L");
+        changeRoleDescHash("QmTDisHekKVCBc4JNHfdiiZNgFRqdPoNn69QbD2vwTeo9L");
+        GBMAddress = _GBMAddress;
         constructorCheck =1;
   }
 
-  modifier onlyInternal {
+  modifier onlyInternal 
+  {
       M1=Master(masterAddress);
       require(M1.isInternal(msg.sender) == 1);
       _; 
   }
   
-  modifier onlyOwner {
+  modifier onlyOwner 
+  {
       M1=Master(masterAddress);
       require(M1.isOwner(msg.sender) == 1);
       _; 
+  }
+
+  modifier onlyGBM
+  {
+        require(msg.sender == GBMAddress);
+      _;
+  }
+  
+  function changeGBMAddress(address _GBMAddress) onlyGBM
+  {
+      require(GBMAddress != 0x00);
+      GBMAddress = _GBMAddress;
   }
   
   /// @dev Change master's contract address
@@ -84,7 +95,7 @@ contract  memberRoles
       }
   }
 
-  function changeAllContractAddress(address _GDAddress)
+  function changeAllContractAddress(address _GDAddress) onlyInternal
   {
     GDAddress = _GDAddress;
   }
@@ -97,7 +108,8 @@ contract  memberRoles
   /// @dev Get the role id assigned to a member when giving memberAddress
   function getMemberRoleIdByAddress(address _memberAddress) public constant returns(uint memberRoleId)
   {
-      M1=Master(masterAddress); address tokenAddress;
+      M1=Master(masterAddress); 
+      address tokenAddress;
       tokenAddress=M1.getDappTokenAddress();
       BT=BasicToken(tokenAddress);
       memberRoleId = memberAddressToMemberRole[_memberAddress];
@@ -125,11 +137,12 @@ contract  memberRoles
   /// @dev Add new member role for governance.
   function addNewMemberRole(bytes32 _newRoleName,string _newDescHash) 
   {
+      require(msg.sender == GBMAddress);
       memberRole.push(_newRoleName);
       memberRoleDescHash = _newDescHash;  
   }
 
-  function setRoleDescHash(string _newDescHash)
+  function changeRoleDescHash(string _newDescHash) onlyInternal
   {
      memberRoleDescHash = _newDescHash;
   }
@@ -154,8 +167,9 @@ contract  memberRoles
       }
   }
 
-  function updateMemberRole(address _memberAddress,uint _memberRoleId,uint8 _typeOf)
+  function updateMemberRole(address _memberAddress,uint _memberRoleId,uint8 _typeOf) 
   {
+      require(msg.sender == GBMAddress);
       if(_typeOf == 1)
       {
         require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 0);
@@ -174,25 +188,6 @@ contract  memberRoles
       }
   }
 
-  // /// @dev Assign role to a member when giving member address and role id
-  // function assignMemberRole(address _memberAddress,uint _memberRoleId) onlyOwner
-  // {
-  //     require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 0);
-  //     memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter+1;
-  //     memberRoleData[_memberRoleId].memberActive[_memberAddress] = 1;
-  //     memberAddressToMemberRole[_memberAddress] = _memberRoleId;
-  //     memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
-  // }
-
-  // function removeMember(address _memberAddress,uint _memberRoleId) onlyOwner
-  // {
-  //     require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 1);
-  //     memberRoleData[_memberRoleId].memberCounter = memberRoleData[_memberRoleId].memberCounter-1;
-  //     memberRoleData[_memberRoleId].memberActive[_memberAddress] = 0;
-  //     memberAddressToMemberRole[_memberAddress] = 0;
-  //     // memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
-  // }
-
   /// @dev Get the role id which is authorized to categorize a proposal.
   function getAuthorizedMemberId() public constant returns(uint roleId)
   {
@@ -210,6 +205,4 @@ contract  memberRoles
   {
     return memberRole.length;
   }
-
-
 }
