@@ -16,8 +16,6 @@
 pragma solidity ^0.4.8;
 import "./StandardToken.sol";
 import "./SafeMath.sol";
-// import "./zeppelin-solidity/contracts/token/StandardToken.sol";
-
 
 contract GBTStandardToken is StandardToken
 {
@@ -27,42 +25,66 @@ contract GBTStandardToken is StandardToken
     uint public tokenPrice;
     string public name;
     string public symbol;
-    uint8 public decimals;
+    uint public decimals;
     address owner;
+    address GBTCAddress;
+    address GBMAddress;
     uint  initialTokens;
-
-    function GBTStandardToken(uint256 initialSupply, string tokenName, uint8 decimalUnits, string tokenSymbol) 
-    {
-        owner = msg.sender;
-        balances[address(this)] = initialSupply;              
-        totalSupply = initialSupply;                        // Update total supply
-        name = tokenName;                                   // Set the name for display purposes
-        symbol = tokenSymbol;                               // Set the symbol for display purposes
-        decimals = decimalUnits;               
+    
+    modifier onlyGBTController
+    {  
+        require(msg.sender == GBTCAddress);
+        _; 
     }
 
-    function addInBalance(address _Address,uint _value) 
+    modifier onlyGBM
+    {
+        require(msg.sender == GBMAddress);
+        _;
+    }
+
+    function GBTStandardToken() 
+    {
+        owner = msg.sender;
+        balances[address(this)] = 0;              
+        totalSupply = 0;                      
+        name = "GBT";                        
+        symbol = "";                  
+        decimals = 18;
+    }
+
+    function changeGBMAddress(address _GBMAddress) onlyGBM
+    {
+        GBMAddress = _GBMAddress;
+    }
+
+    function changeGBTControllerAddress(address _GBTCAddress) onlyGBM
+    {
+        GBTCAddress = _GBTCAddress;
+    }
+
+    function addInBalance(address _Address,uint _value) onlyGBTController
     {
         balances[_Address] = SafeMath.add(balances[_Address],_value);
     }
 
-    function subFromBalance(address _Address,uint _value) 
+    function subFromBalance(address _Address,uint _value)  onlyGBTController
     {
         balances[_Address] = SafeMath.sub(balances[_Address],_value);
     }
 
-    function callTransferGBTEvent(address _from, address _to, uint256 _value,string _description)
+    function callTransferGBTEvent(address _from, address _to, uint256 _value,string _description) onlyGBTController
     {
         TransferGBT(_from,_to,_value,_description);
         Transfer(_from, _to, _value);
     }
     
-    function addInTotalSupply(uint _tokens)
+    function addInTotalSupply(uint _tokens) onlyGBTController
     {
         totalSupply = totalSupply + _tokens;
     }
     
-    function subFromTotalSupply(uint _tokens)
+    function subFromTotalSupply(uint _tokens) onlyGBTController
     {
         totalSupply = totalSupply - _tokens;
     }
