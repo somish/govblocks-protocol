@@ -536,56 +536,83 @@ contract Governance {
         return (_proposalId,optionid,optionStake,optionValue,memberAddress,optionReward,dateAdded);
     }
 
-    function calculateMemberReward(address _memberAddress)
+    function calculateMemberReward(address _memberAddress) onlyInternal
     {
         uint i;uint transferBack; uint proposalId; uint category;uint calcReward;
         PC=ProposalCategory(PCAddress);
         GD=governanceData(GDAddress);
         GBTS=GBTStandardToken(GBTSAddress);
-
-        uint proposalCreateLength = getTotalProposal(_memberAddress);
-        uint optionCreateLength = getProposalAnsLength(_memberAddress);
+        uint proposalCreateLength = GD.getTotalProposal(_memberAddress);
+        uint optionCreateLength = GD.getProposalAnsLength(_memberAddress);
         uint proposalVoteLength = GD.getTotalVotesByAddress(_memberAddress);
+        uint createId = GD.getProposalCreate(_memberAddress);
+        uint optionId = GD.getOptionCreate(_memberAddress);
+        uint voteId = GD.getProposalVote(_memberAddress);
+        uint lastIndex = 0;
 
-        setProposalCreate(_memberAddress,proposalCreateLength);
-        setOptionCreate(_memberAddress,optionCreateLength);
-        setProposalVote(_memberAddress,proposalVoteLength);
-
-        for(i=getProposalCreate(_memberAddress); i>proposalCreateLength; i++)
+        for(i=createId; i<proposalCreateLength; i++)
         {   
             proposalId = GD.getProposalIdByAddress(_memberAddress,i);
             category = GD.getProposalCategory(proposalId);
-            if(GD.getProposalFinalOption(proposalId) > 0)
+            if(GD.getProposalStatus(proposalId) < 2)
+                lastIndex = i;
+
+            if(GD.getProposalFinalOption(proposalId) > 0 && GD.getReturnedTokens(_memberAddress,proposalId,'P') == 0)
             {
                 calcReward = (PC.getRewardPercProposal(category)*GD.getProposalTotalReward(proposalId))/100;
                 transferBack = transferBack + calcReward + GD.getDepositedTokens(_memberAddress,_proposalId,'P');
                 GD.callRewardEvent(_memberAddress,proposalId,"GBT Reward for being Proposal owner - Accepted ",calcReward)
+                GD.setReturnedTokens(_memberAddress,proposalId,'P',1);
             }
         }
 
-        for(i=getOptionCreate(_memberAddress); i<optionCreateLength; i++)
+        if(lastIndex == 0)
+          lastIndex = i;
+        setProposalCreate(_memberAddress,lastIndex);
+        lastIndex = 0;
+
+        for(i=optionId; i<optionCreateLength; i++)
         {
             proposalId = GD.getProposalAnsId(_memberAddress,i);
             uint optionid = GD.getOptionIdByAddress(proposalId,_memberAddress);
-            if(GD.getProposalFinalOption(proposalId) > 0 && GD.getProposalFinalOption(proposalId) == optionid)
+            if(GD.getProposalStatus(proposalId) < 2)
+                lastIndex = i;
+
+            if(GD.getProposalFinalOption(proposalId) > 0 && GD.getProposalFinalOption(proposalId) == optionid && GD.getReturnedTokens(_memberAddress,proposalId,'S') == 0)
             {
                 calcReward = (PC.getRewardPercOption(category)*GD.getProposalTotalReward(proposalId))/100;
                 transferBack = transferBack + calcReward + GD.getDepositedTokens(_memberAddress,_proposalId,'S');
                 GD.callRewardEvent(_memberAddress,_proposalId,"GBT Reward earned for being Solution owner - Final Solution by majority voting",calcReward);
+                GD.setReturnedTokens(_memberAddress,proposalId,'S',1);
             }
         }
 
-        for(i=getProposalVote(_memberAddress); i<proposalVoteLength; i++)
+         if(lastIndex == 0)
+          lastIndex = i;
+        setOptionCreate(_memberAddress,lastIndex);
+        lastIndex = 0;
+
+        for(i=voteId; i<proposalVoteLength; i++)
         {
             uint voteid = GD.getVoteIdByIndex(_memberAddress,i);
             proposalId = GD.getProposalIdByVoteId(voteid);
-            if(GD.getProposalFinalOption(proposalId) > 0 && GD.getOptionById(voteid,0) == GD.getProposalFinalOption(proposalId))
+            if(GD.getProposalStatus(proposalId) < 2)
+                lastIndex = i;
+
+            if(GD.getProposalFinalOption(proposalId) > 0 && GD.getOptionById(voteid,0) == GD.getProposalFinalOption(proposalId) && GD.getReturnedTokens(_memberAddress,proposalId,'V') == 0)
             {
                 calcReward = (PC.getRewardPercVote(category)*GD.getProposalTotalReward(proposalId)*GD.getVoteValue(voteid))/(100*GD.getProposalReward(proposalId));
                 transferBack = transferBack + calcReward + GD.getDepositedTokens(_memberAddress,_proposalId,'V');
                 GD.callRewardEvent(_memberAddress,_proposalId,"GBT Reward earned for voting in favour of final option",calcReward);
+                GD.setReturnedTokens(_memberAddress,proposalId,'V',1);
             }
         }
+
+        if(lastIndex == 0)
+          lastIndex = i;
+        setProposalVote(_memberAddress,lastIndex);
+        lastIndex = 0;
+
         GD.setReward(transferBack,_memberAddress);
     }
 }

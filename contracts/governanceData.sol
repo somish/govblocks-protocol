@@ -130,6 +130,12 @@ contract governanceData {
         uint optionCreate;
         uint proposalVote;
     }
+
+    struct deposit
+    {
+        uint amount;
+        uint8 returned;
+    }
     
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndToken;
     mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;
@@ -144,9 +150,8 @@ contract governanceData {
     mapping(address=>uint[]) allMemberVotes; // Total Votes given by member till now..
     mapping(uint=>uint8) initialOptionsAdded;
     mapping(address=>mapping(uint=>uint)) allOptionDataAgainstMember; // AddressProposalOptionId
-    mapping(address=>mapping(uint=>mapping(bytes4=>uint))) allMemberDepositTokens;
+    mapping(address=>mapping(uint=>mapping(bytes4=>deposit))) allMemberDepositTokens;
     mapping(address=>lastReward);
-    mapping(address=>uint) allMemberTotalReward;
 
 
     uint public quorumPercentage;
@@ -290,17 +295,17 @@ contract governanceData {
         depositPercVote=40;
     }
 
-    function setProposalCreate(address _memberAddress,uint _proposalId)
+    function setProposalCreate(address _memberAddress,uint _proposalId) onlyInternal
     {
         lastReward[_memberAddress].proposalCreate =_proposalId;
     }
 
-    function setOptionCreate(address _memberAddress, uint _proposalId)
+    function setOptionCreate(address _memberAddress, uint _proposalId) onlyInternal
     {
         lastReward[_memberAddress].optionCreate = _proposalId;
     }
 
-    function setProposalVote(address _memberAddress,uint _voteId)
+    function setProposalVote(address _memberAddress,uint _voteId) onlyInternal
     {
         lastReward[_memberAddress].proposalVote = _voteId;
     }
@@ -320,17 +325,28 @@ contract governanceData {
         return lastReward[_memberAddress].proposalVote;
     }
 
-    function setDepositTokens(address _memberAddress,uint _proposalId,bytes4 _typeOf,uint _depositAmount)
+    function setDepositTokens(address _memberAddress,uint _proposalId,bytes4 _typeOf,uint _depositAmount) onlyInternal
     {
-        allMemberDepositTokens[_memberAddress][_proposalId][_typeOf] = _depositAmount;
+        allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].amount = _depositAmount;
     }
 
-    function getDepositedTokens(address _memberAddress,uint _proposalId,bytes4 _typeOf)
+    function getDepositedTokens(address _memberAddress,uint _proposalId,bytes4 _typeOf) constant returns(uint) 
     {
-        return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf];
+        return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].amount;
     }
 
-    function claimReward()
+    function getReturnedTokens(address _memberAddress,uint _proposalId,bytes4 _typeOf)constant returns(uint8)
+    {
+        return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned;
+    }
+
+    function setReturnedTokens(address _memberAddress,uint _proposalId,bytes4 _typeOf,uint8 _returnedIndex) onlyInternal
+    {
+        return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned = _returnedIndex ;
+    }
+
+ 
+    function claimReward() onlyInternal
     {
         GBTS=GBTStandardToken(GBTSAddress);
         G1.calculateMemberReward(msg.sender);
@@ -338,9 +354,9 @@ contract governanceData {
         GBTS.callTransferGBTEvent(address(this),msg.sender, allMemberTotalReward[msg.sender],"GBT Stake claimed - Returned");
     }
 
-    function setReward(uint _reward,address _memberAddress)
+    function setReward(uint _reward,address _memberAddress) onlyInternal
     {
-        allMemberTotalReward[_memberAddress] = _reward;
+        allMemberDepositTokens[_memberAddress] = _reward;
         GBTS=GBTStandardToken(GBTSAddress);
         GBTS.addInBalance(address(this),_reward);
     }
