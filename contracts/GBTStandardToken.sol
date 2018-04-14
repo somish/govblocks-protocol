@@ -30,7 +30,24 @@ contract GBTStandardToken is StandardToken
     address GBTCAddress;
     address GBMAddress;
     uint  initialTokens;
-    
+
+    struct lock
+    {
+        uint amount;
+        uint validUpto;
+    }
+
+    lock[] lockToken;
+    mapping(bytes32=>mapping(uint=>uint)) proposal_lockToken;
+    mapping(address=>uint) user_lockToken;
+
+    function lockMemberToken(bytes32 _gbUserName,uint _memberStake,uint _proposalId,uint _tokenlockPerc)
+    {
+        lockToken.push((stake*_tokenlockPerc)/100,totalTime);
+        proposal_lockToken[_gbUserName][_proposalId] = id;
+        user_lockToken[msg.sender] = id;
+    }
+
     modifier onlyGBTController
     {  
         require(msg.sender == GBTCAddress);
