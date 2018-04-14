@@ -19,8 +19,6 @@ import "./memberRoles.sol";
 contract ProposalCategory
 {
     uint8 public constructorCheck;
-    // mapping(uint=>string) allCategoryData;
-    // string[] allCategory;
 
     struct category
     {
@@ -31,6 +29,9 @@ contract ProposalCategory
         uint8 minStake;
         uint8 maxStake;
         uint defaultIncentive;
+        uint rewardPercProposal;
+        uint rewardPercOption;
+        uint rewardPercVote;
     }
 
     category[] public allCategory;
@@ -104,7 +105,7 @@ contract ProposalCategory
     {
         require(msg.sender == GBMAddress);
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleSequence.length == _closingTime.length);
-        allCategory.push(category(_categoryData,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive));    
+        allCategory.push(category(_categoryData,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive,0,0,0));    
     }
 
     function updateCategory(uint _categoryId,string _categoryData) 
@@ -187,6 +188,36 @@ contract ProposalCategory
     function changeIncentiveById(uint _categoryId,uint _incentive)
     {
         allCategory[_categoryId].defaultIncentive = _incentive;
+    }
+
+    function changeLockPercProposal(uint _categoryId,uint _value)
+    {
+        allCategory[_categoryId].lockPercProposal = _value;
+    }
+
+    function changeLockPercOption(uint _categoryId,uint _value)
+    {
+        allCategory[_categoryId].lockPercOption = _value;    
+    }
+
+    function changeLockPercVote(uint _categoryId,uint _value)
+    {
+        allCategory[_categoryId].lockPercVote = _value;
+    }
+
+    function getLockPercProposal(uint _categoryId)constant returns(uint)
+    {
+        return allCategory[_categoryId].lockPercProposal;
+    }
+
+    function getLockPercOption(uint _categoryId)constant returns(uint)
+    {
+        return allCategory[_categoryId].lockPercOption;
+    }
+
+    function (uint _categoryId)constant returns(uint)
+    {
+        return allCategory[_categoryId].lockPercVote;
     }
 
     function getCategoryData2(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint24[] closingTime)
