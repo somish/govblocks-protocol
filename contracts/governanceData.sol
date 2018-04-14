@@ -170,20 +170,7 @@ contract governanceData {
     {
         _depositAmount = allMemberDepositTokens[_memberAddress][_proposalId];
     }
-
-    function calculateReward(uint _proposalId)
-    {
-        uint reward = allProposal[_proposalId].totalreward;
-        allMemberDepositTokens[msg.sender][_proposalId]
-    }
-
-    function undepositTokens(uint _proposalId)
-    {
-
-    }
-
-
-
+    
     uint public quorumPercentage;
     uint public pendingProposalStart;
     uint public GBTStakeValue; 
