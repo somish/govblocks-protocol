@@ -146,16 +146,16 @@ contract Governance {
   /// @dev Calculate the proposal value to distribute it later - Distribute amount depends upon the final decision against proposal.
   function setProposalValue(uint _proposalId,uint _memberStake) onlyInternal
   {
-      GD=governanceData(GDAddress);
-      GD.setProposalStake(_proposalId,_memberStake);
-      GBTS=GBTStandardToken(GBTSAddress);
+      // GD=governanceData(GDAddress);
+      // // GD.setProposalStake(_proposalId,_memberStake);
+      // GBTS=GBTStandardToken(GBTSAddress );
 
-      uint memberLevel = Math.max256(GD.getMemberReputation(msg.sender),1);
-      uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(msg.sender),100),100)),GBTS.totalSupply());
-      uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
+      // uint memberLevel = Math.max256(GD.getMemberReputation(msg.sender),1);
+      // uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(msg.sender),100),100)),GBTS.totalSupply());
+      // uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
 
-      uint finalProposalValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
-      GD.setProposalValue(_proposalId,finalProposalValue);
+      // uint finalProposalValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
+      // GD.setProposalValue(_proposalId,finalProposalValue);
   }
   
   /// @dev categorizing proposal to proceed further. _reward is the company incentive to distribute to End Members.

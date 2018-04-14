@@ -104,13 +104,13 @@ contract StandardVotingType
 
     function setOptionValue_givenByMemberSVT(address _memberAddress,uint _proposalId,uint _memberStake) internal returns (uint finalOptionValue) 
     {
-        GD=governanceData(GDAddress);
-        GBTS=GBTStandardToken(GBTSAddress);
-        uint memberLevel = Math.max256(GD.getMemberReputation(_memberAddress),1);
-        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(_memberAddress),100),100)),GBTS.totalSupply());
-        uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
+        // GD=governanceData(GDAddress);
+        // GBTS=GBTStandardToken(GBTSAddress);
+        // uint memberLevel = Math.max256(GD.getMemberReputation(_memberAddress),1);
+        // uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(_memberAddress),100),100)),GBTS.totalSupply());
+        // uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
 
-        finalOptionValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
+        // finalOptionValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
     }
 
     function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)

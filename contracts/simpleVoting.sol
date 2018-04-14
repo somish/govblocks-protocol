@@ -227,8 +227,8 @@ contract simpleVoting is VotingType
         GD=governanceData(GDAddress);
         G1=Governance(G1Address);        
         
-         voteValueFavour=0;  voterStake=0;  wrongOptionStake=0;  returnTokens=0;
-         totalVoteValue=0;  totalTokenToDistribute=0; 
+        voteValueFavour=0;  voterStake=0;  wrongOptionStake=0;  returnTokens=0;
+        totalVoteValue=0;  totalTokenToDistribute=0; 
         uint finalVerdict;
         (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
         
@@ -268,7 +268,7 @@ contract simpleVoting is VotingType
             totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,GD.getProposalStake(_proposalId)); // denied
 
         totalTokenToDistribute = totalTokenToDistribute + GD.getProposalIncentive(_proposalId);
-        distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue);
+        // distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue);
     }
     
     function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue) internal
@@ -298,7 +298,7 @@ contract simpleVoting is VotingType
         for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++)
         {
             uint voteid = GD.getVoteIdById(_proposalId,i); 
-            if(GD.getOptionById(voteid,0) == finalVerdict)
+            if(GD.getOptionById(voteid,0) == finaelVrdict)
             {
                 reward = SafeMath.div(SafeMath.mul(GD.getVoteValue(voteid),_totalTokenToDistribute),_totalVoteValue);
                 uint repPoints = GD.getMemberReputation(GD.getVoterAddress(voteid))+addMemberPoints;
