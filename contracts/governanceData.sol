@@ -123,7 +123,6 @@ contract governanceData {
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndToken;
     mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;
     mapping(address=>mapping(uint=>uint)) AddressProposalVote; 
-
     mapping(uint=>proposalCategory) allProposalCategory;
     mapping(uint=>proposalVersionData[]) proposalVersions;
     mapping(uint=>Status[]) proposalStatus;
@@ -134,7 +133,9 @@ contract governanceData {
     mapping(address=>uint[]) allMemberVotes; // Total Votes given by member till now..
     mapping(uint=>uint8) initialOptionsAdded;
     mapping(address=>mapping(uint=>uint)) allOptionDataAgainstMember; // AddressProposalOptionId
-    mapping(address=>mapping(uint=>uint)) allMemberDepositTokens;
+    
+
+    mapping(address=>mapping(uint=>mapping(bytes4=>uint))) allMemberDepositTokens;
 
     struct lastReward
     {
@@ -145,6 +146,44 @@ contract governanceData {
 
     mapping(address=>lastReward);
 
+    function setProposalCreate(address _memberAddress,uint _proposalId)
+    {
+        lastReward[_memberAddress].proposalCreate =_proposalId;
+    }
+
+    function setOptionCreate(address _memberAddress, uint _proposalId)
+    {
+        lastReward[_memberAddress].optionCreate = _proposalId;
+    }
+
+    function setProposalVote(address _memberAddress,uint _voteId)
+    {
+        lastReward[_memberAddress].proposalVote = _voteId;
+    }
+
+    function setDepositTokens(address _memberAddress,uint _proposalId,uint _depositAmount)
+    {
+        allMemberDepositTokens[_memberAddress][_proposalId] = _depositAmount;
+    }
+
+    function getDepositTokensByAddress(address _memberAddress,uint _proposalId)constant returns(uint _depositAmount)
+    {
+        _depositAmount = allMemberDepositTokens[_memberAddress][_proposalId];
+    }
+
+    function calculateReward(uint _proposalId)
+    {
+        uint reward = allProposal[_proposalId].totalreward;
+        allMemberDepositTokens[msg.sender][_proposalId]
+    }
+
+    function undepositTokens(uint _proposalId)
+    {
+
+    }
+
+
+
     uint public quorumPercentage;
     uint public pendingProposalStart;
     uint public GBTStakeValue; 
@@ -153,6 +192,9 @@ contract governanceData {
     uint public scalingWeight;
     uint public allVotesTotal;
     uint public constructorCheck;
+    uint public burnPercProposal;
+    uint public burnPercOption;
+    uint public burnPercVote;
     uint addProposalOwnerPoints;
     uint addOptionOwnerPoints;
     uint addMemberPoints;
@@ -178,21 +220,22 @@ contract governanceData {
         _; 
     }
     
-     modifier onlyOwner {
+     modifier onlyOwner 
+    {
         MS=Master(masterAddress);
         require(MS.isOwner(msg.sender) == 1);
         _; 
     }
 
-    modifier onlyMaster {
-        
+    modifier onlyMaster 
+    {
         require(msg.sender == masterAddress);
         _; 
     }
 
     modifier onlyGBM
     {
-            require(msg.sender == GBMAddress);
+        require(msg.sender == GBMAddress);
         _;
     }
 
@@ -409,6 +452,9 @@ contract governanceData {
         globalRiskFactor=5;
         membershipScalingFactor=1;
         scalingWeight=1;
+        depositPercProposal=30;
+        depositPercOption=30;
+        depositPercVote=40;
     }
 
     /// @dev Set Vote Id against given proposal.
