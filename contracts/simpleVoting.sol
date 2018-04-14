@@ -206,10 +206,6 @@ contract simpleVoting is VotingType
         GD.editProposalVoteCount(_proposalId,roleId,GD.getOptionById(voteId,0),voteVal);
         GD.setProposalVoteCount(_proposalId,roleId,_optionChosen[0],voteVal);
         GD.setOptionChosen(voteId,_optionChosen[0]);
-
-        // uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
-        // allVotes[voteId].voteStakeGBT = _GBTPayableTokenAmount;
-        // allVotes[voteId].voteValue = finalVoteValue;
     }
 
     function closeProposalVote(uint _proposalId) onlyInternal
@@ -218,102 +214,126 @@ contract simpleVoting is VotingType
         SVT.closeProposalVoteSVT(_proposalId);
     }
 
-    uint public voteValueFavour; uint public voterStake; uint public wrongOptionStake; uint public returnTokens;
-    uint public totalVoteValue; uint public totalTokenToDistribute; 
-    uint reward; uint public reward1; uint public reward2; uint public reward3;
-
     function giveReward_afterFinalDecision(uint _proposalId) onlyInternal
-    {
-        GD=governanceData(GDAddress);
-        G1=Governance(G1Address);        
-        
-        voteValueFavour=0;  voterStake=0;  wrongOptionStake=0;  returnTokens=0;
-        totalVoteValue=0;  totalTokenToDistribute=0; 
-        uint finalVerdict;
-        (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
-        
-        for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++) 
-        {
-            uint voteid = GD.getVoteIdById(_proposalId,i);
-            
-            if(GD.getOptionById(voteid,0) == finalVerdict)
-            {   
-                voteValueFavour = GD.getVoteValue(voteid) + voteValueFavour;
-            }
-            else 
-            {
-                uint burnedTokens = SafeMath.div(GD.getVoteStake(voteid),GD.globalRiskFactor());
-                voterStake = SafeMath.add(voterStake,burnedTokens);
-                returnTokens = SafeMath.sub(GD.getVoteStake(voteid),SafeMath.div(GD.getVoteStake(voteid),GD.globalRiskFactor()));
-                
-                G1.transferBackGBTtoken(GD.getVoterAddress(voteid),returnTokens,"Transfer Back GBT after penalty for voting other than final option -  Token Returned");
-                GD.callPenaltyEvent(GD.getVoterAddress(voteid),_proposalId,"Penalty in GBT for voting other than final option -  Token burned", burnedTokens);
-                GD.setVoteReward(voteid,returnTokens);
-            }
-        }
+    {   
+        GD=governanceData(GDAddress); uint totalTokenToDistribute; uint voteValueFavour;
+        G1=Governance(G1Address); 
+
+        if(GD.getProposalFinalOption(_proposalId) < 0)
+            totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getProposalOwner(_proposalId),_proposalId,'P'));
 
         for(i=0; i<GD.getOptionAddedAddressLength(_proposalId); i++)
         {
             if(i!= finalVerdict)         
-                wrongOptionStake = SafeMath.add(wrongOptionStake,GD.getOptionStakeById(_proposalId,i));
-                GD.setOptionReward(_proposalId,0,i);
+                totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getOptionAddressByProposalId(_proposalId,i),_proposalId,'S'));
         }
 
-        totalVoteValue = SafeMath.add(GD.getOptionValueByProposalId(_proposalId,finalVerdict),voteValueFavour);
-        totalTokenToDistribute = SafeMath.add(wrongOptionStake,voterStake);
- 
-        if(finalVerdict>0)
-            totalVoteValue = SafeMath.add(totalVoteValue,GD.getProposalValue(_proposalId)); // accpted
-        else
-            totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,GD.getProposalStake(_proposalId)); // denied
-
-        totalTokenToDistribute = totalTokenToDistribute + GD.getProposalIncentive(_proposalId);
-        // distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue);
-    }
-    
-    function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue) internal
-    {
-        GD=governanceData(GDAddress);
-        G1=Governance(G1Address);
-        
-        reward=0;reward1=0;reward3=0;
-        uint addMemberPoints; uint subMemberPoints; uint finalVerdict; 
-        (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
-        (,,addMemberPoints,,,subMemberPoints)=GD.getMemberReputationPoints();
- 
-        if(finalVerdict > 0) 
+        for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++) 
         {
-            reward1 = SafeMath.div(SafeMath.mul(GD.getProposalValue(_proposalId),_totalTokenToDistribute),_totalVoteValue);
-            G1.transferBackGBTtoken(GD.getProposalOwner(_proposalId),SafeMath.add(GD.getProposalStake(_proposalId),reward1),"GBT Stake Returned for being Proposal owner - Accepted");
-            GD.callRewardEvent(GD.getProposalOwner(_proposalId),_proposalId,"GBT Reward for being Proposal owner - Accepted ",reward1);
-
-            reward3 = SafeMath.div(SafeMath.mul(GD.getOptionValueByProposalId(_proposalId,finalVerdict),_totalTokenToDistribute),_totalVoteValue);
-            G1.transferBackGBTtoken(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),SafeMath.add(GD.getOptionStakeById(_proposalId,finalVerdict),reward3),"GBT Stake Returned for being Final Solution owner - Accepted");
-            GD.setOptionReward(_proposalId,reward3,finalVerdict);
-            GD.callRewardEvent(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),_proposalId,"GBT Reward earned for being Solution owner - Final Solution by majority voting",reward3);
-        }
-        
-        G1.setProposalDetails(_proposalId,_totalTokenToDistribute,block.number,reward1);
-        
-        for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++)
-        {
-            uint voteid = GD.getVoteIdById(_proposalId,i); 
-            if(GD.getOptionById(voteid,0) == finaelVrdict)
-            {
-                reward = SafeMath.div(SafeMath.mul(GD.getVoteValue(voteid),_totalTokenToDistribute),_totalVoteValue);
-                uint repPoints = GD.getMemberReputation(GD.getVoterAddress(voteid))+addMemberPoints;
-                
-                G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward),"GBT Stake Returned for voting in favour of final solution");
-                G1.updateMemberReputation1("Reputation credit after voted in favour of final option",_proposalId,GD.getVoterAddress(voteid),repPoints,addMemberPoints,"C");
-                GD.setVoteReward(voteid,reward);
-                GD.callRewardEvent(GD.getVoterAddress(voteid),_proposalId,"GBT Reward earned for voting in favour of final option",reward);
+            uint voteid = GD.getVoteIdById(_proposalId,i);
+            if(GD.getOptionById(voteid,0) != finalVerdict)
+            {   
+                totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getVoterAddress(voteid),_proposalId,'V');
+                totalVoteValue = SafeMath.add(totalVoteValue,GD.getVoteValue(voteid));
             }
-            else
-            {
-                G1.updateMemberReputation1("Reputation debit after voted other than final option",_proposalId,GD.getVoterAddress(voteid),(GD.getMemberReputation(GD.getVoterAddress(voteid))-subMemberPoints),subMemberPoints,"D");
-            }     
-        } 
-        G1.updateMemberReputation(_proposalId,finalVerdict);
+        }
+
+        totalReward = totalReward + GD.getProposalIncentive(_proposalId); 
+        G1.setProposalDetails(_proposalId,totalReward,block.number,totalVoteValue);         
     }
+
+    // function giveReward_afterFinalDecision(uint _proposalId) onlyInternal
+    // {
+    //     GD=governanceData(GDAddress);
+    //     G1=Governance(G1Address);        
+        
+    //     voteValueFavour=0;  voterStake=0;  wrongOptionStake=0;  returnTokens=0;
+    //     totalVoteValue=0;  totalTokenToDistribute=0; 
+    //     uint finalVerdict;
+    //     (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
+        
+    //     for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++) 
+    //     {
+    //         uint voteid = GD.getVoteIdById(_proposalId,i);
+            
+    //         if(GD.getOptionById(voteid,0) == finalVerdict)
+    //         {   
+    //             voteValueFavour = GD.getVoteValue(voteid) + voteValueFavour;
+    //         }
+    //         else 
+    //         {
+    //             uint burnedTokens = SafeMath.div(GD.getVoteStake(voteid),GD.globalRiskFactor());
+    //             voterStake = SafeMath.add(voterStake,burnedTokens);
+    //             returnTokens = SafeMath.sub(GD.getVoteStake(voteid),SafeMath.div(GD.getVoteStake(voteid),GD.globalRiskFactor()));
+                
+    //             G1.transferBackGBTtoken(GD.getVoterAddress(voteid),returnTokens,"Transfer Back GBT after penalty for voting other than final option -  Token Returned");
+    //             GD.callPenaltyEvent(GD.getVoterAddress(voteid),_proposalId,"Penalty in GBT for voting other than final option -  Token burned", burnedTokens);
+    //             GD.setVoteReward(voteid,returnTokens);
+    //         }
+    //     }
+
+    //     for(i=0; i<GD.getOptionAddedAddressLength(_proposalId); i++)
+    //     {
+    //         if(i!= finalVerdict)         
+    //             wrongOptionStake = SafeMath.add(wrongOptionStake,GD.getOptionStakeById(_proposalId,i));
+    //             GD.setOptionReward(_proposalId,0,i);
+    //     }
+
+    //     totalVoteValue = SafeMath.add(GD.getOptionValueByProposalId(_proposalId,finalVerdict),voteValueFavour);
+    //     totalTokenToDistribute = SafeMath.add(wrongOptionStake,voterStake);
+ 
+    //     if(finalVerdict>0)
+    //         totalVoteValue = SafeMath.add(totalVoteValue,GD.getProposalValue(_proposalId)); // accpted
+    //     else
+    //         totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,GD.getProposalStake(_proposalId)); // denied
+
+    //     totalTokenToDistribute = totalTokenToDistribute + GD.getProposalIncentive(_proposalId);
+    //     // distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue);
+    // }
+    
+    // function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue) internal
+    // {
+    //     GD=governanceData(GDAddress);
+    //     G1=Governance(G1Address);
+        
+    //     reward=0;reward1=0;reward3=0;
+    //     uint addMemberPoints; uint subMemberPoints; uint finalVerdict; 
+    //     (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
+    //     (,,addMemberPoints,,,subMemberPoints)=GD.getMemberReputationPoints();
+ 
+    //     if(finalVerdict > 0) 
+    //     {
+    //         reward1 = SafeMath.div(SafeMath.mul(GD.getProposalValue(_proposalId),_totalTokenToDistribute),_totalVoteValue);
+    //         G1.transferBackGBTtoken(GD.getProposalOwner(_proposalId),SafeMath.add(GD.getProposalStake(_proposalId),reward1),"GBT Stake Returned for being Proposal owner - Accepted");
+    //         GD.callRewardEvent(GD.getProposalOwner(_proposalId),_proposalId,"GBT Reward for being Proposal owner - Accepted ",reward1);
+
+    //         reward3 = SafeMath.div(SafeMath.mul(GD.getOptionValueByProposalId(_proposalId,finalVerdict),_totalTokenToDistribute),_totalVoteValue);
+    //         G1.transferBackGBTtoken(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),SafeMath.add(GD.getOptionStakeById(_proposalId,finalVerdict),reward3),"GBT Stake Returned for being Final Solution owner - Accepted");
+    //         GD.setOptionReward(_proposalId,reward3,finalVerdict);
+    //         GD.callRewardEvent(GD.getOptionAddressByProposalId(_proposalId,finalVerdict),_proposalId,"GBT Reward earned for being Solution owner - Final Solution by majority voting",reward3);
+    //     }
+        
+    //     G1.setProposalDetails(_proposalId,_totalTokenToDistribute,block.number,reward1);
+        
+    //     for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++)
+    //     {
+    //         uint voteid = GD.getVoteIdById(_proposalId,i); 
+    //         if(GD.getOptionById(voteid,0) == finaelVrdict)
+    //         {
+    //             reward = SafeMath.div(SafeMath.mul(GD.getVoteValue(voteid),_totalTokenToDistribute),_totalVoteValue);
+    //             uint repPoints = GD.getMemberReputation(GD.getVoterAddress(voteid))+addMemberPoints;
+                
+    //             G1.transferBackGBTtoken(GD.getVoterAddress(voteid),SafeMath.add(GD.getVoteStake(voteid),reward),"GBT Stake Returned for voting in favour of final solution");
+    //             G1.updateMemberReputation1("Reputation credit after voted in favour of final option",_proposalId,GD.getVoterAddress(voteid),repPoints,addMemberPoints,"C");
+    //             GD.setVoteReward(voteid,reward);
+    //             GD.callRewardEvent(GD.getVoterAddress(voteid),_proposalId,"GBT Reward earned for voting in favour of final option",reward);
+    //         }
+    //         else
+    //         {
+    //             G1.updateMemberReputation1("Reputation debit after voted other than final option",_proposalId,GD.getVoterAddress(voteid),(GD.getMemberReputation(GD.getVoterAddress(voteid))-subMemberPoints),subMemberPoints,"D");
+    //         }     
+    //     } 
+    //     G1.updateMemberReputation(_proposalId,finalVerdict);
+    // }
 }
 

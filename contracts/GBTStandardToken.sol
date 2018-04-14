@@ -30,6 +30,8 @@ contract GBTStandardToken is StandardToken
     address GBTCAddress;
     address GBMAddress;
     uint  initialTokens;
+    uint public tokenHoldingTime;
+
 
     struct lock
     {
@@ -41,11 +43,21 @@ contract GBTStandardToken is StandardToken
     mapping(bytes32=>mapping(uint=>uint)) proposal_lockToken;
     mapping(address=>uint) user_lockToken;
 
-    function lockMemberToken(bytes32 _gbUserName,uint _memberStake,uint _proposalId,uint _tokenlockPerc)
+    function lockMemberToken(bytes32 _gbUserName,uint _proposalId,uint _memberStake)
     {
-        lockToken.push((stake*_tokenlockPerc)/100,totalTime);
-        proposal_lockToken[_gbUserName][_proposalId] = id;
-        user_lockToken[msg.sender] = id;
+        // lockToken.push((stake*_tokenlockPerc)/100,totalTime);
+        // proposal_lockToken[_gbUserName][_proposalId] = id;
+        // user_lockToken[msg.sender] = id;
+    }
+
+    function getLockedTokenId(bytes32 _gbUserName,uint _proposalId)constant returns(uint id)
+    {
+        id = proposal_lockToken[_gbUserName][_proposalId];
+    }
+
+    function getLockedAmountMyId(uint _id)constant returns (uint stake)
+    {
+        stake = lockToken[_id];
     }
 
     modifier onlyGBTController

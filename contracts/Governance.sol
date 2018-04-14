@@ -175,7 +175,7 @@ contract Governance {
       if(_dappIncentive != 0)
       {
         uint gbtBalanceOfPool = GBTS.balanceOf(P1Address);
-        require (gbtBalanceOfPool > _dappIncentive);
+        require (gbtBalanceOfPool >= _dappIncentive);
       }
        
       GD.setProposalIncentive(_proposalId,_dappIncentive);
@@ -410,12 +410,12 @@ contract Governance {
         }
     }
 
-    function setProposalDetails(uint _proposalId,uint _totaltoken,uint _blockNumber,uint _reward) onlyInternal
+    function setProposalDetails(uint _proposalId,uint _totaltoken,uint _blockNumber,uint _totalVoteValue) onlyInternal
     {
        GD=governanceData(GDAddress);
        GD.setProposalTotalToken(_proposalId,_totaltoken);
        GD.setProposalBlockNo(_proposalId,_blockNumber);
-       GD.setProposalReward(_proposalId,_reward);
+       GD.setProposalTotalVoteValue(_proposalId,_totalVoteValue);
     }
 
     function getMemberDetails(address _memberAddress) constant returns(uint memberReputation, uint totalProposal,uint proposalStake,uint totalOption,uint optionStake,uint totalVotes)
@@ -534,5 +534,58 @@ contract Governance {
         optionReward = GD.getOptionReward(_proposalId,_optionIndex);
         dateAdded = GD.getOptionDateAdded(_proposalId,_optionIndex);
         return (_proposalId,optionid,optionStake,optionValue,memberAddress,optionReward,dateAdded);
+    }
+
+    function calculateMemberReward(address _memberAddress)
+    {
+        uint i;uint transferBack; uint proposalId; uint category;uint calcReward;
+        PC=ProposalCategory(PCAddress);
+        GD=governanceData(GDAddress);
+        GBTS=GBTStandardToken(GBTSAddress);
+
+        uint proposalCreateLength = getTotalProposal(_memberAddress);
+        uint optionCreateLength = getProposalAnsLength(_memberAddress);
+        uint proposalVoteLength = GD.getTotalVotesByAddress(_memberAddress);
+
+        setProposalCreate(_memberAddress,proposalCreateLength);
+        setOptionCreate(_memberAddress,optionCreateLength);
+        setProposalVote(_memberAddress,proposalVoteLength);
+
+        for(i=getProposalCreate(_memberAddress); i>proposalCreateLength; i++)
+        {   
+            proposalId = GD.getProposalIdByAddress(_memberAddress,i);
+            category = GD.getProposalCategory(proposalId);
+            if(GD.getProposalFinalOption(proposalId) > 0)
+            {
+                calcReward = (PC.getRewardPercProposal(category)*GD.getProposalTotalReward(proposalId))/100;
+                transferBack = transferBack + calcReward + GD.getDepositedTokens(_memberAddress,_proposalId,'P');
+                GD.callRewardEvent(_memberAddress,proposalId,"GBT Reward for being Proposal owner - Accepted ",calcReward)
+            }
+        }
+
+        for(i=getOptionCreate(_memberAddress); i<optionCreateLength; i++)
+        {
+            proposalId = GD.getProposalAnsId(_memberAddress,i);
+            uint optionid = GD.getOptionIdByAddress(proposalId,_memberAddress);
+            if(GD.getProposalFinalOption(proposalId) > 0 && GD.getProposalFinalOption(proposalId) == optionid)
+            {
+                calcReward = (PC.getRewardPercOption(category)*GD.getProposalTotalReward(proposalId))/100;
+                transferBack = transferBack + calcReward + GD.getDepositedTokens(_memberAddress,_proposalId,'S');
+                GD.callRewardEvent(_memberAddress,_proposalId,"GBT Reward earned for being Solution owner - Final Solution by majority voting",calcReward);
+            }
+        }
+
+        for(i=getProposalVote(_memberAddress); i<proposalVoteLength; i++)
+        {
+            uint voteid = GD.getVoteIdByIndex(_memberAddress,i);
+            proposalId = GD.getProposalIdByVoteId(voteid);
+            if(GD.getProposalFinalOption(proposalId) > 0 && GD.getOptionById(voteid,0) == GD.getProposalFinalOption(proposalId))
+            {
+                calcReward = (PC.getRewardPercVote(category)*GD.getProposalTotalReward(proposalId)*GD.getVoteValue(voteid))/(100*GD.getProposalReward(proposalId));
+                transferBack = transferBack + calcReward + GD.getDepositedTokens(_memberAddress,_proposalId,'V');
+                GD.callRewardEvent(_memberAddress,_proposalId,"GBT Reward earned for voting in favour of final option",calcReward);
+            }
+        }
+        GD.setReward(transferBack,_memberAddress);
     }
 }

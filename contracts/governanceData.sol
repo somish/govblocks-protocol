@@ -68,14 +68,15 @@ contract governanceData {
         address votingTypeAddress;
         uint proposalValue;
         uint proposalStake;
-        uint proposalReward;
+        uint totalVoteValue;
         uint totalreward;
         uint blocknumber;
         uint8 complexityLevel;
         uint commonIncentive;
     }
 
-    struct proposalCategory{
+    struct proposalCategory
+    {
         address categorizedBy;
         uint8 verdictOptions;
         address[] optionAddedByAddress;
@@ -86,13 +87,15 @@ contract governanceData {
         mapping(uint=>uint) rewardOption;
     }
 
-    struct proposalVersionData{
+    struct proposalVersionData
+    {
         uint versionNum;
         string proposalDescHash;
         uint date_add;
     }
 
-    struct Status{
+    struct Status
+    {
         uint statusId;
         uint date;
     }
@@ -103,7 +106,8 @@ contract governanceData {
         address votingTypeAddress;
     }
 
-    struct proposalVote {
+    struct proposalVote 
+    {
         address voter;
         uint proposalId;
         uint[] optionChosen;
@@ -119,6 +123,13 @@ contract governanceData {
         mapping(uint=>mapping(uint=>uint)) totalVoteCountValue; // PROPOSAL ROLE OPTION VOTEVALUE
         mapping(uint=>uint) totalTokenCount;  // PROPOSAL ROLE TOKEN
     }
+
+    struct lastReward
+    {
+        uint proposalCreate;
+        uint optionCreate;
+        uint proposalVote;
+    }
     
     mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndToken;
     mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;
@@ -133,44 +144,11 @@ contract governanceData {
     mapping(address=>uint[]) allMemberVotes; // Total Votes given by member till now..
     mapping(uint=>uint8) initialOptionsAdded;
     mapping(address=>mapping(uint=>uint)) allOptionDataAgainstMember; // AddressProposalOptionId
-    
-
     mapping(address=>mapping(uint=>mapping(bytes4=>uint))) allMemberDepositTokens;
-
-    struct lastReward
-    {
-        uint proposalCreate;
-        uint optionCreate;
-        uint proposalVote;
-    }
-
     mapping(address=>lastReward);
+    mapping(address=>uint) allMemberTotalReward;
 
-    function setProposalCreate(address _memberAddress,uint _proposalId)
-    {
-        lastReward[_memberAddress].proposalCreate =_proposalId;
-    }
 
-    function setOptionCreate(address _memberAddress, uint _proposalId)
-    {
-        lastReward[_memberAddress].optionCreate = _proposalId;
-    }
-
-    function setProposalVote(address _memberAddress,uint _voteId)
-    {
-        lastReward[_memberAddress].proposalVote = _voteId;
-    }
-
-    function setDepositTokens(address _memberAddress,uint _proposalId,uint _depositAmount)
-    {
-        allMemberDepositTokens[_memberAddress][_proposalId] = _depositAmount;
-    }
-
-    function getDepositTokensByAddress(address _memberAddress,uint _proposalId)constant returns(uint _depositAmount)
-    {
-        _depositAmount = allMemberDepositTokens[_memberAddress][_proposalId];
-    }
-    
     uint public quorumPercentage;
     uint public pendingProposalStart;
     uint public GBTStakeValue; 
@@ -179,9 +157,9 @@ contract governanceData {
     uint public scalingWeight;
     uint public allVotesTotal;
     uint public constructorCheck;
-    uint public burnPercProposal;
-    uint public burnPercOption;
-    uint public burnPercVote;
+    uint public depositPercProposal;
+    uint public depositPercOption;
+    uint public depositPercVote;
     uint addProposalOwnerPoints;
     uint addOptionOwnerPoints;
     uint addMemberPoints;
@@ -263,6 +241,113 @@ contract governanceData {
             uint _totalVotes = SafeMath.add(allVotesTotal,1);  
             allVotesTotal=_totalVotes;
             constructorCheck=1;
+    }
+
+    /// @dev Add points to add or subtract in memberReputation when proposal/option/vote gets denied or accepted.
+    function addMemberReputationPoints() internal
+    {
+        addProposalOwnerPoints = 5;
+        addOptionOwnerPoints = 5;
+        addMemberPoints = 1;
+        subProposalOwnerPoints = 1;
+        subOptionOwnerPoints = 1;
+        subMemberPoints = 1;
+    }
+
+    /// @dev Change points to add or subtract in memberReputation when proposal/option/vote gets denied or accepted.
+    function changeMemberReputationPoints(uint _addProposalOwnerPoints,uint  _addOptionOwnerPoints, uint _addMemberPoints,uint _subProposalOwnerPoints,uint  _subOptionOwnerPoints, uint _subMemberPoints) onlyOwner
+    {
+        addProposalOwnerPoints = _addProposalOwnerPoints;
+        addOptionOwnerPoints= _addOptionOwnerPoints;
+        addMemberPoints = _addMemberPoints;
+        subProposalOwnerPoints = _subProposalOwnerPoints;
+        subOptionOwnerPoints= _subOptionOwnerPoints;
+        subMemberPoints = _subMemberPoints;
+    }
+
+    /// @dev add status.
+    function addStatus() internal
+    {
+        status.push("Draft for discussion"); 
+        status.push("Draft Ready for submission");
+        status.push("Voting started"); 
+        status.push("Proposal Decision - Accepted by Majority Voting"); 
+        status.push("Proposal Decision - Rejected by Majority voting"); 
+        status.push("Proposal Denied, Threshold not reached"); 
+    }
+
+    /// @dev Set Parameters value that will help in Distributing reward.
+    function setGlobalParameters() internal
+    {
+        pendingProposalStart=0;
+        quorumPercentage=25;
+        GBTStakeValue=0;
+        globalRiskFactor=5;
+        membershipScalingFactor=1;
+        scalingWeight=1;
+        depositPercProposal=30;
+        depositPercOption=30;
+        depositPercVote=40;
+    }
+
+    function setProposalCreate(address _memberAddress,uint _proposalId)
+    {
+        lastReward[_memberAddress].proposalCreate =_proposalId;
+    }
+
+    function setOptionCreate(address _memberAddress, uint _proposalId)
+    {
+        lastReward[_memberAddress].optionCreate = _proposalId;
+    }
+
+    function setProposalVote(address _memberAddress,uint _voteId)
+    {
+        lastReward[_memberAddress].proposalVote = _voteId;
+    }
+
+    function getProposalCreate(address _memberAddress) constant returns(uint)
+    {
+        return lastReward[_memberAddress].proposalCreate;
+    }
+
+    function getOptionCreate(address _memberAddress) constant returns(uint)
+    {
+        return lastReward[_memberAddress].optionCreate;
+    }
+
+    function getProposalVote(address _memberAddress) constant returns(uint)
+    {
+        return lastReward[_memberAddress].proposalVote;
+    }
+
+    function setDepositTokens(address _memberAddress,uint _proposalId,bytes4 _typeOf,uint _depositAmount)
+    {
+        allMemberDepositTokens[_memberAddress][_proposalId][_typeOf] = _depositAmount;
+    }
+
+    function getDepositedTokens(address _memberAddress,uint _proposalId,bytes4 _typeOf)
+    {
+        return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf];
+    }
+
+    function claimReward()
+    {
+        GBTS=GBTStandardToken(GBTSAddress);
+        G1.calculateMemberReward(msg.sender);
+        GBTS.transfer(msg.sender,allMemberTotalReward[msg.sender]);
+        GBTS.callTransferGBTEvent(address(this),msg.sender, allMemberTotalReward[msg.sender],"GBT Stake claimed - Returned");
+    }
+
+    function setReward(uint _reward,address _memberAddress)
+    {
+        allMemberTotalReward[_memberAddress] = _reward;
+        GBTS=GBTStandardToken(GBTSAddress);
+        GBTS.addInBalance(address(this),_reward);
+    }
+
+    function getReward(address _memberAddress)constant returns(uint)
+    {
+        return allMemberTotalReward[_memberAddress];
     }
 
     function addInVote(address _memberAddress,uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _finalVoteValue) onlyInternal
@@ -396,52 +481,10 @@ contract governanceData {
     {
         return (allVotes[_voteId].voteStakeGBT);
     }
-    
-    /// @dev Add points to add or subtract in memberReputation when proposal/option/vote gets denied or accepted.
-    function addMemberReputationPoints() internal
-    {
-        addProposalOwnerPoints = 5;
-        addOptionOwnerPoints = 5;
-        addMemberPoints = 1;
-        subProposalOwnerPoints = 1;
-        subOptionOwnerPoints = 1;
-        subMemberPoints = 1;
-    }
 
-    /// @dev Change points to add or subtract in memberReputation when proposal/option/vote gets denied or accepted.
-    function changeMemberReputationPoints(uint _addProposalOwnerPoints,uint  _addOptionOwnerPoints, uint _addMemberPoints,uint _subProposalOwnerPoints,uint  _subOptionOwnerPoints, uint _subMemberPoints) onlyOwner
+    function getProposalIdByVoteId(uint _voteId)constant returns(uint)
     {
-        addProposalOwnerPoints = _addProposalOwnerPoints;
-        addOptionOwnerPoints= _addOptionOwnerPoints;
-        addMemberPoints = _addMemberPoints;
-        subProposalOwnerPoints = _subProposalOwnerPoints;
-        subOptionOwnerPoints= _subOptionOwnerPoints;
-        subMemberPoints = _subMemberPoints;
-    }
-
-    /// @dev add status.
-    function addStatus() internal
-    {
-        status.push("Draft for discussion"); 
-        status.push("Draft Ready for submission");
-        status.push("Voting started"); 
-        status.push("Proposal Decision - Accepted by Majority Voting"); 
-        status.push("Proposal Decision - Rejected by Majority voting"); 
-        status.push("Proposal Denied, Threshold not reached"); 
-    }
-
-    /// @dev Set Parameters value that will help in Distributing reward.
-    function setGlobalParameters() internal
-    {
-        pendingProposalStart=0;
-        quorumPercentage=25;
-        GBTStakeValue=0;
-        globalRiskFactor=5;
-        membershipScalingFactor=1;
-        scalingWeight=1;
-        depositPercProposal=30;
-        depositPercOption=30;
-        depositPercVote=40;
+        return allVotes[_voteid].proposalId;
     }
 
     /// @dev Set Vote Id against given proposal.
@@ -694,13 +737,6 @@ contract governanceData {
         allProposal[_proposalId].versionNum = allProposal[_proposalId].versionNum+1;
 
     }
-    
-    /// @dev Fetch user balance when giving member address.
-    // function getBalanceOfMember(address _memberAddress) public constant returns (uint totalBalance)
-    // {
-    //     GBTS=GBTStandardToken(GBTSAddress);
-    //     totalBalance = GBTS.balanceOf(_memberAddress);
-    // }
 
     /// @dev Fetch details of proposal by giving proposal Id
     function getProposalDetailsById1(uint _proposalId) public constant returns (uint id,address owner,string proposalDescHash,uint date_add,uint date_upd,uint versionNum,uint propStatus)
@@ -719,9 +755,9 @@ contract governanceData {
         return (_proposalId,allProposal[_proposalId].proposalDescHash,allProposal[_proposalId].date_add,status[allProposal[_proposalId].propStatus],allProposal[_proposalId].category,allProposalVotes[_proposalId].length,allProposalCategory[_proposalId].verdictOptions);
     }
 
-    function getProposalDetailsById4(uint _proposalId)constant returns(uint totalTokenToDistribute,uint numberBlock,uint propReward)
+    function getProposalDetailsById4(uint _proposalId)constant returns(uint totalTokenToDistribute,uint numberBlock,uint totalVoteValue)
     {
-        return(allProposal[_proposalId].totalreward,allProposal[_proposalId].blocknumber,allProposal[_proposalId].proposalReward);
+        return(allProposal[_proposalId].totalreward,allProposal[_proposalId].blocknumber,allProposal[_proposalId].totalVoteValue);
     }
 
     /// @dev Get proposal Reward and complexity level Against proposal
@@ -789,13 +825,6 @@ contract governanceData {
         return allProposal[_proposalId].category;
     }
 
-    /// @dev Get the number of tokens already distributed among members.
-    // function getTotalTokenInSupply() constant returns(uint _totalSupplyToken)
-    // {
-    //     GBTS=GBTStandardToken(GBTSAddress);
-    //     _totalSupplyToken = GBTS.totalSupply();
-    // }
-
     /// @dev Member Reputation is set according to if Member's Decision is Final decision.
     function getMemberReputation(address _memberAddress) constant returns(uint memberPoints)
     {
@@ -817,9 +846,9 @@ contract governanceData {
         proposalStake = allProposal[_proposalId].proposalStake;
     }
 
-    function getProposalReward(uint _proposalId) constant returns(uint proposalReward)
+    function getTotalVoteValueById(uint _proposalId) constant returns(uint voteValue)
     {
-        proposalReward = allProposal[_proposalId].proposalReward;
+        voteValue = allProposal[_proposalId].totalVoteValue;
     }
 
     /// @dev Fetch Total length of Member address array That added number of verdicts against proposal.
@@ -870,6 +899,11 @@ contract governanceData {
         return (allMemberVotes[_memberAddress].length);
     }
 
+    function getVoteIdByIndex(address _memberAddress,uint _index)constant returns(uint)
+    {
+        return allMemberVotes[_memberAddress][_index];
+    }
+
     function addTotalProposal(uint _proposalId,address _memberAddress) onlyInternal
     {
         allProposalMember[_memberAddress].push(_proposalId);
@@ -890,6 +924,11 @@ contract governanceData {
         return (allProposalMember[_memberAddress][_index]);
     }
 
+    function getProposalTotalReward(uint _proposalId)constant returns(uint)
+    {
+        return allProposal[_proposalId].totalreward;
+    }
+
     function setProposalTotalToken(uint _proposalId,uint _totalTokenToDistribute) onlyInternal
     {
         allProposal[_proposalId].totalreward = _totalTokenToDistribute;
@@ -900,9 +939,9 @@ contract governanceData {
         allProposal[_proposalId].blocknumber = _blockNumber;
     }
 
-    function setProposalReward(uint _proposalId,uint _reward) onlyInternal
+    function setProposalTotalVoteValue(uint _proposalId,uint _voteValue) onlyInternal
     {
-        allProposal[_proposalId].proposalReward = _reward;
+        allProposal[_proposalId].totalVoteValue = _voteValue;
     }
 
     function setOptionReward(uint _proposalId,uint _reward,uint _optionIndex) onlyInternal
@@ -920,9 +959,9 @@ contract governanceData {
         finalOptionIndex = allProposal[_proposalId].finalVerdict;
     }
 
-    function getProposalRewardById(uint _proposalId) constant returns(uint propStake,uint propReward)
+    function getProposalVoteValueById(uint _proposalId) constant returns(uint propStake,uint voteValue)
     {
-        return(allProposal[_proposalId].proposalStake,allProposal[_proposalId].proposalReward);
+        return(allProposal[_proposalId].proposalStake,allProposal[_proposalId].totalVoteValue);
     }
 
     function getProposalDescHash(uint _proposalId)constant returns(string)

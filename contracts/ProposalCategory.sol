@@ -1,4 +1,4 @@
-/* Copyright (C) 2017 GovBlocks.io
+/* Copyright (C) 2017 GovBRewards.io
 
   This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -190,34 +190,48 @@ contract ProposalCategory
         allCategory[_categoryId].defaultIncentive = _incentive;
     }
 
-    function changeLockPercProposal(uint _categoryId,uint _value)
+    function changeRewardPercProposal(uint _categoryId,uint _value)
     {
-        allCategory[_categoryId].lockPercProposal = _value;
+        allCategory[_categoryId].rewardPercProposal = _value;
     }
 
-    function changeLockPercOption(uint _categoryId,uint _value)
+    function changeRewardPercOption(uint _categoryId,uint _value)
     {
-        allCategory[_categoryId].lockPercOption = _value;    
+        allCategory[_categoryId].rewardPercOption = _value;    
     }
 
-    function changeLockPercVote(uint _categoryId,uint _value)
+    function changeRewardPercVote(uint _categoryId,uint _value)
     {
-        allCategory[_categoryId].lockPercVote = _value;
+        allCategory[_categoryId].rewardPercVote = _value;
     }
 
-    function getLockPercProposal(uint _categoryId)constant returns(uint)
+    function getRemainingClosingTime(uint _proposalId,uint _categoryId,uint _index) constant returns (uint totalTime)
     {
-        return allCategory[_categoryId].lockPercProposal;
+        GBTS=GBTStandardToken(GBTSAddress);
+        
+        uint pClosingTime;
+        for(uint i=0; i<getCloseTimeLength(_categoryId); i++)
+        {
+            pClosingTime = pClosingTime + getClosingTimeAtIndex(category,_index);
+        }
+
+        totalTime = (pClosingTime+GBTS.tokenHoldingTime()+GD.getProposalDateAdd(_proposalId))-now; 
+        return totalTime;
     }
 
-    function getLockPercOption(uint _categoryId)constant returns(uint)
+    function getRewardPercProposal(uint _categoryId)constant returns(uint)
     {
-        return allCategory[_categoryId].lockPercOption;
+        return allCategory[_categoryId].rewardPercProposal;
     }
 
-    function (uint _categoryId)constant returns(uint)
+    function getRewardPercOption(uint _categoryId)constant returns(uint)
     {
-        return allCategory[_categoryId].lockPercVote;
+        return allCategory[_categoryId].rewardPercOption;
+    }
+
+    function getRewardPercVote(uint _categoryId)constant returns(uint)
+    {
+        return allCategory[_categoryId].rewardPercVote;
     }
 
     function getCategoryData2(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint24[] closingTime)
@@ -267,6 +281,11 @@ contract ProposalCategory
     {
         index = _categoryId;
         closingTimeLength = allCategory[_categoryId].closingTime.length;
+    }
+
+    function getCloseTimeLength(uint _categoryId)constant returns(uint)
+    {
+        return allCategory[_categoryId].closingTime.length;
     }
 
     function getRoleSequencLength(uint _categoryId) constant returns(uint roleLength)

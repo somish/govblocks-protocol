@@ -27,7 +27,6 @@ import "./GBTStandardToken.sol";
 
 contract GovBlocksMaster 
 {
-    
     Master MS;
     memberRoles MR;
     ProposalCategory PC;
@@ -105,16 +104,16 @@ contract GovBlocksMaster
         changeGBTTokenInController(_GBTContractAddress);  
     }
 
-    function updateGBTControllerAddress(address _GBTConrollerAddress) onlyOwner
+    function updateGBTControllerAddress(address _GBTControllerAddress) onlyOwner
     {
-        GBTControllerAddress=_GBTConrollerAddress;
+        GBTControllerAddress=_GBTControllerAddress;
         for(uint i=0;i<allGovBlocksUsers.length; i++)
         {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             MS=Master(masterAddress);
-            MS.changeGBTControllerAddress(_GBTConrollerAddress);
+            MS.changeGBTControllerAddress(_GBTControllerAddress);
         }
-        changeGBTControllerInToken(_GBTConrollerAddress);
+        changeGBTControllerInToken(_GBTControllerAddress);
     }
 
     function updateGBMAddress(address _newGBMAddress) onlyOwner
@@ -143,7 +142,6 @@ contract GovBlocksMaster
         GBTC=GBTController(GBTControllerAddress);
         GBTC.changeGBTtokenAddress(GBTAddress);
     }
-
 
     function addGovBlocksUser(bytes32 _gbUserName,address _dappTokenAddress,string _dappDescriptionHash) 
     {
