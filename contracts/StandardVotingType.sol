@@ -62,7 +62,8 @@ contract StandardVotingType
         _; 
     }
 
-    /// @dev Change master's contract address
+    /// @dev Changes master's contract address
+    /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress)
     {
         if(masterAddress == 0x000)
@@ -74,21 +75,31 @@ contract StandardVotingType
                 masterAddress = _masterContractAddress;
         }
     }
-    
+
     modifier onlyMaster
     {
         require(msg.sender == masterAddress);
         _;
     }
     
-    function changeOtherContractAddress(address _SVaddress,address _RBaddress,address _FWaddress) onlyInternal
+    /// @dev Changes other contracts' addresses
+    /// @param _SVaddress New simple voting contract address
+    /// @param _RBaddress New rank based contract address
+    /// @param _FWaddress New feature weighted contracts address
+    function changeOtherContractAddress(address _SVaddress,address _RBaddress,address _FWaddress) onlyInternal 
     {
         SVAddress = _SVaddress;
         RBAddress = _RBaddress;
         FWAddress = _FWaddress;
     }
 
-    function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _governanceContractAddress,address _poolContractAddress) onlyInternal
+    /// @dev Changes all contracts' addresses
+    /// @param _GDcontractAddress  New governance data contract address
+    /// @param _MRcontractAddress New member roles contract address
+    /// @param _PCcontractAddress New proposal category contract address
+    /// @param _governanceContractAddress New governance contract address
+    /// @param _poolContractAddress New pool contract address
+    function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _governanceContractAddress,address _poolContractAddress) onlyInternal 
     {
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
@@ -96,13 +107,21 @@ contract StandardVotingType
         G1Address = _governanceContractAddress;
         P1Address = _poolContractAddress;
     }
-    
+
+    /// @dev Changes GBT standard token address
+    /// @param _GBTSAddress GBT standard token address
     function changeGBTSAddress(address _GBTSAddress) onlyMaster
     {
         GBTSAddress = _GBTSAddress;
     }
 
-    function setOptionValue_givenByMemberSVT(address _memberAddress,uint _proposalId,uint _memberStake) internal returns (uint finalOptionValue) 
+    
+    /// @dev Sets option value given by member in standard voting type
+    /// @param _memberAddress Member address
+    /// @param _proposalId Proposal id
+    /// @param _memberStake Member stake
+    /// @return finalOptionValue Final option value
+    function setOptionValue_givenByMemberSVT(address _memberAddress,uint _proposalId,uint _memberStake) internal returns (uint finalOptionValue)
     {
         // GD=governanceData(GDAddress);
         // GBTS=GBTStandardToken(GBTSAddress);
@@ -113,6 +132,11 @@ contract StandardVotingType
         // finalOptionValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
     }
 
+    /// @dev Sets vote value given by member
+    /// @param _memberAddress Member address
+    /// @param _proposalId Proposal id
+    /// @param _memberStake Member stake
+    /// @return finalVoteValue Final vote value
     function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)
     {
         GD=governanceData(GDAddress);
@@ -122,6 +146,10 @@ contract StandardVotingType
         finalVoteValue = SafeMath.mul(GD.getMemberReputation(_memberAddress),value);
     }  
     
+    /// @dev Checks for options
+    /// @param _proposalId Proposal id
+    /// @param _memberAddress Member address
+    /// @return check Check flag
     function checkForOption(uint _proposalId,address _memberAddress) internal constant returns(uint check)
     {
         GD=governanceData(GDAddress);
@@ -134,6 +162,12 @@ contract StandardVotingType
         }
     }
 
+    /// @dev Adds verdict option in standard voting type
+    /// @param _proposalId Proposal id
+    /// @param _memberAddress Member address
+    /// @param _GBTPayableTokenAmount Amount payable in GBT token
+    /// @param _optionHash Option hash
+    /// @param _dateAdd Date proposal was added
     // function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionDescHash) onlyInternal
     function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) onlyInternal
     {
@@ -159,6 +193,12 @@ contract StandardVotingType
             addVerdictOptionSVT1(_proposalId,_memberAddress,_GBTPayableTokenAmount,_optionHash,_dateAdd);
     }
 
+    /// @dev Adds verdict option in standard voting type
+    /// @param _proposalId Proposal id
+    /// @param _memberAddress Member address
+    /// @param _GBTPayableTokenAmount Amount payable in GBT token
+    /// @param _optionHash Option hash
+    /// @param _dateAdd Date proposal was added
     function addVerdictOptionSVT1(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) internal
     {
         GD=governanceData(GDAddress);
@@ -168,6 +208,8 @@ contract StandardVotingType
     uint24 _closingTime;uint _majorityVote;
     uint8 currentVotingId; uint8 max; uint totalVotes; uint verdictVal;
 
+    /// @dev Closes voting proposal in standard voting type
+    /// @param _proposalId Proposal id
     function closeProposalVoteSVT(uint _proposalId) onlyInternal
     {   
         GD=governanceData(GDAddress);
@@ -175,8 +217,8 @@ contract StandardVotingType
         G1=Governance(G1Address);
         P1=Pool(P1Address);
         VT=VotingType(GD.getProposalVotingType(_proposalId));
-        
- 
+
+
         uint majorityVote;
         (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
         uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId);
@@ -197,7 +239,7 @@ contract StandardVotingType
         }
         
         verdictVal = GD.getVoteValuebyOption_againstProposal(_proposalId,_roleId,max);
-       
+        
         if(totalVotes != 0)
         {
             if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=_majorityVote)
@@ -241,7 +283,13 @@ contract StandardVotingType
             G1.changePendingProposalStart();
         }
     }
-      /// @dev Set the Deatils of added verdict i.e. Verdict Stake, Verdict value and Address of the member whoever added the verdict.
+    /// @dev Sets the details of added verdict i.e. verdict stake, verdict value and address of the member whoever added the verdict.
+    /// @param _proposalId Proposal id
+    /// @param _memberAddress Member address
+    /// @param _stakeValue Stake value
+    /// @param _optionValue Option value
+    /// @param _optionHash Option hash
+    /// @param _dateAdd Date proposal was added
     function setOptionDetails(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue,string _optionHash,uint _dateAdd) internal
     {
         GD=governanceData(GDAddress); uint currentDate;

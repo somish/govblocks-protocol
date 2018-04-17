@@ -1,4 +1,4 @@
-/* Copyright (C) 2017 GovBRewards.io
+/* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,25 +35,25 @@ contract ProposalCategory
     }
 
     category[] public allCategory;
-    Master M1;
+    Master M1;  
     memberRoles MR;
     address MRAddress;
     address masterAddress;
     address GBMAddress;
 
-     modifier onlyInternal {
+    modifier onlyInternal {
         M1=Master(masterAddress);
         require(M1.isInternal(msg.sender) == 1);
         _; 
     }
-
+    
      modifier onlyOwner {
         M1=Master(masterAddress);
         require(M1.isOwner(msg.sender) == 1);
         _; 
     }
-
-      modifier onlyGBM
+    
+    modifier onlyGBM
     {
         require(msg.sender == GBMAddress);
         _;
@@ -64,12 +64,15 @@ contract ProposalCategory
         _; 
     }
 
+    /// @dev Changes GovBlocks master address
+    /// @param _GBMAddress New GovBlocks master address
     function changeGBMAddress(address _GBMAddress) onlyGBM
     {
         GBMAddress = _GBMAddress;
     }
-    
-    /// @dev Change master's contract address
+
+    /// @dev Changes master's contract address
+    /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) 
     {
         if(masterAddress == 0x000)
@@ -82,11 +85,15 @@ contract ProposalCategory
         }
     }
 
+    /// @dev Changes all contracts' addresses
+    /// @param _MRAddress New member roles contract address
     function changeAllContractsAddress(address _MRAddress) onlyInternal
     {
         MRAddress= _MRAddress;
     }
 
+    /// @dev Initiates proposal category
+    /// @param _GBMAddress New GovBlocks master address
     function ProposalCategoryInitiate(address _GBMAddress)
     {
         require(constructorCheck == 0);
@@ -101,6 +108,14 @@ contract ProposalCategory
         constructorCheck =1;
     }
 
+    /// @dev Adds new category
+    /// @param _categoryData Category data
+    /// @param _memberRoleSequence Member role sequence
+    /// @param _memberRoleMajorityVote Majority of votes of a particular member role
+    /// @param _closingTime Closing time of category
+    /// @param _minStake Minimum stake
+    /// @param _maxStake Maximum stake
+    /// @param _defaultIncentive Default incentive
     function addNewCategory(string _categoryData,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake,uint8 _defaultIncentive) 
     {
         require(msg.sender == GBMAddress);
@@ -108,27 +123,43 @@ contract ProposalCategory
         allCategory.push(category(_categoryData,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive,0,0,0));    
     }
 
+    /// @dev Updates category
+    /// @param _categoryId Category id
+    /// @param _categoryData Category data
     function updateCategory(uint _categoryId,string _categoryData) 
     {
         require(msg.sender == GBMAddress);
             allCategory[_categoryId].categoryDescHash = _categoryData;
     }
 
+    /// @dev Sets closing time for the category
+    /// @param _categoryId Category id
+    /// @param _time Closing time
     function setClosingTime(uint _categoryId,uint24 _time)
     {
         allCategory[_categoryId].closingTime.push(_time);
     }
 
+    /// @dev Sets role sequence for categoryId=_categoryId and role sequence=_roleSequence
     function setRoleSequence(uint _categoryId,uint8 _roleSequence)
     {
         allCategory[_categoryId].memberRoleSequence.push(_roleSequence);
     }
 
+    /// @dev Sets majority vote for category id=_categoryId and majority value=_majorityVote
     function setMajorityVote(uint _categoryId,uint _majorityVote)
     {
         allCategory[_categoryId].memberRoleMajorityVote.push(_majorityVote);
     }
 
+    /// @dev Updates category details
+    /// @param _categoryId Category id
+    /// @param _roleName Role name
+    /// @param _majorityVote Majority of votes
+    /// @param _closingTime Closing time
+    /// @param _minStake Minimum stake
+    /// @param _maxStake Maximum stake
+    /// @param _defaultIncentive Default incentive
     function updateCategoryDetails(uint _categoryId,uint8[] _roleName,uint[] _majorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake, uint _defaultIncentive)
     {
         require(_roleName.length == _majorityVote.length && _roleName.length == _closingTime.length);
@@ -148,6 +179,9 @@ contract ProposalCategory
         }
     }
 
+    /// @dev Changes role name by category id
+    /// @param _categoryId Category id
+    /// @param _roleName Role name 
     function changeRoleNameById(uint _categoryId,uint8[] _roleName)
     {
         allCategory[_categoryId].memberRoleSequence=new uint8[](_roleName.length);
@@ -157,6 +191,9 @@ contract ProposalCategory
         }
     }
 
+    /// @dev Changes majority of vote of a category by id
+    /// @param _categoryId Category id
+    /// @param _majorityVote Majority of votes
     function changeMajorityVoteById(uint _categoryId,uint[] _majorityVote)
     {
         allCategory[_categoryId].memberRoleMajorityVote=new uint[](_majorityVote.length);
@@ -166,6 +203,9 @@ contract ProposalCategory
         }
     }    
 
+    /// @dev Changes closing time by cateory id
+    /// @param _categoryId Category id
+    /// @param _closingTime Closing time
     function changeClosingTimeById(uint _categoryId,uint24[] _closingTime)
     {
         allCategory[_categoryId].closingTime=new uint24[](_closingTime.length);
@@ -175,36 +215,55 @@ contract ProposalCategory
         }
     }
 
+    /// @dev Changes minimum stake by id
+    /// @param _categoryId Category id
+    /// @param _minStake Minimum stake
     function changeMinStakeById(uint _categoryId,uint8 _minStake)
     {
         allCategory[_categoryId].minStake = _minStake;
     }
 
+    /// @dev Changes maximum stake by category id
     function changeMaxStakeById(uint _categoryId,uint8 _maxStake)
     {
         allCategory[_categoryId].maxStake = _maxStake;
     }
     
+    /// @dev Changes incentive by category id
     function changeIncentiveById(uint _categoryId,uint _incentive)
     {
         allCategory[_categoryId].defaultIncentive = _incentive;
     }
 
+    /// @dev Changes reward percentage proposal by category id
+    /// @param _categoryId Category id
+    /// @param _value Reward percentage value
     function changeRewardPercProposal(uint _categoryId,uint _value)
     {
         allCategory[_categoryId].rewardPercProposal = _value;
     }
 
+    /// @dev Changes reward percentage option by category id
+    /// @param _categoryId Category id
+    /// @param _value Reward percentage value
     function changeRewardPercOption(uint _categoryId,uint _value)
     {
         allCategory[_categoryId].rewardPercOption = _value;    
     }
 
+    /// @dev Changes reward percentage vote by category id
+    /// @param _categoryId Category id
+    /// @param _value 
     function changeRewardPercVote(uint _categoryId,uint _value)
     {
         allCategory[_categoryId].rewardPercVote = _value;
     }
 
+    /// @dev Gets remaining closing time
+    /// @param _proposalId Proposal id
+    /// @param _categoryId Category id
+    /// @param _index Index of categories
+    /// @return totalTime Total time remaining before closing
     function getRemainingClosingTime(uint _proposalId,uint _categoryId,uint _index) constant returns (uint totalTime)
     {
         GBTS=GBTStandardToken(GBTSAddress);
@@ -219,21 +278,29 @@ contract ProposalCategory
         return totalTime;
     }
 
+    /// @dev Gets reward percentage proposal by category id
     function getRewardPercProposal(uint _categoryId)constant returns(uint)
     {
         return allCategory[_categoryId].rewardPercProposal;
     }
 
+    /// @dev Gets reward percentage option by category id
     function getRewardPercOption(uint _categoryId)constant returns(uint)
     {
         return allCategory[_categoryId].rewardPercOption;
     }
 
+    /// @dev Gets reward percentage vote by category id    
     function getRewardPercVote(uint _categoryId)constant returns(uint)
     {
         return allCategory[_categoryId].rewardPercVote;
     }
 
+    /// @dev Gets category data for category id
+    /// @param category Category id  
+    /// @param roleName Role name
+    /// @param majorityVote Majority vote  
+    /// @param closingTime Closing time of category  
     function getCategoryData2(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint24[] closingTime)
     {
         MR=memberRoles(MRAddress);
@@ -250,6 +317,11 @@ contract ProposalCategory
         closingTime =  allCategory[_categoryId].closingTime;
     }
 
+    /// @dev Gets category details
+    /// @param closingTime Closing time of category
+    /// @return cateId Category id
+    /// @return memberRoleSequence Member role sequence for voting
+    /// @return cateId Category id
     function getCategoryDetails(uint _categoryId) public constant returns (uint cateId,uint8[] memberRoleSequence,uint[] memberRoleMajorityVote,uint24[] closingTime,uint minStake,uint maxStake,uint incentive)
     {    
         cateId = _categoryId;
@@ -261,71 +333,93 @@ contract ProposalCategory
         incentive = allCategory[_categoryId].defaultIncentive; 
     } 
 
+    /// @dev Gets minimum stake for category id
     function getMinStake(uint _categoryId)constant returns(uint8) 
     {
         return allCategory[_categoryId].minStake;
     }
 
+    /// @dev Gets maximum stake for category id
     function getMaxStake(uint _categoryId) constant returns(uint8)
     {
         return allCategory[_categoryId].maxStake;
     }
 
+    /// @dev Gets member role's majority vote length
+    /// @param _categoryId Category id
+    /// @return index Category index
+    /// @return majorityVoteLength Majority vote length
     function getRoleMajorityVotelength(uint _categoryId) constant returns(uint index,uint majorityVoteLength)
     {
         index = _categoryId;
         majorityVoteLength= allCategory[_categoryId].memberRoleMajorityVote.length;
     }
 
+    /// @dev Gets closing time length
+    /// @param _categoryId Category id
+    /// @return index Category index
+    /// @return closingTimeLength Closing time length
     function getClosingTimeLength(uint _categoryId) constant returns(uint index,uint closingTimeLength)
     {
         index = _categoryId;
         closingTimeLength = allCategory[_categoryId].closingTime.length;
     }
 
+    /// @dev Gets closing time length by category id
     function getCloseTimeLength(uint _categoryId)constant returns(uint)
     {
         return allCategory[_categoryId].closingTime.length;
     }
 
+    /// @dev Gets role sequence length by category id
     function getRoleSequencLength(uint _categoryId) constant returns(uint roleLength)
     {
         roleLength = allCategory[_categoryId].memberRoleSequence.length;
     }
 
+    /// @dev Gets closing time of index= _index by category id
     function getClosingTimeAtIndex(uint _categoryId,uint _index) constant returns(uint24 closeTime)
     {
         return allCategory[_categoryId].closingTime[_index];
     }
 
+    /// @dev Gets role sequence of index= _index by category id  
     function getRoleSequencAtIndex(uint _categoryId,uint _index) constant returns(uint roleId)
     {
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
 
+    /// @dev Gets majority of votes at index= _index by category id
     function getRoleMajorityVoteAtIndex(uint _categoryId,uint _index) constant returns(uint majorityVote)
     {
         return allCategory[_categoryId].memberRoleMajorityVote[_index];
     }
  
+    /// @dev Gets category incentive at index= _index by category id
     function getCatIncentive(uint _categoryId)constant returns(uint incentive)
     {
         incentive = allCategory[_categoryId].defaultIncentive;
     }
 
+    /// @dev Gets category id and incentive at index= _index by category id
     function getCategoryIncentive(uint _categoryId)constant returns(uint category,uint incentive)
     {
         category = _categoryId;
         incentive = allCategory[_categoryId].defaultIncentive;
     }
 
+    /// @dev Gets category length
+    /// @return allCategory.length Category length
     function getCategoryLength()constant returns(uint)
     {
         return allCategory.length;
     }
 
+    /// @dev Gets category data of a given category id
+    /// @param _categoryId Category id
+    /// @return allCategory[_categoryId].categoryDescHash Hash of description of category id '_categoryId'
     function getCategoryData1(uint _categoryId) constant returns(string)
     {
         return allCategory[_categoryId].categoryDescHash;
-    }    
+    }
 }
