@@ -63,15 +63,21 @@ contract GovBlocksMaster
       _;
     }
 
+    /// @dev Initializes GovBlocks master
+    /// @param _GBTControllerAddress GBT controller address
+    /// @param _GBTAddress GBT address
     function GovBlocksMasterInit(address _GBTControllerAddress,address _GBTAddress) 
     {
       require(owner == 0x00);
       owner = msg.sender; 
       GBTControllerAddress=_GBTControllerAddress;
       GBTAddress = _GBTAddress;
-      updateGBMAddress(address(this));
+      updateGBMAddress(address(this));  
     } 
 
+    /// @dev Changes authorized GovBlocks owner
+    /// @param dAppName dApp username
+    /// @param _memberAddress Address of the member
     function changeAuthorizedGB(bytes32 dAppName,address _memberAddress)
     {
       if(authGBOwner == 0x00)
@@ -81,17 +87,25 @@ contract GovBlocksMaster
         govBlocksDapps[dAppName].authGBAddress = _memberAddress;
     }
 
+    /// @dev Checks for authorized GovBlocks owner
+    /// @param dAppName dApp username
+    /// @param _memberAddress Member's address to be checked for GovBlocks owner
+    /// @return auth Authentication flag
     function isAuthorizedGBOwner(bytes32 dAppName,address _memberAddress)constant returns(uint auth)
     {
        if(govBlocksDapps[dAppName].authGBAddress == _memberAddress)
           auth = 1;
     } 
 
+    /// @dev Transfers ownership to new owner (of GBT contract address)
+    /// @param _newOwner Address of new owner
     function transferOwnership(address _newOwner) onlyOwner  
     {
       owner = _newOwner;
     }
 
+    /// @dev Updates GBT contract address
+    /// @param _GBTContractAddress New GBT contract address
     function updateGBTAddress(address _GBTContractAddress) onlyOwner
     {
         GBTAddress=_GBTContractAddress;
@@ -100,10 +114,12 @@ contract GovBlocksMaster
           address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
           MS=Master(masterAddress);
           MS.changeGBTAddress(_GBTContractAddress);
-        }
-        changeGBTTokenInController(_GBTContractAddress);  
+        }  
+        changeGBTTokenInController(_GBTContractAddress); 
     }
 
+    /// @dev Updates GBT controller address
+    /// @param _GBTConrollerAddress New GBT controller address
     function updateGBTControllerAddress(address _GBTControllerAddress) onlyOwner
     {
         GBTControllerAddress=_GBTControllerAddress;
@@ -116,6 +132,8 @@ contract GovBlocksMaster
         changeGBTControllerInToken(_GBTControllerAddress);
     }
 
+    /// @dev Updates GovBlocks master address
+    /// @param _newGBMAddress New GovBlocks master address
     function updateGBMAddress(address _newGBMAddress) onlyOwner
     {
         for(uint i=0;i<allGovBlocksUsers.length; i++)
@@ -131,18 +149,26 @@ contract GovBlocksMaster
         GBTS.changeGBMAddress(_newGBMAddress);
     }
 
+    /// @dev Changes GBT token in controller
+    /// @param _newGBTToken New GBT token address
     function changeGBTTokenInController(address _newGBTToken) internal
     {
         GBTC=GBTController(GBTControllerAddress);
         GBTC.changeGBTtokenAddress(GBTAddress);
     }
 
+    /// @dev Changes GBT controller in token
+    /// @param _newGBTController New GBT controller address
     function changeGBTControllerInToken(address _newGBTController) internal
     {
         GBTC=GBTController(GBTControllerAddress);
         GBTC.changeGBTtokenAddress(GBTAddress);
     }
 
+    /// @dev Adds GovBlocks user
+    /// @param _gbUserName  GovBlocks username
+    /// @param _dappTokenAddress dApp token address
+    /// @param _dappDescriptionHash dApp description hash
     function addGovBlocksUser(bytes32 _gbUserName,address _dappTokenAddress,string _dappDescriptionHash) 
     {
         require(govBlocksDapps[_gbUserName].masterAddress==0x00);
@@ -157,6 +183,9 @@ contract GovBlocksMaster
         MS.setOwner(msg.sender);
     }
 
+    /// @dev Changes dApp master address
+    /// @param _gbUserName GovBlocks username
+    /// @param _newMasterAddress dApp new master address
     function changeDappMasterAddress(bytes32 _gbUserName,address _newMasterAddress)
     {
        if( govBlocksDapps[_gbUserName].masterAddress == 0x000)
@@ -167,8 +196,8 @@ contract GovBlocksMaster
        else
         {            
             if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
-            {
-                govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
+                {
+                    govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
                 govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
             }
             else
@@ -176,6 +205,9 @@ contract GovBlocksMaster
         }   
     }
 
+    /// @dev Changes dApp token address
+    /// @param _gbUserName  GovBlocks username
+    /// @param _dappTokenAddress dApp new token address
     function changeDappTokenAddress(bytes32 _gbUserName,address _dappTokenAddress)
     {
        if( govBlocksDapps[_gbUserName].tokenAddress == 0x000)
@@ -186,15 +218,18 @@ contract GovBlocksMaster
        else
         {            
             if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
-            {
-                govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
-                govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
+                {
+                    govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
+                    govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
             }
             else
                 throw;
         }   
     }
-
+ 
+    /// @dev Changes dApp description hash
+    /// @param _gbUserName GovBlocks username
+    /// @param _dappDescriptionHash dApp new description hash
     function changeDappDescHash(bytes32 _gbUserName,string _dappDescriptionHash)
     { 
         if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
@@ -205,12 +240,19 @@ contract GovBlocksMaster
             throw;
     }
 
+    /// @dev Sets byte code and abi
+    /// @param _byteCodeHash Byte code hash
+    /// @param _abiHash Abi hash
     function setByteCodeAndAbi(string _byteCodeHash,string _abiHash) onlyOwner
     {
         byteCodeHash = _byteCodeHash;
         contractsAbiHash = _abiHash;
     }
 
+    /// @dev Changes all below address
+    /// @param _GDAddress Governance data new address
+    /// @param _SVAddress Standard voting new address
+    /// @param _GOVAddress Governance new address
     // function changeAllAddress(address _GDAddress,address _SVAddress,address _GOVAddress) onlyOwner
     // {
     //    GDAddress = _GDAddress;
@@ -218,16 +260,37 @@ contract GovBlocksMaster
     //    GOVAddress = _GOVAddress;
     // }
 
+    /// @dev Changes all address (another function)
+    /// @param _GBTControllerAddress GBT controller new address    
+    /// @param _GBTokenAddress GBT token new address
+    function changeAllAddress1(address _GBTControllerAddress,address _GBTokenAddress) onlyOwner
+    {
+        GBTControllerAddress = _GBTControllerAddress;
+        GBTAddress = _GBTokenAddress;
+    }
+    
+    /// @dev Sets hash value for dApp user
+    /// @param _hash Hash value 
     function setDappUser(string _hash)
     {
        govBlocksUser[msg.sender] = _hash;
     }
 
+    /// @dev Gets byte code and abi hash
+    /// @param byteCode Byte code 
+    /// @param abiHash Application binary interface hash
     function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
     {
        return (byteCodeHash,contractsAbiHash);
     }
 
+    /// @dev Gets GovBlocks user details
+    /// @param _gbUserName GovBlocks username
+    /// @return GbUserName GovBlocks username
+    /// @return masterContractAddress Master contract address of dApp
+    /// @return allContractsbyteCodeHash All contracts byte code hash
+    /// @return allCcontractsAbiHash All contracts abi hash
+    /// @return versionNo Verson number of dApp
     function getGovBlocksUserDetails(bytes32 _gbUserName) constant returns(bytes32 GbUserName,address masterContractAddress,string allContractsbyteCodeHash,string allCcontractsAbiHash,uint versionNo)
     {
         address master = govBlocksDapps[_gbUserName].masterAddress;
@@ -239,11 +302,24 @@ contract GovBlocksMaster
             return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,byteCodeHash,contractsAbiHash,versionNo);
     }
 
+    /// @dev Gets GovBlocks user details by index
+    /// @param _index Index to fetch user details
+    /// @return index Index
+    /// @return GbUserName GovBlocks username
+    /// @return MasterContractAddress Master contract address
     function getGovBlocksUserDetailsByIndex(uint _index) constant returns(uint index,bytes32 GbUserName,address MasterContractAddress)
     {
        return (_index,allGovBlocksUsers[_index],govBlocksDapps[allGovBlocksUsers[_index]].masterAddress);
     }
 
+    /// @dev Gets GovBlocks user details (another function)
+    /// @param _gbUserName GovBlocks username whose details need to be fetched
+    /// @return GbUserName GovBlocks username 
+    /// @return masterContractAddress Master contract address
+    /// @return dappTokenAddress dApp token address
+    /// @return allContractsbyteCodeHash All contracts byte code hash
+    /// @return allCcontractsAbiHash All contract abi hash
+    /// @return versionNo Version number
     function getGovBlocksUserDetails1(bytes32 _gbUserName)constant returns(bytes32 GbUserName,address masterContractAddress,address dappTokenAddress,string allContractsbyteCodeHash,string allCcontractsAbiHash,uint versionNo)
     {
         address master = govBlocksDapps[_gbUserName].masterAddress;
@@ -255,86 +331,113 @@ contract GovBlocksMaster
             return (_gbUserName,govBlocksDapps[_gbUserName].masterAddress,govBlocksDapps[_gbUserName].tokenAddress,byteCodeHash,contractsAbiHash,versionNo);
     }
 
+    /// @dev Gets GovBlocks user details (another function)
+    /// @param _Address Address of the dApp whose details need to be fetched
+    /// @return dappName dApp name
+    /// @return masterContractAddress Master contract address of dApp
+    /// @return dappTokenAddress dApp's token address
     function getGovBlocksUserDetails2(address _Address)constant returns(bytes32 dappName,address masterContractAddress,address dappTokenAddress)
     {
        dappName = govBlocksDappByAddress[_Address];
        return (dappName,govBlocksDapps[dappName].masterAddress,govBlocksDapps[dappName].tokenAddress);
     }
 
+    /// @dev Gets dApp description hash
+    /// @param _gbUserName GovBlocks username
+    /// @return govBlocksDapps[_gbUserName].dappDescHash GovBlocks description hash
     function getDappDescHash(bytes32 _gbUserName)constant returns(string)
     {
         return govBlocksDapps[_gbUserName].dappDescHash;
     }
 
+    /// @dev Gets all GovBlocks users length
+    /// @return allGovBlocksUsers.length All GovBlocks users length
     function getAllDappLength()constant returns(uint)
     {
        return (allGovBlocksUsers.length);
     }
 
+    /// @dev Gets dApps users by index
     function getAllDappById(uint _gbIndex)constant returns (bytes32 _gbUserName)
     {
        return (allGovBlocksUsers[_gbIndex]);
     }
 
+    /// @dev Gets all dApps users
     function getAllDappArray()constant returns(bytes32[])
     {
        return (allGovBlocksUsers);
     }
 
+    /// @dev Gets dApp username
     function getDappUser()constant returns (string)
     {
        return (govBlocksUser[msg.sender]);
     }
 
+    /// @dev Gets dApp master address of dApp (username=govBlocksUser)
     function getDappMasterAddress(bytes32 _gbUserName)constant returns(address masterAddress)
     {
         return (govBlocksDapps[_gbUserName].masterAddress);
     }
 
+    /// @dev Gets dApp token address of dApp (username=govBlocksUser)
     function getDappTokenAddress(bytes32 _gbUserName)constant returns(address tokenAddres)
     {
         return (govBlocksDapps[_gbUserName].tokenAddress);
     }
 
+    /// @dev Gets dApp username by address
     function getDappNameByAddress(address _contractAddress)constant returns(bytes32)
     {
             return govBlocksDappByAddress[_contractAddress];
     }
 
+    /// @dev Gets GBT and GBT controller address
     function getGBTandGBTC() constant returns(address _GBTController,address _GBToken)
     {
         return (GBTControllerAddress,GBTAddress);
     }
 
+    /// @dev Gets GBT address 
     function getGBTAddress()constant returns(address)
     {
        return GBTAddress;
     }
 
+    /// @dev Gets GBT controller address
     function getGBTCAddress()constant returns(address)
     {
        return GBTControllerAddress;
     }
 
+    /// @dev Gets governance data contract address
     // function getGDAddress()constant returns(address)
     // {
     //   return GDAddress;
     // }
 
+    /// @dev Gets simple voting contract address
     // function getSVAddress()constant returns(address)
     // {
     //    return SVAddress;
     // }
 
+    /// @dev Gets governance contract address
     // function getGOVAddress()constant returns(address)
     // {
     //   return GOVAddress;
     // }
 
 
+
     // ACTION AFTER PROPOSAL PASS function
 
 
+    /// @dev Adds new member roles in GovBlocks
+    /// @param _gbUserName GovBlocks new username
+    /// @param _newRoleName GovBlocks new role name
+    /// @param _newDescHash GovBlocks new description hash
     function addNewMemberRoleGB(bytes32 _gbUserName,bytes32 _newRoleName,string _newDescHash) 
     {
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
@@ -346,6 +449,11 @@ contract GovBlocksMaster
         MR.addNewMemberRole(_newRoleName,_newDescHash);
     }
 
+    /// @dev Updates member roles in GovBlocks
+    /// @param _gbUserName GovBlocks new username
+    /// @param _memberAddress New members address
+    /// @param _memberRoleId New members role id
+    /// @param _typeOf Typeof role of the member
     function updateMemberRoleGB(bytes32 _gbUserName,address _memberAddress,uint _memberRoleId,uint8 _typeOf) 
     {
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
@@ -357,6 +465,9 @@ contract GovBlocksMaster
         MR.updateMemberRole(_memberAddress,_memberRoleId,_typeOf);
     }
     
+    /// @dev Adds new category in GovBlocks
+    /// @param _gbUserName GovBlocks username
+    /// @param _descHash GovBlocks description hash
     function addNewCategoryGB(bytes32 _gbUserName,string _descHash) 
     {
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
@@ -368,6 +479,10 @@ contract GovBlocksMaster
         // PC.addNewCategory(_descHash);
     }
 
+    /// @dev Updates category in GovBlocks
+    /// @param _gbUserName GovBlocks username
+    /// @param _categoryId Category id 
+    /// @param _categoryData Category data
     function updateCategoryGB(bytes32 _gbUserName,uint _categoryId,string _categoryData) 
     {
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
@@ -379,6 +494,10 @@ contract GovBlocksMaster
         PC.updateCategory(_categoryId,_categoryData);
     }
 
+    /// @dev Configures global parameters for reputation weights
+    /// @param _gbUserName GovBlocks username
+    /// @param _typeOf Typeof role of the member
+    /// @param _value Quorum percentage value
     function configureGlobalParameters(bytes32 _gbUserName,bytes16 _typeOf,uint _value)
     {
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);

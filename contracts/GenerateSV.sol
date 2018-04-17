@@ -20,11 +20,17 @@ import "./simpleVoting.sol";
 contract GenerateSV
 {
     mapping(bytes32=>address) contractAddress;
+
+    /// @dev Gets address of simple voting contract by GovBlocks username
+    /// @param _gbUserName GovBlocks username
+    /// @return contractAddress[_gbUserName] Address of simple voting contract by GovBlocks username
     function getAddress(bytes32 _gbUserName)constant returns(address)
     {
         return (contractAddress[_gbUserName]);
     }
     
+    /// @dev Generates new simple voting contract
+    /// @param _gbUserName GovBlocks username
     function GenerateContract(bytes32 _gbUserName)
     {
         contractAddress[_gbUserName] = new simpleVoting();

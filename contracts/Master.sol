@@ -73,6 +73,9 @@ contract Master is Ownable {
     FeatureWeighted FW;
     StandardVotingType SVT;
 
+    /// @dev Constructor function for master
+    /// @param _GovBlocksMasterAddress GovBlocks master address
+    /// @param _gbUserName GovBlocks username
     function Master(address _GovBlocksMasterAddress,bytes32 _gbUserName)
     {
         masterAddress=address(this);
@@ -82,13 +85,13 @@ contract Master is Ownable {
         GBMAddress = _GovBlocksMasterAddress;
         DappName = _gbUserName;
     }
-
+   
     modifier onlyOwner
     {  
         require(isOwner(msg.sender) == 1);
         _; 
     }
-   
+
     modifier onlyAuthorizedGB
     {
         GBM=GovBlocksMaster(GBMAddress);
@@ -102,6 +105,9 @@ contract Master is Ownable {
         _; 
     }
 
+    /// @dev Checks for authorized GovBlocks owner
+    /// @param _memberaddress Address to be checked
+    /// @return check Check flag value (1 = authorized GovBlocks owner)
     function isAuthGB(address _memberaddress) constant returns(uint check)
     {
         GBM=GovBlocksMaster(GBMAddress);
@@ -109,6 +115,9 @@ contract Master is Ownable {
             check = 1;
     }
 
+    /// @dev Checks for internal 
+    /// @param _address Contract address to be checked for internal
+    /// @return check Check flag (boolean value)
     function isInternal(address _address) constant returns(uint check)
     {
         check=0;
@@ -116,6 +125,9 @@ contract Master is Ownable {
             check=1;
     }
 
+    /// @dev Checks for owner 
+    /// @param _ownerAddress Contract address to be checked for owner
+    /// @return check Check flag (boolean value)
     function isOwner(address _ownerAddress) constant returns(uint check)
     {
         check=0;
@@ -123,30 +135,38 @@ contract Master is Ownable {
             check=1;
     }
     
+    /// @dev Sets owner 
+    /// @param _memberaddress Contract address to be set as owner
     function setOwner(address _memberaddress)
     {
         require(msg.sender == GBMAddress || msg.sender == owner);
         owner = _memberaddress;
     }
     
+    /// @dev Gets GBT controller address
+    /// @return _GBTCAddress GBT controller address
     function getGBTCAddress()constant returns(address _GBTCAddress)
     {
         GBM=GovBlocksMaster(GBMAddress);
         (_GBTCAddress,)= GBM.getGBTandGBTC();
     }
     
+    /// @dev Gets GBT token address
+    /// @return _GBTAddress GBT token address
     function getGBTokenAddress()constant returns(address _GBTAddress)
     {
         GBM=GovBlocksMaster(GBMAddress);
         (,_GBTAddress)= GBM.getGBTandGBTC();
     }
     
-    /// @dev Creates a new version of contract addresses.
+    
+    /// @dev Creates a new version of contract addresses
+    /// @param _contractAddresses Array of nine contract addresses which will be generated
     function addNewVersion(address[9] _contractAddresses) onlyAuthorizedGB
     {
         uint versionNo = versionLength;
         setVersionLength(versionNo+1);
-
+     
         addContractDetails(versionNo,"Master",masterAddress);
         addContractDetails(versionNo,"GovernanceData",_contractAddresses[0]);
         addContractDetails(versionNo,"MemberRoles",_contractAddresses[1]);
@@ -161,7 +181,10 @@ contract Master is Ownable {
         addContractDetails(versionNo,"GBTStandardToken",getGBTokenAddress()); 
     }
 
-    /// @dev Adds Contract's name  and its ethereum address in a given version.
+    /// @dev Adds contract's name  and its address in a given version
+    /// @param _versionNo Version number of the contracts
+    /// @param _contractName Contract name
+    /// @param _contractAddresse Contract addresse
     function addContractDetails(uint _versionNo,bytes32 _contractName,address _contractAddresse) internal
     {
         allContractVersions[_versionNo].push(contractDetails(_contractName,_contractAddresse));        
@@ -169,7 +192,8 @@ contract Master is Ownable {
 
 
     /// @dev Changes all reference contract addresses in master 
-    function changeAddressInMaster(uint _version) internal
+    /// @param _version Version of the new contracts
+    function changeAddressInMaster(uint _version) internal 
     {
         changeAllAddress(_version);
         governanceDataAddress = allContractVersions[_version][1].contractAddress;
@@ -185,6 +209,8 @@ contract Master is Ownable {
         GBTSAddress = allContractVersions[_version][11].contractAddress;
     }
 
+    /// @dev Sets the older versions of contract addresses as inactive and the latest one as active.
+    /// @param version Version of the new contracts
     function changeAllAddress(uint version) internal
     {
         addRemoveAddress(version,1);
@@ -200,7 +226,9 @@ contract Master is Ownable {
         addRemoveAddress(version,11);
     }
 
-    /// @dev Deactivates address of a contract from last version.
+    /// @dev Deactivates address of a contract from last version
+    /// @param _version Version of the new contracts
+    /// @param _index Index of the contracts
     function addRemoveAddress(uint _version,uint _index) internal
     {
         uint version_old=0;
@@ -210,8 +238,9 @@ contract Master is Ownable {
         contracts_active[allContractVersions[_version][_index].contractAddress]=1;
     }
 
-    /// @dev Links all contracts to master.sol by passing address of Master contract to the functions of other contracts.
-    function changeMasterAddress(address _masterAddress) internal
+    /// @dev Links all contracts to master by passing address of master contract to the functions of other contracts.
+    /// @param _masterAddress Master address of the contracts
+    function changeMasterAddress(address _masterAddress) internal 
     {
         GD=governanceData(governanceDataAddress);
         GD.changeMasterAddress(_masterAddress);
@@ -228,6 +257,9 @@ contract Master is Ownable {
         P1=Pool(poolAddress);
         P1.changeMasterAddress(_masterAddress);
 
+        GBTC=GBTController(GBTCAddress);
+        GBTC.changeMasterAddress(_masterAddress);
+
         PC=ProposalCategory(proposalCategoryAddress);
         PC.changeMasterAddress(_masterAddress);
 
@@ -235,8 +267,8 @@ contract Master is Ownable {
         MR.changeMasterAddress(_masterAddress);
     }
 
-   /// @dev Link contracts to one another.
-   function changeOtherAddress() internal
+   /// @dev Links contracts to one another
+   function changeOtherAddress() internal 
    {  
         changeGBTAddress(GBTSAddress);
         changeGBTControllerAddress(GBTCAddress);
@@ -263,7 +295,8 @@ contract Master is Ownable {
         MR.changeAllContractAddress(governanceDataAddress);
    }
 
-    /// @dev Change GBT token address all contracts
+    /// @dev Changes GBT token address in GD, GBT controller, and pool contracts
+    /// @param _tokenAddress Address of the GBT token
     function changeGBTAddress(address _tokenAddress) 
     {
         GBM=GovBlocksMaster(GBMAddress);
@@ -284,6 +317,8 @@ contract Master is Ownable {
         }
     }
 
+    /// @dev Changes GBT controller address
+    /// @param _controllerAddress New GBT controller address
     function changeGBTControllerAddress(address _controllerAddress) 
     {
         GBM=GovBlocksMaster(GBMAddress);
@@ -297,11 +332,11 @@ contract Master is Ownable {
             SV.changeGBTControllerAddress(_controllerAddress);
 
             P1=Pool(poolAddress);
-            P1.changeGBTControllerAddress(_controllerAddress);    
+            P1.changeGBTControllerAddress(_controllerAddress);      
         }
     }
 
-    /// @dev Switch to the recent version of contracts.
+    /// @dev Switches to the recent version of contracts
     function switchToRecentVersion() 
     {
         uint version = versionLength-1;
@@ -311,12 +346,14 @@ contract Master is Ownable {
         addInContractChangeDate(now,version);
         changeAddressInMaster(version);
         changeMasterAddress(allContractVersions[version][0].contractAddress);
-        callConstructorGDMRPC(version);
+            callConstructorGDMRPC(version);
 
         changeOtherAddress();
     }
 
-    function callConstructorGDMRPC(uint version) internal
+    /// @dev Calls contructor governance data, member roles, proposal category contracts
+    /// @param version Version of the new contracts
+    function callConstructorGDMRPC(uint version) internal 
     {
         GD=governanceData(governanceDataAddress);
         MR=memberRoles(memberRolesAddress);
@@ -333,24 +370,35 @@ contract Master is Ownable {
 
     }
 
-    /// @dev Stores the date when version of contracts get switched.
-    function addInContractChangeDate(uint _date , uint _versionNo) internal
+    /// @dev Stores the date when version of contracts get switched
+    /// @param _date Contract change date
+    /// @param _versionNo Version of the new contracts
+    function addInContractChangeDate(uint _date , uint _versionNo) internal 
     {
         contractChangeDate.push(changeVersion(_date,_versionNo));
     }
   
-    /// @dev Sets the length of version.
+    /// @dev Sets the length of version
+    /// @param _length Length of the version
     function setVersionLength(uint _length) internal
     {
         versionLength = _length;
     }
 
+    /// @dev Gets current version amd its master address
+    /// @return versionNo Current version number
+    /// @return masterAddress Master address
     function getCurrentVersion() constant returns(uint versionNo, address masterAddress)
     {
        versionNo = versionLength - 1;
        masterAddress = allContractVersions[versionNo][0].contractAddress;
     }
 
+    /// @dev Gets latest version name and address
+    /// @param _versionNo Version number
+    /// @return versionNo Version number
+    /// @return contractsName Latest version's contract names
+    /// @return contractsAddress Latest version's contract addresses
     function getLatestVersionData(uint _versionNo)constant returns(uint versionNo,bytes32[] contractsName, address[] contractsAddress)
     {
        versionNo = _versionNo;
@@ -370,25 +418,36 @@ contract Master is Ownable {
         GBMAddress == _GBMnewAddress;
     }
 
+    /// @dev Changes master in GovBlocks master
+    /// @param _gbUserName GovBlocks username
+    /// @param _newMasterAddress New master address
     function changeMasterin_GBM(bytes32 _gbUserName,address _newMasterAddress) onlyOwner
     {
       GBM=GovBlocksMaster(GBMAddress);
       GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
     }
 
+    /// @dev Changes token address in GovBlocks master
+    /// @param _gbUserName GovBlocks username
+    /// @param _newTokenAddress New token address for dApp
     function changeDappTokenAddressin_GBM(bytes32 _gbUserName,address _newTokenAddress) onlyOwner
     {
       GBM=GovBlocksMaster(GBMAddress);
       GBM.changeDappTokenAddress(_gbUserName,_newTokenAddress);
     }
 
+    /// @dev Changes dApp description in GovBlocks master
+    /// @param _gbUserName GovBlocks username
+    /// @param _dappDescHash New dApp description hash
     function changeDappDescIn_GBM(bytes32 _gbUserName,string _dappDescHash) onlyOwner
     {
       GBM=GovBlocksMaster(GBMAddress);
       GBM.changeDappDescHash(_gbUserName,_dappDescHash);
     }
 
-    function getDappTokenAddress()constant returns(address dappTokenAddress) 
+    /// @dev Changes dApp token in GovBlocks master
+    /// @return dappTokenAddress New dApp token address
+    function getDappTokenAddress()constant returns(address dappTokenAddress)
     {
         GBM=GovBlocksMaster(GBMAddress);
         dappTokenAddress=GBM.getDappTokenAddress(DappName);
