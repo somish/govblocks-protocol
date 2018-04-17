@@ -21,20 +21,29 @@ import "./GBTStandardToken.sol";
 
 contract governanceData {
   
+    event Proposal(address indexed proposalOwner,uint256 proposalId,uint256 dateAdd,string proposalDescHash);
+    event Solution(uint256 indexed proposalId,address indexed solutionOwner,string solutionDescHash,uint256 dateAdd,uint256 solutionStake);
     event Reputation(address indexed from,uint256 indexed proposalId, string description, uint reputationPoints,bytes4 typeOf);
-    event Vote(address indexed from,address indexed votingTypeAddress,uint256 voteId);
+    event Vote(address indexed from,address indexed proposalId,uint256 dateAdd,uint256 voteStakeGBT,uint256 voteId);
     event Reward(address indexed to,uint256 indexed proposalId,string description,uint256 amount);
     event Penalty(address indexed to,uint256 indexed proposalId,string description,uint256 amount);
     event OraclizeCall(address indexed proposalOwner,uint256 indexed proposalId,uint256 dateAdd,uint256 closingTime);    
+    event ProposalStatus(uint256 indexed proposalId,uint256 proposalStatus,uint256 dateAdd);
+    event ProposalVersion(uint256 indexed versionNumber,string proposalDescHash,uint256 dateAdd);
+
+    function callProposalEvent(address _proposalOwner,uint _proposalId,uint _dateAdd,string _proposalDescHash)
+    {
+        Proposal(_proposalOwner,_proposalId,_dateAdd,_proposalDescHash);   
+    }
 
     function callReputationEvent(address _from,uint256 _proposalId,string _description,uint _reputationPoints,bytes4 _typeOf) onlyInternal
     {
         Reputation(_from, _proposalId, _description,_reputationPoints,_typeOf);
     }
     
-    function callVoteEvent(address _from,address _votingTypeAddress,uint256 _voteId) onlyInternal
+    function callVoteEvent(address _from,uint _proposalId,uint _dateAdd,uint _voteStakeGBT,uint256 _voteId) onlyInternal
     {
-        Vote(_from, _votingTypeAddress, _voteId);
+        Vote(_from,_proposalId,_dateAdd,_voteStakeGBT,_voteId);
     }
     
     function callRewardEvent(address _to,uint256 _proposalId,string _description,uint256 _amount) onlyInternal
@@ -51,54 +60,56 @@ contract governanceData {
     {
         OraclizeCall(allProposal[_proposalId].owner, _proposalId, _dateAdd,_closingTime);
     }
+
+    function callProposalStatusEvent(uint256 _proposalId,uint _proposalStatus,uint _dateAdd)
+    {
+        ProposalStatus(_proposalId,_proposalStatus,_dateAdd);
+    }   
     
     using SafeMath for uint;
     struct proposal
     {
         address owner;
-        string proposalDescHash;
-        uint date_add;
         uint date_upd;
-        uint8 versionNum;
+        address votingTypeAddress;
+    }
+
+    struct proposalData
+    {
         uint8 currVotingStatus;
         uint8 propStatus;  
         uint8 category;
         uint8 finalVerdict;
         uint8 currentVerdict;
-        address votingTypeAddress;
-        uint proposalValue;
-        uint proposalStake;
         uint totalVoteValue;
         uint totalreward;
-        uint blocknumber;
-        uint8 complexityLevel;
         uint commonIncentive;
     }
 
-    struct proposalCategory
-    {
-        address categorizedBy;
-        uint8 verdictOptions;
-        address[] optionAddedByAddress;
-        uint[] valueOfOption;
-        uint[] stakeOnOption;
-        string[] optionHash;
-        uint[] optionDateAdd;
-        mapping(uint=>uint) rewardOption;
-    }
+    // struct proposalCategory
+    // {
+        // address categorizedBy;
+        // uint8 verdictOptions;
+        // address[] optionAddedByAddress;
+        // uint[] valueOfOption;
+        // uint[] stakeOnOption;
+        // string[] optionHash;
+        // uint[] optionDateAdd;
+        // mapping(uint=>uint) rewardOption;
+    // }
 
-    struct proposalVersionData
-    {
-        uint versionNum;
-        string proposalDescHash;
-        uint date_add;
-    }
+    // struct proposalVersionData
+    // {
+    //     uint versionNum;
+    //     string proposalDescHash;
+    //     uint date_add;
+    // }
 
-    struct Status
-    {
-        uint statusId;
-        uint date;
-    }
+    // struct Status
+    // {
+    //     uint statusId;
+    //     uint date;
+    // }
     
     struct votingTypeDetails
     {
@@ -109,20 +120,20 @@ contract governanceData {
     struct proposalVote 
     {
         address voter;
-        uint proposalId;
+        // uint proposalId;
         uint[] optionChosen;
-        uint dateSubmit;
-        uint voterTokens;
-        uint voteStakeGBT;
+        // uint dateSubmit;
+        // uint voterTokens;
+        // uint voteStakeGBT;
         uint voteValue;
-        uint reward;
+        // uint reward;
     }
 
-    struct proposalVoteAndTokenCount 
-    {
-        mapping(uint=>mapping(uint=>uint)) totalVoteCountValue; // PROPOSAL ROLE OPTION VOTEVALUE
-        mapping(uint=>uint) totalTokenCount;  // PROPOSAL ROLE TOKEN
-    }
+    // struct proposalVoteAndTokenCount 
+    // {
+    //     mapping(uint=>mapping(uint=>uint)) totalVoteCountValue; // PROPOSAL ROLE OPTION VOTEVALUE
+    //     mapping(uint=>uint) totalTokenCount;  // PROPOSAL ROLE TOKEN
+    // }
 
     struct lastReward
     {
@@ -137,18 +148,21 @@ contract governanceData {
         uint8 returned;
     }
     
-    mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndToken;
-    mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote;
-    mapping(address=>mapping(uint=>uint)) AddressProposalVote; 
-    mapping(uint=>proposalCategory) allProposalCategory;
-    mapping(uint=>proposalVersionData[]) proposalVersions;
-    mapping(uint=>Status[]) proposalStatus;
+    mapping(uint=>proposalData) allProposalData;
+    mapping(uint=>address[]) allProposalOptions;
     mapping(address=>uint) allMemberReputationByAddress;
-    mapping(uint=>uint[]) allProposalVotes; // CAN OPTIMIZE THIS
-    mapping(address=>uint[]) allProposalMember; // Proposal Against Member
+    mapping(address=>mapping(uint=>uint)) AddressProposalVote; // Checking if user has already voted for a proposal 
+    mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote; // Checking in proposal role vote closing 
+
+
+
+    // mapping(uint => proposalVoteAndTokenCount) allProposalVoteAndToken;
+    // mapping(uint=>uint8) initialOptionsAdded; // get Option details by +1 as first option is always the deny one..
+    // mapping(uint=>uint[]) allProposalVotes; // CAN OPTIMIZE THIS // Total votes againt proposal . can get this by ProposalRoleVote
+    
+    mapping(address=>uint[]) allProposalMember; // Proposal Against Member // can get from AddressProposalVote. 
     mapping(address=>uint[]) allProposalOption; // Total Proposals against Member, array contains proposalIds to which solution being provided
     mapping(address=>uint[]) allMemberVotes; // Total Votes given by member till now..
-    mapping(uint=>uint8) initialOptionsAdded;
     mapping(address=>mapping(uint=>uint)) allOptionDataAgainstMember; // AddressProposalOptionId
     mapping(address=>mapping(uint=>mapping(bytes4=>deposit))) allMemberDepositTokens;
     mapping(address=>lastReward);
@@ -172,7 +186,6 @@ contract governanceData {
     uint subOptionOwnerPoints;
     uint subMemberPoints;
 
-    string[]  status;
     proposal[] allProposal;
     proposalVote[] allVotes;
     votingTypeDetails[] allVotingTypeDetails;
@@ -242,7 +255,7 @@ contract governanceData {
             setVotingTypeDetails("Simple Voting",null_address);
             setVotingTypeDetails("Rank Based Voting",null_address);
             setVotingTypeDetails("Feature Weighted Voting",null_address);
-            allVotes.push(proposalVote(0X00,0,new uint[](0),0,0,0,0,0));
+            allVotes.push(proposalVote(0X00,new uint[](0),0);
             uint _totalVotes = SafeMath.add(allVotesTotal,1);  
             allVotesTotal=_totalVotes;
             constructorCheck=1;
@@ -325,6 +338,11 @@ contract governanceData {
         return lastReward[_memberAddress].proposalVote;
     }
 
+    function getIdOfLastReward(address _memberAddress)constant returns(uint lastPCid,uint lastOCid,uint lastPVid)
+    {
+        return (lastReward[_memberAddress].proposalCreate,lastReward[_memberAddress].optionCreate,lastReward[_memberAddress].proposalVote);
+    }
+
     function setDepositTokens(address _memberAddress,uint _proposalId,bytes4 _typeOf,uint _depositAmount) onlyInternal
     {
         allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].amount = _depositAmount;
@@ -345,31 +363,23 @@ contract governanceData {
         return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned = _returnedIndex ;
     }
 
- 
-    function claimReward() onlyInternal
+    function claimReward()
     {
         GBTS=GBTStandardToken(GBTSAddress);
-        G1.calculateMemberReward(msg.sender);
-        GBTS.transfer(msg.sender,allMemberTotalReward[msg.sender]);
-        GBTS.callTransferGBTEvent(address(this),msg.sender, allMemberTotalReward[msg.sender],"GBT Stake claimed - Returned");
-    }
-
-    function setReward(uint _reward,address _memberAddress) onlyInternal
-    {
-        allMemberDepositTokens[_memberAddress] = _reward;
-        GBTS=GBTStandardToken(GBTSAddress);
-        GBTS.addInBalance(address(this),_reward);
-    }
-
-    function getReward(address _memberAddress)constant returns(uint)
-    {
-        return allMemberTotalReward[_memberAddress];
+        G1=Governance(G1Address);
+        uint rewardToClaim = G1.calculateMemberReward(msg.sender);
+        if(rewardToClaim != 0)
+        { 
+            GBTS.addInBalance(address(this),rewardToClaim);
+            GBTS.transfer(_memberAddress,_amount);
+            GBTS.callTransferGBTEvent(address(this),_memberAddress,_amount,"GBT Stake claimed - Returned");
+        }
     }
 
     function addInVote(address _memberAddress,uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount,uint _finalVoteValue) onlyInternal
     {
-        GBTS=GBTStandardToken(GBTSAddress);
-        allVotes.push(proposalVote(_memberAddress,_proposalId,_optionChosen,now,GBTS.balanceOf(_memberAddress),_GBTPayableTokenAmount,_finalVoteValue,0));
+        allVotes.push(proposalVote(_memberAddress,_optionChosen,_finalVoteValue));
+        Vote(_memberAddress,_proposalId,now,_GBTPayableTokenAmount,_voteId);
         increaseTotalVotes();
     }
 
@@ -389,10 +399,20 @@ contract governanceData {
         ProposalRoleVote[_proposalId][_roleId].push(_voteId);
     }
 
-    function getVoteDetailByid(uint _voteid) public constant returns(address voter,uint proposalId,uint[] optionChosen,uint dateSubmit,uint voterTokens,uint voteStakeGBT,uint voteValue)
+    function getVoteDetailByid(uint _voteid) public constant returns(address voter,uint[] optionChosen,uint voteValue)
     {
-        return(allVotes[_voteid].voter,allVotes[_voteid].proposalId,allVotes[_voteid].optionChosen,allVotes[_voteid].dateSubmit,allVotes[_voteid].voterTokens,allVotes[_voteid].voteStakeGBT,allVotes[_voteid].voteValue);
+        return(allVotes[_voteid].voter,allVotes[_voteid].optionChosen,allVotes[_voteid].voteValue);
     }
+
+
+
+
+
+//// WORK IN PROGRESS FROM HERE :
+
+
+
+
 
     function setProposalVoteCount(uint _proposalId,uint _roleId,uint _option,uint _finalVoteValue) onlyInternal
     {
@@ -568,9 +588,17 @@ contract governanceData {
         return (allProposalOption[_memberAddress].length);
     }
 
-    function getProposalAnsId(address _memberAddress, uint _index)constant returns (uint) // return proposId to which option added.
+    function getProposalAnsId(address _memberAddress, uint _optionArrayIndex)constant returns (uint) // return proposId to which option added.   {
     {
-        return (allProposalOption[_memberAddress][_index]);
+        return (allProposalOption[_memberAddress][_optionArrayIndex]);
+    }
+
+    function getOptionIdAgainstProposalByAddress(address _memberAddress,uint _optionArrayIndex)constant returns(uint proposalId,uint optionId,uint proposalStatus,uint finalVerdict)
+    {
+        proposalId = allProposalOption[_memberAddress][_optionArrayIndex];
+        optionId = allOptionDataAgainstMember[_memberAddress][proposalId];
+        proposalStatus = allProposal[proposalId].propStatus;
+        finalVerdict = allProposal[proposalId].finalVerdict;
     }
 
     /// @dev Set the Deatils of added verdict i.e. Verdict Stake, Verdict value and Address of the member whoever added the verdict.
@@ -632,54 +660,56 @@ contract governanceData {
     /// @dev Updates  status of an existing proposal.
     function updateProposalStatus(uint _id ,uint8 _status)  onlyInternal
     {
-        allProposal[_id].propStatus = _status;
+        allProposalData[_id].propStatus = _status;
         allProposal[_id].date_upd = now;
     }
 
-    /// @dev Stores the status information of a given proposal.
-    function pushInProposalStatus(uint _proposalId , uint8 _status) onlyInternal
-    {
-        proposalStatus[_proposalId].push(Status(_status,now));
-    }
+    // /// @dev Stores the status information of a given proposal.
+    // function pushInProposalStatus(uint _proposalId , uint8 _status) onlyInternal
+    // {
+    //     ProposalStatus(_proposalId,_status,now);
+    //     // proposalStatus[_proposalId].push(Status(_status,now));
+    // }
 
-    function setInitialOptionsAdded(uint _proposalId) onlyInternal
-    {
-        require (initialOptionsAdded[_proposalId] == 0);
-            initialOptionsAdded[_proposalId] = 1;
-    }
+    // function setInitialOptionsAdded(uint _proposalId) onlyInternal
+    // {
+    //     require (initialOptionsAdded[_proposalId] == 0);
+    //         initialOptionsAdded[_proposalId] = 1;
+    // }
 
-    function getInitialOptionsAdded(uint _proposalId) constant returns (uint)
-    {
-        if(initialOptionsAdded[_proposalId] == 1)
-            return 1;
-    }
+    // function getInitialOptionsAdded(uint _proposalId) constant returns (uint)
+    // {
+    //     if(initialOptionsAdded[_proposalId] == 1)
+    //         return 1;
+    // }
 
-    function setTotalOptions(uint _proposalId) onlyInternal
-    {
-        allProposalCategory[_proposalId].verdictOptions = allProposalCategory[_proposalId].verdictOptions +1;
-    }
+    // function setTotalOptions(uint _proposalId) onlyInternal
+    // {
+    //     allProposalCategory[_proposalId].verdictOptions = allProposalCategory[_proposalId].verdictOptions +1;
+    // }
 
     function setProposalIncentive(uint _proposalId,uint _reward) onlyInternal
     {
         allProposal[_proposalId].commonIncentive = _reward;  
     }
 
-    function setCategorizedBy(uint _proposalId,address _memberAddress) onlyInternal
-    {
-        allProposalCategory[_proposalId].categorizedBy = _memberAddress;
-    }
+    // function setCategorizedBy(uint _proposalId,address _memberAddress) onlyInternal
+    // {
+    //     allProposalCategory[_proposalId].categorizedBy = _memberAddress;
+    // }
 
-    function setProposalLevel(uint _proposalId,uint8 _proposalComplexityLevel) onlyInternal
-    {
-         allProposal[_proposalId].complexityLevel = _proposalComplexityLevel;
-    }
+    // function setProposalLevel(uint _proposalId,uint8 _proposalComplexityLevel) onlyInternal
+    // {
+    //      allProposal[_proposalId].complexityLevel = _proposalComplexityLevel;
+    // }
 
   
     /// @dev Changes the status of a given proposal.
     function changeProposalStatus(uint _id,uint8 _status) onlyInternal
     {
         require(allProposal[_id].category != 0);
-        pushInProposalStatus(_id,_status);
+        ProposalStatus(_proposalId,_proposalStatus,_dateAdd);
+        // pushInProposalStatus(_id,_status);
         updateProposalStatus(_id,_status);
     }
 
@@ -780,6 +810,11 @@ contract governanceData {
     function getProposalDetails(uint _proposalId) public constant returns (uint id,uint proposalValue,uint proposalStake,uint incentive,uint complexity)
     {
         return (_proposalId,allProposal[_proposalId].proposalValue,allProposal[_proposalId].proposalStake,allProposal[_proposalId].commonIncentive,allProposal[_proposalId].complexityLevel);
+    }
+
+    function getProposalDetailsById5(uint _proposalId)public constant returns(uint proposalStatus,uint uint finalVerdict)
+    {
+        return (allProposal[_proposalId].propStatus,allProposal[_proposalId].finalVerdict);
     }
 
     /// @dev Gets version details of a given proposal id.
@@ -920,6 +955,15 @@ contract governanceData {
         return allMemberVotes[_memberAddress][_index];
     }
 
+    function getProposalDetailsByVoteId(address _memberAddress,uint _voteArrayIndex,uint _optionChosenId)constant returns(uint voteId,uint proposalId,uint optionChosen,uint proposalStatus,uint finalVerdict)
+    {
+        voteId = allMemberVotes[_memberAddress][_index];
+        proposalId = allVotes[_voteid].proposalId;
+        optionChosen = allVotes[_voteId].optionChosen[_optionChosenId];
+        proposalStatus = allProposal[proposalId].propStatus;
+        finalVerdict = allProposal[proposalId].finalVerdict;
+    }
+
     function addTotalProposal(uint _proposalId,address _memberAddress) onlyInternal
     {
         allProposalMember[_memberAddress].push(_proposalId);
@@ -938,6 +982,14 @@ contract governanceData {
     function getProposalIdByAddress(address _memberAddress,uint _index)constant returns(uint)
     {
         return (allProposalMember[_memberAddress][_index]);
+    }
+
+    function getProposalDetailsByAddress(address _memberAddress,uint _index)constant returns(uint proposalId,uint categoryId,uint finalVerdict,uint propStatus)
+    {
+        proposalId = allProposalMember[_memberAddress][_index];
+        categoryId = allProposal[proposalId].category;
+        finalVerdict = allProposal[proposalId].finalVerdict;
+        proposalStatus = allProposal[proposalId].propStatus;
     }
 
     function getProposalTotalReward(uint _proposalId)constant returns(uint)
@@ -1021,15 +1073,23 @@ contract governanceData {
         subMemberPoints = _repPoints;
     }  
 
-    function addNewProposal(address _memberAddress,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress,uint _date) onlyInternal
-    {
-        allProposal.push(proposal(_memberAddress,_proposalDescHash,_date,now,0,0,0,_categoryId,0,0,_votingTypeAddress,0,0,0,0,0,0,0));               
-    }  
-    
     function changePendingProposalStart(uint _value) onlyInternal
     {
         pendingProposalStart = _value;
     }
+
+    function addNewProposal(uint _proposalId,address _memberAddress,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress,uint _dateAdd) 
+    {
+        allProposalData[_proposalId].categoryId = _categoryId;
+        createProposal1(_proposalId,_memberAddress,_proposalDescHash,_votingTypeAddress,_dateAdd);
+    }  
+    
+    function createProposal1(uint _proposalId,address _memberAddress,string _proposalDescHash,address _votingTypeAddress,uint _dateAdd)
+    {
+        allProposal.push(proposal(_memberAddress,_dateAdd,_votingTypeAddress));
+        Proposal(_memberAddress,_proposalId,_dateAdd,_proposalDescHash);
+    }
+
 }  
 
  
