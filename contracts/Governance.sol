@@ -26,9 +26,6 @@ import "./Pool.sol";
 import "./GBTController.sol";
 import "./GBTStandardToken.sol";
 import "./VotingType.sol";
-// import "./zeppelin-solidity/contracts/token/BasicToken.sol";
-// import "./zeppelin-solidity/contracts/math/SafeMath.sol";
-// import "./zeppelin-solidity/contracts/math/Math.sol";
 
 contract Governance {
     
@@ -197,7 +194,7 @@ contract Governance {
   {
       GD=governanceData(GDAddress);
       require(msg.sender == GD.getProposalOwner(_proposalId));
-      GD.storeProposalVersion(_proposalId);
+      GD.storeProposalVersion(_proposalId,_proposalDescHash);
       updateProposalDetails1(_proposalId,_proposalDescHash);
       GD.changeProposalStatus(_proposalId,1);
       
