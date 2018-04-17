@@ -109,27 +109,39 @@ contract simpleVoting is VotingType
         GBTSAddress = _GBTSAddress;    
     }
     
-    function transferVoteStakeSV(uint _memberStake) internal
+    function receiveStake(uint _memberStake) internal
     {
-        // GBTC=GBTController(GBTCAddress);
-        // if(_memberStake != 0)
-            // GBTC.re/ceiveGBT(msg.sender,_memberStake,"Payable GBT Stake for voting against proposal");
+        GBTS=GBTStandardToken(GBTSAddress);
+        GD=governanceData(GDAddress);
+        if(_memberStake != 0)
+        {
+            uint depositAmount = ((gbtTransfer*GD.depositPercVote())/100);
+            uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
+            GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'V');
+            GBTS.lockMemberToken(_gbUserName,_proposalId,SafeMath.sub(_TokenAmount,finalAmount);
+        }  
     }
 
-    function addVerdictOption(uint _proposalId,address _member,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) 
+    function addVerdictOption(uint _proposalId,address _member,string _optionHash,uint _dateAdd) 
     {
         SVT=StandardVotingType(SVTAddress);
         MS=Master(masterAddress);
             require(MS.isInternal(msg.sender) == 1 || msg.sender == _member);
-
+       
         SVT.addVerdictOptionSVT(_proposalId,_member,_GBTPayableTokenAmount,_optionHash,_dateAdd);
-        // if(_GBTPayableTokenAmount != 0)
         //     payableGBTTokensSimpleVoting(_member,_GBTPayableTokenAmount,"Payable GBT Stake for adding solution against proposal");
     }
      
-    function initiateVerdictOption(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) 
+    function initiateVerdictOption(uint _proposalId,,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) 
     {
-        addVerdictOption(_proposalId,_memberAddress,_GBTPayableTokenAmount, _optionHash,_dateAdd);
+        addVerdictOption(_proposalId,msg.sender,_GBTPayableTokenAmount, _optionHash,_dateAdd);
+        if(_GBTPayableTokenAmount!=0)
+        {
+            uint depositAmount = ((optionGBT*GD.depositPercOption())/100);
+            uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
+            GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'S');
+            GBTS.lockMemberToken(_proposalId,SafeMath.sub(_GBTPayableTokenAmount,finalAmount));
+        }
     }
 
     function proposalVoting(uint _proposalId,uint[] _optionChosen,address _memberAddress,uint _GBTPayableTokenAmount) 
@@ -186,7 +198,7 @@ contract simpleVoting is VotingType
             G1.checkRoleVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote);
             GD.addInVote(_memberAddress,_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
             GD.callVoteEvent(_memberAddress,_voteAddress,votelength);
-            // transferVoteStakeSV(_GBTPayableTokenAmount);
+            receiveStake(_GBTPayableTokenAmount);
         }
         else 
             changeMemberVote(_proposalId,_optionChosen,_memberAddress,_GBTPayableTokenAmount);
