@@ -17,7 +17,7 @@ pragma solidity ^0.4.8;
 import "./StandardToken.sol";
 import "./SafeMath.sol";
 
-contract GBTStandardToken is StandardToken
+contract GBTStandardToken is ERC20, ERC20Basic
 {
     event TransferGBT(address indexed from, address indexed to, uint256 value,string description);
 
@@ -28,7 +28,7 @@ contract GBTStandardToken is StandardToken
     uint public decimals;
     address owner;
     address GBTCAddress;
-    address GBMAddress;
+    
     uint  initialTokens;
     uint public tokenHoldingTime;
 
@@ -39,26 +39,155 @@ contract GBTStandardToken is StandardToken
         uint validUpto;
     }
 
-    lock[] lockToken;
-    mapping(bytes32=>mapping(uint=>uint)) proposal_lockToken;
-    mapping(address=>uint) user_lockToken;
+    mapping(address=>lock[]) user_lockToken;
 
-    function lockMemberToken(bytes32 _gbUserName,uint _proposalId,uint _memberStake)
+    mapping(address => uint256) balances;
+  /**
+  * @dev transfer token for a specified address
+  * @param _to The address to transfer to.
+  * @param _value The amount to be transferred.
+  */
+  function transfer(address _to, uint256 _value) public returns (bool) {
+    bool trf= transfer_message(_to,value,"");
+    return trf;
+  }
+
+   function transfer_message(address _to, uint256 _value,string _message) public returns (bool) {
+    require(_to != address(0));
+    require(_value <= (balances[msg.sender]-getLockToken(msg.sender)) );
+
+    // SafeMath.sub will throw if there is not enough balance.
+    balances[msg.sender] = balances[msg.sender].sub(_value);
+    balances[_to] = balances[_to].add(_value);
+    Transfer(msg.sender, _to, _value);
+    if(_message!="")
+        TransferGBT(msg.sender, _to, _value,_message);
+    return true;
+  }
+
+  /**
+  * @dev Gets the balance of the specified address.
+  * @param _owner The address to query the the balance of.
+  * @return An uint256 representing the amount owned by the passed address.
+  */
+  function balanceOf(address _owner) public constant returns (uint256 balance) {
+    return balances[_owner];
+  }
+
+    function lockToken(address _memberAddress,uint _amount,uint _validUpto,uint8 _v,bytes32 _r,bytes32 _s)
     {
-        // lockToken.push((stake*_tokenlockPerc)/100,totalTime);
-        // proposal_lockToken[_gbUserName][_proposalId] = id;
-        // user_lockToken[msg.sender] = id;
+        require(verifySign(_memberAddress,_amount,_validUpto,_v,_r,_s));
+        user_lockToken[_memberAddress].push(lock(_amount,_validUpto);
     }
 
-    function getLockedTokenId(bytes32 _gbUserName,uint _proposalId)constant returns(uint id)
+    function verifySign(address _memberAddress,uint _amount,uint _validUpto,uint8 _v,bytes32 _r,bytes32 _s) constant  returns(bool)
     {
-        id = proposal_lockToken[_gbUserName][_proposalId];
+        bytes32 hash = getOrderHash(_memberAddress,_amount,_validUpto);
+        return  isValidSignature(hash,_memberAddress,_v,_r,_s);
+    }
+   
+    function getOrderHash(address _memberAddress,uint _amount,uint _validUpto) constant returns (bytes32)
+    {
+        return keccak256(_memberAddress,_amount,_validUpto);
+    }
+    
+    function isValidSignature(bytes32 hash, address _memberaddress,uint8 v, bytes32 r, bytes32 s) constant  returns(bool)
+    {
+        
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHash = keccak256(prefix, hash);
+        address a= ecrecover(prefixedHash, v, r, s);      
+        return (a==_memberaddress);
     }
 
-    function getLockedAmountMyId(uint _id)constant returns (uint stake)
+    function getLockToken(address _memberAddress)constant returns(uint locked_tokens)
     {
-        stake = lockToken[_id];
+        uint time=now;
+        locked_tokens=0;
+        for(uint i=0;i<user_lockToken[_memberAddress].length();i++)
+        {
+            if(user_lockToken[_memberAddress][i].validUpto>time)
+                locked_tokens-locked_tokens+user_lockToken[_memberAddress][i].amount;
+
+        }
+
     }
+
+    mapping (address => mapping (address => uint256)) internal allowed;
+
+
+  /**
+   * @dev Transfer tokens from one address to another
+   * @param _from address The address which you want to send tokens from
+   * @param _to address The address which you want to transfer to
+   * @param _value uint256 the amount of tokens to be transferred
+   */
+  function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+   bool trf= transferFrom_mssage(_from,_to,_value,"");
+   return trf;
+  }
+
+  function transferFrom_mssage(address _from, address _to, uint256 _value,string _message) public returns (bool) {
+   require(_to != address(0));
+    require(_value <= (balances[_from]-getLockToken(msg.sender));
+    require(_value <= allowed[_from][msg.sender]);
+
+    balances[_from] = balances[_from].sub(_value);
+    balances[_to] = balances[_to].add(_value);
+    allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
+    Transfer(_from, _to, _value);
+    if(_message!="")
+        TransferGBT(_from, _to, _value,_message);
+    return true;
+  }
+  /**
+   * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
+   *
+   * Beware that changing an allowance with this method brings the risk that someone may use both the old
+   * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
+   * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
+   * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+   * @param _spender The address which will spend the funds.
+   * @param _value The amount of tokens to be spent.
+   */
+  function approve(address _spender, uint256 _value) public returns (bool) {
+    allowed[msg.sender][_spender] = _value;
+    Approval(msg.sender, _spender, _value);
+    return true;
+  }
+
+  /**
+   * @dev Function to check the amount of tokens that an owner allowed to a spender.
+   * @param _owner address The address which owns the funds.
+   * @param _spender address The address which will spend the funds.
+   * @return A uint256 specifying the amount of tokens still available for the spender.
+   */
+  function allowance(address _owner, address _spender) public constant returns (uint256 remaining) {
+    return allowed[_owner][_spender];
+  }
+
+  /**
+   * approve should be called when allowed[_spender] == 0. To increment
+   * allowed value is better to use this function to avoid 2 calls (and wait until
+   * the first transaction is mined)
+   * From MonolithDAO Token.sol
+   */
+  function increaseApproval (address _spender, uint _addedValue) public returns (bool success) {
+    allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);
+    Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+    return true;
+  }
+
+  function decreaseApproval (address _spender, uint _subtractedValue) public returns (bool success) {
+    uint oldValue = allowed[msg.sender][_spender];
+    if (_subtractedValue > oldValue) {
+      allowed[msg.sender][_spender] = 0;
+    } else {
+      allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
+    }
+    Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+    return true;
+  }
 
     modifier onlyGBTController
     {  
@@ -66,11 +195,7 @@ contract GBTStandardToken is StandardToken
         _; 
     }
 
-    modifier onlyGBM
-    {
-        require(msg.sender == GBMAddress);
-        _;
-    }
+   
 
     function GBTStandardToken() 
     {
@@ -82,39 +207,90 @@ contract GBTStandardToken is StandardToken
         decimals = 18;
     }
 
-    function changeGBMAddress(address _GBMAddress) onlyGBM
+
+event Mint(address indexed to, uint256 amount);
+  event MintFinished();
+
+  bool public mintingFinished = false;
+
+
+  modifier canMint() {
+    require(!mintingFinished);
+    _;
+  }
+
+  /**
+   * @dev Function to mint tokens
+   * @param _to The address that will receive the minted tokens.
+   * @param _amount The amount of tokens to mint.
+   * @return A boolean that indicates if the operation was successful.
+   */
+
+  function mint(address _to, uint256 _amount) internal canMint public returns (bool) {
+    totalSupply = totalSupply.add(_amount);
+    balances[_to] = balances[_to].add(_amount);
+    Mint(_to, _amount);
+    Transfer(address(0), _to, _amount);
+    return true;
+  }
+
+  /**
+   * @dev Function to stop minting new tokens.
+   * @return True if the operation was successful.
+   */
+  function finishMinting() onlyOwner canMint public returns (bool) {
+    mintingFinished = true;
+    MintFinished();
+    return true;
+  }
+  
+  uint public tokenPrice;
+
+  function buyToken() payable 
     {
-        GBMAddress = _GBMAddress;
+        actual_amount = SafeMath.mul(SafeMath.div(msg.value,tokenPrice),10**decimals);         
+        mint(msg.sender,actual_amount);
     }
 
-    function changeGBTControllerAddress(address _GBTCAddress) onlyGBM
+ function changeTokenPrice(uint _price)
     {
-        GBTCAddress = _GBTCAddress;
+        uint _tokenPrice = _price;
+        tokenPrice = _tokenPrice;
     }
 
-    function addInBalance(address _Address,uint _value) onlyGBTController
+    function getTokenPrice() constant returns(uint)
     {
-        balances[_Address] = SafeMath.add(balances[_Address],_value);
+        return tokenPrice;
     }
 
-    function subFromBalance(address _Address,uint _value)  onlyGBTController
-    {
-        balances[_Address] = SafeMath.sub(balances[_Address],_value);
-    }
+    // function changeGBTControllerAddress(address _GBTCAddress) onlyGBM
+    // {
+    //     GBTCAddress = _GBTCAddress;
+    // }
 
-    function callTransferGBTEvent(address _from, address _to, uint256 _value,string _description) onlyGBTController
-    {
-        TransferGBT(_from,_to,_value,_description);
-        Transfer(_from, _to, _value);
-    }
+    // function addInBalance(address _Address,uint _value) onlyGBTController
+    // {
+    //     balances[_Address] = SafeMath.add(balances[_Address],_value);
+    // }
+
+    // function subFromBalance(address _Address,uint _value)  onlyGBTController
+    // {
+    //     balances[_Address] = SafeMath.sub(balances[_Address],_value);
+    // }
+
+    // function callTransferGBTEvent(address _from, address _to, uint256 _value,string _description) onlyGBTController
+    // {
+    //     TransferGBT(_from,_to,_value,_description);
+    //     Transfer(_from, _to, _value);
+    // }
     
-    function addInTotalSupply(uint _tokens) onlyGBTController
-    {
-        totalSupply = totalSupply + _tokens;
-    }
+    // function addInTotalSupply(uint _tokens) onlyGBTController
+    // {
+    //     totalSupply = totalSupply + _tokens;
+    // }
     
-    function subFromTotalSupply(uint _tokens) onlyGBTController
-    {
-        totalSupply = totalSupply - _tokens;
-    }
+    // function subFromTotalSupply(uint _tokens) onlyGBTController
+    // {
+    //     totalSupply = totalSupply - _tokens;
+    // }
 }
