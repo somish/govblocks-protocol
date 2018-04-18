@@ -85,7 +85,7 @@ contract Master is Ownable {
         versionLength =0;
         GBMAddress = _GovBlocksMasterAddress;
         DappName = _gbUserName;
-        allContractNames.push('MAS');
+        allContractNames.push('MS');
         allContractNames.push('GD');
         allContractNames.push('MR');
         allContractNames.push('PC');
@@ -414,7 +414,7 @@ contract Master is Ownable {
     
         addInContractChangeDate(now,version);
         changeAddressInMaster(version);
-        changeMasterAddress(allContractVersions[version]['MAS']);
+        changeMasterAddress(allContractVersions[version]['MS']);
         callConstructorGDMRPC(version);
         changeOtherAddress();
     }
@@ -459,7 +459,7 @@ contract Master is Ownable {
     function getCurrentVersion() constant returns(uint versionNo, address masterAddress)
     {
        versionNo = versionLength - 1;
-       masterAddress = allContractVersions[versionNo]['MAS'];
+       masterAddress = allContractVersions[versionNo]['MS'];
     }
 
     /// @dev Gets latest version name and address

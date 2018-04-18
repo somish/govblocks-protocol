@@ -38,7 +38,7 @@ contract StandardVotingType
     GBTStandardToken GBTS;
     Master MS;
     Pool P1;
-    Governance G1;
+    Governance GOV;
     memberRoles MR;
     ProposalCategory PC;
     governanceData  GD;
@@ -116,7 +116,7 @@ contract StandardVotingType
         } else if(contractName == 'FW'){
             FW = FeatureWeighted(contractAddress);
         } else if(contractName == 'GOV'){
-            G1 = Governance(contractAddress);
+            GOV = Governance(contractAddress);
         } else if(contractName == 'PL'){
             P1 = Pool(contractAddress);
         }
@@ -229,7 +229,7 @@ contract StandardVotingType
         _closingTime = PC.getClosingTimeAtIndex(GD.getProposalCategory(_proposalId),currentVotingId);
         _majorityVote= PC.getRoleMajorityVoteAtIndex(GD.getProposalCategory(_proposalId),currentVotingId);
 
-        require(G1.checkProposalVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote)==1); //1
+        require(GOV.checkProposalVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote)==1); //1
         uint _roleId = PC.getRoleSequencAtIndex(GD.getProposalCategory(_proposalId),currentVotingId);
     
         max=0;  
@@ -254,37 +254,37 @@ contract StandardVotingType
                         if(currentVotingId < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
                         // if(currentVotingId < _roleSequenceLength)
                         {
-                            G1.updateProposalDetails(_proposalId,currentVotingId,max,0);
+                            GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
                             P1.closeProposalOraclise(_proposalId,_closingTime); 
                             GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(GD.getProposalCategory(_proposalId),currentVotingId+1));
                         } 
                         else
                         {
-                            G1.updateProposalDetails(_proposalId,currentVotingId,max,max);
+                            GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
                             GD.changeProposalStatus(_proposalId,3);
                             VT.giveReward_afterFinalDecision(_proposalId);
                         }
                     }
                     else
                     {
-                        G1.updateProposalDetails(_proposalId,currentVotingId,max,max);
+                        GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
                         GD.changeProposalStatus(_proposalId,4);
                         VT.giveReward_afterFinalDecision(_proposalId);
-                        G1.changePendingProposalStart();
+                        GOV.changePendingProposalStart();
                     }      
                 } 
                 else
                 {
-                    G1.updateProposalDetails(_proposalId,currentVotingId,max,max);
+                    GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
                     GD.changeProposalStatus(_proposalId,5);
-                    G1.changePendingProposalStart();
+                    GOV.changePendingProposalStart();
                 } 
         }
         else
         {
-            G1.updateProposalDetails(_proposalId,currentVotingId,max,max);
+            GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
             GD.changeProposalStatus(_proposalId,5);
-            G1.changePendingProposalStart();
+            GOV.changePendingProposalStart();
         }
     }
     /// @dev Sets the details of added verdict i.e. verdict stake, verdict value and address of the member whoever added the verdict.
