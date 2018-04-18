@@ -422,4 +422,13 @@ contract ProposalCategory
     {
         return allCategory[_categoryId].categoryDescHash;
     }
+
+    /// @dev Gets Category data depending upon current voting index in Voting sequence.
+    /// @param _categoryId Category id
+    /// @param _currVotingIndex Current voting index in voting seqeunce.
+    /// @return Next member role to vote with its closing time and majority vote.
+    function getCategpryData2(uint _categoryId,uint _currVotingIndex)constant returns(uint8 roleSequence,uint majorityVote,uint24 closingTime)
+    {
+        return (allCategory[_categoryId].memberRoleSequence[_currVotingIndex],allCategory[_categoryId].memberRoleMajorityVote[_currVotingIndex],allCategory[_categoryId].closingTime[_currVotingIndex]);
+    }
 }
