@@ -31,10 +31,10 @@ import "./Ownable.sol";
 
 contract Master is Ownable {
 
-    struct contractDetails{
-        bytes32 name;
-        address contractAddress;
-    }
+    // struct contractDetails{
+    //     bytes32 name;
+    //     address contractAddress;
+    // }
 
     struct changeVersion{
         uint date_implement;
@@ -44,9 +44,10 @@ contract Master is Ownable {
     uint  public versionLength;
     bytes32 public DappName;
     changeVersion[]  contractChangeDate;
-    mapping(uint=>contractDetails[]) public allContractVersions;
+    mapping(uint=>mapping(bytes4=>address)) public allContractVersions;
     mapping(address=>uint) public contracts_active;
-    
+    mapping(bytes4 => bytes4[]) contract_dependency;
+    bytes4[] allContractNames;
     address governanceDataAddress;
     address memberRolesAddress;
     address proposalCategoryAddress;
@@ -64,7 +65,7 @@ contract Master is Ownable {
     GBTController GBTC;
     GBTStandardToken GBTS;
     Pool P1;
-    Governance G1;
+    Governance GOV;
     governanceData GD;
     memberRoles MR;
     ProposalCategory PC;
@@ -84,6 +85,24 @@ contract Master is Ownable {
         versionLength =0;
         GBMAddress = _GovBlocksMasterAddress;
         DappName = _gbUserName;
+        allContractNames.push('MAS');
+        allContractNames.push('GD');
+        allContractNames.push('MR');
+        allContractNames.push('PC');
+        allContractNames.push('SV');
+        allContractNames.push('RB');
+        allContractNames.push('FW');
+        allContractNames.push('SVT');
+        allContractNames.push('GOV');
+        allContractNames.push('PL');
+        allContractNames.push('GC');
+        allContractNames.push('GS');
+        contract_dependency['GD'] = ['SV', 'RB', 'FW'];
+        contract_dependency['SV'] = ['SVT', 'GD', 'MR', 'PC', 'GOV'];
+        contract_dependency['SVT'] = ['GD', 'MR', 'PC', 'GOV', 'PL', 'SV', 'RB', 'FW'];
+        contract_dependency['GOV'] = ['GD', 'MR', 'PC', 'PL'];
+        contract_dependency['PC'] = ['MR'];
+        contract_dependency['MR'] = ['GD'];
     }
    
     modifier onlyOwner
@@ -185,9 +204,9 @@ contract Master is Ownable {
     /// @param _versionNo Version number of the contracts
     /// @param _contractName Contract name
     /// @param _contractAddresse Contract addresse
-    function addContractDetails(uint _versionNo,bytes32 _contractName,address _contractAddresse) internal
+    function addContractDetails(uint _versionNo,bytes4 _contractName,address _contractAddress) internal
     {
-        allContractVersions[_versionNo].push(contractDetails(_contractName,_contractAddresse));        
+        allContractVersions[_versionNo][_contractName] = _contractAddress;        
     }
 
 
@@ -196,46 +215,38 @@ contract Master is Ownable {
     function changeAddressInMaster(uint _version) internal 
     {
         changeAllAddress(_version);
-        governanceDataAddress = allContractVersions[_version][1].contractAddress;
-        memberRolesAddress = allContractVersions[_version][2].contractAddress;
-        proposalCategoryAddress = allContractVersions[_version][3].contractAddress;
-        simpleVotingAddress = allContractVersions[_version][4].contractAddress;
-        rankBasedVotingAddress = allContractVersions[_version][5].contractAddress;
-        featureWeightedAddress = allContractVersions[_version][6].contractAddress;
-        standardVotingTypeAddress = allContractVersions[_version][7].contractAddress;
-        governanceAddress = allContractVersions[_version][8].contractAddress;
-        poolAddress = allContractVersions[_version][9].contractAddress;
-        GBTCAddress = allContractVersions[_version][10].contractAddress;
-        GBTSAddress = allContractVersions[_version][11].contractAddress;
+        governanceDataAddress = allContractVersions[_version]['GD'];
+        memberRolesAddress = allContractVersions[_version]['MR'];
+        proposalCategoryAddress = allContractVersions[_version]['PC'];
+        simpleVotingAddress = allContractVersions[_version]['SV'];
+        rankBasedVotingAddress = allContractVersions[_version]['RB'];
+        featureWeightedAddress = allContractVersions[_version]['FW'];
+        standardVotingTypeAddress = allContractVersions[_version]['SVT'];
+        governanceAddress = allContractVersions[_version]['GOV'];
+        poolAddress = allContractVersions[_version]['PL'];
+        GBTCAddress = allContractVersions[_version]['GC'];
+        GBTSAddress = allContractVersions[_version]['GS'];
     }
 
     /// @dev Sets the older versions of contract addresses as inactive and the latest one as active.
-    /// @param version Version of the new contracts
-    function changeAllAddress(uint version) internal
+    /// @param _version Version of the new contracts
+    function changeAllAddress(uint _version) internal
     {
-        addRemoveAddress(version,1);
-        addRemoveAddress(version,2);
-        addRemoveAddress(version,3);
-        addRemoveAddress(version,4);
-        addRemoveAddress(version,5);
-        addRemoveAddress(version,6);
-        addRemoveAddress(version,7);
-        addRemoveAddress(version,8);
-        addRemoveAddress(version,9);
-        addRemoveAddress(version,10);
-        addRemoveAddress(version,11);
+         for(uint i=0; i < allContractNames.length; i++){
+           addRemoveAddress(_version,allContractNames[i]);
+        }
     }
 
     /// @dev Deactivates address of a contract from last version
     /// @param _version Version of the new contracts
-    /// @param _index Index of the contracts
-    function addRemoveAddress(uint _version,uint _index) internal
+    /// @param _contractName Contract name
+    function addRemoveAddress(uint _version,bytes4 _contractName) internal
     {
         uint version_old=0;
         if(_version>0)
             version_old=_version-1;
-        contracts_active[allContractVersions[version_old][_index].contractAddress]=0;
-        contracts_active[allContractVersions[_version][_index].contractAddress]=1;
+        contracts_active[allContractVersions[version_old][_contractName]]=0;
+        contracts_active[allContractVersions[_version][_contractName]]=1;
     }
 
     /// @dev Links all contracts to master by passing address of master contract to the functions of other contracts.
@@ -251,8 +262,8 @@ contract Master is Ownable {
         SVT=StandardVotingType(standardVotingTypeAddress);
         SVT.changeMasterAddress(_masterAddress);
 
-        G1=Governance(governanceAddress);
-        G1.changeMasterAddress(_masterAddress);
+        GOV=Governance(governanceAddress);
+        GOV.changeMasterAddress(_masterAddress);
 
         P1=Pool(poolAddress);
         P1.changeMasterAddress(_masterAddress);
@@ -268,34 +279,92 @@ contract Master is Ownable {
     }
 
    /// @dev Links contracts to one another
+   /// @param _contractName Name of the contract which changed
    function changeOtherAddress() internal 
    {  
+            
+            for(uint i=0; i<contract_dependency['GD'].length; i++){
+                if( allContractVersions[versionLength-1][contract_dependency['GD'][i]] !=  allContractVersions[versionLength][contract_dependency['GD'][i]]){
+                    GD.changeAddress(contract_dependency['GD'][i], allContractVersions[versionLength][contract_dependency['GD'][i]]);
+                }
+            }
+            for(uint i=0; i<contract_dependency['MR'].length; i++){
+                if( allContractVersions[versionLength-1][contract_dependency['MR'][i]] !=  allContractVersions[versionLength][contract_dependency['MR'][i]]){
+                    MR.changeAddress(contract_dependency['MR'][i], allContractVersions[versionLength][contract_dependency['MR'][i]]);
+                }
+            }
+            for(uint i=0; i<contract_dependency['PC'].length; i++){
+                if( allContractVersions[versionLength-1][contract_dependency['PC'][i]] !=  allContractVersions[versionLength][contract_dependency['PC'][i]]){
+                    PC.changeAddress(contract_dependency['PC'][i], allContractVersions[versionLength][contract_dependency['PC'][i]]);
+                }
+            }
+            for(uint i=0; i<contract_dependency['SV'].length; i++){
+                if( allContractVersions[versionLength-1][contract_dependency['SV'][i]] !=  allContractVersions[versionLength][contract_dependency['SV'][i]]){
+                    SV.changeAddress(contract_dependency['SV'][i], allContractVersions[versionLength][contract_dependency['SV'][i]]);
+                }
+            }
+            for(uint i=0; i<contract_dependency['RB'].length; i++){
+                if( allContractVersions[versionLength-1][contract_dependency['RB'][i]] !=  allContractVersions[versionLength][contract_dependency['RB'][i]]){
+                    RB.changeAddress(contract_dependency['RB'][i], allContractVersions[versionLength][contract_dependency['RB'][i]]);
+                }
+            }
+            for(uint i=0; i<contract_dependency['FW'].length; i++){
+                if( allContractVersions[versionLength-1][contract_dependency['FW'][i]] !=  allContractVersions[versionLength][contract_dependency['FW'][i]]){
+                    FW.changeAddress(contract_dependency['FW'][i], allContractVersions[versionLength][contract_dependency['FW'][i]]);
+                }
+            }
+            for(uint i=0; i<contract_dependency['SVT'].length; i++){
+                if( allContractVersions[versionLength-1][contract_dependency['SVT'][i]] !=  allContractVersions[versionLength][contract_dependency['SVT'][i]]){
+                    SVT.changeAddress(contract_dependency['SVT'][i], allContractVersions[versionLength][contract_dependency['SVT'][i]]);
+                }
+            }
+            for(uint i=0; i<contract_dependency['GOV'].length; i++){
+                if( allContractVersions[versionLength-1][contract_dependency['GOV'][i]] !=  allContractVersions[versionLength][contract_dependency['GOV'][i]]){
+                    GOV.changeAddress(contract_dependency['GOV'][i], allContractVersions[versionLength][contract_dependency['GOV'][i]]);
+                }
+            }
+            for(uint i=0; i<contract_dependency['PL'].length; i++){
+                if( allContractVersions[versionLength-1][contract_dependency['PL'][i]] !=  allContractVersions[versionLength][contract_dependency['PL'][i]]){
+                    PL.changeAddress(contract_dependency['PL'][i], allContractVersions[versionLength][contract_dependency['PL'][i]]);
+                }
+            }
+            // for(uint i=0; i<contract_dependency['GC'].length; i++){
+            //     if( allContractVersions[versionLength-1][contract_dependency[_contractName][i]] !=  allContractVersions[versionLength][contract_dependency[_contractName][i]]){
+            //         GC.changeAddress(contract_dependency[_contractName][i], allContractVersions[versionLength][contract_dependency[_contractName][i]]);
+            //     }
+            // }
+            // for(uint i=0; i<contract_dependency['GS'].length; i++){
+            //     if( allContractVersions[versionLength-1][contract_dependency[_contractName][i]] !=  allContractVersions[versionLength][contract_dependency[_contractName][i]]){
+            //         GS.changeAddress(contract_dependency[_contractName][i], allContractVersions[versionLength][contract_dependency[_contractName][i]]);
+            //     }
+            // }
+
         changeGBTAddress(GBTSAddress);
         changeGBTControllerAddress(GBTCAddress);
         
-        GD=governanceData(governanceDataAddress);
-        GD.editVotingType(0,simpleVotingAddress);
-        GD.editVotingType(1,rankBasedVotingAddress);
-        GD.editVotingType(2,featureWeightedAddress);
+        // GD=governanceData(governanceDataAddress);
+        // GD.editVotingType(0,simpleVotingAddress);
+        // GD.editVotingType(1,rankBasedVotingAddress);
+        // GD.editVotingType(2,featureWeightedAddress);
 
-        SV=simpleVoting(simpleVotingAddress);
-        SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
+        // SV=simpleVoting(simpleVotingAddress);
+        // SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
 
-        SVT=StandardVotingType(standardVotingTypeAddress);
-        SVT.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress,poolAddress);
-        SVT.changeOtherContractAddress(simpleVotingAddress,rankBasedVotingAddress,featureWeightedAddress);
+        // SVT=StandardVotingType(standardVotingTypeAddress);
+        // SVT.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress,poolAddress);
+        // SVT.changeOtherContractAddress(simpleVotingAddress,rankBasedVotingAddress,featureWeightedAddress);
 
-        G1=Governance(governanceAddress);
-        G1.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress,poolAddress);
+        // GOV=Governance(governanceAddress);
+        // GOV.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress,poolAddress);
         
-        PC=ProposalCategory(proposalCategoryAddress);
-        PC.changeAllContractsAddress(memberRolesAddress);
+        // PC=ProposalCategory(proposalCategoryAddress);
+        // PC.changeAllContractsAddress(memberRolesAddress);
    
-        MR=memberRoles(memberRolesAddress);
-        MR.changeAllContractAddress(governanceDataAddress);
+        // MR=memberRoles(memberRolesAddress);
+        // MR.changeAllContractAddress(governanceDataAddress);
    }
 
-    /// @dev Changes GBT token address in GD, GBT controller, and pool contracts
+    /// @dev Changes GBT token address in GD, SV, SVT and governance contracts
     /// @param _tokenAddress Address of the GBT token
     function changeGBTAddress(address _tokenAddress) 
     {
@@ -304,20 +373,20 @@ contract Master is Ownable {
         if((version == 0 && msg.sender== owner) || msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(DappName,msg.sender) == 1)
         {
             GD=governanceData(governanceDataAddress);
-            GD.changeGBTtokenAddress(_tokenAddress);
+            GD.changeGBTSAddress(_tokenAddress);
             
             SV=simpleVoting(simpleVotingAddress);
             SV.changeGBTSAddress(_tokenAddress);
             
-            G1=Governance(governanceAddress);
-            G1.changeGBTSAddress(_tokenAddress);
+            GOV=Governance(governanceAddress);
+            GOV.changeGBTSAddress(_tokenAddress);
             
             SVT=StandardVotingType(standardVotingTypeAddress);
             SVT.changeGBTSAddress(_tokenAddress);
         }
     }
 
-    /// @dev Changes GBT controller address
+    /// @dev Changes GBT controller address in GOV, SV and pool contracts
     /// @param _controllerAddress New GBT controller address
     function changeGBTControllerAddress(address _controllerAddress) 
     {
@@ -325,8 +394,8 @@ contract Master is Ownable {
         uint version = versionLength-1;
         if((version == 0 && msg.sender== owner) || msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(DappName,msg.sender) == 1)
         {
-            G1=Governance(governanceAddress);
-            G1.changeGBTControllerAddress(_controllerAddress);
+            GOV=Governance(governanceAddress);
+            GOV.changeGBTControllerAddress(_controllerAddress);
 
             SV=simpleVoting(simpleVotingAddress);
             SV.changeGBTControllerAddress(_controllerAddress);
@@ -345,13 +414,12 @@ contract Master is Ownable {
     
         addInContractChangeDate(now,version);
         changeAddressInMaster(version);
-        changeMasterAddress(allContractVersions[version][0].contractAddress);
-            callConstructorGDMRPC(version);
-
+        changeMasterAddress(allContractVersions[version]['MAS']);
+        callConstructorGDMRPC(version);
         changeOtherAddress();
     }
 
-    /// @dev Calls contructor governance data, member roles, proposal category contracts
+    /// @dev Calls contructor of governance data, member roles, proposal category contracts
     /// @param version Version of the new contracts
     function callConstructorGDMRPC(uint version) internal 
     {
@@ -391,7 +459,7 @@ contract Master is Ownable {
     function getCurrentVersion() constant returns(uint versionNo, address masterAddress)
     {
        versionNo = versionLength - 1;
-       masterAddress = allContractVersions[versionNo][0].contractAddress;
+       masterAddress = allContractVersions[versionNo]['MAS'];
     }
 
     /// @dev Gets latest version name and address
@@ -399,19 +467,21 @@ contract Master is Ownable {
     /// @return versionNo Version number
     /// @return contractsName Latest version's contract names
     /// @return contractsAddress Latest version's contract addresses
-    function getLatestVersionData(uint _versionNo)constant returns(uint versionNo,bytes32[] contractsName, address[] contractsAddress)
+    function getLatestVersionData(uint _versionNo)constant returns(uint versionNo,bytes4[] contractsName, address[] contractsAddress)
     {
        versionNo = _versionNo;
-       contractsName=new bytes32[](allContractVersions[versionNo].length);
-       contractsAddress=new address[](allContractVersions[versionNo].length);
+       contractsName=new bytes4[](allContractNames.length);
+       contractsAddress=new address[](allContractNames.length);
    
-       for(uint i=0; i < allContractVersions[versionNo].length; i++)
+       for(uint i=0; i < allContractNames.length; i++)
        {
-           contractsName[i]=allContractVersions[versionNo][i].name;
-           contractsAddress[i] = allContractVersions[versionNo][i].contractAddress;
+           contractsName[i]=allContractNames[i];
+           contractsAddress[i] = allContractVersions[versionNo][allContractNames[i]];
        }
     }
 
+    /// @dev Changes GovBlocks Master address
+    /// @param _GBMnewAddress New GovBlocks master address
     function changeGBMAddress(address _GBMnewAddress)
     {
         require(msg.sender == GBMAddress);

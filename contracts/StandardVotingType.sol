@@ -21,25 +21,18 @@ pragma solidity ^0.4.8;
 import "./simpleVoting.sol";
 import "./RankBasedVoting.sol";
 import "./FeatureWeighted.sol";
+import "./ProposalCategory";
 import "./governanceData.sol";
 import "./VotingType.sol";
 import "./Pool.sol";
-// import "./Master.sol";
+import "./Master.sol";
 import "./Governance.sol";
+import "./memberRoles";
 import "./GBTStandardToken.sol";
 
 
 contract StandardVotingType
 {
-    address SVAddress;
-    address RBAddress;
-    address FWAddress;
-    address GDAddress;
-    address MRAddress;
-    address PCAddress;
-    address VTAddress;
-    address G1Address;
-    address P1Address;
     address GBTSAddress;
     address public masterAddress;
     GBTStandardToken GBTS;
@@ -49,15 +42,13 @@ contract StandardVotingType
     memberRoles MR;
     ProposalCategory PC;
     governanceData  GD;
-    BasicToken BT;
-    StandardVotingType SVT;
+    // BasicToken BT;
     simpleVoting SV;
     RankBasedVoting RB;
     FeatureWeighted FW;
     VotingType VT;
 
     modifier onlyInternal {
-        MS=Master(masterAddress);
         require(MS.isInternal(msg.sender) == 1);
         _; 
     }
@@ -70,10 +61,10 @@ contract StandardVotingType
             masterAddress = _masterContractAddress;
         else
         {
-            MS=Master(masterAddress);
             require(MS.isInternal(msg.sender) == 1);
                 masterAddress = _masterContractAddress;
         }
+        MS=Master(masterAddress);
     }
 
     modifier onlyMaster
@@ -86,12 +77,12 @@ contract StandardVotingType
     /// @param _SVaddress New simple voting contract address
     /// @param _RBaddress New rank based contract address
     /// @param _FWaddress New feature weighted contracts address
-    function changeOtherContractAddress(address _SVaddress,address _RBaddress,address _FWaddress) onlyInternal 
-    {
-        SVAddress = _SVaddress;
-        RBAddress = _RBaddress;
-        FWAddress = _FWaddress;
-    }
+    // function changeOtherContractAddress(bytes4 _contractName) onlyInternal 
+    // {
+    //     SVAddress = _SVaddress;
+    //     RBAddress = _RBaddress;
+    //     FWAddress = _FWaddress;
+    // }
 
     /// @dev Changes all contracts' addresses
     /// @param _GDcontractAddress  New governance data contract address
@@ -99,13 +90,36 @@ contract StandardVotingType
     /// @param _PCcontractAddress New proposal category contract address
     /// @param _governanceContractAddress New governance contract address
     /// @param _poolContractAddress New pool contract address
-    function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _governanceContractAddress,address _poolContractAddress) onlyInternal 
-    {
-        GDAddress = _GDcontractAddress;
-        MRAddress = _MRcontractAddress;
-        PCAddress = _PCcontractAddress;
-        G1Address = _governanceContractAddress;
-        P1Address = _poolContractAddress;
+    // function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _governanceContractAddress,address _poolContractAddress) onlyInternal 
+    // {
+    //     GDAddress = _GDcontractAddress;
+    //     MRAddress = _MRcontractAddress;
+    //     PCAddress = _PCcontractAddress;
+    //     G1Address = _governanceContractAddress;
+    //     P1Address = _poolContractAddress;
+    // }
+
+    /// @dev Changes Global objects of the contracts || Uses latest version
+    /// @param contractName Contract name 
+    /// @param contractAddress Contract addresses
+    function changeAddress(bytes4 contractName, address contractAddress){
+        if(contractName == 'GD'){
+            GD = governanceData(contractAddress);
+        } else if(contractName == 'MR'){
+            MR = memberRoles(contractAddress);
+        } else if(contractName == 'PC'){
+            PC = ProposalCategory(contractAddress);
+        } else if(contractName == 'SV'){
+            SV = simpleVoting(contractAddress);
+        } else if(contractName == 'RB'){
+            RB = RankBasedVoting(contractAddress);
+        } else if(contractName == 'FW'){
+            FW = FeatureWeighted(contractAddress);
+        } else if(contractName == 'GOV'){
+            G1 = Governance(contractAddress);
+        } else if(contractName == 'PL'){
+            P1 = Pool(contractAddress);
+        }
     }
 
     /// @dev Changes GBT standard token address
@@ -139,7 +153,6 @@ contract StandardVotingType
     /// @return finalVoteValue Final vote value
     function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)
     {
-        GD=governanceData(GDAddress);
         GBTS=GBTStandardToken(GBTSAddress);
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(_memberAddress),100),100)),GBTS.totalSupply());
         uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
@@ -152,7 +165,6 @@ contract StandardVotingType
     /// @return check Check flag
     function checkForOption(uint _proposalId,address _memberAddress) internal constant returns(uint check)
     {
-        GD=governanceData(GDAddress);
         for(uint i=0; i<GD.getProposalAnsLength(_memberAddress); i++)
         {
             if(GD.getProposalAnsId(_memberAddress,i) == _proposalId)
@@ -171,10 +183,7 @@ contract StandardVotingType
     // function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionDescHash) onlyInternal
     function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) onlyInternal
     {
-        GD=governanceData(GDAddress);
-        MR=memberRoles(MRAddress);
         GBTS=GBTStandardToken(GBTSAddress);
-        PC=ProposalCategory(PCAddress);
         checkForOption(_proposalId,_memberAddress);
 
         uint currentVotingId;
@@ -201,7 +210,6 @@ contract StandardVotingType
     /// @param _dateAdd Date proposal was added
     function addVerdictOptionSVT1(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) internal
     {
-        GD=governanceData(GDAddress);
         setOptionDetails(_proposalId,_memberAddress,_GBTPayableTokenAmount,setOptionValue_givenByMemberSVT(_memberAddress,_proposalId,_GBTPayableTokenAmount),_optionHash,_dateAdd);
     }
 
@@ -212,10 +220,6 @@ contract StandardVotingType
     /// @param _proposalId Proposal id
     function closeProposalVoteSVT(uint _proposalId) onlyInternal
     {   
-        GD=governanceData(GDAddress);
-        MR=memberRoles(MRAddress);
-        G1=Governance(G1Address);
-        P1=Pool(P1Address);
         VT=VotingType(GD.getProposalVotingType(_proposalId));
 
 
@@ -291,8 +295,8 @@ contract StandardVotingType
     /// @param _optionHash Option hash
     /// @param _dateAdd Date proposal was added
     function setOptionDetails(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue,string _optionHash,uint _dateAdd) internal
-    {
-        GD=governanceData(GDAddress); uint currentDate;
+    { 
+        uint currentDate;
         if(_dateAdd == 0)
             currentDate = now;
         else
