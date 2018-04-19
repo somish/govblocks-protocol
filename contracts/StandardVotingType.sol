@@ -178,41 +178,42 @@ contract StandardVotingType
     function closeProposalVoteSVT(uint _proposalId) onlyInternal
     {   
         VT=VotingType(GD.getProposalVotingType(_proposalId)); 
-        uint8 _mrSequence;uint _majorityVote;uint24 _closingTime; uint category;uint currentVotingId;
-        (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId); 
-        uint8 totaloptions = GD.getTotalVerdictOptions(_proposalId);
+        uint8 _mrSequence;uint _majorityVote;uint24 _closingTime; uint category;uint currentVotingId; uint totaloptions; uint totalVoteValue=0;
+        (,category,currentVotingId,,,totaloptions) = GD.getProposalDetailsById2(_proposalId); 
         (_mrSequenceId,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId)
         require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId,_closingTime,_majorityVote)==1); //1
         
-
-        
-        
+        uint[] memory finalVoteValue = new uint[](totaloption); 
+        for(uint8 i=0; i<GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequence); i++)
+        {
+            uint voteId = GD.getVoteId_againstProposalRole(_proposalId,_mrSequence,i);
+            uint solutionChosen = GD.getSolutionByVoteIdAndIndex(voteId,0);
+            uint voteValue = GD.getVoteValue(voteId);
+            totalVoteValue = totalVoteValue + voteValue;
+            finalVoteValue[solutionChosen] = finalVoteValue[solutionChosen] + voteValue;
+        }
 
         max=0;  
-        for(uint8 i = 0; i < verdictOptions; i++)
+        for(i = 0; i < finalVoteValue.length; i++)
         {
-            totalVotes = SafeMath.add(totalVotes,GD.getVoteValuebyOption_againstProposal(_proposalId,_roleId,i)); 
-            if(GD.getVoteValuebyOption_againstProposal(_proposalId,_roleId,max) < GD.getVoteValuebyOption_againstProposal(_proposalId,_roleId,i))
+            if(finalVoteValue[max] < finalVoteValue[i])
             {  
                 max = i; 
             }
         }
-        
-        verdictVal = GD.getVoteValuebyOption_againstProposal(_proposalId,_roleId,max);
-        
-        if(totalVotes != 0)
+
+        if(totalVoteValue != 0)
         {
-            if(SafeMath.div(SafeMath.mul(verdictVal,100),totalVotes)>=_majorityVote)
+            if(SafeMath.div(SafeMath.mul(finalVoteValue[max],100),totalVoteValue)>=_majorityVote)
                 {   
                     currentVotingId = currentVotingId+1;
                     if(max > 0 )
                     {
                         if(currentVotingId < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
-                        // if(currentVotingId < _roleSequenceLength)
                         {
                             GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
                             P1.closeProposalOraclise(_proposalId,_closingTime); 
-                            GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(GD.getProposalCategory(_proposalId),currentVotingId+1));
+                            GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId+1));
                         } 
                         else
                         {
