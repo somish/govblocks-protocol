@@ -141,49 +141,47 @@ contract StandardVotingType
         finalVoteValue = SafeMath.mul(GD.getMemberReputation(_memberAddress),value);
     }  
     
-    /// @dev Checks for options
+    /// @dev Checks if msg.sender has already added the solution
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
     /// @return check Check flag
-    function checkForOption(uint _proposalId,address _memberAddress) internal constant returns(uint check)
-    {
-        for(uint i=0; i<GD.getTotalVerdictOptions(_proposalId); i++)
-        {
-            if(GD.getOptionAddressByProposalId(_memberAddress,i) == _memberAddress)
-                check = 1;
-            else 
-                check = 0;
-        }
-    }
+    // function checkForSolution(uint _proposalId,address _memberAddress) internal constant returns(uint check)
+    // {
+    //     for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
+    //     {
+    //         if(GD.getSolutionAddedByProposalId(_memberAddress,i) == _memberAddress)
+    //             check = 1;
+    //         else 
+    //             check = 0;
+    //     }
+    // }
 
-    /// @dev Adds verdict option in standard voting type
+    /// @dev Adds solution against proposal.
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
     /// @param _solutionHash Solution hash
     /// @param _dateAdd Date proposal was added
-    function addSolutionSVT(uint _proposalId,address _memberAddress,string _solutionHash,uint _dateAdd) onlyInternal
-    {
-        GBTS=GBTStandardToken(GBTSAddress);
-        require(checkForOption(_proposalId,_memberAddress) == 0);
+    // function addSolutionSVT(uint _proposalId,address _memberAddress,string _solutionHash,uint _dateAdd) onlyInternal
+    // {
+    //     GBTS=GBTStandardToken(GBTSAddress);
+    //     require(checkForSolution(_proposalId,_memberAddress) == 0);
 
-        uint currentVotingId;
-        (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
-        require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GBTS.balanceOf(_memberAddress) != 0 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
-        GD.setTotalOptions(_proposalId); 
-        GD.setOptionAddress(_proposalId,_memberAddress);    
-    }
+    //     uint currentVotingId;
+    //     (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+    //     require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GBTS.balanceOf(_memberAddress) != 0 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
+    // }
 
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
     /// @param _proposalId Proposal id
     function closeProposalVoteSVT(uint _proposalId) onlyInternal
     {   
         VT=VotingType(GD.getProposalVotingType(_proposalId)); 
-        uint8 _mrSequence;uint _majorityVote;uint24 _closingTime; uint category;uint currentVotingId; uint totaloptions; uint totalVoteValue=0;
-        (,category,currentVotingId,,,totaloptions) = GD.getProposalDetailsById2(_proposalId); 
+        uint8 _mrSequence;uint _majorityVote;uint24 _closingTime; uint category;uint currentVotingId; uint totalSolutions; uint totalVoteValue=0;
+        (,category,currentVotingId,,,totalSolutions) = GD.getProposalDetailsById2(_proposalId); 
         (_mrSequenceId,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId)
         require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId,_closingTime,_majorityVote)==1); //1
         
-        uint[] memory finalVoteValue = new uint[](totaloption); 
+        uint[] memory finalVoteValue = new uint[](totalSolutions); 
         for(uint8 i=0; i<GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequence); i++)
         {
             uint voteId = GD.getVoteId_againstProposalRole(_proposalId,_mrSequence,i);
