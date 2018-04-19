@@ -118,7 +118,7 @@ contract Governance {
       receiveStake(_proposalId,SafeMath.sub(_proposalSolutionStake,proposalStake),GD.getVotingTypeAddress(_votingTypeId),proposalDateAdd,_solutionHash);
   }
 
-  function submitProposalWithSolution(uint _proposalId,uint _proposalSolutionStake,string _optionHash) public
+  function submitProposalWithSolution(uint _proposalId,uint _proposalSolutionStake,string _solutionHash) public
   {
       GD=governanceData(GDAddress); 
       require(msg.sender == GD.getProposalOwner(_proposalId));
@@ -136,11 +136,11 @@ contract Governance {
         PC=ProposalCategory(PCAddress);
 
         uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
-        uint depositAmount = ((_solutionStake*GD.depositPercOption())/100);
+        uint depositAmount = ((_solutionStake*GD.depositPercSolution())/100);
         uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
         GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'S');
         GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime)); 
-        VT.addVerdictOption(_proposalId,msg.sender,_solutionHash,_proposalDateAdd,_solutionStake);
+        VT.addSolution(_proposalId,msg.sender,_solutionHash,_proposalDateAdd,_solutionStake);
         GD.setSolutionAdded(_proposalId,msg.sender);
   }
 
@@ -215,22 +215,22 @@ contract Governance {
   {
     GD=governanceData(GDAddress);
     address _proposalOwner =  GD.getProposalOwner(_proposalId);
-    address _finalOptionOwner = GD.getOptionAddressByProposalId(_proposalId,_finalVerdict);
-    uint addProposalOwnerPoints; uint addOptionOwnerPoints; uint subProposalOwnerPoints; uint subOptionOwnerPoints;
-    (addProposalOwnerPoints,addOptionOwnerPoints,,subProposalOwnerPoints,subOptionOwnerPoints,)= GD.getMemberReputationPoints();
+    address _finalSolutionOwner = GD.getSolutionAddedByProposalId(_proposalId,_finalVerdict);
+    uint addProposalOwnerPoints; uint addSolutionOwnerPoints; uint subProposalOwnerPoints; uint subSolutionOwnerPoints;
+    (addProposalOwnerPoints,addSolutionOwnerPoints,,subProposalOwnerPoints,subSolutionOwnerPoints,)= GD.getMemberReputationPoints();
 
     if(_finalVerdict>0)
     {
         GD.setMemberReputation("Reputation credit for proposal owner - Accepted",_proposalId,_proposalOwner,SafeMath.add(GD.getMemberReputation(_proposalOwner),addProposalOwnerPoints),addProposalOwnerPoints,"C");
-        GD.setMemberReputation("Reputation credit for option owner - Final option selected by majority voting",_proposalId,_finalOptionOwner,SafeMath.add(GD.getMemberReputation(_finalOptionOwner),addOptionOwnerPoints),addOptionOwnerPoints,"C"); 
+        GD.setMemberReputation("Reputation credit for solution owner - Final Solution selected by majority voting",_proposalId,_finalSolutionOwner,SafeMath.add(GD.getMemberReputation(_finalSolutionOwner),addSolutionOwnerPoints),addSolutionOwnerPoints,"C"); 
     }
     else
     {
         GD.setMemberReputation("Reputation debit for proposal owner - Rejected",_proposalId,_proposalOwner,SafeMath.sub(GD.getMemberReputation(_proposalOwner),subProposalOwnerPoints),subProposalOwnerPoints,"D");
-        for(uint i=0; i<GD.getTotalVerdictOptions(_proposalId); i++)
+        for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
         {
-            address memberAddress = GD.getOptionAddressByProposalId(_proposalId,i);
-            GD.setMemberReputation("Reputation debit for option owner - Rejected by majority voting",_proposalId,memberAddress,SafeMath.sub(GD.getMemberReputation(memberAddress),subOptionOwnerPoints),subOptionOwnerPoints,"D");
+            address memberAddress = GD.getSolutionAddedByProposalId(_proposalId,i);
+            GD.setMemberReputation("Reputation debit for solution owner - Rejected by majority voting",_proposalId,memberAddress,SafeMath.sub(GD.getMemberReputation(memberAddress),subSolutionOwnerPoints),subSolutionOwnerPoints,"D");
         }
     }   
   }
@@ -395,9 +395,9 @@ contract Governance {
               if(proposalStatus< 2)
                   lastIndex = i;
 
-              if(finalVredict> 0 && finalVredict == optionId && GD.getReturnedTokensFlag(_memberAddress,proposalId,'S') == 0)
+              if(finalVredict> 0 && finalVredict == solutionId && GD.getReturnedTokensFlag(_memberAddress,proposalId,'S') == 0)
               {
-                  calcReward = (PC.getRewardPercOption(category)*totalReward)/100;
+                  calcReward = (PC.getRewardPercSolution(category)*totalReward)/100;
                   finalRewardToDistribute = finalRewardToDistribute + calcReward + GD.getDepositedTokens(_memberAddress,_proposalId,'S');
                   GD.callRewardEvent(_memberAddress,_proposalId,"GBT Reward earned for being Solution owner - Final Solution by majority voting",calcReward);
                   GD.setReturnedTokensFlag(_memberAddress,proposalId,'S',1);
