@@ -133,11 +133,13 @@ contract Governance {
         VT=VotingType(_VTAddress);
         GD=governanceData(GDAddress);
         GBTS=GBTStandardToken(GBTSAddress);
+        PC=ProposalCategory(PCAddress);
 
+        uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
         uint depositAmount = ((_solutionStake*GD.depositPercOption())/100);
         uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
         GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'S');
-        GBTS.lockToken(_gbUserName,_proposalId,SafeMath.sub(_solutionStake,finalAmount)); 
+        GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime)); 
         VT.addVerdictOption(_proposalId,msg.sender,_solutionHash,_proposalDateAdd,_solutionStake);
         GD.setSolutionAdded(_proposalId,msg.sender);
   }
