@@ -150,10 +150,13 @@ contract simpleVoting is VotingType
     /// @param _dateAdd Date when solution was added
     function receiveSolutionStakeSV(uint _proposalId,uint _solutionStake,string _solutionHash,uint _dateAdd) internal
     {
+        GD=governanceData(GDAddress);
+        PC=ProposalCategory(PCAddress);
+        uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
         uint depositAmount = ((_solutionStake*GD.depositPercOption())/100);
         uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
         GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'S');
-        GBTS.lockMemberToken(_gbUserName,_proposalId,SafeMath.sub(_solutionStake,finalAmount));  
+        GBTS.lockMemberToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime);  
         GD.callSolutionEvent(_proposalId,msg.sender,_solutionHash,_dateAdd,_solutionStake);    
     }
 
