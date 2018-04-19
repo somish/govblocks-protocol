@@ -170,7 +170,7 @@ contract simpleVoting is VotingType
         // MR=memberRoles(MRAddress);
         // GBTS=GBTStandardToken(GBTSAddress);
         uint8 _mrSequence;uint _majorityVote;uint24 _closingTime; uint currentVotingId;uint intermediateVerdict;uint category;
-        (,category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
+        (,category,currentVotingId,intermediateVerdict,,,) = GD.getProposalDetailsById2(_proposalId);
         (_mrSequence,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId)
         uint _proposalDateUpd = GD.getProposalDateUpd(_proposalId);
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
@@ -183,8 +183,7 @@ contract simpleVoting is VotingType
         else
             require(_optionChosen[0]==intermediateVerdict || _optionChosen[0]==0);
             
-        castVote(_proposalId,_optionChosen,msg.sender,_voteStake,roleId,_closingTime,_majorityVote);
-        
+        castVote(_proposalId,_optionChosen,msg.sender,_voteStake,roleId,_closingTime,_majorityVote);    
     }
 
     /// @dev Castes vote
@@ -247,22 +246,23 @@ contract simpleVoting is VotingType
         uint voteValueFavour; 
         // GOV=Governance(G1Address); 
 
-        if(GD.getProposalFinalOption(_proposalId) < 0)
+        if(GD.getProposalFinalVerdict(_proposalId) < 0)
             totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getProposalOwner(_proposalId),_proposalId,'P'));
 
-        for(i=0; i<GD.getTotalVerdictOptions(_proposalId); i++)
+        for(i=0; i<GD.getTotalSolutions(_proposalId); i++)
         {
             if(i!= finalVerdict)         
-                totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getOptionAddressByProposalId(_proposalId,i),_proposalId,'S'));
+                totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getSolutionAddedByProposalId(_proposalId,i),_proposalId,'S'));
         }
 
         uint mrLength = MR.getAllMemberLength();
         for(uint i=0; i<mrLength; i++) 
         {
-            uint mrVoteLength = GD.getVoteLength(_proposalId,i);
+            uint mrVoteLength = GD.getAllVoteIdsLength_byProposalRole(_proposalId,i);
             for(uint j =0; j<mrVoteLength; j++)
             {
-                if(GD.getOptionById(GD.getVoteIdAgainstRole(_proposalId,j,0),0) != finalVerdict)
+                uint voteId = GD.getVoteId_againstProposalRole(_proposalId,j,0);
+                if(GD.getSolutionByVoteIdAndIndex(voteId,0) != finalVerdict)
                 {
                     totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getVoterAddress(voteid),_proposalId,'V');
                     totalVoteValue = SafeMath.add(totalVoteValue,GD.getVoteValue(voteid));
@@ -271,7 +271,7 @@ contract simpleVoting is VotingType
         }
 
         totalReward = totalReward + GD.getProposalIncentive(_proposalId); 
-        GOV.setProposalDetails(_proposalId,totalReward,block.number,totalVoteValue);         
+        GOV.setProposalDetails(_proposalId,totalReward,totalVoteValue);         
     } 
 
     // function changeMemberVote(uint _proposalId,uint[] _optionChosen,address _memberAddress,uint _GBTPayableTokenAmount) internal

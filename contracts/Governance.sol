@@ -569,7 +569,6 @@ contract Governance {
         uint solutionProposalLength =  getAllSolutionIdsLength_byAddress(_memberAddress);
         proposalIds = new uint[](solutionProposalLength);
         solutionProposalIds = new uint[](solutionProposalLength);
-
         for(uint i=0; i<length; i++)
         {
             for(uint j=0; j<allProposalOptions[i].length; j++)
