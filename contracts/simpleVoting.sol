@@ -156,7 +156,7 @@ contract simpleVoting is VotingType
         uint depositAmount = ((_solutionStake*GD.depositPercOption())/100);
         uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
         GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'S');
-        GBTS.lockMemberToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime);  
+        GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime);  
         GD.callSolutionEvent(_proposalId,msg.sender,_solutionHash,_dateAdd,_solutionStake);    
     }
 
