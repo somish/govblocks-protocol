@@ -566,7 +566,7 @@ contract governanceData {
         allProposalOption[_proposalId].push(_memberAddress);
     }
 
-        /// @dev Gets option chosen by vote id
+    /// @dev Gets option chosen by vote id
     /// @param _voteId Vote id
     /// @return optionChosen Option chosen
     function getSolutionByVoteId(uint _voteId) constant returns(uint[] solutionChosen)
@@ -843,6 +843,7 @@ contract governanceData {
         return (allProposal.length);
     }  
 
+    /// @dev Get Latest updated version of proposal.
     function getProposalVersion(uint _proposalId,uint8 _versionNum)
     {
         return allProposalData[_proposalId].versionNumber;
@@ -874,6 +875,7 @@ contract governanceData {
         Proposal(_memberAddress,_proposalId,_dateAdd,_proposalDescHash);
     }
 
+    /// @dev Gets final solution index won after majority voting.
     function getProposalFinalVerdict(uint _proposalId) constant returns(uint finalOptionIndex)
     {
         finalOptionIndex = allProposalData[_proposalId].finalVerdict;
