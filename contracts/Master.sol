@@ -80,8 +80,7 @@ contract Master is Ownable {
     function Master(address _GovBlocksMasterAddress,bytes32 _gbUserName)
     {
         masterAddress=address(this);
-        contracts_active[masterAddress]=0;
-        contracts_active[address(this)]=1;
+        contracts_active[masterAddress]=1;
         versionLength =0;
         GBMAddress = _GovBlocksMasterAddress;
         DappName = _gbUserName;
@@ -126,7 +125,7 @@ contract Master is Ownable {
 
     /// @dev Checks for authorized GovBlocks owner
     /// @param _memberaddress Address to be checked
-    /// @return check Check flag value (1 = authorized GovBlocks owner)
+    /// @return check Check flag value (authorized GovBlocks owner = 1)
     function isAuthGB(address _memberaddress) constant returns(uint check)
     {
         GBM=GovBlocksMaster(GBMAddress);
@@ -455,11 +454,11 @@ contract Master is Ownable {
 
     /// @dev Gets current version amd its master address
     /// @return versionNo Current version number
-    /// @return masterAddress Master address
-    function getCurrentVersion() constant returns(uint versionNo, address masterAddress)
+    /// @return MSAddress Master address
+    function getCurrentVersion() constant returns(uint versionNo, address MSAddress)
     {
        versionNo = versionLength - 1;
-       masterAddress = allContractVersions[versionNo]['MS'];
+       MSAddress = allContractVersions[versionNo]['MS'];
     }
 
     /// @dev Gets latest version name and address

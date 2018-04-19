@@ -21,19 +21,19 @@ pragma solidity ^0.4.8;
 import "./simpleVoting.sol";
 import "./RankBasedVoting.sol";
 import "./FeatureWeighted.sol";
-import "./ProposalCategory";
+import "./ProposalCategory.sol";
 import "./governanceData.sol";
 import "./VotingType.sol";
 import "./Pool.sol";
 import "./Master.sol";
 import "./Governance.sol";
-import "./memberRoles";
+import "./memberRoles.sol";
 import "./GBTStandardToken.sol";
 
 
 contract StandardVotingType
 {
-    address GBTSAddress;
+    // address GBTSAddress;
     address public masterAddress;
     GBTStandardToken GBTS;
     Master MS;
@@ -42,6 +42,7 @@ contract StandardVotingType
     memberRoles MR;
     ProposalCategory PC;
     governanceData  GD;
+    // BasicToken BT;
     simpleVoting SV;
     RankBasedVoting RB;
     FeatureWeighted FW;
@@ -60,10 +61,10 @@ contract StandardVotingType
             masterAddress = _masterContractAddress;
         else
         {
+            MS=Master(masterAddress);
             require(MS.isInternal(msg.sender) == 1);
                 masterAddress = _masterContractAddress;
         }
-        MS=Master(masterAddress);
     }
 
     modifier onlyMaster
@@ -125,7 +126,24 @@ contract StandardVotingType
     /// @param _GBTSAddress GBT standard token address
     function changeGBTSAddress(address _GBTSAddress) onlyMaster
     {
-        GBTSAddress = _GBTSAddress;
+        GBTS = GBTStandardToken(_GBTSAddress);
+    }
+
+    
+    /// @dev Sets option value given by member in standard voting type
+    /// @param _memberAddress Member address
+    /// @param _proposalId Proposal id
+    /// @param _memberStake Member stake
+    /// @return finalOptionValue Final option value
+    function setOptionValue_givenByMemberSVT(address _memberAddress,uint _proposalId,uint _memberStake) internal returns (uint finalOptionValue)
+    {
+        // GD=governanceData(GDAddress);
+        // GBTS=GBTStandardToken(GBTSAddress);
+        // uint memberLevel = Math.max256(GD.getMemberReputation(_memberAddress),1);
+        // uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(_memberAddress),100),100)),GBTS.totalSupply());
+        // uint maxValue= Math.max256(tokensHeld,GD.membershipScalingFactor());
+
+        // finalOptionValue = SafeMath.mul(SafeMath.mul(GD.globalRiskFactor(),memberLevel),SafeMath.mul(_memberStake,maxValue));
     }
 
     /// @dev Sets vote value given by member
@@ -135,7 +153,7 @@ contract StandardVotingType
     /// @return finalVoteValue Final vote value
     function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)
     {
-        GBTS=GBTStandardToken(GBTSAddress);
+        // GBTS=GBTStandardToken(GBTSAddress);
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(_memberAddress),100),100)),GBTS.totalSupply());
         uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
         finalVoteValue = SafeMath.mul(GD.getMemberReputation(_memberAddress),value);
@@ -147,9 +165,9 @@ contract StandardVotingType
     /// @return check Check flag
     function checkForOption(uint _proposalId,address _memberAddress) internal constant returns(uint check)
     {
-        for(uint i=0; i<GD.getTotalVerdictOptions(_proposalId); i++)
+        for(uint i=0; i<GD.getProposalAnsLength(_memberAddress); i++)
         {
-            if(GD.getOptionAddressByProposalId(_memberAddress,i) == _memberAddress)
+            if(GD.getProposalAnsId(_memberAddress,i) == _proposalId)
                 check = 1;
             else 
                 check = 0;
@@ -159,31 +177,61 @@ contract StandardVotingType
     /// @dev Adds verdict option in standard voting type
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
-    /// @param _solutionHash Solution hash
+    /// @param _GBTPayableTokenAmount Amount payable in GBT token
+    /// @param _optionHash Option hash
     /// @param _dateAdd Date proposal was added
-    function addSolutionSVT(uint _proposalId,address _memberAddress,string _solutionHash,uint _dateAdd) onlyInternal
+    // function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionDescHash) onlyInternal
+    function addVerdictOptionSVT(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) onlyInternal
     {
-        GBTS=GBTStandardToken(GBTSAddress);
-        require(checkForOption(_proposalId,_memberAddress) == 0);
+        // GBTS=GBTStandardToken(GBTSAddress);
+        checkForOption(_proposalId,_memberAddress);
 
         uint currentVotingId;
         (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
-        require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GBTS.balanceOf(_memberAddress) != 0 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
-        GD.setTotalOptions(_proposalId); 
-        GD.setOptionAddress(_proposalId,_memberAddress);    
+
+        require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GBTS.balanceOf(_memberAddress) != 0);
+        require(GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
+        
+        GD.setOptionIdByAddress(_proposalId,_memberAddress);
+        
+        // uint8 paramInt; uint8 paramBytes32; uint8 paramAddress;
+        // (,,,,paramInt,paramBytes32,paramAddress,,) = PC.getCategoryDetails(GD.getProposalCategory(_proposalId));
+
+        // require(paramInt == _paramInt.length && paramBytes32 == _paramBytes32.length && paramAddress == _paramAddress.length);
+        // addVerdictOptionSVT2(_proposalId,GD.getProposalCategory(_proposalId),_paramInt,_paramBytes32,_paramAddress);
+            addVerdictOptionSVT1(_proposalId,_memberAddress,_GBTPayableTokenAmount,_optionHash,_dateAdd);
     }
 
-    /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
+    /// @dev Adds verdict option in standard voting type
+    /// @param _proposalId Proposal id
+    /// @param _memberAddress Member address
+    /// @param _GBTPayableTokenAmount Amount payable in GBT token
+    /// @param _optionHash Option hash
+    /// @param _dateAdd Date proposal was added
+    function addVerdictOptionSVT1(uint _proposalId,address _memberAddress,uint _GBTPayableTokenAmount,string _optionHash,uint _dateAdd) internal
+    {
+        setOptionDetails(_proposalId,_memberAddress,_GBTPayableTokenAmount,setOptionValue_givenByMemberSVT(_memberAddress,_proposalId,_GBTPayableTokenAmount),_optionHash,_dateAdd);
+    }
+
+    uint24 _closingTime;uint _majorityVote;
+    uint8 currentVotingId; uint8 max; uint totalVotes; uint verdictVal;
+
+    /// @dev Closes voting proposal in standard voting type
     /// @param _proposalId Proposal id
     function closeProposalVoteSVT(uint _proposalId) onlyInternal
     {   
-        VT=VotingType(GD.getProposalVotingType(_proposalId)); 
-        uint8 _mrSequence;uint _majorityVote;uint24 _closingTime; uint category;uint currentVotingId;
-        (,category,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId); 
-        uint8 totaloptions = GD.getTotalVerdictOptions(_proposalId);
-        (_mrSequenceId,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId)
-        require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId,_closingTime,_majorityVote)==1); //1
-        
+        VT=VotingType(GD.getProposalVotingType(_proposalId));
+
+
+        uint majorityVote;
+        (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+        uint8 verdictOptions = GD.getTotalVerdictOptions(_proposalId);
+        _closingTime = PC.getClosingTimeAtIndex(GD.getProposalCategory(_proposalId),currentVotingId);
+        _majorityVote= PC.getRoleMajorityVoteAtIndex(GD.getProposalCategory(_proposalId),currentVotingId);
+
+        require(GOV.checkProposalVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote)==1); //1
+        uint _roleId = PC.getRoleSequencAtIndex(GD.getProposalCategory(_proposalId),currentVotingId);
+    
         max=0;  
         for(uint8 i = 0; i < verdictOptions; i++)
         {
@@ -238,6 +286,29 @@ contract StandardVotingType
             GD.changeProposalStatus(_proposalId,5);
             GOV.changePendingProposalStart();
         }
+    }
+    /// @dev Sets the details of added verdict i.e. verdict stake, verdict value and address of the member whoever added the verdict.
+    /// @param _proposalId Proposal id
+    /// @param _memberAddress Member address
+    /// @param _stakeValue Stake value
+    /// @param _optionValue Option value
+    /// @param _optionHash Option hash
+    /// @param _dateAdd Date proposal was added
+    function setOptionDetails(uint _proposalId,address _memberAddress,uint _stakeValue,uint _optionValue,string _optionHash,uint _dateAdd) internal
+    { 
+        uint currentDate;
+        if(_dateAdd == 0)
+            currentDate = now;
+        else
+            currentDate = _dateAdd;
+
+        GD.setOptionAddress(_proposalId,_memberAddress);
+        GD.setOptionStake(_proposalId,_stakeValue);
+        GD.setOptionValue(_proposalId,_optionValue);
+        GD.setOptionHash(_proposalId,_optionHash);
+        GD.setOptionDateAdded(_proposalId,currentDate);
+        GD.setProposalAnsByAddress(_proposalId,_memberAddress); // Saving proposal id against memebr to which solution is provided
+        GD.setTotalOptions(_proposalId);
     }
 }
 
