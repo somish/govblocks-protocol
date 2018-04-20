@@ -21,19 +21,19 @@ pragma solidity ^0.4.8;
 import "./simpleVoting.sol";
 import "./RankBasedVoting.sol";
 import "./FeatureWeighted.sol";
-import "./ProposalCategory";
+import "./ProposalCategory.sol";
 import "./governanceData.sol";
 import "./VotingType.sol";
 import "./Pool.sol";
 import "./Master.sol";
 import "./Governance.sol";
-import "./memberRoles";
+import "./memberRoles.sol";
 import "./GBTStandardToken.sol";
 
 
 contract StandardVotingType
 {
-    address GBTSAddress;
+    // address GBTSAddress;
     address public masterAddress;
     GBTStandardToken GBTS;
     Master MS;
@@ -60,10 +60,10 @@ contract StandardVotingType
             masterAddress = _masterContractAddress;
         else
         {
+            MS=Master(masterAddress);
             require(MS.isInternal(msg.sender) == 1);
                 masterAddress = _masterContractAddress;
         }
-        MS=Master(masterAddress);
     }
 
     modifier onlyMaster
@@ -125,7 +125,7 @@ contract StandardVotingType
     /// @param _GBTSAddress GBT standard token address
     function changeGBTSAddress(address _GBTSAddress) onlyMaster
     {
-        GBTSAddress = _GBTSAddress;
+        GBTS = GBTStandardToken(_GBTSAddress);
     }
 
     /// @dev Sets vote value given by member
@@ -135,7 +135,7 @@ contract StandardVotingType
     /// @return finalVoteValue Final vote value
     function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)
     {
-        GBTS=GBTStandardToken(GBTSAddress);
+        // GBTS=GBTStandardToken(GBTSAddress);
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(_memberAddress),100),100)),GBTS.totalSupply());
         uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
         finalVoteValue = SafeMath.mul(GD.getMemberReputation(_memberAddress),value);
