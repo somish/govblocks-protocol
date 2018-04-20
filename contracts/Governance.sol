@@ -193,9 +193,8 @@ contract Governance {
   /// @dev Categorizes proposal to proceed further. _reward is the company's incentive to distribute to end members
   /// @param _proposalId Proposal id
   /// @param _categoryId Category id
-  /// @param _proposalComplexityLevel Proposal's complexity level
   /// @param _dappIncentive It is the company's incentive to distribute to end members
-  function categorizeProposal(uint _proposalId , uint8 _categoryId,uint8 _proposalComplexityLevel,uint _dappIncentive) public
+  function categorizeProposal(uint _proposalId , uint8 _categoryId,uint _dappIncentive) public
   {
     //   MR = memberRoles(MRAddress);
     //   GD = governanceData(GDAddress);
@@ -743,5 +742,27 @@ contract Governance {
             }
         }
     }
+
+    /// @dev Get Total tokens deposited by member till date against all proposal.
+    function getAllDepositTokens_byAddress(address _memberAddress)constant returns(uint,uint,uint)
+    {
+        uint length = GD.getProposalLength();
+        uint depositFor_creatingProposal; uint depositFor_proposingSolution; uint depositFor_castingVote;
+        for(uint8 i=0; i<length; i++)
+        {
+            depositFor_creatingProposal = depositFor_creatingProposal + getDepositedTokens(_memberAddress,i,"P");
+            depositFor_proposingSolution = depositFor_proposingSolution + getDepositedTokens(_memberAddress,i,"S");
+            depositFor_castingVote = depositFor_castingVote + getDepositedTokens(_memberAddress,i,"V");
+        }
+
+        return (depositFor_creatingProposal,depositFor_proposingSolution,depositFor_castingVote);
+    }
+
+    /// @dev Get total deposit tokens against member and proposal Id with type of (proposal/solution/vote); 
+    function getDepositTokens_byAddressProposal(address _memberAddress,uint _proposalId)constant returns(uint,uint depositFor_creatingProposal,uint depositFor_proposingSolution,uint depositFor_castingVote)
+    {
+        return (_proposalId,getDepositedTokens(_memberAddress,_proposalId,"P"),getDepositedTokens(_memberAddress,_proposalId,"S"),getDepositedTokens(_memberAddress,_proposalId,"V"));
+    }
+
 
 }
