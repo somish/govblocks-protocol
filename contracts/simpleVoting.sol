@@ -141,7 +141,7 @@ contract simpleVoting is VotingType
     /// @param _dateAdd Date proposal was added
     function addSolution1(uint _proposalId,address _memberAddress,string _solutionHash,uint _dateAdd) internal
     {
-        GBTS=GBTStandardToken(GBTSAddress);
+        // GBTS=GBTStandardToken(GBTSAddress);
         uint currentVotingId;uint check;
         (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
 
