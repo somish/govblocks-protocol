@@ -429,8 +429,23 @@ contract governanceData {
         return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned = _returnedIndex ;
     }
 
+    /// @dev user can calim the tokens rewarded them till now.
+    function claimReward()
+    {
+        GBTS=GBTStandardToken(GBTSAddress);
+        G1=Governance(G1Address);
+        uint rewardToClaim = G1.calculateMemberReward(msg.sender);
+        if(rewardToClaim != 0)
+        { 
+            GBTS.addInBalance(address(this),rewardToClaim);
+            GBTS.transfer_message(_memberAddress,_amount,"GBT Stake claimed - Returned");
+        }
+    }
+
+
 
 // VERSION 2.0 : VOTE DETAILS 
+
 
     /// @dev Sets vote id against member
     /// @param _memberAddress Member address
@@ -879,6 +894,12 @@ contract governanceData {
     function getProposalFinalVerdict(uint _proposalId) constant returns(uint finalSolutionIndex)
     {
         finalSolutionIndex = allProposalData[_proposalId].finalVerdict;
+    }
+
+    /// @dev Gets Intermidiate solution index;
+    function getProposalIntermediateVerdict(uint _proposalId) constant returns(uint)
+    {
+        return allProposalData[_proposalId].currentVerdict;
     }
 
 
