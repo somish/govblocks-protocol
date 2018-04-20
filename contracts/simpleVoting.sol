@@ -124,23 +124,14 @@ contract simpleVoting is VotingType
     /// @param _solutionStake Solution stake
     /// @param _solutionHash Solution hash
     /// @param _dateAdd Date when the solution was added
-    function addSolution(uint _proposalId,address _memberAddress,uint _solutionStake,string _solutionHash,uint _dateAdd) public
+    function addSolution(uint _proposalId,address _memberAddress,uint _solutionStake,string _solutionHash,uint _dateAdd,uint8 _v,bytes32 _r,bytes32 _s) public
     {
         // SVT=StandardVotingType(SVTAddress);
         MS=Master(masterAddress);
         require(MS.isInternal(msg.sender) == 1 || msg.sender == _memberAddress);
         if(_solutionStake!=0)
-            receiveSolutionStakeSV(_proposalId,_solutionStake,_solutionHash,_dateAdd)
+            receiveSolutionStakeSV(_proposalId,_solutionStake,_solutionHash,_dateAdd,_v,_r,_s);
         addSolution1(_proposalId,_memberAddress,_solutionHash,_dateAdd);
-    }
-     
-    /// @dev Adds solution
-    /// @param _proposalId Proposal id
-    /// @param _solutionStake Stake put by the member when providing a solution
-    /// @param _solutionHash Solution hash
-    function initiateAddSolution(uint _proposalId,uint _solutionStake,string _solutionHash) 
-    {
-        addSolution(_proposalId,msg.sender,_solutionStake, _solutionHash,now); 
     }
 
     /// @dev Adds solution against proposal.
@@ -151,19 +142,9 @@ contract simpleVoting is VotingType
     function addSolution1(uint _proposalId,address _memberAddress,string _solutionHash,uint _dateAdd) internal
     {
         GBTS=GBTStandardToken(GBTSAddress);
-        uint currentVotingId;
+        uint currentVotingId;uint check;
         (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
 
-        require(checkForSolution(_proposalId,_memberAddress) == 0);
-        require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GBTS.balanceOf(_memberAddress) != 0 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
-    }
-
-    /// @dev Checks if msg.sender has already added the solution.
-    /// @param _proposalId Proposal id
-    /// @param _memberAddress Member address
-    /// @return check Check flag
-    function checkForSolution(uint _proposalId,address _memberAddress) internal constant returns(uint check)
-    {
         for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
         {
             if(GD.getSolutionAddedByProposalId(_memberAddress,i) == _memberAddress)
@@ -171,6 +152,16 @@ contract simpleVoting is VotingType
             else 
                 check = 0;
         }
+        require(check == 0 && currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GBTS.balanceOf(_memberAddress) != 0 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
+    }
+
+    /// @dev Adds solution
+    /// @param _proposalId Proposal id
+    /// @param _solutionStake Stake put by the member when providing a solution
+    /// @param _solutionHash Solution hash
+    function initiateAddSolution(uint _proposalId,uint _solutionStake,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) 
+    {
+        addSolution(_proposalId,msg.sender,_solutionStake, _solutionHash,now,_v,_r,_s); 
     }
 
     /// @dev Receives solution stake against solution in simple voting
@@ -178,7 +169,7 @@ contract simpleVoting is VotingType
     /// @param _solutionStake Solution stake
     /// @param _solutionHash Solution hash
     /// @param _dateAdd Date when solution was added
-    function receiveSolutionStakeSV(uint _proposalId,uint _solutionStake,string _solutionHash,uint _dateAdd) internal
+    function receiveSolutionStakeSV(uint _proposalId,uint _solutionStake,string _solutionHash,uint _dateAdd,uint8 _v,bytes32 _r,bytes32 _s) internal
     {
         GD=governanceData(GDAddress);
         PC=ProposalCategory(PCAddress);
@@ -186,7 +177,7 @@ contract simpleVoting is VotingType
         uint depositAmount = ((_solutionStake*GD.depositPercSolution())/100);
         uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
         GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'S');
-        GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime);  
+        GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime,_v,_r,_s);  
         GD.callSolutionEvent(_proposalId,msg.sender,_solutionHash,_dateAdd,_solutionStake);    
     }
 
@@ -322,9 +313,7 @@ contract simpleVoting is VotingType
     //     GD.setProposalVoteCount(_proposalId,roleId,_optionChosen[0],voteVal);
     //     GD.setOptionChosen(voteId,_optionChosen[0]);
 
-           // receiveGBT(gbtTransfer,"Payable GBT Stake to submit proposal for voting");
-           // receiveGBT(amount,"Payable GBT Stake for adding solution against proposal");
-           // receiveGBT(_Incentive,"Dapp incentive to be distributed in GBT")
+        
     // }
 }
 

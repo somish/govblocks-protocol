@@ -176,15 +176,15 @@ contract StandardVotingType
     function closeProposalVoteSVT(uint _proposalId) onlyInternal
     {   
         VT=VotingType(GD.getProposalVotingType(_proposalId)); 
-        uint8 _mrSequence;uint _majorityVote;uint24 _closingTime; uint category;uint currentVotingId; uint totalSolutions; uint totalVoteValue=0;
+        uint8 _mrSequenceId;uint _majorityVote;uint24 _closingTime; uint category;uint currentVotingId; uint totalSolutions; uint totalVoteValue=0;
         (,category,currentVotingId,,,totalSolutions) = GD.getProposalDetailsById2(_proposalId); 
         (_mrSequenceId,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId)
         require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId,_closingTime,_majorityVote)==1); //1
         
         uint[] memory finalVoteValue = new uint[](totalSolutions); 
-        for(uint8 i=0; i<GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequence); i++)
+        for(uint8 i=0; i<GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequenceId); i++)
         {
-            uint voteId = GD.getVoteId_againstProposalRole(_proposalId,_mrSequence,i);
+            uint voteId = GD.getVoteId_againstProposalRole(_proposalId,_mrSequenceId,i);
             uint solutionChosen = GD.getSolutionByVoteIdAndIndex(voteId,0);
             uint voteValue = GD.getVoteValue(voteId);
             totalVoteValue = totalVoteValue + voteValue;
@@ -211,7 +211,7 @@ contract StandardVotingType
                         {
                             GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
                             P1.closeProposalOraclise(_proposalId,_closingTime); 
-                            GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId+1));
+                            GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId));
                         } 
                         else
                         {

@@ -104,7 +104,7 @@ contract governanceData {
 
     /// @dev Calls Oraclize call event
     /// @param _proposalId Proposal id
-    /// @param _dateAdd Date proposal was added 
+    /// @param _dateAdd Date proposal was added
     /// @param _closingTime Closing time of the proposal
     function callOraclizeCallEvent(uint256 _proposalId,uint256 _dateAdd,uint256 _closingTime) onlyInternal
     {
@@ -168,7 +168,7 @@ contract governanceData {
     }
     
     mapping(uint=>proposalData) allProposalData;
-    mapping(uint=>address[]) allProposalOptions;
+    mapping(uint=>address[]) allProposalSolutions;
     mapping(address=>uint32) allMemberReputationByAddress;
     mapping(address=>mapping(uint=>uint)) AddressProposalVote; 
     mapping(uint=>mapping(uint=>uint[])) ProposalRoleVote; 
@@ -185,13 +185,13 @@ contract governanceData {
     uint public allVotesTotal;
     uint public constructorCheck;
     uint public depositPercProposal;
-    uint public depositPercOption;
+    uint public depositPercSolution;
     uint public depositPercVote;
     uint addProposalOwnerPoints;
-    uint addOptionOwnerPoints;
+    uint addSolutionOwnerPoints;
     uint addMemberPoints;
     uint subProposalOwnerPoints;
-    uint subOptionOwnerPoints;
+    uint subSolutionOwnerPoints;
     uint subMemberPoints;
 
     proposal[] allProposal;
@@ -276,31 +276,31 @@ contract governanceData {
             constructorCheck=1;
     }
 
-    /// @dev Adds points to add or subtract in member reputation when proposal/option/vote gets denied or accepted
+    /// @dev Adds points to add or subtract in member reputation when proposal/Solution/vote gets denied or accepted
     function addMemberReputationPoints() internal
     {
         addProposalOwnerPoints = 5;
-        addOptionOwnerPoints = 5;
+        addSolutionOwnerPoints = 5;
         addMemberPoints = 1;
         subProposalOwnerPoints = 1;
-        subOptionOwnerPoints = 1;
+        subSolutionOwnerPoints = 1;
         subMemberPoints = 1;
     }
 
-    /// @dev Changes points to add or subtract in member reputation when proposal/option/vote gets denied or accepted
+    /// @dev Changes points to add or subtract in member reputation when proposal/Solution/vote gets denied or accepted
     /// @param _addProposalOwnerPoints Add proposal owner's points
-    /// @param _addOptionOwnerPoints Add option owner's points
+    /// @param _addSolutionOwnerPoints Add Solution owner's points
     /// @param _addMemberPoints Add member points
     /// @param _subProposalOwnerPoints Subtract proposal owner points
-    /// @param _subOptionOwnerPoints Subtract option owner points
+    /// @param _subSolutionOwnerPoints Subtract Solution owner points
     /// @param _subMemberPoints Subtract member points
-    function changeMemberReputationPoints(uint _addProposalOwnerPoints,uint  _addOptionOwnerPoints, uint _addMemberPoints,uint _subProposalOwnerPoints,uint  _subOptionOwnerPoints, uint _subMemberPoints) onlyOwner
+    function changeMemberReputationPoints(uint _addProposalOwnerPoints,uint  _addSolutionOwnerPoints, uint _addMemberPoints,uint _subProposalOwnerPoints,uint  _subSolutionOwnerPoints, uint _subMemberPoints) onlyOwner
     {
         addProposalOwnerPoints = _addProposalOwnerPoints;
-        addOptionOwnerPoints= _addOptionOwnerPoints;
+        addSolutionOwnerPoints= _addSolutionOwnerPoints;
         addMemberPoints = _addMemberPoints;
         subProposalOwnerPoints = _subProposalOwnerPoints;
-        subOptionOwnerPoints= _subOptionOwnerPoints;
+        subSolutionOwnerPoints= _subSolutionOwnerPoints;
         subMemberPoints = _subMemberPoints;
     }
 
@@ -325,7 +325,7 @@ contract governanceData {
         membershipScalingFactor=1;
         scalingWeight=1;
         depositPercProposal=30;
-        depositPercOption=30;
+        depositPercSolution=30;
         depositPercVote=40;
     }
     
@@ -365,7 +365,7 @@ contract governanceData {
         lastReward[_memberAddress].lastReward_proposalId =_proposalId;
     }
 
-    /// @dev Sets last reward for option/solution
+    /// @dev Sets last reward for solution
     /// @param _memberAddress Member address
     /// @param _proposalId Proposal id
     function setLastRewardId_ofSolutionProposals(address _memberAddress, uint _proposalId) onlyInternal
@@ -471,11 +471,11 @@ contract governanceData {
     /// @dev Gets vote details by id
     /// @param _voteid Vote id
     /// @return voter Voter address
-    /// @return optionChosen Option chosen
+    /// @return solutionChosen Solution chosen
     /// @return voteValue Vote value
-    function getVoteDetailById(uint _voteid) public constant returns(address voter,uint[] optionChosen,uint voteValue)
+    function getVoteDetailById(uint _voteid) public constant returns(address voter,uint[] solutionChosen,uint voteValue)
     {
-       return(allVotes[_voteid].voter,allVotes[_voteid].optionChosen,allVotes[_voteid].voteValue);
+       return(allVotes[_voteid].voter,allVotes[_voteid].solutionChosen,allVotes[_voteid].voteValue);
     }
 
     /// @dev Gets vote id against member
@@ -553,9 +553,9 @@ contract governanceData {
 
 
       
-    /// @dev Sets option chosen by vote id
+    /// @dev Sets Solution chosen by vote id
     /// @param _voteId Vote id
-    /// @param _value Option chosen
+    /// @param _value Solution chosen
     function setSolutionChosen(uint _voteId,uint _value) onlyInternal
     {
         allVotes[_voteId].solutionChosen.push(_value);
@@ -563,30 +563,30 @@ contract governanceData {
 
     function setSolutionAdded(uint _proposalId,address _memberAddress) onlyInternal
     {
-        allProposalOption[_proposalId].push(_memberAddress);
+        allProposalSolutions[_proposalId].push(_memberAddress);
     }
 
-    /// @dev Gets option chosen by vote id
+    /// @dev Gets Solution chosen by vote id
     /// @param _voteId Vote id
-    /// @return optionChosen Option chosen
+    /// @return solutionChosen Solution chosen
     function getSolutionByVoteId(uint _voteId) constant returns(uint[] solutionChosen)
     {
         return (allVotes[_voteId].solutionChosen);
     }
   
-    /// @dev Gets option chosen on vote id= _voteId
+    /// @dev Gets Solution chosen on vote id= _voteId
     /// @param _voteId Vote id
-    /// @param _solutionChosenId Option chosen id
-    /// @return option Option 
-    function getSolutionByVoteIdAndIndex(uint _voteId,uint _solutionChosenId)constant returns(uint option)
+    /// @param _solutionChosenId Solution chosen id
+    /// @return solution Solution 
+    function getSolutionByVoteIdAndIndex(uint _voteId,uint _solutionChosenId)constant returns(uint solution)
     {
         return (allVotes[_voteId].solutionChosen[_solutionChosenId]);
     }
 
     /// @dev Gets the address of member whosoever added the verdict when given proposal id and verdict index.
-    function getSolutionAddedByProposalId(uint _proposalId,uint _optionIndex) constant returns(address memberAddress)
+    function getSolutionAddedByProposalId(uint _proposalId,uint _Index) constant returns(address memberAddress)
     {
-        return allProposalOptions[_proposalId][_optionIndex];
+        return allProposalSolutions[_proposalId][_Index];
     }
 
     
@@ -625,9 +625,9 @@ contract governanceData {
     }
 
      /// @dev Gets reputation points to proceed with updating the member reputation level
-    function getMemberReputationPoints() constant returns(uint addProposalOwnPoints,uint addOptionOwnPoints,uint addMemPoints,uint subProposalOwnPoints,uint subOptionOwnPoints,uint subMemPoints)
+    function getMemberReputationPoints() constant returns(uint addProposalOwnPoints,uint addSolutionOwnerPoints,uint addMemPoints,uint subProposalOwnPoints,uint subSolutionOwnPoints,uint subMemPoints)
     {
-        return (addProposalOwnerPoints,addOptionOwnerPoints,addMemberPoints,subProposalOwnerPoints,subOptionOwnerPoints,subMemberPoints);
+        return (addProposalOwnerPoints,addSolutionOwnerPoints,addMemberPoints,subProposalOwnerPoints,subSolutionOwnerPoints,subMemberPoints);
     } 
 
     /// @dev Changes proposal owner reputation points
@@ -637,9 +637,9 @@ contract governanceData {
     }
 
     /// @dev Adds proposal owner reputation points    
-    function changeOptionOwnerAdd(uint _repPoints) onlyGBM
+    function changeSolutionOwnerAdd(uint _repPoints) onlyGBM
     {
-        addOptionOwnerPoints = _repPoints;
+        addSolutionOwnerPoints = _repPoints;
     }
 
     /// @dev Subtracts proposal owner reputation points    
@@ -753,7 +753,7 @@ contract governanceData {
     /// @dev Get the category of given proposal. 
     function getProposalDetailsById2(uint _proposalId) public constant returns(uint id,uint8 category,uint8 currentVotingId,uint8 intermediateVerdict,uint8 finalVerdict,address votingTypeAddress,uint totalSolutions) 
     {
-        return (_proposalId,allProposalData[_proposalId].category,allProposalData[_proposalId].currVotingStatus,allProposalData[_proposalId].currentVerdict,allProposalData[_proposalId].finalVerdict,allProposal[_proposalId].votingTypeAddress,allProposalOptions[_proposalId].length); 
+        return (_proposalId,allProposalData[_proposalId].category,allProposalData[_proposalId].currVotingStatus,allProposalData[_proposalId].currentVerdict,allProposalData[_proposalId].finalVerdict,allProposal[_proposalId].votingTypeAddress,allProposalSolutions[_proposalId].length); 
     }
 
     /// @dev Gets proposal details of given proposal id
@@ -798,10 +798,10 @@ contract governanceData {
         return (allProposalDataal[_proposalId].currVotingStatus);
     }
 
-    /// @dev Get Total number of verdict options against proposal.
+    /// @dev Get Total number of Solutions against proposal.
     function getTotalSolutions(uint _proposalId) constant returns(uint8)
     {
-        return allProposalOptions[_proposalId].length;
+        return allProposalSolutions[_proposalId].length;
     }
 
     /// @dev Get Current Status of proposal when given proposal Id
@@ -876,9 +876,9 @@ contract governanceData {
     }
 
     /// @dev Gets final solution index won after majority voting.
-    function getProposalFinalVerdict(uint _proposalId) constant returns(uint finalOptionIndex)
+    function getProposalFinalVerdict(uint _proposalId) constant returns(uint finalSolutionIndex)
     {
-        finalOptionIndex = allProposalData[_proposalId].finalVerdict;
+        finalSolutionIndex = allProposalData[_proposalId].finalVerdict;
     }
 
 
