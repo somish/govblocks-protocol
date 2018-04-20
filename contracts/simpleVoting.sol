@@ -124,13 +124,13 @@ contract simpleVoting is VotingType
     /// @param _solutionStake Solution stake
     /// @param _solutionHash Solution hash
     /// @param _dateAdd Date when the solution was added
-    function addSolution(uint _proposalId,address _memberAddress,uint _solutionStake,string _solutionHash,uint _dateAdd) public
+    function addSolution(uint _proposalId,address _memberAddress,uint _solutionStake,string _solutionHash,uint _dateAdd,uint8 _v,bytes32 _r,bytes32 _s) public
     {
         // SVT=StandardVotingType(SVTAddress);
         MS=Master(masterAddress);
         require(MS.isInternal(msg.sender) == 1 || msg.sender == _memberAddress);
         if(_solutionStake!=0)
-            receiveSolutionStakeSV(_proposalId,_solutionStake,_solutionHash,_dateAdd)
+            receiveSolutionStakeSV(_proposalId,_solutionStake,_solutionHash,_dateAdd,_v,_r,_s);
         addSolution1(_proposalId,_memberAddress,_solutionHash,_dateAdd);
     }
      
@@ -138,9 +138,9 @@ contract simpleVoting is VotingType
     /// @param _proposalId Proposal id
     /// @param _solutionStake Stake put by the member when providing a solution
     /// @param _solutionHash Solution hash
-    function initiateAddSolution(uint _proposalId,uint _solutionStake,string _solutionHash) 
+    function initiateAddSolution(uint _proposalId,uint _solutionStake,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) 
     {
-        addSolution(_proposalId,msg.sender,_solutionStake, _solutionHash,now); 
+        addSolution(_proposalId,msg.sender,_solutionStake, _solutionHash,now,_v,_r,_s); 
     }
 
     /// @dev Adds solution against proposal.
@@ -178,7 +178,7 @@ contract simpleVoting is VotingType
     /// @param _solutionStake Solution stake
     /// @param _solutionHash Solution hash
     /// @param _dateAdd Date when solution was added
-    function receiveSolutionStakeSV(uint _proposalId,uint _solutionStake,string _solutionHash,uint _dateAdd) internal
+    function receiveSolutionStakeSV(uint _proposalId,uint _solutionStake,string _solutionHash,uint _dateAdd,uint8 _v,bytes32 _r,bytes32 _s) internal
     {
         GD=governanceData(GDAddress);
         PC=ProposalCategory(PCAddress);
@@ -186,7 +186,7 @@ contract simpleVoting is VotingType
         uint depositAmount = ((_solutionStake*GD.depositPercSolution())/100);
         uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
         GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'S');
-        GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime);  
+        GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime,_v,_r,_s);  
         GD.callSolutionEvent(_proposalId,msg.sender,_solutionHash,_dateAdd,_solutionStake);    
     }
 
