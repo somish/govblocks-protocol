@@ -525,11 +525,11 @@ contract Governance {
             if(proposalStatus < 2)
                 lastIndex = i;
 
-            if(finalVredict > 0 && optionChosen == finalVredict && GD.getReturnedTokensFlag(_memberAddress,proposalId,'V') == 0)
+            if(finalVredict > 0 && solutionChosen == finalVredict && GD.getReturnedTokensFlag(_memberAddress,proposalId,'V') == 0)
             {
                 calcReward = (PC.getRewardPercVote(category)*totalReward*voteValue)/(100*totalVoteValueProposal);
                 finalRewardToDistribute = finalRewardToDistribute + calcReward + GD.getDepositedTokens(_memberAddress,i,'V');
-                GD.callRewardEvent(_memberAddress,i,"GBT Reward earned for voting in favour of final option",calcReward);
+                GD.callRewardEvent(_memberAddress,i,"GBT Reward earned for voting in favour of final Solution",calcReward);
                 GD.setReturnedTokensFlag(_memberAddress,i,'V',1);
             }
         }
@@ -609,7 +609,7 @@ contract Governance {
         totalVoteCasted = new uint[](totalVoteCount);
         for(uint i=0; i<length; i++)
         {
-            uint voteId = AddressProposalVote[_memberAddress][i];
+            uint voteId = GD.getVoteId_againstMember(_memberAddress,i);
             if(voteId != 0)
             {
                 totalVoteCasted[j] = voteId;
@@ -626,7 +626,7 @@ contract Governance {
         uint length= getProposalLength();
         for(uint i=0; i<length; i++)
         {
-            uint voteId = AddressProposalVote[_memberAddress][i];
+            uint voteId = GD.getVoteId_againstMember(_memberAddress,i);
             if(voteId != 0)
                 totalVoteCount++;
         }
@@ -642,7 +642,7 @@ contract Governance {
         totalProposalCreated=new uint[](proposalLength);
         for(uint i=0; i<length; i++)
         {
-            if(_memberAddress == allProposal[i].owner)
+            if(_memberAddress == GD.getProposalOwner(_proposalId))
             {
                 totalProposalCreated[j] = i;
                 j++;
@@ -659,7 +659,7 @@ contract Governance {
         uint length = MR.getAllMemberLength();
         for(uint i =0; i<length; i++)
         {
-            totalVotes = totalVotes + ProposalRoleVote[_proposalId][i].length;
+            totalVotes = totalVotes + GD.getAllVoteIdsLength_byProposalRole(_proposalId,i);
         }
     }
 
@@ -688,14 +688,14 @@ contract Governance {
     /// @return category Category
     function getSolutionId_againstAddressProposal(address _memberAddress,uint _proposalId)constant returns(uint proposalId,uint solutionId,uint proposalStatus,uint finalVerdict,uint totalReward,uint8 category) 
     {
-        for(uint i=0; i<allProposalOption[_proposalId].length; i++)
+        for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
         {
-            if(_memberAddress == allProposalOption[_proposalId][i])
+            if(_memberAddress == GD.getSolutionAddedByProposalId(_proposalId,i))
             {
                 solutionId = i;
                 proposalId = _proposalId;
-                proposalStatus = allProposal[proposalId].propStatus;
-                finalVerdict = allProposal[proposalId].finalVerdict;
+                proposalStatus = GD.getProposalStatus(_proposalId);
+                finalVerdict = GD.getProposalFinalVerdict(_proposalId);
                 totalReward = GD.getProposalTotalReward(_proposalId);
                 category = GD.getProposalCategory(_proposalId);
                 break;
@@ -716,9 +716,9 @@ contract Governance {
         solutionProposalIds = new uint[](solutionProposalLength);
         for(uint i=0; i<length; i++)
         {
-            for(uint j=0; j<allProposalOptions[i].length; j++)
+            for(uint j=0; j<GD.getTotalSolutions(_proposalId); j++)
             {
-                if(_memberAddress = allProposalOptions[i][j])
+                if(_memberAddress = GD.getSolutionAddedByProposalId(i,j))
                 {
                     proposalIds[m] = i;
                     solutionProposalIds[m] = j;
@@ -736,9 +736,9 @@ contract Governance {
         uint length = getProposalLength();
         for(uint i=0; i<length; i++)
         {
-            for(uint j=0; j<allProposalOptions[i].length; j++)
+            for(uint j=0; j<GD.getTotalSolutions(_proposalId); j++)
             {
-                if(_memberAddress = allProposalOptions[i][j])
+                if(_memberAddress = GD.getSolutionAddedByProposalId(i,j))
                     totalSolutionProposalCount++;
             }
         }
