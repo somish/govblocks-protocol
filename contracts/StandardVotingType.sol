@@ -211,7 +211,7 @@ contract StandardVotingType
                         {
                             GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
                             P1.closeProposalOraclise(_proposalId,_closingTime); 
-                            GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId+1));
+                            GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId));
                         } 
                         else
                         {
