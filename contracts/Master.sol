@@ -303,7 +303,7 @@ contract Master is Ownable {
                 }
             }
             for(uint i=0; i<contract_dependency['RB'].length; i++){
-                if( allContractVersions[versionLength-1][contract_dependency['RB'][i]] !=  allContractVersions[versionLength][contract_dependency['RB'][i]]){
+                if( allContractVersions[versioneLngth-1][contract_dependency['RB'][i]] !=  allContractVersions[versionLength][contract_dependency['RB'][i]]){
                     RB.changeAddress(contract_dependency['RB'][i], allContractVersions[versionLength][contract_dependency['RB'][i]]);
                 }
             }
