@@ -200,46 +200,117 @@ contract StandardVotingType
             }
         }
 
-        if(totalVoteValue != 0)
+        if(checkForThreshold(_proposalId,_mrSequenceId) == true)
         {
             if(SafeMath.div(SafeMath.mul(finalVoteValue[max],100),totalVoteValue)>=_majorityVote)
-                {   
+            {
+                if(max > 0)
+                {
                     currentVotingId = currentVotingId+1;
-                    if(max > 0 )
+                    if(currentVotingId < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
                     {
-                        if(currentVotingId < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
-                        {
-                            GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
-                            P1.closeProposalOraclise(_proposalId,_closingTime); 
-                            GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId));
-                        } 
-                        else
-                        {
-                            GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
-                            GD.changeProposalStatus(_proposalId,3);
-                            VT.giveReward_afterFinalDecision(_proposalId);
-                        }
-                    }
+                        GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
+                        P1.closeProposalOraclise(_proposalId,_closingTime); 
+                        GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId));
+                    } 
                     else
                     {
                         GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
-                        GD.changeProposalStatus(_proposalId,4);
+                        GD.changeProposalStatus(_proposalId,3);
                         VT.giveReward_afterFinalDecision(_proposalId);
-                        GOV.changePendingProposalStart();
-                    }      
-                } 
+                    }
+                }
                 else
                 {
                     GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
-                    GD.changeProposalStatus(_proposalId,5);
+                    GD.changeProposalStatus(_proposalId,4);
+                    VT.giveReward_afterFinalDecision(_proposalId);
                     GOV.changePendingProposalStart();
                 } 
+            }
+            else
+            {
+                GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
+                GD.changeProposalStatus(_proposalId,4);
+                GOV.changePendingProposalStart();
+            } 
+        }   
+        else
+        {
+            GOV.updateProposalDetails(_proposalId,currentVotingId,max,GD.getProposalIntermediateVerdict(_proposalId));
+            GD.changeProposalStatus(_proposalId,5);
+            GOV.changePendingProposalStart();
+        }
+
+
+        // if(totalVoteValue != 0)
+        // {
+        //     if(SafeMath.div(SafeMath.mul(finalVoteValue[max],100),totalVoteValue)>=_majorityVote)
+        //     {   
+        //             currentVotingId = currentVotingId+1;
+        //             if(max > 0 )
+        //             {
+        //                 if(currentVotingId < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
+        //                 {
+        //                     GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
+        //                     P1.closeProposalOraclise(_proposalId,_closingTime); 
+        //                     GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId));
+        //                 } 
+        //                 else
+        //                 {
+        //                     GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
+        //                     GD.changeProposalStatus(_proposalId,3);
+        //                     VT.giveReward_afterFinalDecision(_proposalId);
+        //                 }
+        //             }
+        //             else
+        //             {
+        //                 GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
+        //                 GD.changeProposalStatus(_proposalId,4);
+        //                 VT.giveReward_afterFinalDecision(_proposalId);
+        //                 GOV.changePendingProposalStart();
+        //             }      
+        //     } 
+        //     else
+        //     {
+        //         GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
+        //         GD.changeProposalStatus(_proposalId,5);
+        //         GOV.changePendingProposalStart();
+        //     } 
+        // }
+        // else
+        // {
+        //     GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
+        //     GD.changeProposalStatus(_proposalId,5);
+        //     GOV.changePendingProposalStart();
+        // }
+    }
+
+    function checkForThreshold(uint _proposalId,uint _mrSequenceId) internal constant returns(bool)
+    {
+        uint thresHoldValue;
+        if(_mrSequenceId == 2)
+        {
+            address dAppTokenAddress = GBM.getDappTokenAddress(MS.DappName());
+            BT=BasicToken(dAppTokenAddress);
+            uint totalTokens;
+
+            for(uint8 i=0; i<GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequenceId); i++)
+            {
+                uint voteId = GD.getVoteId_againstProposalRole(_proposalId,_mrSequenceId,i);
+                address voterAddress =GD.getVoterAddress(voteId);
+                totalTokens = totalTokens + BT.balanceOf(voterAddress);
+            }
+           
+            thresHoldValue = totalTokens*100/BT.totalSupply();
+            if(thresHoldValue > GD.quorumPercentage())
+                return true;
         }
         else
         {
-            GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
-            GD.changeProposalStatus(_proposalId,5);
-            GOV.changePendingProposalStart();
+            thresHoldValue = (GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequenceId)*100)/MR.getAllMemberLength(_mrSequenceId);
+            if(thresHoldValue >GD.quorumPercentage())
+                return true;
         }
     }
 }
