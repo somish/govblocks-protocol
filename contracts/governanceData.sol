@@ -17,7 +17,6 @@
 pragma solidity ^0.4.8;
 import "./SafeMath.sol";
 import "./Master.sol";
-import "./GBTStandardToken.sol";
 
 contract governanceData {
   
@@ -202,7 +201,7 @@ contract governanceData {
     GBTStandardToken GBTS;
     address masterAddress;
     address GBMAddress;
-    address GBTSAddress;
+    // address GBTSAddress;
     address constant null_address = 0x00;
 
     modifier onlyInternal {
@@ -253,10 +252,10 @@ contract governanceData {
     
     /// @dev Changes GovBlocks standard token address
     /// @param _GBTAddress New GovBlocks token address
-    function changeGBTSAddress(address _GBTAddress) onlyMaster
-    {
-        GBTSAddress = _GBTAddress;
-    }   
+    // function changeGBTSAddress(address _GBTAddress) onlyMaster
+    // {
+    //     GBTSAddress = _GBTAddress;
+    // }   
     
     /// @dev Initiates governance data
     /// @param _GBMAddress GovBlocks master address
