@@ -370,10 +370,7 @@ contract Master is Ownable {
         GBM=GovBlocksMaster(GBMAddress);
         uint version = versionLength-1;
         if((version == 0 && msg.sender== owner) || msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(DappName,msg.sender) == 1)
-        {
-            GD=governanceData(governanceDataAddress);
-            GD.changeGBTSAddress(_tokenAddress);
-            
+        { 
             SV=simpleVoting(simpleVotingAddress);
             SV.changeGBTSAddress(_tokenAddress);
             
