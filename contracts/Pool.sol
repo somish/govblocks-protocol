@@ -28,8 +28,8 @@ contract Pool is usingOraclize
     using SafeMath for uint;
     address masterAddress;
     address GBTOwner;
-    address GBTControllerAddress;
-    address GBTStandardTokenAddress;
+    // address GBTControllerAddress;
+    // address GBTStandardTokenAddress;
     GBTController GBTC;
     GBTStandardToken GBTS;
     Master M1;
@@ -79,17 +79,17 @@ contract Pool is usingOraclize
     
     /// @dev Changes GBT token address
     /// @param _GBTSContractAddress New GBT token address
-    function changeGBTtokenAddress(address _GBTSContractAddress)
-    {
-        GBTStandardTokenAddress = _GBTSContractAddress;
-    }
+    // function changeGBTtokenAddress(address _GBTSContractAddress)
+    // {
+    //     GBTStandardTokenAddress = _GBTSContractAddress;
+    // }
 
     /// @dev Changes GBT controller address
     /// @param _GBTCAddress New GBT controller address
-    function changeGBTControllerAddress(address _GBTCAddress)
-    {
-        GBTControllerAddress = _GBTCAddress;
-    }
+    // function changeGBTControllerAddress(address _GBTCAddress)
+    // {
+    //     GBTControllerAddress = _GBTCAddress;
+    // }
     
     function () payable {}
 
@@ -100,20 +100,20 @@ contract Pool is usingOraclize
     // }
 
     /// @dev Buys GBT token
-    function buyGBT() payable
-    {
-        GBTC=GBTController(GBTControllerAddress);
-        GBTC.buyTokenGBT.value(msg.value)(address(this));
-    }
+    // function buyGBT() payable
+    // {
+    //     GBTC=GBTController(GBTControllerAddress);
+    //     GBTC.buyTokenGBT.value(msg.value)(address(this));
+    // }
 
     /// @dev Transfers GBT to controller
     /// @param _amount Amount to be transferred
     /// @param _description Description of transfer
-    function transferGBTtoController(uint _amount,string _description) 
-    {
-        GBTC=GBTController(GBTControllerAddress);
-        GBTC.receiveGBT(address(this),_amount,_description);
-    }
+    // function transferGBTtoController(uint _amount,string _description) 
+    // {
+    //     GBTC=GBTController(GBTControllerAddress);
+    //     GBTC.receiveGBT(address(this),_amount,_description);
+    // }
 
     /// @dev Closes proposal using oraclize
     /// @param _proposalId Proposal id

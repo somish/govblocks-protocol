@@ -26,8 +26,8 @@ contract  memberRoles
   uint8 public constructorCheck;
   Master M1; 
   address masterAddress;
-  address GDAddress;
-  address BTAddress;
+//   address GDAddress;
+//   address BTAddress;
   address GBMAddress;
   BasicToken BT;
 
@@ -38,7 +38,7 @@ contract  memberRoles
     address[] memberAddress;
   }
 
-  mapping(uint=>address) updateMemberRole;
+  mapping(uint=>address) updateMemberRoles;
   mapping(uint=>memberRoleDetails) memberRoleData;
   mapping (address=>uint) memberAddressToMemberRole;
   event MemberRole(address indexed roleId, bytes32 roleName, string roleDescription);
@@ -104,10 +104,16 @@ contract  memberRoles
 
   /// @dev Changes governance data contract address
   /// @param _GDAddress New governance data contract address
-  function changeAllContractAddress(address _GDAddress) onlyInternal
-  {
-    GDAddress = _GDAddress;
-  }
+//   function changeAllContractAddress(address _GDAddress) onlyInternal
+//   {
+//     GDAddress = _GDAddress;
+//   }
+
+  function changeAddress(bytes4 contractName, address contractAddress){
+        if(contractName == 'GD'){
+            GD = governanceData(contractAddress);
+        }
+    }
 
   /// @dev Gets role description hash
   /// @return memberRoleDescHash Member role description hash
@@ -156,13 +162,12 @@ contract  memberRoles
   /// @dev Adds new member role
   /// @param _newRoleName New role name
   /// @param _newDescHash New description hash
-  function addNewMemberRole(bytes32 _newRoleName,string _newDescHash, address _canAddMembers) 
+  function addNewMemberRole(bytes32 _newRoleName,string _roleDescription, address _canAddMembers) 
   {
       require(msg.sender == GBMAddress);
-      memberRole.push(_newRoleName);
-    //   memberRoleDescHash = _newDescHash;  
-      updateMemberRole[memberRole.length] = _canAddMembers;
-      MemberRole(memberRole.length, _newRoleName, _newDescHash);
+      memberRole.push(_newRoleName);  
+      updateMemberRoles[memberRole.length] = _canAddMembers;
+      MemberRole(memberRole.length, _newRoleName, _roleDescription);
   }
 
   /// @dev Sets new role description hash
@@ -204,7 +209,7 @@ contract  memberRoles
   /// @param _typeOf Type of role id of the member
   function updateMemberRole(address _memberAddress,uint _memberRoleId,uint8 _typeOf)
   {
-      require(msg.sender == GBMAddress || msg.sender == updateMemberRole[_memberRoleId]);
+      require(msg.sender == GBMAddress || msg.sender == updateMemberRoles[_memberRoleId]);
       if(_typeOf == 1)
       {
         require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 0);

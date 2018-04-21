@@ -35,10 +35,10 @@ contract Governance {
 //   address MRAddress;
 //   address GBTSAddress;
 //   address BTAddress;
+//   GBTController GBTC;
   address P1Address;
   address masterAddress;
   GBTStandardToken GBTS;
-  GBTController GBTC;
   Master MS;
   memberRoles MR;
   ProposalCategory PC;

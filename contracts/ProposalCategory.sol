@@ -37,7 +37,7 @@ contract ProposalCategory
     category[] public allCategory;
     Master M1;  
     memberRoles MR;
-    address MRAddress;
+    // address MRAddress;
     address masterAddress;
     address GBMAddress;
 
@@ -87,9 +87,15 @@ contract ProposalCategory
 
     /// @dev Changes all contracts' addresses
     /// @param _MRAddress New member roles contract address
-    function changeAllContractsAddress(address _MRAddress) onlyInternal
-    {
-        MRAddress= _MRAddress;
+    // function changeAllContractsAddress(address _MRAddress) onlyInternal
+    // {
+    //     MRAddress= _MRAddress;
+    // }
+
+    function changeAddress(bytes4 contractName, address contractAddress){
+        if(contractName == 'MR'){
+            MR = memberRoles(contractAddress);
+        }
     }
 
     /// @dev Initiates proposal category
@@ -303,7 +309,7 @@ contract ProposalCategory
     /// @param closingTime Closing time of category  
     function getCategoryData2(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint24[] closingTime)
     {
-        MR=memberRoles(MRAddress);
+        // MR=memberRoles(MRAddress);
         category = _categoryId;
         roleName=new bytes32[]( allCategory[_categoryId].memberRoleSequence.length);
         for(uint8 i=0; i < allCategory[_categoryId].memberRoleSequence.length; i++)
