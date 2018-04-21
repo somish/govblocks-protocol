@@ -38,8 +38,10 @@ contract  memberRoles
     address[] memberAddress;
   }
 
+  mapping(uint=>address) updateMemberRole;
   mapping(uint=>memberRoleDetails) memberRoleData;
   mapping (address=>uint) memberAddressToMemberRole;
+  event MemberRole(address indexed roleId, bytes32 roleName, string roleDescription);
 
   /// @dev Initiates member roles
   /// @param _GBMAddress GovBlocks master address
@@ -154,11 +156,13 @@ contract  memberRoles
   /// @dev Adds new member role
   /// @param _newRoleName New role name
   /// @param _newDescHash New description hash
-  function addNewMemberRole(bytes32 _newRoleName,string _newDescHash) 
+  function addNewMemberRole(bytes32 _newRoleName,string _newDescHash, address _canAddMembers) 
   {
       require(msg.sender == GBMAddress);
       memberRole.push(_newRoleName);
-      memberRoleDescHash = _newDescHash;  
+    //   memberRoleDescHash = _newDescHash;  
+      updateMemberRole[memberRole.length] = _canAddMembers;
+      MemberRole(memberRole.length, _newRoleName, _newDescHash);
   }
 
   /// @dev Sets new role description hash
@@ -200,7 +204,7 @@ contract  memberRoles
   /// @param _typeOf Type of role id of the member
   function updateMemberRole(address _memberAddress,uint _memberRoleId,uint8 _typeOf)
   {
-      require(msg.sender == GBMAddress);
+      require(msg.sender == GBMAddress || msg.sender == updateMemberRole[_memberRoleId]);
       if(_typeOf == 1)
       {
         require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == 0);

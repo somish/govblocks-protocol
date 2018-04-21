@@ -438,7 +438,7 @@ contract GovBlocksMaster
     /// @param _gbUserName GovBlocks new username
     /// @param _newRoleName GovBlocks new role name
     /// @param _newDescHash GovBlocks new description hash
-    function addNewMemberRoleGB(bytes32 _gbUserName,bytes32 _newRoleName,string _newDescHash) 
+    function addNewMemberRoleGB(bytes32 _gbUserName,bytes32 _newRoleName,string _newDescHash, address _canAddMembers) 
     {
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
         address master = govBlocksDapps[_gbUserName].masterAddress; address MRAddress;
@@ -446,7 +446,7 @@ contract GovBlocksMaster
         uint versionNo = MS.versionLength()-1; 
         (,MRAddress) = MS.allContractVersions(versionNo,2);
         MR=memberRoles(MRAddress);
-        MR.addNewMemberRole(_newRoleName,_newDescHash);
+        MR.addNewMemberRole(_newRoleName, _newDescHash, _canAddMembers);
     }
 
     /// @dev Updates member roles in GovBlocks
