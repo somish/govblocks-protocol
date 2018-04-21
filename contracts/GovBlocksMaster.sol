@@ -22,7 +22,7 @@ import "./GenerateGOV.sol";
 import "./memberRoles.sol";
 import "./ProposalCategory.sol";
 import "./governanceData.sol";
-import "./GBTController.sol";
+// import "./GBTController.sol";
 import "./GBTStandardToken.sol";
 
 contract GovBlocksMaster 
@@ -31,10 +31,10 @@ contract GovBlocksMaster
     memberRoles MR;
     ProposalCategory PC;
     governanceData GD;
-    GBTController GBTC;
+    // GBTController GBTC;
     GBTStandardToken GBTS;
     address public owner;
-    address GBTControllerAddress;
+    // address GBTControllerAddress;
     address GBTAddress;
     // address GDAddress;
     // address SVAddress;
@@ -66,11 +66,11 @@ contract GovBlocksMaster
     /// @dev Initializes GovBlocks master
     /// @param _GBTControllerAddress GBT controller address
     /// @param _GBTAddress GBT address
-    function GovBlocksMasterInit(address _GBTControllerAddress,address _GBTAddress) 
+    function GovBlocksMasterInit(address _GBTAddress) 
     {
       require(owner == 0x00);
       owner = msg.sender; 
-      GBTControllerAddress=_GBTControllerAddress;
+      // GBTControllerAddress=_GBTControllerAddress;
       GBTAddress = _GBTAddress;
       updateGBMAddress(address(this));  
     } 
@@ -115,22 +115,22 @@ contract GovBlocksMaster
           MS=Master(masterAddress);
           MS.changeGBTAddress(_GBTContractAddress);
         }  
-        changeGBTTokenInController(_GBTContractAddress); 
+        // changeGBTTokenInController(_GBTContractAddress); 
     }
 
     /// @dev Updates GBT controller address
     /// @param _GBTConrollerAddress New GBT controller address
-    function updateGBTControllerAddress(address _GBTControllerAddress) onlyOwner
-    {
-        GBTControllerAddress=_GBTControllerAddress;
-        for(uint i=0;i<allGovBlocksUsers.length; i++)
-        {
-            address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
-            MS=Master(masterAddress);
-            MS.changeGBTControllerAddress(_GBTControllerAddress);
-        }
-        changeGBTControllerInToken(_GBTControllerAddress);
-    }
+    // function updateGBTControllerAddress(address _GBTControllerAddress) onlyOwner
+    // {
+    //     GBTControllerAddress=_GBTControllerAddress;
+    //     for(uint i=0;i<allGovBlocksUsers.length; i++)
+    //     {
+    //         address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
+    //         MS=Master(masterAddress);
+    //         MS.changeGBTControllerAddress(_GBTControllerAddress);
+    //     }
+    //     changeGBTControllerInToken(_GBTControllerAddress);
+    // }
 
     /// @dev Updates GovBlocks master address
     /// @param _newGBMAddress New GovBlocks master address
@@ -143,7 +143,7 @@ contract GovBlocksMaster
             MS.changeGBMAddress(_newGBMAddress);
         }
 
-        GBTC=GBTController(GBTControllerAddress);
+        // GBTC=GBTController(GBTControllerAddress);
         GBTS=GBTStandardToken(GBTAddress);
         GBTC.changeGBMAddress(_newGBMAddress);
         GBTS.changeGBMAddress(_newGBMAddress);
@@ -151,19 +151,19 @@ contract GovBlocksMaster
 
     /// @dev Changes GBT token in controller
     /// @param _newGBTToken New GBT token address
-    function changeGBTTokenInController(address _newGBTToken) internal
-    {
-        GBTC=GBTController(GBTControllerAddress);
-        GBTC.changeGBTtokenAddress(GBTAddress);
-    }
+    // function changeGBTTokenInController(address _newGBTToken) internal
+    // {
+    //     GBTC=GBTController(GBTControllerAddress);
+    //     GBTC.changeGBTtokenAddress(GBTAddress);
+    // }
 
     /// @dev Changes GBT controller in token
     /// @param _newGBTController New GBT controller address
-    function changeGBTControllerInToken(address _newGBTController) internal
-    {
-        GBTC=GBTController(GBTControllerAddress);
-        GBTC.changeGBTtokenAddress(GBTAddress);
-    }
+    // function changeGBTControllerInToken(address _newGBTController) internal
+    // {
+    //     GBTC=GBTController(GBTControllerAddress);
+    //     GBTC.changeGBTtokenAddress(GBTAddress);
+    // }
 
     /// @dev Adds GovBlocks user
     /// @param _gbUserName  GovBlocks username
@@ -263,9 +263,9 @@ contract GovBlocksMaster
     /// @dev Changes all address (another function)
     /// @param _GBTControllerAddress GBT controller new address    
     /// @param _GBTokenAddress GBT token new address
-    function changeAllAddress1(address _GBTControllerAddress,address _GBTokenAddress) onlyOwner
+    function changeAllAddress1(address _GBTokenAddress) onlyOwner
     {
-        GBTControllerAddress = _GBTControllerAddress;
+        // GBTControllerAddress = _GBTControllerAddress;
         GBTAddress = _GBTokenAddress;
     }
     
@@ -394,10 +394,10 @@ contract GovBlocksMaster
     }
 
     /// @dev Gets GBT and GBT controller address
-    function getGBTandGBTC() constant returns(address _GBTController,address _GBToken)
-    {
-        return (GBTControllerAddress,GBTAddress);
-    }
+    // function getGBTandGBTC() constant returns(address _GBTController,address _GBToken)
+    // {
+    //     return (GBTControllerAddress,GBTAddress);
+    // }
 
     /// @dev Gets GBT address 
     function getGBTAddress()constant returns(address)
@@ -405,11 +405,11 @@ contract GovBlocksMaster
        return GBTAddress;
     }
 
-    /// @dev Gets GBT controller address
-    function getGBTCAddress()constant returns(address)
-    {
-       return GBTControllerAddress;
-    }
+    // /// @dev Gets GBT controller address
+    // function getGBTCAddress()constant returns(address)
+    // {
+    //    return GBTControllerAddress;
+    // }
 
     /// @dev Gets governance data contract address
     // function getGDAddress()constant returns(address)
