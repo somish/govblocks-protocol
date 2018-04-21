@@ -14,7 +14,9 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity ^0.4.8;
 import "./Master.sol";
+import "./GBTStandardToken.sol";
 import "./memberRoles.sol";
+import "./governanceData.sol";
 
 contract ProposalCategory
 {
@@ -25,7 +27,7 @@ contract ProposalCategory
         string categoryDescHash;
         uint8[] memberRoleSequence;
         uint[] memberRoleMajorityVote;
-        uint24[] closingTime;
+        uint[] closingTime;
         uint8 minStake;
         uint8 maxStake;
         uint defaultIncentive;
@@ -37,9 +39,11 @@ contract ProposalCategory
     category[] public allCategory;
     Master M1;  
     memberRoles MR;
-    // address MRAddress;
+    GBTStandardToken GBTS;
+    governanceData GD;
     address masterAddress;
     address GBMAddress;
+    address GBTSAddress;
 
     modifier onlyInternal {
         M1=Master(masterAddress);
@@ -70,6 +74,13 @@ contract ProposalCategory
     {
         GBMAddress = _GBMAddress;
     }
+    
+    /// @dev Changes GovBlocks standard token address
+    /// @param _GBTAddress New GovBlocks token address
+    function changeGBTSAddress(address _GBTAddress) onlyMaster
+    {
+        GBTSAddress = _GBTAddress;
+    }   
 
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
@@ -85,8 +96,8 @@ contract ProposalCategory
         }
     }
 
-    /// @dev Changes all contracts' addresses
-    /// @param _MRAddress New member roles contract address
+    // /// @dev Changes all contracts' addresses
+   // /// @param _MRAddress New member roles contract address
     // function changeAllContractsAddress(address _MRAddress) onlyInternal
     // {
     //     MRAddress= _MRAddress;
@@ -122,7 +133,7 @@ contract ProposalCategory
     /// @param _minStake Minimum stake
     /// @param _maxStake Maximum stake
     /// @param _defaultIncentive Default incentive
-    function addNewCategory(string _categoryData,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake,uint8 _defaultIncentive) 
+    function addNewCategory(string _categoryData,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake,uint8 _defaultIncentive) 
     {
         require(msg.sender == GBMAddress);
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleSequence.length == _closingTime.length);
@@ -277,10 +288,10 @@ contract ProposalCategory
         uint pClosingTime;
         for(uint i=0; i<getCloseTimeLength(_categoryId); i++)
         {
-            pClosingTime = pClosingTime + getClosingTimeAtIndex(category,_index);
+            pClosingTime = pClosingTime + getClosingTimeAtIndex(_categoryId,_index);
         }
-
-        totalTime = (pClosingTime+GBTS.tokenHoldingTime()+GD.getProposalDateAdd(_proposalId))-now; 
+    // date Add in events ASK HERE
+        totalTime = (pClosingTime+GBTS.tokenHoldingTime()+GD.getProposalDateUpd(_proposalId))-now; 
         return totalTime;
     }
 
@@ -291,7 +302,7 @@ contract ProposalCategory
     }
 
     /// @dev Gets reward percentage option by category id
-    function getRewardPercOption(uint _categoryId)constant returns(uint)
+    function getRewardPercSolution(uint _categoryId)constant returns(uint)
     {
         return allCategory[_categoryId].rewardPercOption;
     }
@@ -307,7 +318,7 @@ contract ProposalCategory
     /// @param roleName Role name
     /// @param majorityVote Majority vote  
     /// @param closingTime Closing time of category  
-    function getCategoryData2(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint24[] closingTime)
+    function getCategoryData2(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint[] closingTime)
     {
         // MR=memberRoles(MRAddress);
         category = _categoryId;
@@ -328,7 +339,7 @@ contract ProposalCategory
     /// @return cateId Category id
     /// @return memberRoleSequence Member role sequence for voting
     /// @return cateId Category id
-    function getCategoryDetails(uint _categoryId) public constant returns (uint cateId,uint8[] memberRoleSequence,uint[] memberRoleMajorityVote,uint24[] closingTime,uint minStake,uint maxStake,uint incentive)
+    function getCategoryDetails(uint _categoryId) public constant returns (uint cateId,uint8[] memberRoleSequence,uint[] memberRoleMajorityVote,uint[] closingTime,uint minStake,uint maxStake,uint incentive)
     {    
         cateId = _categoryId;
         memberRoleSequence = allCategory[_categoryId].memberRoleSequence;
@@ -384,7 +395,7 @@ contract ProposalCategory
     }
 
     /// @dev Gets closing time of index= _index by category id
-    function getClosingTimeAtIndex(uint _categoryId,uint _index) constant returns(uint24 closeTime)
+    function getClosingTimeAtIndex(uint _categoryId,uint _index) constant returns(uint closeTime)
     {
         return allCategory[_categoryId].closingTime[_index];
     }
@@ -433,7 +444,7 @@ contract ProposalCategory
     /// @param _categoryId Category id
     /// @param _currVotingIndex Current voting index in voting seqeunce.
     /// @return Next member role to vote with its closing time and majority vote.
-    function getCategpryData2(uint _categoryId,uint _currVotingIndex)constant returns(uint8 roleSequence,uint majorityVote,uint24 closingTime)
+    function getCategpryData2(uint _categoryId,uint _currVotingIndex)constant returns(uint8 roleSequence,uint majorityVote,uint closingTime)
     {
         return (allCategory[_categoryId].memberRoleSequence[_currVotingIndex],allCategory[_categoryId].memberRoleMajorityVote[_currVotingIndex],allCategory[_categoryId].closingTime[_currVotingIndex]);
     }
