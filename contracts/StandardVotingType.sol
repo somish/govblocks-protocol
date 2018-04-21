@@ -29,12 +29,15 @@ import "./Master.sol";
 import "./Governance.sol";
 import "./memberRoles.sol";
 import "./GBTStandardToken.sol";
+import "./BasicToken.sol";
 
 
 contract StandardVotingType
 {
     // address GBTSAddress;
     address public masterAddress;
+    address BTAddress;
+    BasicToken BT;
     GBTStandardToken GBTS;
     Master MS;
     Pool P1;
