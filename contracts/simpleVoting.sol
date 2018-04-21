@@ -1,4 +1,4 @@
-    /* Copyright (C) 2017 GovBlocks.io
+/* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -12,308 +12,440 @@
 
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
-
-
 pragma solidity ^0.4.8;
-
-import "./VotingType.sol";
 import "./Master.sol";
-import "./StandardVotingType.sol";
-import "./governanceData.sol";
-import "./Governance.sol";
-import "./memberRoles.sol";
 import "./GBTStandardToken.sol";
-import "./ProposalCategory.sol";
+import "./memberRoles.sol";
+import "./governanceData.sol";
 
-contract simpleVoting is VotingType
+contract ProposalCategory
 {
-    using SafeMath for uint;
-    using Math for uint;
-    // address GDAddress;
-    // address MRAddress;
-    // address PCAddress;
-    // address GBTAddress;
-    // address G1Address;
-    // address SVTAddress;
-    // address GBTSAddress;
-    GBTStandardToken GBTS;
-    memberRoles MR;
-    Governance GOV;
-    ProposalCategory PC;
-    governanceData GD;
-    StandardVotingType SVT;
-    Master MS;
-    uint public constructorCheck;
-    address public masterAddress;
+    uint8 public constructorCheck;
 
-    modifier onlyInternal {
-        MS=Master(masterAddress);
-        require(MS.isInternal(msg.sender) == 1);
-        _; 
+    struct category
+    {
+        string categoryDescHash;
+        uint8[] memberRoleSequence;
+        uint[] memberRoleMajorityVote;
+        uint[] closingTime;
+        uint8 minStake;
+        uint8 maxStake;
+        uint defaultIncentive;
+        uint rewardPercProposal;
+        uint rewardPercOption;
+        uint rewardPercVote;
     }
 
-    modifier onlyMaster {    
+    category[] public allCategory;
+    Master M1;  
+    memberRoles MR;
+    GBTStandardToken GBTS;
+    governanceData GD;
+    address masterAddress;
+    address GBMAddress;
+    address GBTSAddress;
+
+    modifier onlyInternal {
+        M1=Master(masterAddress);
+        require(M1.isInternal(msg.sender) == 1);
+        _; 
+    }
+    
+     modifier onlyOwner {
+        M1=Master(masterAddress);
+        require(M1.isOwner(msg.sender) == 1);
+        _; 
+    }
+    
+    modifier onlyGBM
+    {
+        require(msg.sender == GBMAddress);
+        _;
+    }
+
+    modifier onlyMaster {
         require(msg.sender == masterAddress);
         _; 
     }
 
-    /// @dev Initiates simple voting contract
-    function SimpleVotingInitiate()
+    /// @dev Changes GovBlocks master address
+    /// @param _GBMAddress New GovBlocks master address
+    function changeGBMAddress(address _GBMAddress) onlyGBM
     {
-        require(constructorCheck == 0);
-        votingTypeName = "Simple Voting";
-        constructorCheck=1;
+        GBMAddress = _GBMAddress;
     }
     
-    /// @dev Changes master address
+    /// @dev Changes GovBlocks standard token address
+    /// @param _GBTAddress New GovBlocks token address
+    function changeGBTSAddress(address _GBTAddress) onlyMaster
+    {
+        GBTSAddress = _GBTAddress;
+    }   
+
+    /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
-    function changeMasterAddress(address _masterContractAddress)
+    function changeMasterAddress(address _masterContractAddress) 
     {
         if(masterAddress == 0x000)
             masterAddress = _masterContractAddress;
         else
         {
-            MS=Master(masterAddress);
-            require(MS.isInternal(msg.sender) == 1);
+            M1=Master(masterAddress);
+            require(M1.isInternal(msg.sender) == 1);
                 masterAddress = _masterContractAddress;
         }
     }
-    
-    /// @dev Changes all contracts' addresses
-    /// @param _StandardVotingAddress Standard voting address
-    /// @param _GDcontractAddress Governance data contract address
-    /// @param _MRcontractAddress Member roles contract address
-    /// @param _PCcontractAddress Proposal category contract address
-    /// @param _G1ContractAddress Governance contract address
-    // function changeAllContractsAddress(address _StandardVotingAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _G1ContractAddress) onlyInternal
+
+    // /// @dev Changes all contracts' addresses
+   // /// @param _MRAddress New member roles contract address
+    // function changeAllContractsAddress(address _MRAddress) onlyInternal
     // {
-    //     SVTAddress = _StandardVotingAddress;
-    //     GDAddress = _GDcontractAddress;
-    //     MRAddress = _MRcontractAddress;
-    //     PCAddress = _PCcontractAddress;
-    //     G1Address = _G1ContractAddress;
+    //     MRAddress= _MRAddress;
     // }
 
-    /// @dev Changes Global objects of the contracts || Uses latest version
-    /// @param contractName Contract name 
-    /// @param contractAddress Contract addresses
-    function changeAddress(bytes4 contractName, address contractAddress) onlyInternal{
-        if(contractName == 'GD'){
-            GD = governanceData(contractAddress);
-        } else if(contractName == 'MR'){
+    function changeAddress(bytes4 contractName, address contractAddress){
+        if(contractName == 'MR'){
             MR = memberRoles(contractAddress);
-        } else if(contractName == 'PC'){
-            PC = ProposalCategory(contractAddress);
-        } else if(contractName == 'SVT'){
-            SVT = StandardVotingType(contractAddress);
-        } else if(contractName == 'GOV'){
-            GOV = Governance(contractAddress);
         }
     }
 
-    /// @dev Changes GBT controller address
-    /// @param _GBTCAddress New GBT controller address
-    function changeGBTSAddress(address _GBTSAddress) onlyMaster
+    /// @dev Initiates proposal category
+    /// @param _GBMAddress New GovBlocks master address
+    function ProposalCategoryInitiate(address _GBMAddress)
     {
-        GBTS = GBTStandardToken(_GBTSAddress);
+        require(constructorCheck == 0);
+        GBMAddress = _GBMAddress;
+        // addNewCategory("QmcEP2ELejTFsaLCeiukMNS9HSg6mxitFubHEuuLDSLbYt");
+        // addNewCategory("QmeX5jkkSFPrsehqsit7zMWmTXB6pTeSHscE3HRiA1R9t5");
+        // addNewCategory("Qmb2RQ4t6b7BEevbMqF4jjjZxEbp5bspHAX8ZdL8s7t8N8");
+        // addNewCategory("QmeYFNJvVH6nkk2fFjnzgxQm9szxV3ocpFnKE2wBWaVhDN");
+        // addNewCategory("QmcAiWumEJaF6jLg14eaLU9WgdKLSy8bzPLNHMCSUZxU9a");
+        // addNewCategory("QmWTbFV1TW3Pw79tCwuJUwNyXKZVkxzkW1xW4sL9CYzUmA");
+        // addNewCategory("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8");
+        constructorCheck =1;
     }
 
-    /// @dev Initiates add solution 
-    /// @param _proposalId Proposal id
-    /// @param _memberAddress Member address
-    /// @param _solutionStake Solution stake
-    /// @param _solutionHash Solution hash
-    /// @param _dateAdd Date when the solution was added
-    function addSolution(uint _proposalId,address _memberAddress,uint _solutionStake,string _solutionHash,uint _dateAdd,uint8 _v,bytes32 _r,bytes32 _s) public
+    /// @dev Adds new category
+    /// @param _categoryData Category data
+    /// @param _memberRoleSequence Member role sequence
+    /// @param _memberRoleMajorityVote Majority of votes of a particular member role
+    /// @param _closingTime Closing time of category
+    /// @param _minStake Minimum stake
+    /// @param _maxStake Maximum stake
+    /// @param _defaultIncentive Default incentive
+    function addNewCategory(string _categoryData,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake,uint8 _defaultIncentive) 
     {
-        // SVT=StandardVotingType(SVTAddress);
-        MS=Master(masterAddress);
-        require(MS.isInternal(msg.sender) == 1 || msg.sender == _memberAddress);
-        if(_solutionStake!=0)
-            receiveSolutionStakeSV(_proposalId,_solutionStake,_solutionHash,_dateAdd,_v,_r,_s);
-        addSolution1(_proposalId,_memberAddress,_solutionHash,_dateAdd);
+        require(msg.sender == GBMAddress);
+        require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleSequence.length == _closingTime.length);
+        allCategory.push(category(_categoryData,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive,0,0,0));    
     }
 
-    /// @dev Adds solution against proposal.
-    /// @param _proposalId Proposal id
-    /// @param _memberAddress Member address
-    /// @param _solutionHash Solution hash
-    /// @param _dateAdd Date proposal was added
-    function addSolution1(uint _proposalId,address _memberAddress,string _solutionHash,uint _dateAdd) internal
+    /// @dev Updates category
+    /// @param _categoryId Category id
+    /// @param _categoryData Category data
+    function updateCategory(uint _categoryId,string _categoryData) 
     {
-        // GBTS=GBTStandardToken(GBTSAddress);
-        uint currentVotingId;uint check;
-        (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
-
-        for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
-        {
-            if(GD.getSolutionAddedByProposalId(_memberAddress,i) == _memberAddress)
-                check = 1;
-            else 
-                check = 0;
-        }
-        require(check == 0 && currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GBTS.balanceOf(_memberAddress) != 0 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
+        require(msg.sender == GBMAddress);
+            allCategory[_categoryId].categoryDescHash = _categoryData;
     }
 
-    /// @dev Adds solution
-    /// @param _proposalId Proposal id
-    /// @param _solutionStake Stake put by the member when providing a solution
-    /// @param _solutionHash Solution hash
-    function initiateAddSolution(uint _proposalId,uint _solutionStake,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) 
+    /// @dev Sets closing time for the category
+    /// @param _categoryId Category id
+    /// @param _time Closing time
+    function setClosingTime(uint _categoryId,uint24 _time)
     {
-        addSolution(_proposalId,msg.sender,_solutionStake, _solutionHash,now,_v,_r,_s); 
+        allCategory[_categoryId].closingTime.push(_time);
     }
 
-    /// @dev Receives solution stake against solution in simple voting
-    /// @param _proposalId Proposal id
-    /// @param _solutionStake Solution stake
-    /// @param _solutionHash Solution hash
-    /// @param _dateAdd Date when solution was added
-    function receiveSolutionStakeSV(uint _proposalId,uint _solutionStake,string _solutionHash,uint _dateAdd,uint8 _v,bytes32 _r,bytes32 _s) internal
+    /// @dev Sets role sequence for categoryId=_categoryId and role sequence=_roleSequence
+    function setRoleSequence(uint _categoryId,uint8 _roleSequence)
     {
-        GD=governanceData(GDAddress);
-        PC=ProposalCategory(PCAddress);
-        uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
-        uint depositAmount = ((_solutionStake*GD.depositPercSolution())/100);
-        uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
-        GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'S');
-        GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime,_v,_r,_s);  
-        GD.callSolutionEvent(_proposalId,msg.sender,_solutionHash,_dateAdd,_solutionStake);    
+        allCategory[_categoryId].memberRoleSequence.push(_roleSequence);
     }
 
-    /// @dev Creates proposal for voting
-    /// @param _proposalId Proposal id
-    /// @param _solutionChosen solution chosen while voting
-    /// @param _GBTPayableTokenAmount Amount payable in GBT tokens
-    /// @param _authRole Authorized role id 
-    /// @param _closingTime Closing time of voting
+    /// @dev Sets majority vote for category id=_categoryId and majority value=_majorityVote
+    function setMajorityVote(uint _categoryId,uint _majorityVote)
+    {
+        allCategory[_categoryId].memberRoleMajorityVote.push(_majorityVote);
+    }
+
+    /// @dev Updates category details
+    /// @param _categoryId Category id
+    /// @param _roleName Role name
     /// @param _majorityVote Majority of votes
-    function proposalVoting(uint _proposalId,uint[] _solutionChosen,uint _voteStake) public
+    /// @param _closingTime Closing time
+    /// @param _minStake Minimum stake
+    /// @param _maxStake Maximum stake
+    /// @param _defaultIncentive Default incentive
+    function updateCategoryDetails(uint _categoryId,uint8[] _roleName,uint[] _majorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake, uint _defaultIncentive)
     {
-        // GD=governanceData(GDAddress);
-        // MR=memberRoles(MRAddress);
-        // GBTS=GBTStandardToken(GBTSAddress);
-        uint8 _mrSequence;uint _majorityVote;uint24 _closingTime; uint currentVotingId;uint intermediateVerdict;uint category;
-        (,category,currentVotingId,intermediateVerdict,,,) = GD.getProposalDetailsById2(_proposalId);
-        (_mrSequence,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId)
-        uint _proposalDateUpd = GD.getProposalDateUpd(_proposalId);
-        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
+        require(_roleName.length == _majorityVote.length && _roleName.length == _closingTime.length);
+        allCategory[_categoryId].minStake = _minStake;
+        allCategory[_categoryId].maxStake = _maxStake;
+        allCategory[_categoryId].defaultIncentive = _defaultIncentive;
 
-        require(SafeMath.add(_proposalDateUpd,_closingTime) >= now && msg.sender != GD.getSolutionAddedByProposalId(_proposalId,_solutionChosen[0]));
-        require(roleId == _mrSequence && GBTS.balanceOf(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _solutionChosen.length == 1);
+        allCategory[_categoryId].memberRoleSequence=new uint8[](_roleName.length);
+        allCategory[_categoryId].memberRoleMajorityVote=new uint[](_majorityVote.length);
+        allCategory[_categoryId].closingTime = new uint24[](_closingTime.length);
 
-        if(currentVotingId == 0)
-            require(_solutionChosen[0] <= GD.getTotalSolutions(_proposalId););
-        else
-            require(_solutionChosen[0]==intermediateVerdict || _solutionChosen[0]==0);
-            
-        castVote(_proposalId,_solutionChosen,msg.sender,_voteStake,roleId,_closingTime,_majorityVote);    
+        for(uint i=0; i<_roleName.length; i++)
+        {
+            allCategory[_categoryId].memberRoleSequence[i] =_roleName[i];
+            allCategory[_categoryId].memberRoleMajorityVote[i] = _majorityVote[i];
+            allCategory[_categoryId].closingTime[i] = _closingTime[i];
+        }
     }
 
-    /// @dev Castes vote
-    /// @param _proposalId Proposal id
-    /// @param _solutionChosen solution chosen
-    /// @param _memberAddress Member address
-    /// @param _voteStake Vote stake
-    /// @param _roleId Role id
-    /// @param _closingTime Closing time of the voting
-    /// @param _majorityVote Majority of votes
-    function castVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _voteStake,uint _roleId,uint _closingTime,uint _majorityVote) internal
+    /// @dev Changes role name by category id
+    /// @param _categoryId Category id
+    /// @param _roleName Role name 
+    function changeRoleNameById(uint _categoryId,uint8[] _roleName)
     {
-        // GD=governanceData(GDAddress);
-        // SVT=StandardVotingType(SVTAddress);
-        // GOV=Governance(G1Address);
-        if(GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0)
+        allCategory[_categoryId].memberRoleSequence=new uint8[](_roleName.length);
+        for(uint i=0; i<_roleName.length; i++)
         {
-            uint voteId = GD.allVotesTotal();
-            uint finalVoteValue = SVT.setVoteValue_givenByMember(_memberAddress,_proposalId,_voteStake);
-            GD.setVoteId_againstMember(_memberAddress,_proposalId,voteId);
-            GD.setVoteIdAgainstProposalRole(_proposalId,_roleId,voteId);
-            GOV.checkRoleVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote);
-            GD.addInVote(_memberAddress,_proposalId,_solutionChosen,_voteStake,finalVoteValue);
-            receiveVoteStakeSV(_voteStake,_proposalId);
+            allCategory[_categoryId].memberRoleSequence[i] = _roleName[i];
         }
-        // else 
-            // changeMemberVote(_proposalId,_solutionChosen,_memberAddress,_GBTPayableTokenAmount);
+    }
+
+    /// @dev Changes majority of vote of a category by id
+    /// @param _categoryId Category id
+    /// @param _majorityVote Majority of votes
+    function changeMajorityVoteById(uint _categoryId,uint[] _majorityVote)
+    {
+        allCategory[_categoryId].memberRoleMajorityVote=new uint[](_majorityVote.length);
+        for(uint i=0; i<_majorityVote.length; i++)
+        {
+            allCategory[_categoryId].memberRoleMajorityVote[i] = _majorityVote[i];
+        }
+    }    
+
+    /// @dev Changes closing time by cateory id
+    /// @param _categoryId Category id
+    /// @param _closingTime Closing time
+    function changeClosingTimeById(uint _categoryId,uint24[] _closingTime)
+    {
+        allCategory[_categoryId].closingTime=new uint24[](_closingTime.length);
+        for(uint i=0; i<_closingTime.length; i++)
+        {
+            allCategory[_categoryId].closingTime[i] = _closingTime[i];
+        }
+    }
+
+    /// @dev Changes minimum stake by id
+    /// @param _categoryId Category id
+    /// @param _minStake Minimum stake
+    function changeMinStakeById(uint _categoryId,uint8 _minStake)
+    {
+        allCategory[_categoryId].minStake = _minStake;
+    }
+
+    /// @dev Changes maximum stake by category id
+    function changeMaxStakeById(uint _categoryId,uint8 _maxStake)
+    {
+        allCategory[_categoryId].maxStake = _maxStake;
     }
     
-    /// @dev Receives vote stake against solution in simple voting
-    /// @param _memberStake Member stake
-    /// @param _proposalId Proposal id
-     function receiveVoteStakeSV(uint _memberStake,uint _proposalId) internal
+    /// @dev Changes incentive by category id
+    function changeIncentiveById(uint _categoryId,uint _incentive)
     {
-        // GBTS=GBTStandardToken(GBTSAddress);
-        // GD=governanceData(GDAddress);
-        if(_memberStake != 0)
-        {
-            uint depositAmount = ((gbtTransfer*GD.depositPercVote())/100);
-            uint finalAmount = depositAmount + GD.getDepositTokensByAddress(msg.sender,_proposalId);
-            GD.setDepositTokens(msg.sender,_proposalId,finalAmount,'V');
-            GBTS.lockMemberToken(_gbUserName,_proposalId,SafeMath.sub(_TokenAmount,finalAmount);
-        }  
+        allCategory[_categoryId].defaultIncentive = _incentive;
     }
 
-    /// @dev Closes proposal for voting
-    /// @param _proposalId Proposal id
-    function closeProposalVote(uint _proposalId) onlyInternal
+    /// @dev Changes reward percentage proposal by category id
+    /// @param _categoryId Category id
+    /// @param _value Reward percentage value
+    function changeRewardPercProposal(uint _categoryId,uint _value)
     {
-        // SVT=StandardVotingType(SVTAddress);
-        SVT.closeProposalVoteSVT(_proposalId);
+        allCategory[_categoryId].rewardPercProposal = _value;
     }
 
-    /// @dev Gives rewards to respective members after final decision
+    /// @dev Changes reward percentage option by category id
+    /// @param _categoryId Category id
+    /// @param _value Reward percentage value
+    function changeRewardPercOption(uint _categoryId,uint _value)
+    {
+        allCategory[_categoryId].rewardPercOption = _value;    
+    }
+
+    /// @dev Changes reward percentage vote by category id
+    /// @param _categoryId Category id
+    /// @param _value 
+    function changeRewardPercVote(uint _categoryId,uint _value)
+    {
+        allCategory[_categoryId].rewardPercVote = _value;
+    }
+
+    /// @dev Gets remaining closing time
     /// @param _proposalId Proposal id
-    function giveReward_afterFinalDecision(uint _proposalId) onlyInternal
-    {   
-        // GD=governanceData(GDAddress); 
-        uint totalTokenToDistribute; 
-        uint voteValueFavour; 
-        // GOV=Governance(G1Address); 
-
-        if(GD.getProposalFinalVerdict(_proposalId) < 0)
-            totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getProposalOwner(_proposalId),_proposalId,'P'));
-
-        for(i=0; i<GD.getTotalSolutions(_proposalId); i++)
+    /// @param _categoryId Category id
+    /// @param _index Index of categories
+    /// @return totalTime Total time remaining before closing
+    function getRemainingClosingTime(uint _proposalId,uint _categoryId,uint _index) constant returns (uint totalTime)
+    {
+        GBTS=GBTStandardToken(GBTSAddress);
+        
+        uint pClosingTime;
+        for(uint i=0; i<getCloseTimeLength(_categoryId); i++)
         {
-            if(i!= finalVerdict)         
-                totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getSolutionAddedByProposalId(_proposalId,i),_proposalId,'S'));
+            pClosingTime = pClosingTime + getClosingTimeAtIndex(_categoryId,_index);
         }
+    // date Add in events ASK HERE
+        totalTime = (pClosingTime+GBTS.tokenHoldingTime()+GD.getProposalDateUpd(_proposalId))-now; 
+        return totalTime;
+    }
 
-        uint mrLength = MR.getAllMemberLength();
-        for(uint i=0; i<mrLength; i++) 
+    /// @dev Gets reward percentage proposal by category id
+    function getRewardPercProposal(uint _categoryId)constant returns(uint)
+    {
+        return allCategory[_categoryId].rewardPercProposal;
+    }
+
+    /// @dev Gets reward percentage option by category id
+    function getRewardPercSolution(uint _categoryId)constant returns(uint)
+    {
+        return allCategory[_categoryId].rewardPercOption;
+    }
+
+    /// @dev Gets reward percentage vote by category id    
+    function getRewardPercVote(uint _categoryId)constant returns(uint)
+    {
+        return allCategory[_categoryId].rewardPercVote;
+    }
+
+    /// @dev Gets category data for category id
+    /// @param category Category id  
+    /// @param roleName Role name
+    /// @param majorityVote Majority vote  
+    /// @param closingTime Closing time of category  
+    function getCategoryData2(uint _categoryId) constant returns(uint category,bytes32[] roleName,uint[] majorityVote,uint[] closingTime)
+    {
+        // MR=memberRoles(MRAddress);
+        category = _categoryId;
+        roleName=new bytes32[]( allCategory[_categoryId].memberRoleSequence.length);
+        for(uint8 i=0; i < allCategory[_categoryId].memberRoleSequence.length; i++)
         {
-            uint mrVoteLength = GD.getAllVoteIdsLength_byProposalRole(_proposalId,i);
-            for(uint j =0; j<mrVoteLength; j++)
-            {
-                uint voteId = GD.getVoteId_againstProposalRole(_proposalId,j,0);
-                if(GD.getSolutionByVoteIdAndIndex(voteId,0) != finalVerdict)
-                {
-                    totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getVoterAddress(voteid),_proposalId,'V');
-                    totalVoteValue = SafeMath.add(totalVoteValue,GD.getVoteValue(voteid));
-                } 
-            }
+            bytes32 name;
+            (,name) = MR.getMemberRoleNameById(allCategory[_categoryId].memberRoleSequence[i]);
+            roleName[i] = name;
         }
+        
+        majorityVote = allCategory[_categoryId].memberRoleMajorityVote;
+        closingTime =  allCategory[_categoryId].closingTime;
+    }
 
-        totalReward = totalReward + GD.getProposalIncentive(_proposalId); 
-        GOV.setProposalDetails(_proposalId,totalReward,totalVoteValue);         
+    /// @dev Gets category details
+    /// @param closingTime Closing time of category
+    /// @return cateId Category id
+    /// @return memberRoleSequence Member role sequence for voting
+    /// @return cateId Category id
+    function getCategoryDetails(uint _categoryId) public constant returns (uint cateId,uint8[] memberRoleSequence,uint[] memberRoleMajorityVote,uint[] closingTime,uint minStake,uint maxStake,uint incentive)
+    {    
+        cateId = _categoryId;
+        memberRoleSequence = allCategory[_categoryId].memberRoleSequence;
+        memberRoleMajorityVote = allCategory[_categoryId].memberRoleMajorityVote;
+        closingTime = allCategory[_categoryId].closingTime;
+        minStake = allCategory[_categoryId].minStake;
+        maxStake = allCategory[_categoryId].maxStake;
+        incentive = allCategory[_categoryId].defaultIncentive; 
     } 
 
-    // function changeMemberVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _GBTPayableTokenAmount) internal
-    // {
-    //     MR=memberRoles(MRAddress);
-    //     GOV=Governance(G1Address);
-    //     GD=governanceData(GDAddress);
-    //     SVT=StandardVotingType(SVTAddress);
+    /// @dev Gets minimum stake for category id
+    function getMinStake(uint _categoryId)constant returns(uint8) 
+    {
+        return allCategory[_categoryId].minStake;
+    }
 
-    //     uint roleId = MR.getMemberRoleIdByAddress(_memberAddress);
-    //     uint voteId = GD.getVoteId_againstMember(_memberAddress,_proposalId);
-    //     uint voteVal = GD.getVoteValue(voteId);
-        
-    //     GD.editProposalVoteCount(_proposalId,roleId,GD.getOptionById(voteId,0),voteVal);
-    //     GD.setProposalVoteCount(_proposalId,roleId,_optionChosen[0],voteVal);
-    //     GD.setOptionChosen(voteId,_optionChosen[0]);
+    /// @dev Gets maximum stake for category id
+    function getMaxStake(uint _categoryId) constant returns(uint8)
+    {
+        return allCategory[_categoryId].maxStake;
+    }
 
-        
-    // }
+    /// @dev Gets member role's majority vote length
+    /// @param _categoryId Category id
+    /// @return index Category index
+    /// @return majorityVoteLength Majority vote length
+    function getRoleMajorityVotelength(uint _categoryId) constant returns(uint index,uint majorityVoteLength)
+    {
+        index = _categoryId;
+        majorityVoteLength= allCategory[_categoryId].memberRoleMajorityVote.length;
+    }
+
+    /// @dev Gets closing time length
+    /// @param _categoryId Category id
+    /// @return index Category index
+    /// @return closingTimeLength Closing time length
+    function getClosingTimeLength(uint _categoryId) constant returns(uint index,uint closingTimeLength)
+    {
+        index = _categoryId;
+        closingTimeLength = allCategory[_categoryId].closingTime.length;
+    }
+
+    /// @dev Gets closing time length by category id
+    function getCloseTimeLength(uint _categoryId)constant returns(uint)
+    {
+        return allCategory[_categoryId].closingTime.length;
+    }
+
+    /// @dev Gets role sequence length by category id
+    function getRoleSequencLength(uint _categoryId) constant returns(uint roleLength)
+    {
+        roleLength = allCategory[_categoryId].memberRoleSequence.length;
+    }
+
+    /// @dev Gets closing time of index= _index by category id
+    function getClosingTimeAtIndex(uint _categoryId,uint _index) constant returns(uint closeTime)
+    {
+        return allCategory[_categoryId].closingTime[_index];
+    }
+
+    /// @dev Gets role sequence of index= _index by category id  
+    function getRoleSequencAtIndex(uint _categoryId,uint _index) constant returns(uint roleId)
+    {
+        return allCategory[_categoryId].memberRoleSequence[_index];
+    }
+
+    /// @dev Gets majority of votes at index= _index by category id
+    function getRoleMajorityVoteAtIndex(uint _categoryId,uint _index) constant returns(uint majorityVote)
+    {
+        return allCategory[_categoryId].memberRoleMajorityVote[_index];
+    }
+ 
+    /// @dev Gets category incentive at index= _index by category id
+    function getCatIncentive(uint _categoryId)constant returns(uint incentive)
+    {
+        incentive = allCategory[_categoryId].defaultIncentive;
+    }
+
+    /// @dev Gets category id and incentive at index= _index by category id
+    function getCategoryIncentive(uint _categoryId)constant returns(uint category,uint incentive)
+    {
+        category = _categoryId;
+        incentive = allCategory[_categoryId].defaultIncentive;
+    }
+
+    /// @dev Gets category length
+    /// @return allCategory.length Category length
+    function getCategoryLength()constant returns(uint)
+    {
+        return allCategory.length;
+    }
+
+    /// @dev Gets category data of a given category id
+    /// @param _categoryId Category id
+    /// @return allCategory[_categoryId].categoryDescHash Hash of description of category id '_categoryId'
+    function getCategoryData1(uint _categoryId) constant returns(string)
+    {
+        return allCategory[_categoryId].categoryDescHash;
+    }
+
+    /// @dev Gets Category data depending upon current voting index in Voting sequence.
+    /// @param _categoryId Category id
+    /// @param _currVotingIndex Current voting index in voting seqeunce.
+    /// @return Next member role to vote with its closing time and majority vote.
+    function getCategpryData2(uint _categoryId,uint _currVotingIndex)constant returns(uint8 roleSequence,uint majorityVote,uint closingTime)
+    {
+        return (allCategory[_categoryId].memberRoleSequence[_currVotingIndex],allCategory[_categoryId].memberRoleMajorityVote[_currVotingIndex],allCategory[_categoryId].closingTime[_currVotingIndex]);
+    }
 }
-

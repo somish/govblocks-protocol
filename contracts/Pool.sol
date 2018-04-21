@@ -76,16 +76,11 @@ contract Pool is usingOraclize
         require(M1.isOwner(msg.sender) == 1);
         _; 
     }
-    
-    /// @dev Changes GBT token address
-    /// @param _GBTSContractAddress New GBT token address
+
     // function changeGBTtokenAddress(address _GBTSContractAddress)
     // {
     //     GBTStandardTokenAddress = _GBTSContractAddress;
     // }
-
-    /// @dev Changes GBT controller address
-    /// @param _GBTCAddress New GBT controller address
     // function changeGBTControllerAddress(address _GBTCAddress)
     // {
     //     GBTControllerAddress = _GBTCAddress;
@@ -106,9 +101,7 @@ contract Pool is usingOraclize
     //     GBTC.buyTokenGBT.value(msg.value)(address(this));
     // }
 
-    /// @dev Transfers GBT to controller
-    /// @param _amount Amount to be transferred
-    /// @param _description Description of transfer
+
     // function transferGBTtoController(uint _amount,string _description) 
     // {
     //     GBTC=GBTController(GBTControllerAddress);
@@ -118,7 +111,7 @@ contract Pool is usingOraclize
     /// @dev Closes proposal using oraclize
     /// @param _proposalId Proposal id
     /// @param _closingTime Closing time of proposal
-    function closeProposalOraclise(uint _proposalId , uint24 _closingTime) 
+    function closeProposalOraclise(uint _proposalId , uint _closingTime) 
     {
         uint index = getApilCall_length(); bytes32 myid2;
         M1=Master(masterAddress);

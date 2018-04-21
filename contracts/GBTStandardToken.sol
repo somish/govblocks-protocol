@@ -17,7 +17,7 @@ pragma solidity ^0.4.8;
 import "./StandardToken.sol";
 import "./SafeMath.sol";
 
-contract GBTStandardToken is ERC20, ERC20Basic
+contract GBTStandardToken is ERC20Basic, ERC20
 {
     event TransferGBT(address indexed from, address indexed to, uint256 value,string description);
 
@@ -59,8 +59,9 @@ contract GBTStandardToken is ERC20, ERC20Basic
   }
 
    function transfer_message(address _to, uint256 _value,string _message) public returns (bool) {
-    bool trf= transfer(_to,value);
-    if(_message!="" && trf == true)
+    bool trf= transfer(_to,_value);
+    // if(_message!="" && trf == true) // ASK HERE
+    if(trf == true)
         TransferGBT(msg.sender, _to, _value,_message);
     return true;
   }
@@ -77,7 +78,7 @@ contract GBTStandardToken is ERC20, ERC20Basic
     function lockToken(address _memberAddress,uint _amount,uint _validUpto,uint8 _v,bytes32 _r,bytes32 _s)
     {
         require(verifySign(_memberAddress,_amount,_validUpto,_v,_r,_s));
-        user_lockToken[_memberAddress].push(lock(_amount,_validUpto);
+        user_lockToken[_memberAddress].push(lock(_amount,_validUpto));
     }
 
     function verifySign(address _memberAddress,uint _amount,uint _validUpto,uint8 _v,bytes32 _r,bytes32 _s) constant  returns(bool)
@@ -104,7 +105,7 @@ contract GBTStandardToken is ERC20, ERC20Basic
     {
         uint time=now;
         locked_tokens=0;
-        for(uint i=0;i<user_lockToken[_memberAddress].length();i++)
+        for(uint i=0;i<user_lockToken[_memberAddress].length; i++)
         {
             if(user_lockToken[_memberAddress][i].validUpto>time)
                 locked_tokens-locked_tokens+user_lockToken[_memberAddress][i].amount;
@@ -129,14 +130,14 @@ contract GBTStandardToken is ERC20, ERC20Basic
 
   function transferFrom_mssage(address _from, address _to, uint256 _value,string _message) public returns (bool) {
    require(_to != address(0));
-    require(_value <= (balances[_from]-getLockToken(msg.sender));
+    require(_value <= (balances[_from]-getLockToken(msg.sender)));
     require(_value <= allowed[_from][msg.sender]);
 
     balances[_from] = balances[_from].sub(_value);
     balances[_to] = balances[_to].add(_value);
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
     Transfer(_from, _to, _value);
-    if(_message!="")
+    // if(_message!="") // ASK HERE
         TransferGBT(_from, _to, _value,_message);
     return true;
   }
@@ -218,6 +219,12 @@ event Mint(address indexed to, uint256 amount);
     require(!mintingFinished);
     _;
   }
+  
+     modifier onlyOwner{
+        require(msg.sender == owner);
+      _;
+    }
+  
 
   /**
    * @dev Function to mint tokens
@@ -226,7 +233,7 @@ event Mint(address indexed to, uint256 amount);
    * @return A boolean that indicates if the operation was successful.
    */
 
-  function mint(address _to, uint256 _amount) internal canMint public returns (bool) {
+  function mint(address _to, uint256 _amount) canMint internal returns (bool) {
     totalSupply = totalSupply.add(_amount);
     balances[_to] = balances[_to].add(_amount);
     Mint(_to, _amount);
@@ -238,15 +245,13 @@ event Mint(address indexed to, uint256 amount);
    * @dev Function to stop minting new tokens.
    * @return True if the operation was successful.
    */
-  function finishMinting() onlyOwner canMint public returns (bool) {
+  function finishMinting() onlyOwner canMint  returns (bool) {
     mintingFinished = true;
     MintFinished();
     return true;
   }
-  
-  uint public tokenPrice;
-
-  function buyToken() payable 
+ 
+  function buyToken() payable public returns(uint actual_amount)
     {
         actual_amount = SafeMath.mul(SafeMath.div(msg.value,tokenPrice),10**decimals);         
         mint(msg.sender,actual_amount);

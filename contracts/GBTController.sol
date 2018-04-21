@@ -25,102 +25,102 @@ import "./Master.sol";
 
 contract GBTController 
 {
-    using SafeMath for uint;
-    address public GBMAddress;
-    address public owner;
-    address M1Address;
-    address GBTStandardTokenAddress;
-    governanceData GD;
-    Master MS;
-    GovBlocksMaster GBM;
-    GBTStandardToken GBTS;
-    VotingType VT;
-    Governance G1;
-    ProposalCategory PC;
-    uint public tokenPrice;
-    uint public actual_amount;
+    // using SafeMath for uint;
+    // address public GBMAddress;
+    // address public owner;
+    // address M1Address;
+    // address GBTStandardTokenAddress;
+    // governanceData GD;
+    // Master MS;
+    // GovBlocksMaster GBM;
+    // GBTStandardToken GBTS;
+    // VotingType VT;
+    // Governance G1;
+    // ProposalCategory PC;
+    // uint public tokenPrice;
+    // uint public actual_amount;
 
-    modifier onlyGBM
-    {
-        require(msg.sender == GBMAddress);
-        _;
-    }
+    // modifier onlyGBM
+    // {
+    //     require(msg.sender == GBMAddress);
+    //     _;
+    // }
     
-    function GBTController(address _GBMAddress) 
-    {
-        owner = msg.sender;
-        tokenPrice = 1*10**15;
-        GBMAddress = _GBMAddress;
-    }
+    // function GBTController(address _GBMAddress) 
+    // {
+    //     owner = msg.sender;
+    //     tokenPrice = 1*10**15;
+    //     GBMAddress = _GBMAddress;
+    // }
 
-    function changeGBTtokenAddress(address _Address) onlyGBM
-    {
-        GBTStandardTokenAddress = _Address;
-    }
+    // function changeGBTtokenAddress(address _Address) onlyGBM
+    // {
+    //     GBTStandardTokenAddress = _Address;
+    // }
 
-    function changeGBMAddress(address _GBMAddress) onlyGBM
-    {
-        GBMAddress = _GBMAddress;
-    }
+    // function changeGBMAddress(address _GBMAddress) onlyGBM
+    // {
+    //     GBMAddress = _GBMAddress;
+    // }
 
-    function transferGBT(address _to, uint256 _value,string _description) 
-    {
-        GBTS=GBTStandardToken(GBTStandardTokenAddress);
-
-        require(_value <= GBTS.balanceOf(address(this)));
-        GBTS.addInBalance(_to,_value);
-        GBTS.subFromBalance(address(this),_value);
-        GBTS.callTransferGBTEvent(address(this), _to, _value, _description);
-    }
-    
-    // function receiveGBT(address _from,uint _value, string _description) 
+    // function transferGBT(address _to, uint256 _value,string _description) 
     // {
     //     GBTS=GBTStandardToken(GBTStandardTokenAddress);
 
-    //     require(_value <= GBTS.balanceOf(_from));
-    //     GBTS.addInBalance(address(this),_value);
-    //     GBTS.subFromBalance(_from,_value);
-    //     GBTS.callTransferGBTEvent(_from, address(this), _value, _description);
-    // }  
-
-     function receiveGBT(uint _value, string _description) internal
-    {
-        GBTS=GBTStandardToken(GBTStandardTokenAddress);
-
-        require(_value <= GBTS.balanceOf(msg.sender));
-        GBTS.addInBalance(address(this),_value);
-        GBTS.subFromBalance(msg.sender,_value);
-        GBTS.callTransferGBTEvent(msg.sender, address(this), _value, _description);
-    }  
+    //     require(_value <= GBTS.balanceOf(address(this)));
+    //     GBTS.addInBalance(_to,_value);
+    //     GBTS.subFromBalance(address(this),_value);
+    //     GBTS.callTransferGBTEvent(address(this), _to, _value, _description);
+    // }
     
-    function buyTokenGBT(address _to) payable 
-    {
-        GBTS=GBTStandardToken(GBTStandardTokenAddress);
-        actual_amount = SafeMath.mul(SafeMath.div(msg.value,tokenPrice),10**GBTS.decimals());         
-        rewardToken(_to,actual_amount);
-    }
+    // // function receiveGBT(address _from,uint _value, string _description) 
+    // // {
+    // //     GBTS=GBTStandardToken(GBTStandardTokenAddress);
 
-    function rewardToken(address _to,uint _amount) internal  
-    {
-        GBTS=GBTStandardToken(GBTStandardTokenAddress);
-        GBTS.addInBalance(_to,_amount);
-        GBTS.addInTotalSupply(_amount);
-        GBTS.callTransferGBTEvent(GBTStandardTokenAddress, _to, _amount, "GBT Purchased");
-    }
+    // //     require(_value <= GBTS.balanceOf(_from));
+    // //     GBTS.addInBalance(address(this),_value);
+    // //     GBTS.subFromBalance(_from,_value);
+    // //     GBTS.callTransferGBTEvent(_from, address(this), _value, _description);
+    // // }  
 
-    function changeTokenPrice(uint _price)
-    {
-        uint _tokenPrice = _price;
-        tokenPrice = _tokenPrice;
-    }
+    //  function receiveGBT(uint _value, string _description) internal
+    // {
+    //     GBTS=GBTStandardToken(GBTStandardTokenAddress);
 
-    function getTokenPrice() constant returns(uint)
-    {
-        return tokenPrice;
-    }
+    //     require(_value <= GBTS.balanceOf(msg.sender));
+    //     GBTS.addInBalance(address(this),_value);
+    //     GBTS.subFromBalance(msg.sender,_value);
+    //     GBTS.callTransferGBTEvent(msg.sender, address(this), _value, _description);
+    // }  
+    
+    // function buyTokenGBT(address _to) payable 
+    // {
+    //     GBTS=GBTStandardToken(GBTStandardTokenAddress);
+    //     actual_amount = SafeMath.mul(SafeMath.div(msg.value,tokenPrice),10**GBTS.decimals());         
+    //     rewardToken(_to,actual_amount);
+    // }
 
-    function setTokenHoldingTime(uint _newValidity)
-    {
-        tokenHoldingTime = _newValidity;
-    }
+    // function rewardToken(address _to,uint _amount) internal  
+    // {
+    //     GBTS=GBTStandardToken(GBTStandardTokenAddress);
+    //     GBTS.addInBalance(_to,_amount);
+    //     GBTS.addInTotalSupply(_amount);
+    //     GBTS.callTransferGBTEvent(GBTStandardTokenAddress, _to, _amount, "GBT Purchased");
+    // }
+
+    // function changeTokenPrice(uint _price)
+    // {
+    //     uint _tokenPrice = _price;
+    //     tokenPrice = _tokenPrice;
+    // }
+
+    // function getTokenPrice() constant returns(uint)
+    // {
+    //     return tokenPrice;
+    // }
+
+    // function setTokenHoldingTime(uint _newValidity)
+    // {
+    //     tokenHoldingTime = _newValidity;
+    // }
 }

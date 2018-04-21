@@ -17,14 +17,18 @@
 pragma solidity ^0.4.8;
 import "./Master.sol";
 import "./BasicToken.sol";
+import "./governanceData.sol";
 
 contract  memberRoles
 {
+  event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription);
+    
   bytes32[] memberRole;
   uint categorizeAuthRoleid;
   string memberRoleDescHash;
   uint8 public constructorCheck;
   Master M1; 
+  governanceData GD;
   address masterAddress;
 //   address GDAddress;
 //   address BTAddress;
@@ -41,7 +45,7 @@ contract  memberRoles
   mapping(uint=>address) updateMemberRoles;
   mapping(uint=>memberRoleDetails) memberRoleData;
   mapping (address=>uint) memberAddressToMemberRole;
-  event MemberRole(address indexed roleId, bytes32 roleName, string roleDescription);
+
 
   /// @dev Initiates member roles
   /// @param _GBMAddress GovBlocks master address
@@ -55,7 +59,7 @@ contract  memberRoles
         M1=Master(masterAddress);
         address ownAddress = M1.owner();
         updateMemberRole(ownAddress,1,1);
-        changeRoleDescHash("QmTDisHekKVCBc4JNHfdiiZNgFRqdPoNn69QbD2vwTeo9L");
+        // changeRoleDescHash("QmTDisHekKVCBc4JNHfdiiZNgFRqdPoNn69QbD2vwTeo9L");
         GBMAddress = _GBMAddress;
         constructorCheck =1;
   }
@@ -102,8 +106,6 @@ contract  memberRoles
       }
   }
 
-  /// @dev Changes governance data contract address
-  /// @param _GDAddress New governance data contract address
 //   function changeAllContractAddress(address _GDAddress) onlyInternal
 //   {
 //     GDAddress = _GDAddress;
@@ -161,20 +163,23 @@ contract  memberRoles
   
   /// @dev Adds new member role
   /// @param _newRoleName New role name
-  /// @param _newDescHash New description hash
+  /// @param _roleDescription New description hash
+  /// @param _canAddMembers Authorized member against every role id
   function addNewMemberRole(bytes32 _newRoleName,string _roleDescription, address _canAddMembers) 
   {
       require(msg.sender == GBMAddress);
+      uint totalMembers = getTotalMemberRoles();
       memberRole.push(_newRoleName);  
-      updateMemberRoles[memberRole.length] = _canAddMembers;
-      MemberRole(memberRole.length, _newRoleName, _roleDescription);
+      updateMemberRoles[totalMembers] = _canAddMembers;
+      MemberRole(totalMembers, _newRoleName, _roleDescription);
   }
-
-  /// @dev Sets new role description hash
-  /// @param _newDescHash New description hash
-  function changeRoleDescHash(string _newDescHash) onlyInternal
-  {
-     memberRoleDescHash = _newDescHash;
+  
+  /// @dev Changes member role id's changable member 
+  /// @param _memberRoleId Member role id
+  /// @param _newCanAddMember New canAddMember address
+  function changeCanAddMember(uint _memberRoleId, address _newCanAddMember){
+      require(msg.sender == updateMemberRoles[_memberRoleId]);
+      updateMemberRoles[_memberRoleId] = _newCanAddMember;
   }
   
   /// @dev Gets the role name when given role id

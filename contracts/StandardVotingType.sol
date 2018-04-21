@@ -30,6 +30,7 @@ import "./Governance.sol";
 import "./memberRoles.sol";
 import "./GBTStandardToken.sol";
 import "./BasicToken.sol";
+import "./GovBlocksMaster.sol";
 
 
 contract StandardVotingType
@@ -37,6 +38,7 @@ contract StandardVotingType
     // address GBTSAddress;
     address public masterAddress;
     address BTAddress;
+    GovBlocksMaster GBM;
     BasicToken BT;
     GBTStandardToken GBTS;
     Master MS;
@@ -75,10 +77,6 @@ contract StandardVotingType
         _;
     }
     
-    /// @dev Changes other contracts' addresses
-    /// @param _SVaddress New simple voting contract address
-    /// @param _RBaddress New rank based contract address
-    /// @param _FWaddress New feature weighted contracts address
     // function changeOtherContractAddress(bytes4 _contractName) onlyInternal 
     // {
     //     SVAddress = _SVaddress;
@@ -86,12 +84,6 @@ contract StandardVotingType
     //     FWAddress = _FWaddress;
     // }
 
-    /// @dev Changes all contracts' addresses
-    /// @param _GDcontractAddress  New governance data contract address
-    /// @param _MRcontractAddress New member roles contract address
-    /// @param _PCcontractAddress New proposal category contract address
-    /// @param _governanceContractAddress New governance contract address
-    /// @param _poolContractAddress New pool contract address
     // function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _governanceContractAddress,address _poolContractAddress) onlyInternal 
     // {
     //     GDAddress = _GDcontractAddress;
@@ -144,10 +136,7 @@ contract StandardVotingType
         finalVoteValue = SafeMath.mul(GD.getMemberReputation(_memberAddress),value);
     }  
     
-    /// @dev Checks if msg.sender has already added the solution
-    /// @param _proposalId Proposal id
-    /// @param _memberAddress Member address
-    /// @return check Check flag
+
     // function checkForSolution(uint _proposalId,address _memberAddress) internal constant returns(uint check)
     // {
     //     for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
@@ -159,11 +148,6 @@ contract StandardVotingType
     //     }
     // }
 
-    /// @dev Adds solution against proposal.
-    /// @param _proposalId Proposal id
-    /// @param _memberAddress Member address
-    /// @param _solutionHash Solution hash
-    /// @param _dateAdd Date proposal was added
     // function addSolutionSVT(uint _proposalId,address _memberAddress,string _solutionHash,uint _dateAdd) onlyInternal
     // {
     //     GBTS=GBTStandardToken(GBTSAddress);
@@ -179,9 +163,9 @@ contract StandardVotingType
     function closeProposalVoteSVT(uint _proposalId) onlyInternal
     {   
         VT=VotingType(GD.getProposalVotingType(_proposalId)); 
-        uint8 _mrSequenceId;uint _majorityVote;uint24 _closingTime; uint category;uint currentVotingId; uint totalSolutions; uint totalVoteValue=0;
+        uint8 _mrSequenceId;uint _majorityVote;uint _closingTime; uint8 category;uint8 currentVotingId; uint totalSolutions; uint totalVoteValue=0;
         (,category,currentVotingId,,,totalSolutions) = GD.getProposalDetailsById2(_proposalId); 
-        (_mrSequenceId,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId)
+        (_mrSequenceId,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId);
         require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId,_closingTime,_majorityVote)==1); //1
         
         uint[] memory finalVoteValue = new uint[](totalSolutions); 
@@ -194,7 +178,7 @@ contract StandardVotingType
             finalVoteValue[solutionChosen] = finalVoteValue[solutionChosen] + voteValue;
         }
 
-        max=0;  
+        uint8 max=0;  
         for(i = 0; i < finalVoteValue.length; i++)
         {
             if(finalVoteValue[max] < finalVoteValue[i])
