@@ -306,12 +306,14 @@ contract governanceData {
     /// @dev Adds status 
     function addStatus() internal
     {
-        status.push("Draft for discussion"); 
-        status.push("Draft Ready for submission");
-        status.push("Voting started"); 
-        status.push("Proposal Decision - Accepted by Majority Voting"); 
-        status.push("Proposal Decision - Rejected by Majority voting"); 
-        status.push("Proposal Denied, Threshold not reached"); 
+        status.push("Draft for discussion"); // 0
+        status.push("Draft Ready for submission"); // 1
+        status.push("Voting started");  // 2
+        status.push("Proposal Decision - Accepted by Majority Voting");  // 3
+        status.push("Proposal Decision - Rejected by Majority voting"); // 4
+        status.push("Proposal Accepted - Majority Voting not reached But Accepted by previous Voting"); // 5
+        status.push("Proposal Denied, Threshold not reached"); // 6
+        status.push("Proposal Accepted - Threshold not reached But Accepted by Previous Voting");  // 7
     }
 
     /// @dev Sets global parameters that will help in distributing reward
@@ -328,7 +330,11 @@ contract governanceData {
         depositPercVote=40;
     }
     
+
+
 // VERSION 2.0 : Proposal Creation details against member.
+
+
 
     /// @dev Add proposal ids created by member against member address
     function addInAllProposalByMember(address _memberAddress,uint _proposalId)
@@ -354,7 +360,11 @@ contract governanceData {
       return allProposalAgainstMember[_memberAddress].length;
     }
 
+
+
 // VERSION 2.0 : Last Reward Distribution details.
+
+
 
     /// @dev Sets last rewards for proposal
     /// @param _memberAddress Member address
