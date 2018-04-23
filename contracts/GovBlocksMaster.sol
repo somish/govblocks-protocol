@@ -20,7 +20,6 @@ import "./memberRoles.sol";
 import "./ProposalCategory.sol";
 import "./governanceData.sol";
 // import "./GBTController.sol";
-import "./GBTStandardToken.sol";
 
 contract GovBlocksMaster 
 {
@@ -29,7 +28,6 @@ contract GovBlocksMaster
     ProposalCategory PC;
     governanceData GD;
     // GBTController GBTC;
-    GBTStandardToken GBTS;
     address public owner;
     // address GBTControllerAddress;
     address GBTAddress;
@@ -114,17 +112,6 @@ contract GovBlocksMaster
         // changeGBTTokenInController(_GBTContractAddress); 
     }
 
-    // function updateGBTControllerAddress(address _GBTControllerAddress) onlyOwner
-    // {
-    //     GBTControllerAddress=_GBTControllerAddress;
-    //     for(uint i=0;i<allGovBlocksUsers.length; i++)
-    //     {
-    //         address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
-    //         MS=Master(masterAddress);
-    //         MS.changeGBTControllerAddress(_GBTControllerAddress);
-    //     }
-    //     changeGBTControllerInToken(_GBTControllerAddress);
-    // }
 
     /// @dev Updates GovBlocks master address
     /// @param _newGBMAddress New GovBlocks master address
@@ -138,21 +125,7 @@ contract GovBlocksMaster
         }
     }
 
-    /// @dev Changes GBT token in controller
-    /// @param _newGBTToken New GBT token address
-    // function changeGBTTokenInController(address _newGBTToken) internal
-    // {
-    //     GBTC=GBTController(GBTControllerAddress);
-    //     GBTC.changeGBTtokenAddress(GBTAddress);
-    // }
 
-    /// @dev Changes GBT controller in token
-    /// @param _newGBTController New GBT controller address
-    // function changeGBTControllerInToken(address _newGBTController) internal
-    // {
-    //     GBTC=GBTController(GBTControllerAddress);
-    //     GBTC.changeGBTtokenAddress(GBTAddress);
-    // }
 
     /// @dev Adds GovBlocks user
     /// @param _gbUserName  GovBlocks username
@@ -170,27 +143,19 @@ contract GovBlocksMaster
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
         MS=Master(_newMasterAddress);
         MS.setOwner(msg.sender);
-        // setDappArray(_newMasterAddress,addresses);
     }
-    // bytes2[] addresses;
-    // function setDappArray(address  _newMasterAddress,bytes2[] addresses)
-    // {
-    //     MS=Master(_newMasterAddress);
-    //     MS.addContractNames(addresses);
-    // }
-  
 
     /// @dev Changes dApp master address
     /// @param _gbUserName GovBlocks username
     /// @param _newMasterAddress dApp new master address
     function changeDappMasterAddress(bytes32 _gbUserName,address _newMasterAddress)
     {
-       if( govBlocksDapps[_gbUserName].masterAddress == 0x000)
+      if( govBlocksDapps[_gbUserName].masterAddress == 0x000)
         {       
             govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
             govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         }
-       else
+      else
         {            
             if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
                 {
@@ -224,18 +189,18 @@ contract GovBlocksMaster
         }   
     }
  
-    /// @dev Changes dApp description hash
-    /// @param _gbUserName GovBlocks username
-    /// @param _dappDescriptionHash dApp new description hash
-    function changeDappDescHash(bytes32 _gbUserName,string _dappDescriptionHash)
-    { 
-        if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
-        {
-            govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
-        }
-        else
-            throw;
-    }
+    // /// @dev Changes dApp description hash
+    // /// @param _gbUserName GovBlocks username
+    // /// @param _dappDescriptionHash dApp new description hash
+    // function changeDappDescHash(bytes32 _gbUserName,string _dappDescriptionHash)
+    // { 
+    //     if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
+    //     {
+    //         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
+    //     }
+    //     else
+    //         throw;
+    // }
 
     /// @dev Sets byte code and abi
     /// @param _byteCodeHash Byte code hash
@@ -264,13 +229,13 @@ contract GovBlocksMaster
        govBlocksUser[msg.sender] = _hash;
     }
 
-    /// @dev Gets byte code and abi hash
-    /// @param byteCode Byte code 
-    /// @param abiHash Application binary interface hash
-    function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
-    {
-       return (byteCodeHash,contractsAbiHash);
-    }
+    // /// @dev Gets byte code and abi hash
+    // /// @param byteCode Byte code 
+    // /// @param abiHash Application binary interface hash
+    // function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
+    // {
+    //   return (byteCodeHash,contractsAbiHash);
+    // }
 
     /// @dev Gets GovBlocks user details
     /// @param _gbUserName GovBlocks username
@@ -432,7 +397,7 @@ contract GovBlocksMaster
         address master = govBlocksDapps[_gbUserName].masterAddress; address MRAddress;
         MS=Master(master);
         uint16 versionNo = MS.versionLength()-1; 
-        MRAddress = MS.getAllContractVersions(versionNo,"MR");
+        MRAddress = MS.allContractVersions(versionNo,"MR");
         MR=memberRoles(MRAddress);
         MR.addNewMemberRole(_newRoleName, _roleDescription, _canAddMembers);
     }
@@ -448,7 +413,7 @@ contract GovBlocksMaster
         address master = govBlocksDapps[_gbUserName].masterAddress; address MRAddress;
         MS=Master(master);
         uint16 versionNo = MS.versionLength()-1; 
-        MRAddress = MS.getAllContractVersions(versionNo,"MR");
+        MRAddress = MS.allContractVersions(versionNo,"MR");
         MR=memberRoles(MRAddress);
         MR.updateMemberRole(_memberAddress,_memberRoleId,_typeOf);
     }
@@ -462,7 +427,7 @@ contract GovBlocksMaster
         address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
         MS=Master(master);
         uint16 versionNo = MS.versionLength()-1; 
-        PCAddress = MS.getAllContractVersions(versionNo,"PC");
+        PCAddress = MS.allContractVersions(versionNo,"PC");
         PC=ProposalCategory(PCAddress);
         // PC.addNewCategory(_descHash);
     }
@@ -477,7 +442,7 @@ contract GovBlocksMaster
         address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
         MS=Master(master);
         uint16 versionNo = MS.versionLength()-1; 
-        PCAddress = MS.getAllContractVersions(versionNo,"PC");
+        PCAddress = MS.allContractVersions(versionNo,"PC");
         PC=ProposalCategory(PCAddress);
         PC.updateCategory(_categoryId,_categoryData);
     }
@@ -492,7 +457,7 @@ contract GovBlocksMaster
         address master = govBlocksDapps[_gbUserName].masterAddress; address GDAddress;
         MS=Master(master);
         uint16 versionNo = MS.versionLength()-1; 
-        GDAddress = MS.getAllContractVersions(versionNo,"GD");
+        GDAddress = MS.allContractVersions(versionNo,"GD");
         GD=governanceData(GDAddress);
 
         if(_typeOf == "APO")

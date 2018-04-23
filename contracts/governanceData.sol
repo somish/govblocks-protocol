@@ -841,7 +841,7 @@ contract governanceData {
     }
 
     /// @dev If member's decision is final decision, member's reputation is set accordingly
-    function getMemberReputation(address _memberAddress) constant returns(uint memberPoints)
+    function getMemberReputation(address _memberAddress) constant returns(uint32 memberPoints)
     {
         if(allMemberReputationByAddress[_memberAddress] == 0)
             memberPoints = 1;

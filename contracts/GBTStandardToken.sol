@@ -19,7 +19,7 @@ import "./SafeMath.sol";
 
 contract GBTStandardToken is ERC20Basic, ERC20
 {
-    event TransferGBT(address indexed from, address indexed to, uint256 value,string description);
+    event TransferGBT(address indexed from, address indexed to, uint256 value,bytes32 description);
 
     using SafeMath for uint;
     uint public tokenPrice;
@@ -58,9 +58,9 @@ contract GBTStandardToken is ERC20Basic, ERC20
     return true;
   }
 
-   function transfer_message(address _to, uint256 _value,string _message) public returns (bool) {
+   function transfer_message(address _to, uint256 _value,bytes32 _message) public returns (bool) {
     bool trf= transfer(_to,_value);
-    // if(_message!="" && trf == true) // ASK HERE
+    if(_message!="" && trf == true)
     if(trf == true)
         TransferGBT(msg.sender, _to, _value,_message);
     return true;
@@ -128,7 +128,7 @@ contract GBTStandardToken is ERC20Basic, ERC20
    return trf;
   }
 
-  function transferFrom_mssage(address _from, address _to, uint256 _value,string _message) public returns (bool) {
+  function transferFrom_mssage(address _from, address _to, uint256 _value,bytes32 _message) public returns (bool) {
    require(_to != address(0));
     require(_value <= (balances[_from]-getLockToken(msg.sender)));
     require(_value <= allowed[_from][msg.sender]);
@@ -137,7 +137,7 @@ contract GBTStandardToken is ERC20Basic, ERC20
     balances[_to] = balances[_to].add(_value);
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
     Transfer(_from, _to, _value);
-    // if(_message!="") // ASK HERE
+    if(_message!="") 
         TransferGBT(_from, _to, _value,_message);
     return true;
   }

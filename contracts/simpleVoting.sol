@@ -133,9 +133,10 @@ contract simpleVoting is VotingType
         // SVT=StandardVotingType(SVTAddress);
         MS=Master(masterAddress);
         require(MS.isInternal(msg.sender) == true || msg.sender == _memberAddress);
-        if(_solutionStake!=0)
-            receiveSolutionStakeSV(_proposalId,_solutionStake,_solutionHash,_dateAdd,_v,_r,_s);
+        require(_solutionStake <= PC.getMaxStake(GD.getProposalCategory(_proposalId)) && _solutionStake >= PC.getMinStake(GD.getProposalCategory(_proposalId)));
+        receiveSolutionStakeSV(_proposalId,_solutionStake,_solutionHash,_dateAdd,_v,_r,_s);
         addSolution1(_proposalId,_memberAddress,_solutionHash,_dateAdd);
+        GD.setSolutionAdded(_proposalId,_memberAddress);
     }
 
     /// @dev Adds solution against proposal.
@@ -177,12 +178,15 @@ contract simpleVoting is VotingType
     {
         // GD=governanceData(GDAddress);
         // PC=ProposalCategory(PCAddress);
-        uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
-        uint depositAmount = ((_solutionStake*GD.depositPercSolution())/100);
-        uint finalAmount = depositAmount + GD.getDepositedTokens(msg.sender,_proposalId,'S');
-        GD.setDepositTokens(msg.sender,_proposalId,'S',finalAmount);
-        GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime,_v,_r,_s);  
-        GD.callSolutionEvent(_proposalId,msg.sender,_solutionHash,_dateAdd,_solutionStake);    
+        if(_solutionStake != 0)
+        {
+            uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
+            uint depositAmount = ((_solutionStake*GD.depositPercSolution())/100);
+            uint finalAmount = depositAmount + GD.getDepositedTokens(msg.sender,_proposalId,'S');
+            GD.setDepositTokens(msg.sender,_proposalId,'S',finalAmount);
+            GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime,_v,_r,_s);  
+            GD.callSolutionEvent(_proposalId,msg.sender,_solutionHash,_dateAdd,_solutionStake);    
+        }
     }
 
    /// @dev Creates proposal for voting (Stake in ether)
@@ -212,7 +216,7 @@ contract simpleVoting is VotingType
 
         require(SafeMath.add(_proposalDateUpd,_closingTime) >= now && msg.sender != GD.getSolutionAddedByProposalId(_proposalId,_solutionChosen[0]));
         require(roleId == _mrSequence && GBTS.balanceOf(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _solutionChosen.length == 1);
-
+        require(_voteStake <= PC.getMaxStake(category) && _voteStake >= PC.getMinStake(category));
         if(currentVotingId == 0)
             require(_solutionChosen[0] <= GD.getTotalSolutions(_proposalId));
         else
@@ -260,7 +264,7 @@ contract simpleVoting is VotingType
             uint finalAmount = depositAmount + GD.getDepositedTokens(msg.sender,_proposalId,'V');
             GD.setDepositTokens(msg.sender,_proposalId,'V',finalAmount);
             GBTS.lockToken(msg.sender,SafeMath.sub(_memberStake,finalAmount),remainingTime,_v,_r,_s);
-        }  
+        }
     }
 
     /// @dev Closes proposal for voting

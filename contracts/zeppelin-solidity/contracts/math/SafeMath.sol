@@ -27,8 +27,19 @@ library SafeMath {
     return a - b;
   }
 
+ function sub32(uint32 a, uint32 b) internal constant returns (uint32) {
+    assert(b <= a);
+    return a - b;
+  }
+  
   function add(uint256 a, uint256 b) internal constant returns (uint256) {
     uint256 c = a + b;
+    assert(c >= a);
+    return c;
+  }
+  
+   function add32(uint32 a, uint32 b) internal constant returns (uint32) {
+    uint32 c = a + b;
     assert(c >= a);
     return c;
   }
