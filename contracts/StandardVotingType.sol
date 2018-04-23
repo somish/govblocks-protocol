@@ -53,7 +53,7 @@ contract StandardVotingType
     VotingType VT;
 
     modifier onlyInternal {
-        require(MS.isInternal(msg.sender) == 1);
+        require(MS.isInternal(msg.sender) == true);
         _; 
     }
 
@@ -66,7 +66,7 @@ contract StandardVotingType
         else
         {
             MS=Master(masterAddress);
-            require(MS.isInternal(msg.sender) == 1);
+            require(MS.isInternal(msg.sender) == true);
                 masterAddress = _masterContractAddress;
         }
     }

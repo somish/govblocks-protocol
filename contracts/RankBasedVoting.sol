@@ -62,7 +62,7 @@ contract RankBasedVoting is VotingType
 
     modifier onlyInternal {
         MS=Master(masterAddress);
-        require(MS.isInternal(msg.sender) == 1);
+        require(MS.isInternal(msg.sender) == true);
         _; 
     }
 
@@ -74,7 +74,7 @@ contract RankBasedVoting is VotingType
         else
         {
             MS=Master(masterAddress);
-            require(MS.isInternal(msg.sender) == 1);
+            require(MS.isInternal(msg.sender) == true);
                 masterAddress = _masterContractAddress;
         }
     }

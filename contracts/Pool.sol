@@ -57,7 +57,7 @@ contract Pool is usingOraclize
         else
         {
             M1=Master(masterAddress);
-            if(M1.isInternal(msg.sender) == 1)
+            if(M1.isInternal(msg.sender) == true)
                 masterAddress = _add;
             else
                 throw;
@@ -67,13 +67,13 @@ contract Pool is usingOraclize
 
     modifier onlyInternal {
         M1=Master(masterAddress);
-        require(M1.isInternal(msg.sender) == 1);
+        require(M1.isInternal(msg.sender) == true);
         _; 
     }
     
     modifier onlyOwner {
         M1=Master(masterAddress);
-        require(M1.isOwner(msg.sender) == 1);
+        require(M1.isOwner(msg.sender) == true);
         _; 
     }
 
@@ -191,7 +191,7 @@ contract Pool is usingOraclize
     function __callback(bytes32 myid, string res) 
     {
         M1=Master(masterAddress);
-        if(msg.sender != oraclize_cbAddress() && M1.isOwner(msg.sender)!=1) throw;
+        if(msg.sender != oraclize_cbAddress() && M1.isOwner(msg.sender)!= true) throw;
         allAPIid[myid].dateUpd = uint64(now);
     }
     

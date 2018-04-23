@@ -47,13 +47,13 @@ contract ProposalCategory
 
     modifier onlyInternal {
         M1=Master(masterAddress);
-        require(M1.isInternal(msg.sender) == 1);
+        require(M1.isInternal(msg.sender) == true);
         _; 
     }
     
      modifier onlyOwner {
         M1=Master(masterAddress);
-        require(M1.isOwner(msg.sender) == 1);
+        require(M1.isOwner(msg.sender) == true);
         _; 
     }
     
@@ -91,7 +91,7 @@ contract ProposalCategory
         else
         {
             M1=Master(masterAddress);
-            require(M1.isInternal(msg.sender) == 1);
+            require(M1.isInternal(msg.sender) == true);
                 masterAddress = _masterContractAddress;
         }
     }

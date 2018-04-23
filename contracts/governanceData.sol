@@ -210,14 +210,14 @@ contract governanceData {
 
     modifier onlyInternal {
         MS=Master(masterAddress);
-        require(MS.isInternal(msg.sender) == 1);
+        require(MS.isInternal(msg.sender) == true);
         _; 
     }
     
      modifier onlyOwner 
     {
         MS=Master(masterAddress);
-        require(MS.isOwner(msg.sender) == 1);
+        require(MS.isOwner(msg.sender) == true);
         _; 
     }
 
@@ -242,7 +242,7 @@ contract governanceData {
         else
         {
             MS=Master(masterAddress);
-            require(MS.isInternal(msg.sender) == 1);
+            require(MS.isInternal(msg.sender) == true);
                 masterAddress = _masterContractAddress;
         }
     }

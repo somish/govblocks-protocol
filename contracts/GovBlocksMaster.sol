@@ -170,7 +170,15 @@ contract GovBlocksMaster
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
         MS=Master(_newMasterAddress);
         MS.setOwner(msg.sender);
+        // setDappArray(_newMasterAddress,addresses);
     }
+    // bytes2[] addresses;
+    // function setDappArray(address  _newMasterAddress,bytes2[] addresses)
+    // {
+    //     MS=Master(_newMasterAddress);
+    //     MS.addContractNames(addresses);
+    // }
+  
 
     /// @dev Changes dApp master address
     /// @param _gbUserName GovBlocks username
@@ -423,8 +431,8 @@ contract GovBlocksMaster
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
         address master = govBlocksDapps[_gbUserName].masterAddress; address MRAddress;
         MS=Master(master);
-        uint versionNo = MS.versionLength()-1; 
-        MRAddress = MS.allContractVersions(versionNo,"MR");
+        uint16 versionNo = MS.versionLength()-1; 
+        MRAddress = MS.getAllContractVersions(versionNo,"MR");
         MR=memberRoles(MRAddress);
         MR.addNewMemberRole(_newRoleName, _roleDescription, _canAddMembers);
     }
@@ -439,8 +447,8 @@ contract GovBlocksMaster
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
         address master = govBlocksDapps[_gbUserName].masterAddress; address MRAddress;
         MS=Master(master);
-        uint versionNo = MS.versionLength()-1; 
-        MRAddress = MS.allContractVersions(versionNo,"MR");
+        uint16 versionNo = MS.versionLength()-1; 
+        MRAddress = MS.getAllContractVersions(versionNo,"MR");
         MR=memberRoles(MRAddress);
         MR.updateMemberRole(_memberAddress,_memberRoleId,_typeOf);
     }
@@ -453,8 +461,8 @@ contract GovBlocksMaster
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
         address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
         MS=Master(master);
-        uint versionNo = MS.versionLength()-1; 
-        PCAddress = MS.allContractVersions(versionNo,"PC");
+        uint16 versionNo = MS.versionLength()-1; 
+        PCAddress = MS.getAllContractVersions(versionNo,"PC");
         PC=ProposalCategory(PCAddress);
         // PC.addNewCategory(_descHash);
     }
@@ -468,8 +476,8 @@ contract GovBlocksMaster
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
         address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
         MS=Master(master);
-        uint versionNo = MS.versionLength()-1; 
-        PCAddress = MS.allContractVersions(versionNo,"PC");
+        uint16 versionNo = MS.versionLength()-1; 
+        PCAddress = MS.getAllContractVersions(versionNo,"PC");
         PC=ProposalCategory(PCAddress);
         PC.updateCategory(_categoryId,_categoryData);
     }
@@ -483,8 +491,8 @@ contract GovBlocksMaster
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
         address master = govBlocksDapps[_gbUserName].masterAddress; address GDAddress;
         MS=Master(master);
-        uint versionNo = MS.versionLength()-1; 
-        GDAddress = MS.allContractVersions(versionNo,"GD");
+        uint16 versionNo = MS.versionLength()-1; 
+        GDAddress = MS.getAllContractVersions(versionNo,"GD");
         GD=governanceData(GDAddress);
 
         if(_typeOf == "APO")

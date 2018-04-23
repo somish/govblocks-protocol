@@ -54,7 +54,7 @@ contract FeatureWeighted is VotingType
 
     modifier onlyInternal {
         MS=Master(masterAddress);
-        require(MS.isInternal(msg.sender) == 1);
+        require(MS.isInternal(msg.sender) == true);
         _; 
     }
 
@@ -66,7 +66,7 @@ contract FeatureWeighted is VotingType
         else
         {
             MS=Master(masterAddress);
-            require(MS.isInternal(msg.sender) == 1);
+            require(MS.isInternal(msg.sender) == true);
                 masterAddress = _masterContractAddress;
         }
     }

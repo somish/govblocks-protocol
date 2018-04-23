@@ -48,7 +48,7 @@ contract simpleVoting is VotingType
 
     modifier onlyInternal {
         MS=Master(masterAddress);
-        require(MS.isInternal(msg.sender) == 1);
+        require(MS.isInternal(msg.sender) == true);
         _; 
     }
 
@@ -74,7 +74,7 @@ contract simpleVoting is VotingType
         else
         {
             MS=Master(masterAddress);
-            require(MS.isInternal(msg.sender) == 1);
+            require(MS.isInternal(msg.sender) == true);
                 masterAddress = _masterContractAddress;
         }
     }
@@ -132,7 +132,7 @@ contract simpleVoting is VotingType
     {
         // SVT=StandardVotingType(SVTAddress);
         MS=Master(masterAddress);
-        require(MS.isInternal(msg.sender) == 1 || msg.sender == _memberAddress);
+        require(MS.isInternal(msg.sender) == true || msg.sender == _memberAddress);
         if(_solutionStake!=0)
             receiveSolutionStakeSV(_proposalId,_solutionStake,_solutionHash,_dateAdd,_v,_r,_s);
         addSolution1(_proposalId,_memberAddress,_solutionHash,_dateAdd);
