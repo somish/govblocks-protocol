@@ -163,12 +163,12 @@ contract StandardVotingType
     function closeProposalVoteSVT(uint _proposalId) onlyInternal
     {   
         VT=VotingType(GD.getProposalVotingType(_proposalId)); 
-        uint8 _mrSequenceId;uint _majorityVote;uint _closingTime; uint8 category;uint8 currentVotingId; uint totalSolutions; uint totalVoteValue=0;
-        (,category,currentVotingId,,,totalSolutions) = GD.getProposalDetailsById2(_proposalId); 
-        (_mrSequenceId,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId);
-        require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId,_closingTime,_majorityVote)==1); //1
+        uint totalVoteValue=0; uint8 category = GD.getProposalCategory(_proposalId);
+        uint8 currentVotingId =GD.getProposalCurrentVotingId(_proposalId);
+        uint _mrSequenceId = PC.getRoleSequencAtIndex(category,currentVotingId);
+        require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId)==1); //1
         
-        uint[] memory finalVoteValue = new uint[](totalSolutions); 
+        uint[] memory finalVoteValue = new uint[](GD.getTotalSolutions(_proposalId)); 
         for(uint8 i=0; i<GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequenceId); i++)
         {
             uint voteId = GD.getVoteId_againstProposalRole(_proposalId,_mrSequenceId,i);
@@ -186,46 +186,17 @@ contract StandardVotingType
                 max = i; 
             }
         }
-
+        
         if(checkForThreshold(_proposalId,_mrSequenceId) == true)
         {
-            if(SafeMath.div(SafeMath.mul(finalVoteValue[max],100),totalVoteValue)>=_majorityVote)
-            {
-                if(max > 0)
-                {
-                    currentVotingId = currentVotingId+1;
-                    if(currentVotingId < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
-                    {
-                        GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
-                        P1.closeProposalOraclise(_proposalId,_closingTime); 
-                        GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId));
-                    } 
-                    else
-                    {
-                        GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
-                        GD.changeProposalStatus(_proposalId,3);
-                        VT.giveReward_afterFinalDecision(_proposalId);
-                    }
-                }
-                else
-                {
-                    GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
-                    GD.changeProposalStatus(_proposalId,4);
-                    VT.giveReward_afterFinalDecision(_proposalId);
-                    GOV.changePendingProposalStart();
-                } 
-            }
-            else
-            {
-                GOV.updateProposalDetails(_proposalId,currentVotingId,max,GD.getProposalIntermediateVerdict(_proposalId));
-                GD.changeProposalStatus(_proposalId,5);
-                GOV.changePendingProposalStart();
-            } 
+            closeProposalVoteSVT1(finalVoteValue[max],totalVoteValue,category,_proposalId,max);
         }   
         else
         {
-            GOV.updateProposalDetails(_proposalId,currentVotingId,max,GD.getProposalIntermediateVerdict(_proposalId));
-            if(currentVotingId+1 < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
+            uint8 interVerdict = GD.getProposalIntermediateVerdict(_proposalId);
+
+            GOV.updateProposalDetails(_proposalId,currentVotingId,max,interVerdict);
+            if(GD.getProposalCurrentVotingId(_proposalId)+1 < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
                 GD.changeProposalStatus(_proposalId,7);
             else
                 GD.changeProposalStatus(_proposalId,6);
@@ -233,6 +204,45 @@ contract StandardVotingType
         }
     }
 
+     function closeProposalVoteSVT1(uint maxVoteValue,uint totalVoteValue,uint8 category,uint _proposalId,uint8 max) internal
+            {
+                 uint _closingTime;uint _majorityVote;uint8 currentVotingId = GD.getProposalCurrentVotingId(_proposalId);
+                (,_closingTime,_majorityVote) = PC.getCategoryData3(category,currentVotingId);
+                  if(SafeMath.div(SafeMath.mul(maxVoteValue,100),totalVoteValue)>=_majorityVote)
+                    {
+                        if(max > 0)
+                        {
+                            currentVotingId = currentVotingId+1;
+                            if(currentVotingId < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
+                            {
+                                GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
+                                P1.closeProposalOraclise(_proposalId,_closingTime); 
+                                GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId));
+                            } 
+                            else
+                            {
+                                GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
+                                GD.changeProposalStatus(_proposalId,3);
+                                VT.giveReward_afterFinalDecision(_proposalId);
+                            }
+                        }
+                        else
+                        {
+                            GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
+                            GD.changeProposalStatus(_proposalId,4);
+                            VT.giveReward_afterFinalDecision(_proposalId);
+                            GOV.changePendingProposalStart();
+                        } 
+                    }
+                    else
+                    {
+                        GOV.updateProposalDetails(_proposalId,currentVotingId,max,GD.getProposalIntermediateVerdict(_proposalId));
+                        GD.changeProposalStatus(_proposalId,5);
+                        GOV.changePendingProposalStart();
+                    }    
+                
+            }
+            
     function checkForThreshold(uint _proposalId,uint _mrSequenceId) internal constant returns(bool)
     {
         uint thresHoldValue;

@@ -188,10 +188,10 @@ contract simpleVoting is VotingType
    /// @dev Creates proposal for voting (Stake in ether)
    /// @param _proposalId Proposal id
    /// @param _solutionChosen solution chosen while voting
-   function proposalVoting_inEther(uint _proposalId,uint[] _solutionChosen) payable
+   function proposalVoting_inEther(uint _proposalId,uint[] _solutionChosen,uint8 _v,bytes32 _r,bytes32 _s) payable
    {
        uint tokenAmount = GBTS.buyToken.value(msg.value)();
-       proposalVoting(_proposalId, _solutionChosen, tokenAmount);
+       proposalVoting(_proposalId, _solutionChosen, tokenAmount,_v,_r,_s);
    }
 
 
@@ -204,9 +204,9 @@ contract simpleVoting is VotingType
         // GD=governanceData(GDAddress);
         // MR=memberRoles(MRAddress);
         // GBTS=GBTStandardToken(GBTSAddress);
-        uint8 _mrSequence;uint _majorityVote;uint _closingTime; uint currentVotingId;uint intermediateVerdict;uint category;
+        uint8 _mrSequence;uint _closingTime; uint currentVotingId;uint intermediateVerdict;uint category;
         (,category,currentVotingId,intermediateVerdict,,,) = GD.getProposalDetailsById2(_proposalId);
-        (_mrSequence,_majorityVote,_closingTime) = PC.getCategpryData2(category,currentVotingId);
+        (_mrSequence,,_closingTime) = PC.getCategoryData3(category,currentVotingId);
         uint _proposalDateUpd = GD.getProposalDateUpd(_proposalId);
         uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
 
@@ -218,7 +218,7 @@ contract simpleVoting is VotingType
         else
             require(_solutionChosen[0]==intermediateVerdict || _solutionChosen[0]==0);
             
-        castVote(_proposalId,_solutionChosen,msg.sender,_voteStake,roleId,_closingTime,_majorityVote,_v,_r,_s);    
+        castVote(_proposalId,_solutionChosen,msg.sender,_voteStake,roleId,_v,_r,_s);    
     }
 
     /// @dev Castes vote
@@ -227,9 +227,7 @@ contract simpleVoting is VotingType
     /// @param _memberAddress Member address
     /// @param _voteStake Vote stake
     /// @param _roleId Role id
-    /// @param _closingTime Closing time of the voting
-    /// @param _majorityVote Majority of votes
-    function castVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _voteStake,uint _roleId,uint _closingTime,uint _majorityVote,uint8 _v,bytes32 _r,bytes32 _s) internal
+    function castVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _voteStake,uint _roleId,uint8 _v,bytes32 _r,bytes32 _s) internal
     {
         // GD=governanceData(GDAddress);
         // SVT=StandardVotingType(SVTAddress);
@@ -240,7 +238,7 @@ contract simpleVoting is VotingType
             uint finalVoteValue = SVT.setVoteValue_givenByMember(_memberAddress,_proposalId,_voteStake);
             GD.setVoteId_againstMember(_memberAddress,_proposalId,voteId);
             GD.setVoteId_againstProposalRole(_proposalId,_roleId,voteId);
-            GOV.checkRoleVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote);
+            GOV.checkRoleVoteClosing(_proposalId,_roleId);
             GD.callVoteEvent(_memberAddress,_proposalId,now,_voteStake,voteId);
             receiveVoteStakeSV(_voteStake,_proposalId,_v,_r,_s);
         }
@@ -267,7 +265,7 @@ contract simpleVoting is VotingType
 
     /// @dev Closes proposal for voting
     /// @param _proposalId Proposal id
-    function closeProposalVote(uint _proposalId) onlyInternal
+    function closeProposalVote(uint _proposalId) public
     {
         // SVT=StandardVotingType(SVTAddress);
         SVT.closeProposalVoteSVT(_proposalId);

@@ -160,7 +160,7 @@ contract Governance {
       uint proposalStake = SafeMath.div(_proposalSolutionStake,2);
       createProposal(_proposalDescHash,_votingTypeId,_categoryId,proposalDateAdd);
       openProposalForVoting(_proposalId,_categoryId,proposalStake,_v,_r,_s);
-      receiveStake(_proposalId,SafeMath.sub(_proposalSolutionStake,proposalStake),GD.getVotingTypeAddress(_votingTypeId),proposalDateAdd,_solutionHash,_v,_r,_s);
+      receiveStake(_proposalId,SafeMath.sub(_proposalSolutionStake,proposalStake),proposalDateAdd,_solutionHash,_v,_r,_s);
    }
 
      /// @dev Submit proposal with solution (Stake in ether)
@@ -184,28 +184,28 @@ contract Governance {
       uint proposalDateAdd = GD.getProposalDateUpd(_proposalId);
       uint proposalStake = SafeMath.div(_proposalSolutionStake,2); 
       openProposalForVoting(_proposalId,GD.getProposalCategory(_proposalId),proposalStake,_v,_r,_s);
-      receiveStake(_proposalId,SafeMath.sub(_proposalSolutionStake,proposalStake),GD.getProposalVotingType(_proposalId),proposalDateAdd,_solutionHash,_v,_r,_s);
+      receiveStake(_proposalId,SafeMath.sub(_proposalSolutionStake,proposalStake),proposalDateAdd,_solutionHash,_v,_r,_s);
   }
 
   /// @dev Receives stake
   /// @param _proposalId Proposalid
   /// @param _solutionStake Solution stake
-  /// @param _VTAddress  Voting type address
   /// @param _proposalDateAdd Date when proposal was added
   /// @param _solutionHash Solution hash
-  function receiveStake(uint _proposalId,uint _solutionStake,address _VTAddress,uint _proposalDateAdd,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) internal
+  function receiveStake(uint _proposalId,uint _solutionStake,uint _proposalDateAdd,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) internal
   {
-        VT=VotingType(_VTAddress);
+        VT=VotingType(GD.getProposalVotingType(_proposalId));
         // GD=governanceData(GDAddress);
         // GBTS=GBTStandardToken(GBTSAddress);
         // PC=ProposalCategory(PCAddress);
-
+        
+        
         uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
         uint depositAmount = ((_solutionStake*GD.depositPercSolution())/100);
         uint finalAmount = depositAmount + GD.getDepositedTokens(msg.sender,_proposalId,'S');
         GD.setDepositTokens(msg.sender,_proposalId,'S',finalAmount);
         GBTS.lockToken(msg.sender,SafeMath.sub(_solutionStake,finalAmount),remainingTime,_v,_r,_s); 
-        VT.addSolution(_proposalId,msg.sender,0,_solutionHash,_proposalDateAdd);
+        VT.addSolution(_proposalId,msg.sender,0,_solutionHash,_proposalDateAdd,_v,_r,_s);
         GD.setSolutionAdded(_proposalId,msg.sender);
   }
 
@@ -250,13 +250,13 @@ contract Governance {
     //   GD = governanceData(GDAddress);
     //   P1 = Pool(P1Address);
     //   GBTS=GBTStandardToken(GBTSAddress); 
-      uint pStatus;
-      uint pCategory;
-      (,pStatus,pCategory) = GD.getProposalDetailsById3(_proposalId);
+    //   uint pStatus;
+    //   uint pCategory;
+    //   (,pStatus,pCategory) = GD.getProposalDetailsById3(_proposalId);
 
-      require(pStatus != 0 && pStatus < 2 && GD.getProposalOwner(_proposalId) == msg.sender);
+      require(GD.getProposalStatus(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2 && GD.getProposalOwner(_proposalId) == msg.sender);
       uint closingTime = SafeMath.add(PC.getClosingTimeAtIndex(_categoryId,0),GD.getProposalDateUpd(_proposalId));
-      uint remainingTime = PC.getRemainingClosingTime(_proposalId,pCategory,GD.getProposalCurrentVotingId(_proposalId));
+      uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
 
       uint depositAmount = SafeMath.div(SafeMath.mul(_tokenAmount,GD.depositPercProposal()),100);
       uint finalAmount = depositAmount + GD.getDepositedTokens(msg.sender,_proposalId,'P');
@@ -331,14 +331,13 @@ contract Governance {
   /// @dev Checks proposal for vote closing
   /// @param _proposalId Proposal id
   /// @param _roleId Role id
-  /// @param _closingTime Closing time of the proposal
-  /// @param _majorityVote Majority of vote
-  function checkProposalVoteClosing(uint _proposalId,uint _roleId,uint _closingTime,uint _majorityVote) onlyInternal constant returns(uint8 closeValue) 
+  function checkProposalVoteClosing(uint _proposalId,uint _roleId) onlyInternal constant returns(uint8 closeValue) 
   {
     //   GD=governanceData(GDAddress);
     //   MR=memberRoles(MRAddress); 
-      uint dateUpdate;uint pStatus;
+      uint dateUpdate;uint pStatus;uint _closingTime;uint _majorityVote;
       (,,dateUpdate,,pStatus) = GD.getProposalDetailsById1(_proposalId);
+      (,_closingTime,_majorityVote) = PC.getCategoryData3(GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
       
       if(pStatus == 2 && _roleId != 2)
       {
@@ -363,11 +362,9 @@ contract Governance {
   /// @dev Checks role for vote closing
   /// @param _proposalId Proposal id
   /// @param _roleId Role id
-  /// @param _closingTime Closing time of voting
-  /// @param _majorityVote Majority of votes
-  function checkRoleVoteClosing(uint _proposalId,uint _roleId,uint _closingTime,uint _majorityVote) onlyInternal
+  function checkRoleVoteClosing(uint _proposalId,uint _roleId) onlyInternal
   {
-     if(checkProposalVoteClosing(_proposalId,_roleId,_closingTime,_majorityVote)==1)
+     if(checkProposalVoteClosing(_proposalId,_roleId)==1)
        callOraclize(_proposalId,0);
    }
 
@@ -544,18 +541,18 @@ contract Governance {
     function calculateVoteReward(address _memberAddress,uint _lastRewardVoteId) internal
     {
         // GD=governanceData(GDAddress);
-        uint allProposalLength = GD.getProposalLength(); uint totalVoteValueProposal; uint calcReward;
+        uint allProposalLength = GD.getProposalLength(); uint calcReward;
         uint lastIndex = 0;uint i;uint solutionChosen;uint proposalStatus;uint finalVredict;uint voteValue;uint totalReward;uint category;
 
         for(i=_lastRewardVoteId; i<allProposalLength; i++)
         {
-            (solutionChosen,proposalStatus,finalVredict,voteValue,totalReward,category,totalVoteValueProposal) = getVoteDetails_toCalculateReward(_memberAddress,i);
+            (solutionChosen,proposalStatus,finalVredict,voteValue,totalReward,category,) = getVoteDetails_toCalculateReward(_memberAddress,i);
             if(proposalStatus < 2)
                 lastIndex = i;
 
             if(finalVredict > 0 && solutionChosen == finalVredict && GD.getReturnedTokensFlag(_memberAddress,i,'V') == 0)
             {
-                calcReward = (PC.getRewardPercVote(category)*totalReward*voteValue)/(100*totalVoteValueProposal);
+                calcReward = (PC.getRewardPercVote(category)*totalReward*voteValue)/(100*GD.getProposalTotalReward(i));
                 finalRewardToDistribute = finalRewardToDistribute + calcReward + GD.getDepositedTokens(_memberAddress,i,'V');
                 GD.callRewardEvent(_memberAddress,i,"GBT Reward earned for voting in favour of final Solution",calcReward);
                 GD.setReturnedTokensFlag(_memberAddress,i,'V',1);
