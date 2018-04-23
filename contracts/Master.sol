@@ -160,29 +160,6 @@ contract Master is Ownable {
         contract_dependency_new['GV']['PL'] = true;
         contract_dependency_new['PC']['MR'] = true;
         contract_dependency_new['MR']['GD'] = true;
-        // contract_dependency['GD'].push('SV');
-        // contract_dependency['GD'].push('RB');
-        // contract_dependency['GD'].push('FW');
-        // contract_dependency['SV'].push('VT');
-        // contract_dependency['SV'].push('GD');
-        // contract_dependency['SV'].push('MR');
-        // contract_dependency['SV'].push('PC');
-        // contract_dependency['SV'].push('GV');
-        // contract_dependency['VT'].push('GD');
-        // contract_dependency['VT'].push('MR');
-        // contract_dependency['VT'].push('PC');
-        // contract_dependency['VT'].push('GV');
-        // contract_dependency['VT'].push('PL');
-        // contract_dependency['VT'].push('SV');
-        // contract_dependency['VT'].push('RB');
-        // contract_dependency['VT'].push('FW');
-        // contract_dependency['GV'].push('GD');
-        // contract_dependency['GV'].push('MR');
-        // contract_dependency['GV'].push('PC');
-        // contract_dependency['GV'].push('PL');
-        // contract_dependency['PC'].push('MR');
-        // contract_dependency['MR'].push('GD');
-        
     }
     
     modifier onlyOwner
@@ -362,85 +339,69 @@ contract Master is Ownable {
    function changeOtherAddress(uint16 version) internal 
    {  
             uint8 i;
-            for( i=0; i<contract_dependency['GD'].length; i++){
-                if( allContractVersions[versionLength-1][contract_dependency['GD'][i]] !=  allContractVersions[versionLength][contract_dependency['GD'][i]]){
-                    GD.changeAddress(contract_dependency['GD'][i], allContractVersions[versionLength][contract_dependency['GD'][i]]);
-                }
-            }
-            for( i=0; i<contract_dependency['MR'].length; i++){
-                if( allContractVersions[versionLength-1][contract_dependency['MR'][i]] !=  allContractVersions[versionLength][contract_dependency['MR'][i]]){
-                    MR.changeAddress(contract_dependency['MR'][i], allContractVersions[versionLength][contract_dependency['MR'][i]]);
-                }
-            }
-            for( i=0; i<contract_dependency['PC'].length; i++){
-                if( allContractVersions[versionLength-1][contract_dependency['PC'][i]] !=  allContractVersions[versionLength][contract_dependency['PC'][i]]){
-                    PC.changeAddress(contract_dependency['PC'][i], allContractVersions[versionLength][contract_dependency['PC'][i]]);
-                }
-            }
-            for( i=0; i<contract_dependency['SV'].length; i++){
-                if( allContractVersions[versionLength-1][contract_dependency['SV'][i]] !=  allContractVersions[versionLength][contract_dependency['SV'][i]]){
-                    SV.changeAddress(contract_dependency['SV'][i], allContractVersions[versionLength][contract_dependency['SV'][i]]);
-                }
-            }
-            // for( i=0; i<contract_dependency['RB'].length; i++){
-            //     if( allContractVersions[versionLength-1][contract_dependency['RB'][i]] !=  allContractVersions[versionLength][contract_dependency['RB'][i]]){
-            //         RB.changeAddress(contract_dependency['RB'][i], allContractVersions[versionLength][contract_dependency['RB'][i]]);
-            //     }
-            // }
-            // for( i=0; i<contract_dependency['FW'].length; i++){
-            //     if( allContractVersions[versionLength-1][contract_dependency['FW'][i]] !=  allContractVersions[versionLength][contract_dependency['FW'][i]]){
-            //         FW.changeAddress(contract_dependency['FW'][i], allContractVersions[versionLength][contract_dependency['FW'][i]]);
-            //     }
-            // }
-            for( i=0; i<contract_dependency['VT'].length; i++){
-                if( allContractVersions[versionLength-1][contract_dependency['VT'][i]] !=  allContractVersions[versionLength][contract_dependency['VT'][i]]){
-                    SVT.changeAddress(contract_dependency['VT'][i], allContractVersions[versionLength][contract_dependency['VT'][i]]);
-                }
-            }
-            for( i=0; i<contract_dependency['GV'].length; i++){
-                if( allContractVersions[versionLength-1][contract_dependency['GV'][i]] !=  allContractVersions[versionLength][contract_dependency['GV'][i]]){
-                    GOV.changeAddress(contract_dependency['GV'][i], allContractVersions[versionLength][contract_dependency['GV'][i]]);
-                }
-            }
-            // for( i=0; i<contract_dependency['PL'].length; i++){
-            //     if( allContractVersions[versionLength-1][contract_dependency['PL'][i]] !=  allContractVersions[versionLength][contract_dependency['PL'][i]]){
-            //         P1.changeAddress(contract_dependency['PL'][i], allContractVersions[versionLength][contract_dependency['PL'][i]]);
-            //     }
-            // }
-            // for(uint i=0; i<contract_dependency['GC'].length; i++){
-            //     if( allContractVersions[versionLength-1][contract_dependency[_contractName][i]] !=  allContractVersions[versionLength][contract_dependency[_contractName][i]]){
-            //         GC.changeAddress(contract_dependency[_contractName][i], allContractVersions[versionLength][contract_dependency[_contractName][i]]);
-            //     }
-            // }
-            // for(uint i=0; i<contract_dependency['GS'].length; i++){
-            //     if( allContractVersions[versionLength-1][contract_dependency[_contractName][i]] !=  allContractVersions[versionLength][contract_dependency[_contractName][i]]){
-            //         GS.changeAddress(contract_dependency[_contractName][i], allContractVersions[versionLength][contract_dependency[_contractName][i]]);
-            //     }
-            // }
-
+            for( i=0; i<allContractNames.length; i++){
+               if(contract_dependency_new['GD'][allContractNames[i]] == true){
+                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+                       GD.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   }
+               }
+               if(contract_dependency_new['MR'][allContractNames[i]] == true){
+                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+                       MR.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   }
+               }
+               if(contract_dependency_new['PC'][allContractNames[i]] == true){
+                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+                       PC.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   }
+               }
+               if(contract_dependency_new['SV'][allContractNames[i]] == true){
+                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+                       SV.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   }
+               }
+               if(contract_dependency_new['GD'][allContractNames[i]] == true){
+                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+                       GD.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   }
+               }
+               if(contract_dependency_new['VT'][allContractNames[i]] == true){
+                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+                       VT.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   }
+               }
+               if(contract_dependency_new['GV'][allContractNames[i]] == true){
+                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+                       GV.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   }
+               }
+            //    if(contract_dependency_new['RB'][allContractNames[i]] == true){
+            //        if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+            //            RB.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+            //        }
+            //    }
+            //    if(contract_dependency_new['FW'][allContractNames[i]] == true){
+            //        if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+            //            FW.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+            //        }
+            //    }
+            //    if(contract_dependency_new['PL'][allContractNames[i]] == true){
+            //        if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+            //            PL.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+            //        }
+            //    }
+            //    if(contract_dependency_new['GC'][allContractNames[i]] == true){
+            //        if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+            //            GC.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+            //        }
+            //    }
+            //     if(contract_dependency_new['GS'][allContractNames[i]] == true){
+            //        if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
+            //            GS.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+            //        }
+            //    }
+           }
         changeGBTAddress(allContractVersions[version]['GS']);
-        // changeGBTControllerAddress(GBTCAddress);
-        
-        // GD=governanceData(governanceDataAddress);
-        // GD.editVotingType(0,simpleVotingAddress);
-        // GD.editVotingType(1,rankBasedVotingAddress);
-        // GD.editVotingType(2,featureWeightedAddress);
-
-        // SV=simpleVoting(simpleVotingAddress);
-        // SV.changeAllContractsAddress(standardVotingTypeAddress,governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress);
-
-        // SVT=StandardVotingType(standardVotingTypeAddress);
-        // SVT.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress,governanceAddress,poolAddress);
-        // SVT.changeOtherContractAddress(simpleVotingAddress,rankBasedVotingAddress,featureWeightedAddress);
-
-        // GOV=Governance(governanceAddress);
-        // GOV.changeAllContractsAddress(governanceDataAddress,memberRolesAddress,proposalCategoryAddress,poolAddress);
-        
-        // PC=ProposalCategory(proposalCategoryAddress);
-        // PC.changeAllContractsAddress(memberRolesAddress);
-   
-        // MR=memberRoles(memberRolesAddress);
-        // MR.changeAllContractAddress(governanceDataAddress);
    }
 
     /// @dev Changes GBT token address in GD, SV, SVT and governance contracts
