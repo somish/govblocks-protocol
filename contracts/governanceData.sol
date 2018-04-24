@@ -37,7 +37,7 @@ contract governanceData {
     /// @param versionNumber Version number
     /// @param proposalDescHash Proposal description hash
     /// @param dateAdd Date when proposal version was added
-    function callProposalVersionEvent(uint256 proposalId,uint256 versionNumber,string proposalDescHash,uint256 dateAdd) 
+    function callProposalVersionEvent(uint256 proposalId,uint256 versionNumber,string proposalDescHash,uint256 dateAdd) onlyInternal
     {
         ProposalVersion(proposalId,versionNumber,proposalDescHash,dateAdd);
     }
@@ -48,7 +48,7 @@ contract governanceData {
     /// @param solutionDescHash Solution description hash
     /// @param dateAdd Date the solution was added
     /// @param solutionStake Stake of the solution provider
-    function callSolutionEvent(uint256 proposalId,address solutionOwner,string solutionDescHash,uint256 dateAdd,uint256 solutionStake)
+    function callSolutionEvent(uint256 proposalId,address solutionOwner,string solutionDescHash,uint256 dateAdd,uint256 solutionStake) onlyInternal
     {
         Solution(proposalId,solutionOwner,solutionDescHash,dateAdd,solutionStake);
     }
@@ -58,7 +58,7 @@ contract governanceData {
     /// @param _proposalId Proposal id
     /// @param _dateAdd Date when proposal was added
     /// @param _proposalDescHash Proposal description hash
-    function callProposalEvent(address _proposalOwner,uint _proposalId,uint _dateAdd,string _proposalDescHash)
+    function callProposalEvent(address _proposalOwner,uint _proposalId,uint _dateAdd,string _proposalDescHash) onlyInternal
     {
         Proposal(_proposalOwner,_proposalId,_dateAdd,_proposalDescHash);   
     }
@@ -115,7 +115,7 @@ contract governanceData {
     /// @param _proposalId Proposal id
     /// @param _proposalStatus Proposal status
     /// @param _dateAdd Date when proposal was added
-    function callProposalStatusEvent(uint256 _proposalId,uint _proposalStatus,uint _dateAdd)
+    function callProposalStatusEvent(uint256 _proposalId,uint _proposalStatus,uint _dateAdd) onlyInternal
     {
         ProposalStatus(_proposalId,_proposalStatus,_dateAdd);
     }   
@@ -183,10 +183,11 @@ contract governanceData {
     uint public membershipScalingFactor;
     uint public scalingWeight;
     uint public allVotesTotal;
-    uint public constructorCheck;
+    bool public constructorCheck;
     uint public depositPercProposal;
     uint public depositPercSolution;
     uint public depositPercVote;
+    uint public tokenHoldingTime;
     uint32 addProposalOwnerPoints;
     uint32 addSolutionOwnerPoints;
     uint32 addMemberPoints;
@@ -264,7 +265,7 @@ contract governanceData {
     /// @dev Changes Global objects of the contracts || Uses latest version
     /// @param contractName Contract name 
     /// @param contractAddress Contract addresses
-    function changeAddress(bytes4 contractName, address contractAddress)
+    function changeAddress(bytes4 contractName, address contractAddress) onlyInternal
     {
              if(contractName == 'GOV'){
             GOV = Governance(contractAddress); }
@@ -274,7 +275,7 @@ contract governanceData {
     /// @param _GBMAddress GovBlocks master address
     function GovernanceDataInitiate(address _GBMAddress) 
     {
-        require(constructorCheck == 0);
+        require(constructorCheck == false);
             GBMAddress = _GBMAddress;
             setGlobalParameters();
             addStatus();
@@ -285,7 +286,7 @@ contract governanceData {
             allVotes.push(proposalVote(0X00,new uint[](0),0));
             uint _totalVotes = SafeMath.add(allVotesTotal,1);  
             allVotesTotal=_totalVotes;
-            constructorCheck=1;
+            constructorCheck=true;
     }
 
     /// @dev Adds points to add or subtract in member reputation when proposal/Solution/vote gets denied or accepted
@@ -422,14 +423,12 @@ contract governanceData {
     }
 
     /// @dev user can calim the tokens rewarded them till now.
-    function claimReward()
+    function claimReward() public
     {
-        // GBTS=GBTStandardToken(GBTSAddress);
-        // G1=Governance(G1Address);
         uint rewardToClaim = GOV.calculateMemberReward(msg.sender);
         if(rewardToClaim != 0)
         { 
-            // GBTS.mint(address(this),rewardToClaim); // ASK
+            GBTS.transfer_message(address(this),rewardToClaim,"GBT Stake - Received");
             GBTS.transfer_message(msg.sender,rewardToClaim,"GBT Stake claimed - Returned");
         }
     }
@@ -887,14 +886,14 @@ contract governanceData {
     }
 
     /// @dev Adds new proposal
-    function addNewProposal(uint _proposalId,address _memberAddress,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress,uint _dateAdd) 
+    function addNewProposal(uint _proposalId,address _memberAddress,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress,uint _dateAdd) onlyInternal
     {
         allProposalData[_proposalId].category = _categoryId;
         createProposal1(_proposalId,_memberAddress,_proposalDescHash,_votingTypeAddress,_dateAdd);
     }  
     
     /// @dev Creates new proposal
-    function createProposal1(uint _proposalId,address _memberAddress,string _proposalDescHash,address _votingTypeAddress,uint _dateAdd)
+    function createProposal1(uint _proposalId,address _memberAddress,string _proposalDescHash,address _votingTypeAddress,uint _dateAdd) onlyInternal
     {
         allProposal.push(proposal(_memberAddress,_dateAdd,_votingTypeAddress));
         Proposal(_memberAddress,_proposalId,_dateAdd,_proposalDescHash);
@@ -912,6 +911,10 @@ contract governanceData {
         return allProposalData[_proposalId].currentVerdict;
     }
 
+     function changeTokenHoldingTime(uint _time) onlyOwner
+    {
+       tokenHoldingTime = _time;
+    }
 
 
 
