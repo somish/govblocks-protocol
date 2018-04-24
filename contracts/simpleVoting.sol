@@ -43,7 +43,7 @@ contract simpleVoting is VotingType
     ProposalCategory PC;
     StandardVotingType SVT;
     Master MS;
-    uint public constructorCheck;
+    bool public constructorCheck;
     address public masterAddress;
 
     modifier onlyInternal {
@@ -60,9 +60,9 @@ contract simpleVoting is VotingType
     /// @dev Initiates simple voting contract
     function SimpleVotingInitiate()
     {
-        require(constructorCheck == 0);
+        require(constructorCheck == false);
         votingTypeName = "Simple Voting";
-        constructorCheck=1;
+        constructorCheck=true;
     }
     
     /// @dev Changes master address
@@ -92,7 +92,8 @@ contract simpleVoting is VotingType
     /// @dev Changes Global objects of the contracts || Uses latest version
     /// @param contractName Contract name 
     /// @param contractAddress Contract addresses
-    function changeAddress(bytes4 contractName, address contractAddress) onlyInternal{
+    function changeAddress(bytes4 contractName, address contractAddress) onlyInternal
+    {
         if(contractName == 'GD'){
             GD = governanceData(contractAddress);
         } else if(contractName == 'MR'){
@@ -149,7 +150,6 @@ contract simpleVoting is VotingType
         // GBTS=GBTStandardToken(GBTSAddress);
         uint currentVotingId;uint check;
         (,,currentVotingId,,,,) = GD.getProposalDetailsById2(_proposalId);
-
         for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
         {
             if(GD.getSolutionAddedByProposalId(_proposalId,i) == _memberAddress)
@@ -157,14 +157,14 @@ contract simpleVoting is VotingType
             else 
                 check = 0;
         }
-        require(check == 0 && currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GBTS.balanceOf(_memberAddress) != 0 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
+        require(check == 0 && currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
     }
 
     /// @dev Adds solution
     /// @param _proposalId Proposal id
     /// @param _solutionStake Stake put by the member when providing a solution
     /// @param _solutionHash Solution hash
-    function initiateAddSolution(uint _proposalId,uint _solutionStake,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) 
+    function initiateAddSolution(uint _proposalId,uint _solutionStake,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) public
     {
         addSolution(_proposalId,msg.sender,_solutionStake, _solutionHash,now,_v,_r,_s); 
     }
@@ -255,8 +255,6 @@ contract simpleVoting is VotingType
     /// @param _proposalId Proposal id
      function receiveVoteStakeSV(uint _memberStake,uint _proposalId,uint8 _v,bytes32 _r,bytes32 _s) internal
     {
-        // GBTS=GBTStandardToken(GBTSAddress);
-        // GD=governanceData(GDAddress);
         if(_memberStake != 0)
         {
             uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
@@ -271,7 +269,6 @@ contract simpleVoting is VotingType
     /// @param _proposalId Proposal id
     function closeProposalVote(uint _proposalId) public
     {
-        // SVT=StandardVotingType(SVTAddress);
         SVT.closeProposalVoteSVT(_proposalId);
     }
 
@@ -279,11 +276,7 @@ contract simpleVoting is VotingType
     /// @param _proposalId Proposal id
     function giveReward_afterFinalDecision(uint _proposalId) onlyInternal
     {   
-        // GD=governanceData(GDAddress); 
-        uint totalReward; uint finalVerdict = GD.getProposalFinalVerdict(_proposalId);
-        uint totalVoteValue;
-        // GOV=Governance(G1Address); 
-
+        uint totalVoteValue;uint totalReward; uint finalVerdict = GD.getProposalFinalVerdict(_proposalId);
         if(GD.getProposalFinalVerdict(_proposalId) < 0)
             totalReward = SafeMath.add(totalReward,GD.getDepositedTokens(GD.getProposalOwner(_proposalId),_proposalId,'P'));
 
