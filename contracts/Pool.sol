@@ -16,27 +16,14 @@
 pragma solidity ^0.4.8;
 
 import "./Master.sol";
+import "./SafeMath.sol";
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.4.sol";
-// import "./oraclizeAPI_0.4.sol";
-import "./GBTStandardToken.sol";
-import "./GBTController.sol";
 
 contract Pool is usingOraclize
 {
     event closeProposal(uint256 indexed proposalId,uint256 closingTime,string URL);
-
+    event apiresult(address indexed sender,string msg,bytes32 myid);
     using SafeMath for uint;
-    address masterAddress;
-    address GBTOwner;
-    // address GBTControllerAddress;
-    // address GBTStandardTokenAddress;
-    GBTController GBTC;
-    GBTStandardToken GBTS;
-    Master M1;
-    // uint public tokenPrice;
-
-    mapping(bytes32=>apiId) public allAPIid;
-    bytes32[] public allAPIcall;
 
     struct apiId
     {
@@ -46,7 +33,12 @@ contract Pool is usingOraclize
         uint64 dateUpd;
     }
 
-    event apiresult(address indexed sender,string msg,bytes32 myid);
+    mapping(bytes32=>apiId) public allAPIid;
+    bytes32[] public allAPIcall;
+    address masterAddress;
+    Master MS;
+
+    function () payable {}
 
     /// @dev Changes master address
     /// @param _add New master address
@@ -56,8 +48,8 @@ contract Pool is usingOraclize
             masterAddress = _add;
         else
         {
-            M1=Master(masterAddress);
-            if(M1.isInternal(msg.sender) == true)
+            MS=Master(masterAddress);
+            if(MS.isInternal(msg.sender) == true)
                 masterAddress = _add;
             else
                 throw;
@@ -66,47 +58,16 @@ contract Pool is usingOraclize
     }
 
     modifier onlyInternal {
-        M1=Master(masterAddress);
-        require(M1.isInternal(msg.sender) == true);
+        MS=Master(masterAddress);
+        require(MS.isInternal(msg.sender) == true);
         _; 
     }
     
     modifier onlyOwner {
-        M1=Master(masterAddress);
-        require(M1.isOwner(msg.sender) == true);
+        MS=Master(masterAddress);
+        require(MS.isOwner(msg.sender) == true);
         _; 
     }
-
-    // function changeGBTtokenAddress(address _GBTSContractAddress)
-    // {
-    //     GBTStandardTokenAddress = _GBTSContractAddress;
-    // }
-    // function changeGBTControllerAddress(address _GBTCAddress)
-    // {
-    //     GBTControllerAddress = _GBTCAddress;
-    // }
-    
-    function () payable {}
-
-    // function buyGBT(uint _amount) 
-    // {
-    //     GBTC=GBTController(GBTControllerAddress);
-    //     GBTC.buyTokenGBT.value(_amount)(address(this));
-    // }
-
-    /// @dev Buys GBT token
-    // function buyGBT() payable
-    // {
-    //     GBTC=GBTController(GBTControllerAddress);
-    //     GBTC.buyTokenGBT.value(msg.value)(address(this));
-    // }
-
-
-    // function transferGBTtoController(uint _amount,string _description) 
-    // {
-    //     GBTC=GBTController(GBTControllerAddress);
-    //     GBTC.receiveGBT(address(this),_amount,_description);
-    // }
 
     /// @dev Closes proposal using oraclize
     /// @param _proposalId Proposal id
@@ -114,15 +75,15 @@ contract Pool is usingOraclize
     function closeProposalOraclise(uint _proposalId , uint _closingTime) 
     {
         uint index = getApilCall_length(); bytes32 myid2;
-        M1=Master(masterAddress);
+        MS=Master(masterAddress);
 
         if (_closingTime == 0)
-            myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/4/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
+            myid2 = oraclize_query("URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/42/",bytes32ToString(MS.DappName()),"/",uint2str(index)));
         else
-            myid2 = oraclize_query(_closingTime,"URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/4/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
+            myid2 = oraclize_query(_closingTime,"URL",strConcat("http://a1.govblocks.io/closeProposalVoting.js/42/",bytes32ToString(MS.DappName()),"/",uint2str(index)));
         
         uint closeTime = now + _closingTime;
-        closeProposal(_proposalId,closeTime,strConcat("http://a1.govblocks.io/closeProposalVoting.js/4/",bytes32ToString(M1.DappName()),"/",uint2str(index)));
+        closeProposal(_proposalId,closeTime,strConcat("http://a1.govblocks.io/closeProposalVoting.js/42/",bytes32ToString(MS.DappName()),"/",uint2str(index)));
         saveApiDetails(myid2,"PRO",_proposalId);
         addInAllApiCall(myid2);
     }
@@ -190,8 +151,8 @@ contract Pool is usingOraclize
     /// @param res Result string
     function __callback(bytes32 myid, string res) 
     {
-        M1=Master(masterAddress);
-        if(msg.sender != oraclize_cbAddress() && M1.isOwner(msg.sender)!= true) throw;
+        MS=Master(masterAddress);
+        if(msg.sender != oraclize_cbAddress() && MS.isOwner(msg.sender)!= true) throw;
         allAPIid[myid].dateUpd = uint64(now);
     }
     
@@ -237,5 +198,6 @@ contract Pool is usingOraclize
                 myIndexId = i;
         }
     }
+
 
 }
