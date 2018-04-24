@@ -19,7 +19,6 @@ import "./Master.sol";
 import "./memberRoles.sol";
 import "./ProposalCategory.sol";
 import "./governanceData.sol";
-// import "./GBTController.sol";
 
 contract GovBlocksMaster 
 {
@@ -27,13 +26,8 @@ contract GovBlocksMaster
     memberRoles MR;
     ProposalCategory PC;
     governanceData GD;
-    // GBTController GBTC;
     address public owner;
-    // address GBTControllerAddress;
     address GBTAddress;
-    // address GDAddress;
-    // address SVAddress;
-    // address GOVAddress;
     address public authGBOwner;
 
     struct GBDapps
@@ -64,7 +58,6 @@ contract GovBlocksMaster
     {
       require(owner == 0x00);
       owner = msg.sender; 
-      // GBTControllerAddress=_GBTControllerAddress;
       GBTAddress = _GBTAddress;
       updateGBMAddress(address(this));  
     } 
@@ -109,7 +102,6 @@ contract GovBlocksMaster
           MS=Master(masterAddress);
           MS.changeGBTAddress(_GBTContractAddress);
         }  
-        // changeGBTTokenInController(_GBTContractAddress); 
     }
 
 
@@ -124,8 +116,6 @@ contract GovBlocksMaster
             MS.changeGBMAddress(_newGBMAddress);
         }
     }
-
-
 
     /// @dev Adds GovBlocks user
     /// @param _gbUserName  GovBlocks username
@@ -346,44 +336,13 @@ contract GovBlocksMaster
             return govBlocksDappByAddress[_contractAddress];
     }
 
-    /// @dev Gets GBT and GBT controller address
-    // function getGBTandGBTC() constant returns(address _GBTController,address _GBToken)
-    // {
-    //     return (GBTControllerAddress,GBTAddress);
-    // }
-
     /// @dev Gets GBT address 
     function getGBTAddress()constant returns(address)
     {
        return GBTAddress;
     }
 
-    // /// @dev Gets GBT controller address
-    // function getGBTCAddress()constant returns(address)
-    // {
-    //    return GBTControllerAddress;
-    // }
-
-    /// @dev Gets governance data contract address
-    // function getGDAddress()constant returns(address)
-    // {
-    //   return GDAddress;
-    // }
-
-    /// @dev Gets simple voting contract address
-    // function getSVAddress()constant returns(address)
-    // {
-    //    return SVAddress;
-    // }
-
-    /// @dev Gets governance contract address
-    // function getGOVAddress()constant returns(address)
-    // {
-    //   return GOVAddress;
-    // }
-
-
-
+    
     // ACTION AFTER PROPOSAL PASS function
 
 
