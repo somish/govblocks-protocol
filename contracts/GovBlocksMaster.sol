@@ -67,8 +67,8 @@ contract GovBlocksMaster
     /// @param _memberAddress Address of the member
     function changeAuthorizedGB(bytes32 dAppName,address _memberAddress)
     {
-      if(authGBOwner == 0x00)
-        authGBOwner = _memberAddress;
+      if(govBlocksDapps[dAppName].authGBAddress == 0x00)
+        govBlocksDapps[dAppName].authGBAddress = _memberAddress;
       else
         require(msg.sender == govBlocksDapps[dAppName].authGBAddress);
         govBlocksDapps[dAppName].authGBAddress = _memberAddress;
@@ -219,13 +219,13 @@ contract GovBlocksMaster
        govBlocksUser[msg.sender] = _hash;
     }
 
-    // /// @dev Gets byte code and abi hash
-    // /// @param byteCode Byte code 
-    // /// @param abiHash Application binary interface hash
-    // function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
-    // {
-    //   return (byteCodeHash,contractsAbiHash);
-    // }
+    /// @dev Gets byte code and abi hash
+    /// @param byteCode Byte code 
+    /// @param abiHash Application binary interface hash
+    function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
+    {
+      return (byteCodeHash,contractsAbiHash);
+    }
 
     /// @dev Gets GovBlocks user details
     /// @param _gbUserName GovBlocks username
