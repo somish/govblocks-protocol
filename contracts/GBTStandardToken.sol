@@ -30,8 +30,6 @@ contract GBTStandardToken is ERC20Basic, ERC20
     address GBTCAddress;
     
     uint  initialTokens;
-    uint public tokenHoldingTime;
-
 
     struct lock
     {
@@ -40,8 +38,9 @@ contract GBTStandardToken is ERC20Basic, ERC20
     }
 
     mapping(address=>lock[]) user_lockToken;
-
     mapping(address => uint256) balances;
+
+   
   /**
   * @dev transfer token for a specified address
   * @param _to The address to transfer to.
