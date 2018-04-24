@@ -911,11 +911,16 @@ contract governanceData {
         return allProposalData[_proposalId].currentVerdict;
     }
 
-     function changeTokenHoldingTime(uint _time) onlyOwner
+    function changeTokenHoldingTime(uint _time) onlyOwner
     {
        tokenHoldingTime = _time;
     }
 
+    /// @dev Get total deposit tokens against member and proposal Id with type of (proposal/solution/vote); 
+    function getDepositTokens_byAddressProposal(address _memberAddress,uint _proposalId)constant returns(uint,uint depositFor_creatingProposal,uint depositFor_proposingSolution,uint depositFor_castingVote)
+    {
+        return (_proposalId,getDepositedTokens(_memberAddress,_proposalId,"P"),getDepositedTokens(_memberAddress,_proposalId,"S"),getDepositedTokens(_memberAddress,_proposalId,"V"));
+    }
 
 
 // UPDATED CONTRACTS :

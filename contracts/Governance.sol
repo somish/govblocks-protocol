@@ -116,7 +116,7 @@ contract Governance {
   /// @param _categoryId Category id
   /// @param _dateAdd Date the proposal was added
   function createProposal(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _dateAdd) public
-   {
+  {
     //   GD=governanceData(GDAddress);
     //   PC=ProposalCategory(PCAddress);
       uint _proposalId = GD.getProposalLength();
@@ -130,16 +130,16 @@ contract Governance {
           GD.createProposal1(_proposalId,msg.sender,_proposalDescHash,votingAddress,now);          
   }
 
-   /// @dev Creates a new proposal (Stake in ether)
-   /// @param _proposalDescHash Proposal description hash
-   /// @param _votingTypeId Voting type id
-   /// @param _categoryId Category id
-   /// @param _solutionHash Solution hash
-   function createProposalwithSolution_inEther(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) payable
-   {
+  /// @dev Creates a new proposal (Stake in ether)
+  /// @param _proposalDescHash Proposal description hash
+  /// @param _votingTypeId Voting type id
+  /// @param _categoryId Category id
+  /// @param _solutionHash Solution hash
+  function createProposalwithSolution_inEther(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) payable
+  {
      uint tokenAmount = GBTS.buyToken.value(msg.value)();
      createProposalwithSolution(_proposalDescHash, _votingTypeId, _categoryId, tokenAmount,_solutionHash,_v,_r,_s);
-   }
+  }
  
   /// @dev Creates a new proposal
   /// @param _proposalDescHash Proposal description hash
@@ -157,16 +157,16 @@ contract Governance {
       openProposalForVoting(_proposalId,_categoryId,proposalStake,_v,_r,_s);
       VT.addSolution(_proposalId,msg.sender,SafeMath.sub(_proposalSolutionStake,proposalStake),_solutionHash,proposalDateAdd,_v,_r,_s);
     //   receiveStake(_proposalId,SafeMath.sub(_proposalSolutionStake,proposalStake),proposalDateAdd,_solutionHash,_v,_r,_s);
-   }
+  }
 
-   /// @dev Submit proposal with solution (Stake in ether)
-   /// @param _proposalId Proposal id
-   /// @param _solutionHash Solution hash
-   function submitProposalWithSolution_inEther(uint _proposalId,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) payable
-   {
+  /// @dev Submit proposal with solution (Stake in ether)
+  /// @param _proposalId Proposal id
+  /// @param _solutionHash Solution hash
+  function submitProposalWithSolution_inEther(uint _proposalId,string _solutionHash,uint8 _v,bytes32 _r,bytes32 _s) payable
+  {
      uint tokenAmount = GBTS.buyToken.value(msg.value)();
      submitProposalWithSolution(_proposalId, tokenAmount, _solutionHash,_v,_r,_s);
-   }
+  }
      
 
   /// @dev Submit proposal with solution
@@ -463,16 +463,16 @@ contract Governance {
        GD.setProposalTotalVoteValue(_proposalId,_totalVoteValue);
     }
 
-    /// @dev Gets total incentive by dApp
-    /// @return allIncentive All proposals' incentive
-    function getTotalIncentiveByDapp()constant returns (uint allIncentive)
-    {
-        // GD=governanceData(GDAddress);
-        for(uint i=0; i<GD.getProposalLength(); i++)
-        {
-            allIncentive =  allIncentive + GD.getProposalIncentive(i);
-        }
-    }
+    // /// @dev Gets total incentive by dApp
+    // /// @return allIncentive All proposals' incentive
+    // function getTotalIncentiveByDapp()constant returns (uint allIncentive)
+    // {
+    //     // GD=governanceData(GDAddress);
+    //     for(uint i=0; i<GD.getProposalLength(); i++)
+    //     {
+    //         allIncentive =  allIncentive + GD.getProposalIncentive(i);
+    //     }
+    // }
 
     /// @dev Calculates proposal reward 
     /// @param _memberAddress Member address
@@ -729,30 +729,30 @@ contract Governance {
         } 
     }
 
-     /// @dev Gets proposal answer/solution by address
-     /// @param _memberAddress Member address
-     /// @return proposalIds Proposal ids
-     /// @return solutionIds Solution ids
-     /// @return totalSolution All soultions of a member
-    function getAllSolutionIds_byAddress(address _memberAddress)constant returns(uint[] proposalIds, uint[] solutionProposalIds,uint totalSolution) 
-    {
-        uint length = GD.getProposalLength(); uint8 m;
-        uint solutionProposalLength =  getAllSolutionIdsLength_byAddress(_memberAddress);
-        proposalIds = new uint[](solutionProposalLength);
-        solutionProposalIds = new uint[](solutionProposalLength);
-        for(uint i=0; i<length; i++)
-        {
-            for(uint j=0; j<GD.getTotalSolutions(i); j++)
-            {
-                if(_memberAddress == GD.getSolutionAddedByProposalId(i,j))
-                {
-                    proposalIds[m] = i;
-                    solutionProposalIds[m] = j;
-                    m++;
-                }
-            }
-        }
-    }
+    //  /// @dev Gets proposal answer/solution by address
+    //  /// @param _memberAddress Member address
+    //  /// @return proposalIds Proposal ids
+    //  /// @return solutionIds Solution ids
+    //  /// @return totalSolution All soultions of a member
+    // function getAllSolutionIds_byAddress(address _memberAddress)constant returns(uint[] proposalIds, uint[] solutionProposalIds,uint totalSolution) 
+    // {
+    //     uint length = GD.getProposalLength(); uint8 m;
+    //     uint solutionProposalLength =  getAllSolutionIdsLength_byAddress(_memberAddress);
+    //     proposalIds = new uint[](solutionProposalLength);
+    //     solutionProposalIds = new uint[](solutionProposalLength);
+    //     for(uint i=0; i<length; i++)
+    //     {
+    //         for(uint j=0; j<GD.getTotalSolutions(i); j++)
+    //         {
+    //             if(_memberAddress == GD.getSolutionAddedByProposalId(i,j))
+    //             {
+    //                 proposalIds[m] = i;
+    //                 solutionProposalIds[m] = j;
+    //                 m++;
+    //             }
+    //         }
+    //     }
+    // }
 
     /// @dev Gets all solution ids length by address
     /// @param _memberAddress Member address
@@ -784,12 +784,5 @@ contract Governance {
 
         return (depositFor_creatingProposal,depositFor_proposingSolution,depositFor_castingVote);
     }
-
-    /// @dev Get total deposit tokens against member and proposal Id with type of (proposal/solution/vote); 
-    function getDepositTokens_byAddressProposal(address _memberAddress,uint _proposalId)constant returns(uint,uint depositFor_creatingProposal,uint depositFor_proposingSolution,uint depositFor_castingVote)
-    {
-        return (_proposalId,GD.getDepositedTokens(_memberAddress,_proposalId,"P"),GD.getDepositedTokens(_memberAddress,_proposalId,"S"),GD.getDepositedTokens(_memberAddress,_proposalId,"V"));
-    }
-
 
 }
