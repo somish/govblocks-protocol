@@ -14,14 +14,12 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity ^0.4.8;
 import "./Master.sol";
-import "./GBTStandardToken.sol";
-import "./memberRoles.sol";
 import "./governanceData.sol";
+import "./memberRoles.sol";
 
 contract ProposalCategory
 {
-    uint8 public constructorCheck;
-
+    bool public constructorCheck;
     struct category
     {
         string categoryDescHash;
@@ -37,23 +35,21 @@ contract ProposalCategory
     }
 
     category[] public allCategory;
-    Master M1;  
+    Master MS;  
     memberRoles MR;
-    GBTStandardToken GBTS;
     governanceData GD;
     address masterAddress;
     address GBMAddress;
-    address GBTSAddress;
 
     modifier onlyInternal {
-        M1=Master(masterAddress);
-        require(M1.isInternal(msg.sender) == true);
+        MS=Master(masterAddress);
+        require(MS.isInternal(msg.sender) == true);
         _; 
     }
     
      modifier onlyOwner {
-        M1=Master(masterAddress);
-        require(M1.isOwner(msg.sender) == true);
+        MS=Master(masterAddress);
+        require(MS.isOwner(msg.sender) == true);
         _; 
     }
     
@@ -75,13 +71,6 @@ contract ProposalCategory
         GBMAddress = _GBMAddress;
     }
     
-    /// @dev Changes GovBlocks standard token address
-    /// @param _GBTAddress New GovBlocks token address
-    function changeGBTSAddress(address _GBTAddress) onlyMaster
-    {
-        GBTSAddress = _GBTAddress;
-    }   
-
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) 
@@ -90,8 +79,8 @@ contract ProposalCategory
             masterAddress = _masterContractAddress;
         else
         {
-            M1=Master(masterAddress);
-            require(M1.isInternal(msg.sender) == true);
+            MS=Master(masterAddress);
+            require(MS.isInternal(msg.sender) == true);
                 masterAddress = _masterContractAddress;
         }
     }
@@ -107,13 +96,16 @@ contract ProposalCategory
         if(contractName == 'MR'){
             MR = memberRoles(contractAddress);
         }
+        else if(contractName == 'GD'){
+            GD = governanceData(contractAddress);
+        }
     }
 
     /// @dev Initiates proposal category
     /// @param _GBMAddress New GovBlocks master address
     function ProposalCategoryInitiate(address _GBMAddress)
     {
-        require(constructorCheck == 0);
+        require(constructorCheck == false);
         GBMAddress = _GBMAddress;
         // addNewCategory("QmcEP2ELejTFsaLCeiukMNS9HSg6mxitFubHEuuLDSLbYt");
         // addNewCategory("QmeX5jkkSFPrsehqsit7zMWmTXB6pTeSHscE3HRiA1R9t5");
@@ -122,7 +114,7 @@ contract ProposalCategory
         // addNewCategory("QmcAiWumEJaF6jLg14eaLU9WgdKLSy8bzPLNHMCSUZxU9a");
         // addNewCategory("QmWTbFV1TW3Pw79tCwuJUwNyXKZVkxzkW1xW4sL9CYzUmA");
         // addNewCategory("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8");
-        constructorCheck =1;
+        constructorCheck = true;
     }
 
     /// @dev Adds new category
@@ -282,16 +274,14 @@ contract ProposalCategory
     /// @param _index Index of categories
     /// @return totalTime Total time remaining before closing
     function getRemainingClosingTime(uint _proposalId,uint _categoryId,uint _index) constant returns (uint totalTime)
-    {
-        GBTS=GBTStandardToken(GBTSAddress);
-        
+    {      
         uint pClosingTime;
         for(uint i=0; i<getCloseTimeLength(_categoryId); i++)
         {
             pClosingTime = pClosingTime + getClosingTimeAtIndex(_categoryId,_index);
         }
     // date Add in events ASK HERE
-        totalTime = (pClosingTime+GBTS.tokenHoldingTime()+GD.getProposalDateUpd(_proposalId))-now; 
+        totalTime = (pClosingTime+GD.tokenHoldingTime()+GD.getProposalDateUpd(_proposalId))-now; 
         return totalTime;
     }
 
