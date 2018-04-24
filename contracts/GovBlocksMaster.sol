@@ -131,6 +131,7 @@ contract GovBlocksMaster
         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
+        changeAuthorizedGB(_gbUserName,msg.sender);
         MS=Master(_newMasterAddress);
         MS.setOwner(msg.sender);
     }
