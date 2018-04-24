@@ -17,7 +17,6 @@
 pragma solidity ^0.4.8;
 import "./Master.sol";
 import "./BasicToken.sol";
-import "./governanceData.sol";
 
 contract  memberRoles
 {
@@ -25,13 +24,9 @@ contract  memberRoles
     
   bytes32[] memberRole;
   uint categorizeAuthRoleid;
-  string memberRoleDescHash;
-  uint8 public constructorCheck;
-  Master M1; 
-  governanceData GD;
+  bool public constructorCheck;
+  Master MS; 
   address masterAddress;
-//   address GDAddress;
-//   address BTAddress;
   address GBMAddress;
   BasicToken BT;
 
@@ -46,35 +41,33 @@ contract  memberRoles
   mapping(uint=>memberRoleDetails) memberRoleData;
   mapping (address=>uint) memberAddressToMemberRole;
 
-
   /// @dev Initiates member roles
   /// @param _GBMAddress GovBlocks master address
   function MemberRolesInitiate(address _GBMAddress)
   {
-    require(constructorCheck == 0);
+    require(constructorCheck == false);
         memberRole.push("");
         memberRole.push("Advisory Board");
         memberRole.push("Token Holder");
         categorizeAuthRoleid=1;
-        M1=Master(masterAddress);
-        address ownAddress = M1.owner();
+        MS=Master(masterAddress);
+        address ownAddress = MS.owner();
         updateMemberRole(ownAddress,1,1);
-        // changeRoleDescHash("QmTDisHekKVCBc4JNHfdiiZNgFRqdPoNn69QbD2vwTeo9L");
         GBMAddress = _GBMAddress;
-        constructorCheck =1;
+        constructorCheck = true;
   }
 
   modifier onlyInternal 
   {
-      M1=Master(masterAddress);
-      require(M1.isInternal(msg.sender) == true);
+      MS=Master(masterAddress);
+      require(MS.isInternal(msg.sender) == true);
       _; 
   }
   
   modifier onlyOwner 
   {
-      M1=Master(masterAddress);
-      require(M1.isOwner(msg.sender) == true);
+      MS=Master(masterAddress);
+      require(MS.isOwner(msg.sender) == true);
       _; 
   }
   
@@ -100,28 +93,10 @@ contract  memberRoles
           masterAddress = _masterContractAddress;
       else
       {
-          M1=Master(masterAddress);
-          require(M1.isInternal(msg.sender) == true);
+          MS=Master(masterAddress);
+          require(MS.isInternal(msg.sender) == true);
               masterAddress = _masterContractAddress;
       }
-  }
-
-//   function changeAllContractAddress(address _GDAddress) onlyInternal
-//   {
-//     GDAddress = _GDAddress;
-//   }
-
-  function changeAddress(bytes4 contractName, address contractAddress){
-        if(contractName == 'GD'){
-            GD = governanceData(contractAddress);
-        }
-    }
-
-  /// @dev Gets role description hash
-  /// @return memberRoleDescHash Member role description hash
-  function getRoleDescHash()constant returns(string)
-  {
-    return memberRoleDescHash;
   }
 
   /// @dev Gets the role id assigned to a member when given member address
@@ -129,9 +104,9 @@ contract  memberRoles
   /// @return memberRoleId Role id of the member address
   function getMemberRoleIdByAddress(address _memberAddress) public constant returns(uint memberRoleId)
   {
-      M1=Master(masterAddress); 
+      MS=Master(masterAddress); 
       address tokenAddress;
-      tokenAddress=M1.getDappTokenAddress();
+      tokenAddress=MS.getDappTokenAddress();
       BT=BasicToken(tokenAddress);
       memberRoleId = memberAddressToMemberRole[_memberAddress];
       
@@ -177,7 +152,8 @@ contract  memberRoles
   /// @dev Changes member role id's changable member 
   /// @param _memberRoleId Member role id
   /// @param _newCanAddMember New canAddMember address
-  function changeCanAddMember(uint _memberRoleId, address _newCanAddMember){
+  function changeCanAddMember(uint _memberRoleId, address _newCanAddMember)
+  {
       require(msg.sender == updateMemberRoles[_memberRoleId]);
       updateMemberRoles[_memberRoleId] = _newCanAddMember;
   }
