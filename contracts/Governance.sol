@@ -98,7 +98,7 @@ contract Governance {
 
   /// @dev Changes master address
   /// @param _MasterAddress New master address
-  function changeMasterAddress(address _MasterAddress) onlyInternal
+  function changeMasterAddress(address _MasterAddress)
   {
     if(masterAddress == 0x000)
         masterAddress = _MasterAddress;
