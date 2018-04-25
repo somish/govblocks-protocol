@@ -39,7 +39,7 @@ contract Master is Ownable {
     bytes32 public DappName;
     changeVersion[]  contractChangeDate;
     mapping(uint16=>mapping(bytes2=>address)) public allContractVersions;
-    mapping(address=>bool) contracts_active;
+    mapping(address=>bool) public contracts_active;
     // mapping(bytes2 => bytes2[]) contract_dependency;
     mapping(bytes2 => mapping(bytes2 => bool)) contract_dependency_new;
     bytes2[] allContractNames;
@@ -251,7 +251,7 @@ contract Master is Ownable {
 
     /// @dev Changes all reference contract addresses in master 
     /// @param _version Version of the new contracts
-    function changeAddressInMaster(uint16 _version) internal 
+    function changeAddressInMaster(uint16 _version)  
     {
         changeAllAddress(_version);
         // governanceDataAddress = allContractVersions[_version]['GD'];
@@ -269,7 +269,7 @@ contract Master is Ownable {
 
     /// @dev Sets the older versions of contract addresses as inactive and the latest one as active.
     /// @param _version Version of the new contracts
-    function changeAllAddress(uint16 _version) internal
+    function changeAllAddress(uint16 _version) 
     {
          for(uint8 i=0; i < allContractNames.length; i++){
            addRemoveAddress(_version,allContractNames[i]);
@@ -290,7 +290,7 @@ contract Master is Ownable {
 
     /// @dev Links all contracts to master by passing address of master contract to the functions of other contracts.
     /// @param _masterAddress Master address of the contracts
-    function changeMasterAddress(address _masterAddress,uint16 version) internal 
+    function changeMasterAddress(address _masterAddress,uint16 version)  
     {
         GD=governanceData(allContractVersions[version]['GD']);
         GD.changeMasterAddress(_masterAddress);
@@ -316,7 +316,7 @@ contract Master is Ownable {
 
     /// @dev Calls contructor of governance data, member roles, proposal category contracts
     /// @param version Version of the new contracts
-    function callConstructorGDMRPC(uint16 version) internal 
+    function callConstructorGDMRPC(uint16 version)  
     {
         GD=governanceData(allContractVersions[version]['GD']);
         MR=memberRoles(allContractVersions[version]['MR']);
@@ -334,7 +334,7 @@ contract Master is Ownable {
     }
 
    /// @dev Links contracts to one another
-   function changeOtherAddress(uint16 version) internal 
+   function changeOtherAddress(uint16 version)  
    {  
             uint8 i;
             for( i=0; i<allContractNames.length; i++){
