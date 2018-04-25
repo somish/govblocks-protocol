@@ -463,7 +463,7 @@ contract governanceData {
     }
 
     /// @dev Sets all the voting type names and their addresses
-    function setVotingTypeDetails(bytes32 _votingTypeName,address _votingTypeAddress) onlyOwner
+    function setVotingTypeDetails(bytes32 _votingTypeName,address _votingTypeAddress) internal
     {
         allVotingTypeDetails.push(votingTypeDetails(_votingTypeName,_votingTypeAddress)); 
     }
