@@ -367,7 +367,7 @@ contract GovBlocksMaster
     /// @param _memberAddress New members address
     /// @param _memberRoleId New members role id
     /// @param _typeOf Typeof role of the member
-    function updateMemberRoleGB(bytes32 _gbUserName,address _memberAddress,uint _memberRoleId,uint8 _typeOf) 
+    function updateMemberRoleGB(bytes32 _gbUserName,address _memberAddress,uint32 _memberRoleId,bool _typeOf) 
     {
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
         address master = govBlocksDapps[_gbUserName].masterAddress; address MRAddress;
