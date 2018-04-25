@@ -212,16 +212,17 @@ contract simpleVoting is VotingType
         (,category,currentVotingId,intermediateVerdict,,,) = GD.getProposalDetailsById2(_proposalId);
         (_mrSequence,,_closingTime) = PC.getCategoryData3(category,currentVotingId);
         uint _proposalDateUpd = GD.getProposalDateUpd(_proposalId);
-        uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
+        
+        // uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
 
         require(SafeMath.add(_proposalDateUpd,_closingTime) >= now && msg.sender != GD.getSolutionAddedByProposalId(_proposalId,_solutionChosen[0]));
-        require(roleId == _mrSequence && GBTS.balanceOf(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _solutionChosen.length == 1);
+        require(MR.checkRoleId_byAddress(msg.sender,_mrSequence) == true && GBTS.balanceOf(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2 && _solutionChosen.length == 1);
         require(_voteStake <= PC.getMaxStake(category) && _voteStake >= PC.getMinStake(category));
         if(currentVotingId == 0)
             require(_solutionChosen[0] <= GD.getTotalSolutions(_proposalId));
         else
             require(_solutionChosen[0]==intermediateVerdict || _solutionChosen[0]==0);
-            
+        uint32 roleId = _mrSequence;  
         castVote(_proposalId,_solutionChosen,msg.sender,_voteStake,roleId,_v,_r,_s);    
     }
 
@@ -231,7 +232,7 @@ contract simpleVoting is VotingType
     /// @param _memberAddress Member address
     /// @param _voteStake Vote stake
     /// @param _roleId Role id
-    function castVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _voteStake,uint _roleId,uint8 _v,bytes32 _r,bytes32 _s) internal
+    function castVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _voteStake,uint32 _roleId,uint8 _v,bytes32 _r,bytes32 _s) internal
     {
         // GD=governanceData(GDAddress);
         // SVT=StandardVotingType(SVTAddress);
