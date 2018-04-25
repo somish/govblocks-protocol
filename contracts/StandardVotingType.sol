@@ -130,7 +130,7 @@ contract StandardVotingType
         VT=VotingType(GD.getProposalVotingType(_proposalId)); 
         uint totalVoteValue=0; uint8 category = GD.getProposalCategory(_proposalId);
         uint8 currentVotingId =GD.getProposalCurrentVotingId(_proposalId);
-        uint _mrSequenceId = PC.getRoleSequencAtIndex(category,currentVotingId);
+        uint32 _mrSequenceId = PC.getRoleSequencAtIndex(category,currentVotingId);
         require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId)==1); //1
         
         uint[] memory finalVoteValue = new uint[](GD.getTotalSolutions(_proposalId)); 
@@ -208,7 +208,7 @@ contract StandardVotingType
         
     }
             
-    function checkForThreshold(uint _proposalId,uint _mrSequenceId) internal constant returns(bool)
+    function checkForThreshold(uint _proposalId,uint32 _mrSequenceId) internal constant returns(bool)
     {
         uint thresHoldValue;
         if(_mrSequenceId == 2)
