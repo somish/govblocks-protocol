@@ -172,6 +172,8 @@ contract Master is Ownable {
         // contract_dependency_new['GD']['SV'] = true;
         // contract_dependency_new['GD']['RB'] = true;
         // contract_dependency_new['GD']['FW'] = true;
+        // contract_dependency_new['GD']['FW'] = true;
+        contract_dependency_new['GD']['GV'] = true;
         contract_dependency_new['SV']['VT'] = true;
         contract_dependency_new['SV']['GD'] = true;
         contract_dependency_new['SV']['MR'] = true;
