@@ -267,8 +267,8 @@ contract governanceData {
     /// @param contractAddress Contract addresses
     function changeAddress(bytes4 contractName, address contractAddress) onlyInternal
     {
-             if(contractName == 'GOV'){
-            GOV = Governance(contractAddress); }
+        if(contractName == 'GV'){
+          GOV = Governance(contractAddress); }
     }
     
     /// @dev Initiates governance data
