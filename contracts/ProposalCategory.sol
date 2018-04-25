@@ -391,7 +391,7 @@ contract ProposalCategory
     }
 
     /// @dev Gets role sequence of index= _index by category id  
-    function getRoleSequencAtIndex(uint _categoryId,uint _index) constant returns(uint roleId)
+    function getRoleSequencAtIndex(uint _categoryId,uint _index) constant returns(uint32 roleId)
     {
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
