@@ -213,7 +213,8 @@ contract Governance {
   /// @param _dappIncentive It is the company's incentive to distribute to end members
   function categorizeProposal(uint _proposalId , uint8 _categoryId,uint _dappIncentive) public
   {
-      require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
+      require(MR.checkRoleId_byAddress(msg.sender,MR.getAuthorizedMemberId()) == true);
+    //   require(MR.getMemberRoleIdByAddress(msg.sender) == MR.getAuthorizedMemberId());
       require(GD.getProposalStatus(_proposalId) == 1 || GD.getProposalStatus(_proposalId) == 0);
       uint gbtBalanceOfPool = GBTS.balanceOf(P1Address);
       require (_dappIncentive <= gbtBalanceOfPool);
@@ -326,7 +327,7 @@ contract Governance {
    /// @dev Checks proposal for vote closing
   /// @param _proposalId Proposal id
   /// @param _roleId Role id
-  function checkProposalVoteClosing(uint _proposalId,uint _roleId) onlyInternal constant returns(uint8 closeValue) 
+  function checkProposalVoteClosing(uint _proposalId,uint32 _roleId) onlyInternal constant returns(uint8 closeValue) 
   {
     closeValue = checkForClosing(_proposalId,_roleId);
   }
@@ -334,7 +335,7 @@ contract Governance {
   /// @dev Checks proposal for vote closing
   /// @param _proposalId Proposal id
   /// @param _roleId Role id
-  function checkForClosing(uint _proposalId,uint _roleId) internal constant returns(uint8 closeValue) 
+  function checkForClosing(uint _proposalId,uint32 _roleId) internal constant returns(uint8 closeValue) 
   {
       uint dateUpdate;uint pStatus;uint _closingTime;uint _majorityVote;
       (,,dateUpdate,,pStatus) = GD.getProposalDetailsById1(_proposalId);
@@ -363,7 +364,7 @@ contract Governance {
   /// @dev Checks role for vote closing
   /// @param _proposalId Proposal id
   /// @param _roleId Role id
-  function checkRoleVoteClosing(uint _proposalId,uint _roleId) onlyInternal
+  function checkRoleVoteClosing(uint _proposalId,uint32 _roleId) onlyInternal
   {
      if(checkForClosing(_proposalId,_roleId)==1)
        callOraclize(_proposalId,0);
