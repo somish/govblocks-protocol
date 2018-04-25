@@ -100,9 +100,9 @@ contract simpleVoting is VotingType
             MR = memberRoles(contractAddress);
         } else if(contractName == 'PC'){
             PC = ProposalCategory(contractAddress);
-        } else if(contractName == 'SVT'){
+        } else if(contractName == 'VT'){
             SVT = StandardVotingType(contractAddress);
-        } else if(contractName == 'GOV'){
+        } else if(contractName == 'GV'){
             GOV = Governance(contractAddress);
         }
     }

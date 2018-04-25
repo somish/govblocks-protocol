@@ -98,7 +98,7 @@ contract StandardVotingType
             MR = memberRoles(contractAddress);
         } else if(contractName == 'PC'){
             PC = ProposalCategory(contractAddress);
-        } else if(contractName == 'GOV'){
+        } else if(contractName == 'GV'){
             GOV = Governance(contractAddress);
         } else if(contractName == 'PL'){
             P1 = Pool(contractAddress);
