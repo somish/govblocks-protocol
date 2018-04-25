@@ -46,6 +46,7 @@ contract StandardVotingType
     VotingType VT;
 
     modifier onlyInternal {
+        MS=Master(masterAddress);
         require(MS.isInternal(msg.sender) == true);
         _; 
     }
