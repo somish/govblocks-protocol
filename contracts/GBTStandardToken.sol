@@ -205,6 +205,7 @@ contract GBTStandardToken is ERC20Basic, ERC20
         name = "GBT";                        
         symbol = "";                  
         decimals = 18;
+        tokenPrice = 1*10**15;
     }
 
 
