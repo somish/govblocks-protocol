@@ -258,7 +258,8 @@ contract Governance {
           GBTS.lockToken(msg.sender,SafeMath.sub(_proposalStake,finalAmount),remainingTime,_v,_r,_s);
           GD.setDepositTokens(msg.sender,_proposalId,'P',finalAmount);
           GD.changeProposalStatus(_proposalId,2);
-          callOraclize(_proposalId,closingTime);   
+          callOraclize(_proposalId,closingTime); 
+          GD.callProposalStakeEvent(msg.sender,_proposalId,now,_proposalStake);   
       }
   }
   /// @dev Call oraclize for closing proposal
