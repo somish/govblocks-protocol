@@ -187,8 +187,8 @@ contract Master is Ownable {
         contract_dependency_new['GV']['MR'] = true;
         contract_dependency_new['GV']['PC'] = true;
         contract_dependency_new['GV']['PL'] = true;
-        contract_dependency_new['PC']['MR'] = true;
         contract_dependency_new['PC']['GD'] = true;
+        contract_dependency_new['PC']['MR'] = true;
     }
     
     /// @dev Gets GBT token address
@@ -348,29 +348,42 @@ contract Master is Ownable {
             {
                if(contract_dependency_new['GD'][allContractNames[i]] == true)
                {
-                   if(allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+                    if(version == 0)
                        GD.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                   }
+                    else if(allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['GD'] != allContractVersions[version]['GD'])
+                       GD.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                }
-               if(contract_dependency_new['PC'][allContractNames[i]] == true){
-                   if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+
+               if(contract_dependency_new['PC'][allContractNames[i]] == true)
+               {
+                    if(version == 0)
                        PC.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                   }
+                    else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['PC'] != allContractVersions[version]['PC'])
+                       PC.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                }
-               if(contract_dependency_new['SV'][allContractNames[i]] == true){
-                   if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+
+               if(contract_dependency_new['SV'][allContractNames[i]] == true)
+               {
+                   if(version == 0)
                        SV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                   }
+                   else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['SV'] != allContractVersions[version]['SV'])
+                       SV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                }
-               if(contract_dependency_new['VT'][allContractNames[i]] == true){
-                   if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+
+               if(contract_dependency_new['VT'][allContractNames[i]] == true)
+               {
+                    if(version == 0)
                        SVT.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                   }
+                    else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['VT'] != allContractVersions[version]['VT'])
+                       SVT.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                }
-               if(contract_dependency_new['GV'][allContractNames[i]] == true){
-                   if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+
+               if(contract_dependency_new['GV'][allContractNames[i]] == true)
+               {
+                    if(version == 0)
                        GOV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                   }
+                    else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['GV'] != allContractVersions[version]['GV'])
+                       GOV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                }
 
             //    if(contract_dependency_new['RB'][allContractNames[i]] == true){
