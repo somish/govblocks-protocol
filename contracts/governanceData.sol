@@ -22,7 +22,7 @@ import "./Governance.sol";
 
 contract governanceData {
   
-    event Proposal(address indexed proposalOwner,uint256 proposalId,uint256 dateAdd,string proposalDescHash);
+    event Proposal(address indexed proposalOwner,uint256 indexed proposalId,uint256 dateAdd,string proposalDescHash);
     event Solution(uint256 indexed proposalId,address indexed solutionOwner,string solutionDescHash,uint256 dateAdd,uint256 solutionStake);
     event Reputation(address indexed from,uint256 indexed proposalId, string description, uint32 reputationPoints,bytes4 typeOf);
     event Vote(address indexed from,uint256 indexed proposalId,uint256 dateAdd,uint256 voteStakeGBT,uint256 voteId);
@@ -31,6 +31,12 @@ contract governanceData {
     event OraclizeCall(address indexed proposalOwner,uint256 indexed proposalId,uint256 dateAdd,uint256 closingTime);    
     event ProposalStatus(uint256 indexed proposalId,uint256 proposalStatus,uint256 dateAdd);
     event ProposalVersion(uint256 indexed proposalId,uint256 indexed versionNumber,string proposalDescHash,uint256 dateAdd);
+    event ProposalStake(address indexed proposalOwner,uint256 indexed proposalId,uint dateUpd,uint256 proposalStake);
+
+    function callProposalStakeEvent(address _proposalOwner,uint _proposalId,uint _dateUpd,uint _proposalStake)
+    {
+        ProposalStake(_proposalOwner,_proposalId,_dateUpd,_proposalStake);
+    }   
 
     /// @dev Calls proposal version event
     /// @param proposalId Proposal id
