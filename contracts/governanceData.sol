@@ -268,7 +268,17 @@ contract governanceData {
     function changeAddress(bytes4 contractName, address contractAddress) onlyInternal
     {
         if(contractName == 'GV'){
-          GOV = Governance(contractAddress); }
+          GOV = Governance(contractAddress);
+        } 
+        else if(contractName == 'SV'){
+          editVotingTypeDetails(0,contractAddress);
+        } 
+        else  if(contractName == 'RB'){
+          editVotingTypeDetails(1,contractAddress);
+        } 
+        else if(contractName == 'FW'){
+          editVotingTypeDetails(2,contractAddress);
+        }
     }
     
     /// @dev Initiates governance data
@@ -469,7 +479,7 @@ contract governanceData {
     }
 
     /// @dev Edits voting type of voting type id=_votingTypeId and voting type address=_votingTypeAddress
-    function editVotingTypeDetails(uint _votingTypeId,address _votingTypeAddress) onlyInternal
+    function editVotingTypeDetails(uint _votingTypeId,address _votingTypeAddress) internal
     {
         allVotingTypeDetails[_votingTypeId].votingTypeAddress = _votingTypeAddress;
     }
