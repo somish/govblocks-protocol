@@ -169,10 +169,9 @@ contract Master is Ownable {
     }
 
      function addContractDependencies() internal{
-        // contract_dependency_new['GD']['SV'] = true;
-        // contract_dependency_new['GD']['RB'] = true;
-        // contract_dependency_new['GD']['FW'] = true;
-        // contract_dependency_new['GD']['FW'] = true;
+        contract_dependency_new['GD']['SV'] = true;
+        contract_dependency_new['GD']['RB'] = true;
+        contract_dependency_new['GD']['FW'] = true;
         contract_dependency_new['GD']['GV'] = true;
         contract_dependency_new['SV']['VT'] = true;
         contract_dependency_new['SV']['GD'] = true;
@@ -253,7 +252,7 @@ contract Master is Ownable {
 
     /// @dev Changes all reference contract addresses in master 
     /// @param _version Version of the new contracts
-    function changeAddressInMaster(uint16 _version)  
+    function changeAddressInMaster(uint16 _version) internal 
     {
         changeAllAddress(_version);
         // governanceDataAddress = allContractVersions[_version]['GD'];
@@ -271,7 +270,7 @@ contract Master is Ownable {
 
     /// @dev Sets the older versions of contract addresses as inactive and the latest one as active.
     /// @param _version Version of the new contracts
-    function changeAllAddress(uint16 _version) 
+    function changeAllAddress(uint16 _version) internal
     {
          for(uint8 i=0; i < allContractNames.length; i++){
            addRemoveAddress(_version,allContractNames[i]);
@@ -318,7 +317,7 @@ contract Master is Ownable {
 
     /// @dev Calls contructor of governance data, member roles, proposal category contracts
     /// @param version Version of the new contracts
-    function callConstructorGDMRPC(uint16 version)  
+    function callConstructorGDMRPC(uint16 version)  internal
     {
         GD=governanceData(allContractVersions[version]['GD']);
         MR=memberRoles(allContractVersions[version]['MR']);
@@ -336,45 +335,44 @@ contract Master is Ownable {
     }
 
    /// @dev Links contracts to one another
-   function changeOtherAddress(uint16 version)  
+   function changeOtherAddress(uint16 version)  internal
    {  
+            GD=governanceData(allContractVersions[version]['GD']);
+            PC=ProposalCategory(allContractVersions[version]['PC']);
+            SV=simpleVoting(allContractVersions[version]['SV']);
+            SVT=StandardVotingType(allContractVersions[version]['VT']);
+            GOV=Governance(allContractVersions[version]['GV']);
+
             uint8 i;
-            for( i=0; i<allContractNames.length; i++){
-               if(contract_dependency_new['GD'][allContractNames[i]] == true){
-                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
-                       GD.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+            for( i=0; i<allContractNames.length; i++)
+            {
+               if(contract_dependency_new['GD'][allContractNames[i]] == true)
+               {
+                   if(allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+                       GD.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                    }
                }
-            //   if(contract_dependency_new['MR'][allContractNames[i]] == true){
-            //       if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
-            //           MR.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
-            //       }
-            //   }
                if(contract_dependency_new['PC'][allContractNames[i]] == true){
-                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
-                       PC.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+                       PC.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                    }
                }
                if(contract_dependency_new['SV'][allContractNames[i]] == true){
-                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
-                       SV.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
-                   }
-               }
-               if(contract_dependency_new['GD'][allContractNames[i]] == true){
-                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
-                       GD.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+                       SV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                    }
                }
                if(contract_dependency_new['VT'][allContractNames[i]] == true){
-                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
-                       SVT.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+                       SVT.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                    }
                }
                if(contract_dependency_new['GV'][allContractNames[i]] == true){
-                   if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
-                       GOV.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
+                   if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]]){
+                       GOV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
                    }
                }
+
             //    if(contract_dependency_new['RB'][allContractNames[i]] == true){
             //        if( allContractVersions[versionLength-1][allContractNames[i]] !=  allContractVersions[versionLength][allContractNames[i]]){
             //            RB.changeAddress(allContractNames[i], allContractVersions[versionLength][allContractNames[i]]);
@@ -401,6 +399,7 @@ contract Master is Ownable {
             //        }
             //    }
            }
+
         changeGBTAddress(allContractVersions[version]['GS']);
    }
 
