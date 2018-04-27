@@ -369,7 +369,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 9870,
+          "SourceUnit": 9744,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/VotingType.sol",
           "file": "./VotingType.sol",
           "scope": 373,
@@ -384,7 +384,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 12231,
+          "SourceUnit": 12103,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/governanceData.sol",
           "file": "./governanceData.sol",
           "scope": 373,
@@ -399,7 +399,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 9805,
+          "SourceUnit": 9679,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/StandardVotingType.sol",
           "file": "./StandardVotingType.sol",
           "scope": 373,
@@ -414,7 +414,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 6450,
+          "SourceUnit": 6413,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/Master.sol",
           "file": "./Master.sol",
           "scope": 373,
@@ -429,7 +429,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 4953,
+          "SourceUnit": 4908,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/Governance.sol",
           "file": "./Governance.sol",
           "scope": 373,
@@ -460,14 +460,14 @@
       {
         "attributes": {
           "contractDependencies": [
-            9869
+            9743
           ],
           "contractKind": "contract",
           "documentation": null,
           "fullyImplemented": false,
           "linearizedBaseContracts": [
             372,
-            9869
+            9743
           ],
           "name": "FeatureWeighted",
           "scope": 373
@@ -484,7 +484,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "VotingType",
-                  "referencedDeclaration": 9869,
+                  "referencedDeclaration": 9743,
                   "type": "contract VotingType"
                 },
                 "id": 166,
@@ -502,7 +502,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "SafeMath",
-                  "referencedDeclaration": 8797,
+                  "referencedDeclaration": 8665,
                   "type": "library SafeMath"
                 },
                 "id": 168,
@@ -775,7 +775,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "Governance",
-                  "referencedDeclaration": 4952,
+                  "referencedDeclaration": 4907,
                   "type": "contract Governance"
                 },
                 "id": 189,
@@ -803,7 +803,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "memberRoles",
-                  "referencedDeclaration": 12843,
+                  "referencedDeclaration": 12800,
                   "type": "contract memberRoles"
                 },
                 "id": 191,
@@ -831,7 +831,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "ProposalCategory",
-                  "referencedDeclaration": 8398,
+                  "referencedDeclaration": 8266,
                   "type": "contract ProposalCategory"
                 },
                 "id": 193,
@@ -859,7 +859,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "governanceData",
-                  "referencedDeclaration": 12230,
+                  "referencedDeclaration": 12102,
                   "type": "contract governanceData"
                 },
                 "id": 195,
@@ -887,7 +887,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "StandardVotingType",
-                  "referencedDeclaration": 9804,
+                  "referencedDeclaration": 9678,
                   "type": "contract StandardVotingType"
                 },
                 "id": 197,
@@ -915,7 +915,7 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "Master",
-                  "referencedDeclaration": 6449,
+                  "referencedDeclaration": 6412,
                   "type": "contract Master"
                 },
                 "id": 199,
@@ -1081,7 +1081,7 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 6449,
+                                  "referencedDeclaration": 6412,
                                   "type": "type(contract Master)",
                                   "value": "Master"
                                 },
@@ -1146,7 +1146,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 20565,
+                              "referencedDeclaration": 20523,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -1197,7 +1197,7 @@
                                       "isPure": false,
                                       "lValueRequested": false,
                                       "member_name": "isInternal",
-                                      "referencedDeclaration": 5179,
+                                      "referencedDeclaration": 5134,
                                       "type": "function (address) view external returns (bool)"
                                     },
                                     "children": [
@@ -1238,7 +1238,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 20562,
+                                          "referencedDeclaration": 20520,
                                           "type": "msg",
                                           "value": "msg"
                                         },
@@ -1524,7 +1524,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 6449,
+                                          "referencedDeclaration": 6412,
                                           "type": "type(contract Master)",
                                           "value": "Master"
                                         },
@@ -1589,7 +1589,7 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 20565,
+                                      "referencedDeclaration": 20523,
                                       "type": "function (bool) pure",
                                       "value": "require"
                                     },
@@ -1640,7 +1640,7 @@
                                               "isPure": false,
                                               "lValueRequested": false,
                                               "member_name": "isInternal",
-                                              "referencedDeclaration": 5179,
+                                              "referencedDeclaration": 5134,
                                               "type": "function (address) view external returns (bool)"
                                             },
                                             "children": [
@@ -1681,7 +1681,7 @@
                                                   "overloadedDeclarations": [
                                                     null
                                                   ],
-                                                  "referencedDeclaration": 20562,
+                                                  "referencedDeclaration": 20520,
                                                   "type": "msg",
                                                   "value": "msg"
                                                 },
@@ -3011,7 +3011,7 @@
               "payable": false,
               "scope": 372,
               "stateMutability": "nonpayable",
-              "superFunction": 9863,
+              "superFunction": 9737,
               "visibility": "public"
             },
             "children": [
@@ -3193,5 +3193,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-04-24T10:21:39.037Z"
+  "updatedAt": "2018-04-26T12:00:44.053Z"
 }

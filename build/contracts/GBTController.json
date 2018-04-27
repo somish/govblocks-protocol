@@ -1,8 +1,8 @@
 {
   "contractName": "GBTController",
   "abi": [],
-  "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a72305820e4795e4e193603726e1e2dd6df9dee979e6be4c1ca35c7428e0c82e6461c1a9a0029",
-  "deployedBytecode": "0x6060604052600080fd00a165627a7a72305820e4795e4e193603726e1e2dd6df9dee979e6be4c1ca35c7428e0c82e6461c1a9a0029",
+  "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a723058202ff98c31a8239e0c0b7abbc742a73b6c9b0e65cb88c2fd1bb49e467ad66a62660029",
+  "deployedBytecode": "0x6060604052600080fd00a165627a7a723058202ff98c31a8239e0c0b7abbc742a73b6c9b0e65cb88c2fd1bb49e467ad66a62660029",
   "sourceMap": "944:3233:4:-;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "944:3233:4:-;;;;;",
   "source": "/* Copyright (C) 2017 GovBlocks.io\r\n\r\n  This program is free software: you can redistribute it and/or modify\r\n    it under the terms of the GNU General Public License as published by\r\n    the Free Software Foundation, either version 3 of the License, or\r\n    (at your option) any later version.\r\n\r\n  This program is distributed in the hope that it will be useful,\r\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\r\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\r\n    GNU General Public License for more details.\r\n\r\n  You should have received a copy of the GNU General Public License\r\n    along with this program.  If not, see http://www.gnu.org/licenses/ */\r\n    \r\npragma solidity ^0.4.8;\r\n\r\nimport \"./VotingType.sol\";\r\nimport \"./Governance.sol\";\r\nimport \"./ProposalCategory.sol\";\r\nimport \"./GBTStandardToken.sol\";\r\nimport \"./GovBlocksMaster.sol\";\r\nimport \"./governanceData.sol\";\r\nimport \"./Master.sol\";\r\n\r\ncontract GBTController \r\n{\r\n    // using SafeMath for uint;\r\n    // address public GBMAddress;\r\n    // address public owner;\r\n    // address M1Address;\r\n    // address GBTStandardTokenAddress;\r\n    // governanceData GD;\r\n    // Master MS;\r\n    // GovBlocksMaster GBM;\r\n    // GBTStandardToken GBTS;\r\n    // VotingType VT;\r\n    // Governance G1;\r\n    // ProposalCategory PC;\r\n    // uint public tokenPrice;\r\n    // uint public actual_amount;\r\n\r\n    // modifier onlyGBM\r\n    // {\r\n    //     require(msg.sender == GBMAddress);\r\n    //     _;\r\n    // }\r\n    \r\n    // function GBTController(address _GBMAddress) \r\n    // {\r\n    //     owner = msg.sender;\r\n    //     tokenPrice = 1*10**15;\r\n    //     GBMAddress = _GBMAddress;\r\n    // }\r\n\r\n    // function changeGBTtokenAddress(address _Address) onlyGBM\r\n    // {\r\n    //     GBTStandardTokenAddress = _Address;\r\n    // }\r\n\r\n    // function changeGBMAddress(address _GBMAddress) onlyGBM\r\n    // {\r\n    //     GBMAddress = _GBMAddress;\r\n    // }\r\n\r\n    // function transferGBT(address _to, uint256 _value,string _description) \r\n    // {\r\n    //     GBTS=GBTStandardToken(GBTStandardTokenAddress);\r\n\r\n    //     require(_value <= GBTS.balanceOf(address(this)));\r\n    //     GBTS.addInBalance(_to,_value);\r\n    //     GBTS.subFromBalance(address(this),_value);\r\n    //     GBTS.callTransferGBTEvent(address(this), _to, _value, _description);\r\n    // }\r\n    \r\n    // // function receiveGBT(address _from,uint _value, string _description) \r\n    // // {\r\n    // //     GBTS=GBTStandardToken(GBTStandardTokenAddress);\r\n\r\n    // //     require(_value <= GBTS.balanceOf(_from));\r\n    // //     GBTS.addInBalance(address(this),_value);\r\n    // //     GBTS.subFromBalance(_from,_value);\r\n    // //     GBTS.callTransferGBTEvent(_from, address(this), _value, _description);\r\n    // // }  \r\n\r\n    //  function receiveGBT(uint _value, string _description) internal\r\n    // {\r\n    //     GBTS=GBTStandardToken(GBTStandardTokenAddress);\r\n\r\n    //     require(_value <= GBTS.balanceOf(msg.sender));\r\n    //     GBTS.addInBalance(address(this),_value);\r\n    //     GBTS.subFromBalance(msg.sender,_value);\r\n    //     GBTS.callTransferGBTEvent(msg.sender, address(this), _value, _description);\r\n    // }  \r\n    \r\n    // function buyTokenGBT(address _to) payable \r\n    // {\r\n    //     GBTS=GBTStandardToken(GBTStandardTokenAddress);\r\n    //     actual_amount = SafeMath.mul(SafeMath.div(msg.value,tokenPrice),10**GBTS.decimals());         \r\n    //     rewardToken(_to,actual_amount);\r\n    // }\r\n\r\n    // function rewardToken(address _to,uint _amount) internal  \r\n    // {\r\n    //     GBTS=GBTStandardToken(GBTStandardTokenAddress);\r\n    //     GBTS.addInBalance(_to,_amount);\r\n    //     GBTS.addInTotalSupply(_amount);\r\n    //     GBTS.callTransferGBTEvent(GBTStandardTokenAddress, _to, _amount, \"GBT Purchased\");\r\n    // }\r\n\r\n    // function changeTokenPrice(uint _price)\r\n    // {\r\n    //     uint _tokenPrice = _price;\r\n    //     tokenPrice = _tokenPrice;\r\n    // }\r\n\r\n    // function getTokenPrice() constant returns(uint)\r\n    // {\r\n    //     return tokenPrice;\r\n    // }\r\n\r\n    // function setTokenHoldingTime(uint _newValidity)\r\n    // {\r\n    //     tokenHoldingTime = _newValidity;\r\n    // }\r\n}\r\n",
@@ -32,7 +32,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 9870,
+          "SourceUnit": 9744,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/VotingType.sol",
           "file": "./VotingType.sol",
           "scope": 383,
@@ -47,7 +47,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 4953,
+          "SourceUnit": 4908,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/Governance.sol",
           "file": "./Governance.sol",
           "scope": 383,
@@ -62,7 +62,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 8399,
+          "SourceUnit": 8267,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/ProposalCategory.sol",
           "file": "./ProposalCategory.sol",
           "scope": 383,
@@ -77,7 +77,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 1200,
+          "SourceUnit": 1208,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/GBTStandardToken.sol",
           "file": "./GBTStandardToken.sol",
           "scope": 383,
@@ -92,7 +92,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 2478,
+          "SourceUnit": 2405,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/GovBlocksMaster.sol",
           "file": "./GovBlocksMaster.sol",
           "scope": 383,
@@ -107,7 +107,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 12231,
+          "SourceUnit": 12103,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/governanceData.sol",
           "file": "./governanceData.sol",
           "scope": 383,
@@ -122,7 +122,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 6450,
+          "SourceUnit": 6413,
           "absolutePath": "/D/RUCHITA/GovBlocks-Protocol Access-Modifiers/contracts/Master.sol",
           "file": "./Master.sol",
           "scope": 383,
@@ -170,5 +170,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-04-24T10:21:38.290Z"
+  "updatedAt": "2018-04-26T12:00:44.054Z"
 }

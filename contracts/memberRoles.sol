@@ -107,7 +107,7 @@ contract  memberRoles
       memberRoleData[1].memberAddress.push(ownAddress);
   }
 
-  function getRoleIdLengthByAddress(address _memberAddress)internal returns(uint8 count)
+  function getRoleIdLengthByAddress(address _memberAddress) internal constant  returns(uint8 count)
   {
       uint length = getTotalMemberRoles();
       for(uint8 i=0; i<length; i++)
@@ -122,7 +122,7 @@ contract  memberRoles
   {
       uint8 length = getRoleIdLengthByAddress(_memberAddress);uint8 j=0;
       assignedRoles = new uint32[](length);
-      for(uint8 i=0; i<length; i++)
+      for(uint8 i=0; i<getTotalMemberRoles(); i++)
       {
          if(memberRoleData[i].memberActive[_memberAddress] == true)
            {

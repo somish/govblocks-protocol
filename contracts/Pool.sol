@@ -17,8 +17,8 @@ pragma solidity ^0.4.8;
 
 import "./Master.sol";
 import "./SafeMath.sol";
-import "github.com/oraclize/ethereum-api/oraclizeAPI_0.4.sol";
-// import "./oraclizeAPI_0.4.sol";
+// import "github.com/oraclize/ethereum-api/oraclizeAPI_0.4.sol";
+import "./oraclizeAPI_0.4.sol";
 
 contract Pool is usingOraclize
 {

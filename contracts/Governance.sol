@@ -464,16 +464,16 @@ contract Governance {
        GD.setProposalTotalVoteValue(_proposalId,_totalVoteValue);
     }
 
-    // /// @dev Gets total incentive by dApp
-    // /// @return allIncentive All proposals' incentive
-    // function getTotalIncentiveByDapp()constant returns (uint allIncentive)
-    // {
-    //     // GD=governanceData(GDAddress);
-    //     for(uint i=0; i<GD.getProposalLength(); i++)
-    //     {
-    //         allIncentive =  allIncentive + GD.getProposalIncentive(i);
-    //     }
-    // }
+    /// @dev Gets total incentive by dApp
+    /// @return allIncentive All proposals' incentive
+    function getTotalIncentiveByDapp()constant returns (uint allIncentive)
+    {
+        // GD=governanceData(GDAddress);
+        for(uint i=0; i<GD.getProposalLength(); i++)
+        {
+            allIncentive =  allIncentive + GD.getProposalIncentive(i);
+        }
+    }
 
     /// @dev Calculates proposal reward 
     /// @param _memberAddress Member address
