@@ -432,6 +432,9 @@ contract Master is Ownable {
             
             SVT=StandardVotingType(allContractVersions[version]['VT']);
             SVT.changeGBTSAddress(_tokenAddress);
+
+            P1=Pool(allContractVersions[version]['PL']);
+            P1.changeGBTSAddress(_tokenAddress);
         }
     }
 
