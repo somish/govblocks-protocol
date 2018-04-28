@@ -17,6 +17,7 @@ pragma solidity ^0.4.8;
 
 import "./Master.sol";
 import "./SafeMath.sol";
+import "./GBTStandardToken.sol";
 // import "github.com/oraclize/ethereum-api/oraclizeAPI_0.4.sol";
 import "./oraclizeAPI_0.4.sol";
 
@@ -38,6 +39,7 @@ contract Pool is usingOraclize
     bytes32[] public allAPIcall;
     address masterAddress;
     Master MS;
+    GBTStandardToken GBTS;
 
     function () payable {}
 
@@ -68,6 +70,23 @@ contract Pool is usingOraclize
         MS=Master(masterAddress);
         require(MS.isOwner(msg.sender) == true);
         _; 
+    }
+
+    modifier onlyMaster {    
+        require(msg.sender == masterAddress);
+        _; 
+    }
+
+    /// @dev Changes GBT standard token address
+    /// @param _GBTSAddress New GBT standard token address
+    function changeGBTSAddress(address _GBTSAddress) onlyMaster
+    {
+        GBTS=GBTStandardToken(_GBTSAddress);
+    }
+
+    function buyPoolGBT() payable
+    {
+        GBTS.buyToken.value(msg.value)();
     }
 
     /// @dev Closes proposal using oraclize
