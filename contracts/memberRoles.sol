@@ -40,7 +40,6 @@ contract  memberRoles
 
   mapping(uint=>address) authorizedAddress_againstRole;
   mapping(uint32=>memberRoleDetails) memberRoleData;
-  // mapping (address=>uint[]) memberAddressToMemberRole;
 
   /// @dev Initiates member roles
   /// @param _GBMAddress GovBlocks master address
@@ -197,18 +196,45 @@ contract  memberRoles
   /// @param _memberRoleId Member role id
   /// @return roleId Role id
   /// @return allMemberAddress Member addresses of specified role id
-  function getMemberAddressByRoleId(uint32 _memberRoleId) public constant returns(uint32 roleId,address[] allMemberAddress)
+  function getAllAddressByRoleId(uint32 _memberRoleId) public constant returns(uint32,address[] allMemberAddress)
   {
-      roleId = _memberRoleId;
-      return (roleId,memberRoleData[_memberRoleId].memberAddress);
+      uint length = getMemberCounter(_memberRoleId);uint8 j=0;
+      allMemberAddress = new address[](length);
+      for(uint8 i=0; i<getAllMemberLength(_memberRoleId); i++)
+      {
+          address member = memberRoleData[_memberRoleId].memberAddress[i];
+          if(memberRoleData[_memberRoleId].memberActive[member] == true)
+           {
+              allMemberAddress[j] = member;
+              j++;
+           }
+      }
+      return (_memberRoleId,allMemberAddress);
   }
+
+
 
   /// @dev Gets all members' length
   /// @param _memberRoleId Member role id
   /// @return memberRoleData[_memberRoleId].memberAddress.length Member length
   function getAllMemberLength(uint32 _memberRoleId) public constant returns(uint)
   {
-    return memberRoleData[_memberRoleId].memberAddress.length;    
+     return memberRoleData[_memberRoleId].memberAddress.length;    
+  }
+
+  function getAllMemberAddressById(uint32 _memberRoleId,uint _index)constant returns(address)
+  {
+     return memberRoleData[_memberRoleId].memberAddress[_index];
+  }
+
+  function getMemberCounter(uint32 _memberRoleId)constant returns(uint32)
+  {
+     return memberRoleData[_memberRoleId].memberCounter;
+  }
+
+  function getAuthrizedMember_againstRole(uint32 _memberRoleId)constant returns(address)
+  {
+     return authorizedAddress_againstRole[_memberRoleId];
   }
 
   /// @dev Gets the role name when given role id
