@@ -247,7 +247,7 @@ contract Governance {
     //   uint pCategory;
     //   (,pStatus,pCategory) = GD.getProposalDetailsById3(_proposalId);
 
-      require(GD.getProposalStatus(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2 && GD.getProposalOwner(_proposalId) == msg.sender);
+      require(GD.getProposalCategory(_proposalId) != 0 && GD.getProposalStatus(_proposalId) < 2 && GD.getProposalOwner(_proposalId) == msg.sender);
       require(_proposalStake <= PC.getMaxStake(_categoryId) && _proposalStake >= PC.getMinStake(_categoryId));
       uint closingTime = SafeMath.add(PC.getClosingTimeAtIndex(_categoryId,0),GD.getProposalDateUpd(_proposalId));
       uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
