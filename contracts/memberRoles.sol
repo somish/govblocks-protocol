@@ -149,14 +149,14 @@ contract  memberRoles
       require(msg.sender == GBMAddress || msg.sender == authorizedAddress_againstRole[_memberRoleId]);
       if(_typeOf == true)
       {
-        require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == true);
+        require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == false);
         memberRoleData[_memberRoleId].memberCounter =  SafeMath.add32(memberRoleData[_memberRoleId].memberCounter,1);
         memberRoleData[_memberRoleId].memberActive[_memberAddress] = true;
         memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
       }
       else
       {
-        require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == false);
+        require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == true);
         memberRoleData[_memberRoleId].memberCounter = SafeMath.sub32(memberRoleData[_memberRoleId].memberCounter,1);
         memberRoleData[_memberRoleId].memberActive[_memberAddress] = false;
         memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
