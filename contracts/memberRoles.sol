@@ -27,8 +27,8 @@ contract  memberRoles
   uint8 authorizedAddress_toCategorize;
   bool public constructorCheck;
   Master MS; 
-  address masterAddress;
-  address GBMAddress;
+  address public masterAddress;
+  address public GBMAddress;
   BasicToken BT;
 
   struct memberRoleDetails
