@@ -134,7 +134,7 @@ contract Pool is usingOraclize
 
     /// @dev Gets api calls' length
     /// @return len Length of api calls
-    function getApilCall_length() constant returns(uint len)
+    function getApiCall_length() constant returns(uint len)
     {
         return allAPIcall.length;
     }
