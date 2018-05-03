@@ -83,7 +83,7 @@ contract GBTStandardToken is ERC20Basic, ERC20
     function verifySign(address _memberAddress,uint _amount,uint _validUpto,uint8 _v,bytes32 _r,bytes32 _s) constant  returns(bool)
     {
         bytes32 hash = getOrderHash(_memberAddress,_amount,_validUpto);
-        return  isValidSignature(hash,_memberAddress,_v,_r,_s);
+        return isValidSignature(hash,_memberAddress,_v,_r,_s);
     }
    
     function getOrderHash(address _memberAddress,uint _amount,uint _validUpto) constant returns (bytes32)
@@ -93,7 +93,6 @@ contract GBTStandardToken is ERC20Basic, ERC20
     
     function isValidSignature(bytes32 hash, address _memberaddress,uint8 v, bytes32 r, bytes32 s) constant  returns(bool)
     {
-        
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         bytes32 prefixedHash = keccak256(prefix, hash);
         address a= ecrecover(prefixedHash, v, r, s);      
@@ -252,10 +251,10 @@ event Mint(address indexed to, uint256 amount);
   }
  
   function buyToken() payable public returns(uint actual_amount)
-    {
-        actual_amount = SafeMath.mul(SafeMath.div(msg.value,tokenPrice),10**decimals);         
-        mint(msg.sender,actual_amount);
-    }
+  {
+      actual_amount = SafeMath.mul(SafeMath.div(msg.value,tokenPrice),10**decimals);         
+      mint(msg.sender,actual_amount);
+  }
 
  function changeTokenPrice(uint _price)
     {

@@ -123,11 +123,11 @@ contract  memberRoles
       assignedRoles = new uint32[](length);
       for(uint8 i=0; i<getTotalMemberRoles(); i++)
       {
-         if(memberRoleData[i].memberActive[_memberAddress] == true)
-           {
-              assignedRoles[j] = i;
-              j++;
-           }
+          if(memberRoleData[i].memberActive[_memberAddress] == true)
+          {
+            assignedRoles[j] = i;
+            j++;
+          }
       }
       return assignedRoles;
   }
@@ -211,8 +211,6 @@ contract  memberRoles
       }
       return (_memberRoleId,allMemberAddress);
   }
-
-
 
   /// @dev Gets all members' length
   /// @param _memberRoleId Member role id

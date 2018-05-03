@@ -108,6 +108,11 @@ contract Pool is usingOraclize
         addInAllApiCall(myid2);
     }
 
+    function getApilCall_length() constant returns(uint len)
+    {
+        return allAPIcall.length;
+    }
+
     /// @dev Saves api details
     /// @param myid Proposal id
     /// @param _typeof Type of proposal
