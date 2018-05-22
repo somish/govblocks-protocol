@@ -152,6 +152,9 @@ contract Governance {
     // GD=governanceData(GDAddress);
       uint proposalDateAdd = now;
       uint _proposalId = GD.getProposalLength();
+      address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
+      VT=VotingType(VTAddress);
+
       // uint proposalStake = SafeMath.div(_proposalSolutionStake,2);
       createProposal(_proposalDescHash,_votingTypeId,_categoryId,proposalDateAdd);
       openProposalForVoting(_proposalId,_categoryId,_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
@@ -181,6 +184,9 @@ contract Governance {
       //GD=governanceData(GDAddress); 
       require(msg.sender == GD.getProposalOwner(_proposalId));
       uint proposalDateAdd = GD.getProposalDateUpd(_proposalId);
+      address VTAddress = GD.getProposalVotingType(_proposalId);
+      VT=VotingType(VTAddress);
+
       // uint proposalStake = SafeMath.div(_proposalSolutionStake,2); 
       openProposalForVoting(_proposalId,GD.getProposalCategory(_proposalId),_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
       VT.addSolution(_proposalId,msg.sender,0,_solutionHash,proposalDateAdd,_validityUpto,_v,_r,_s,_lockTokenTxHash);
@@ -795,4 +801,6 @@ contract Governance {
 
         return (depositFor_creatingProposal,depositFor_proposingSolution,depositFor_castingVote);
     }
+    
+    
 }
