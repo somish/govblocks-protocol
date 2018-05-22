@@ -150,11 +150,9 @@ contract simpleVoting is VotingType
         for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
         {
             if(GD.getSolutionAddedByProposalId(_proposalId,i) == _memberAddress)
-                check = 1;
-            else 
-                check = 0;
+                {check = 1; break;}
         }
-        require(check == 0 && currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
+        require(check == 0 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
     }
 
     /// @dev Adds solution
