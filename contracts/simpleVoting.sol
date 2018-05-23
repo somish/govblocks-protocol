@@ -228,7 +228,6 @@ contract simpleVoting is VotingType
         uint _proposalDateUpd = GD.getProposalDateUpd(_proposalId);
         uint stake = _voteStake/(10**GBTS.decimals());
         require(stake <= PC.getMaxStake(category) && stake >= PC.getMinStake(category));
-        require(SafeMath.add(_proposalDateUpd,_closingTime) >= now && msg.sender != GD.getSolutionAddedByProposalId(_proposalId,_solutionChosen[0]));
     }
 
     /// @dev Castes vote
@@ -250,7 +249,6 @@ contract simpleVoting is VotingType
             GD.setVoteId_againstProposalRole(_proposalId,_roleId,voteId);
             GOV.checkRoleVoteClosing(_proposalId,_roleId);
             GD.callVoteEvent(_memberAddress,_proposalId,now,_voteStake,voteId);
-            
         }
         // else 
             // changeMemberVote(_proposalId,_solutionChosen,_memberAddress,_GBTPayableTokenAmount);
@@ -266,9 +264,10 @@ contract simpleVoting is VotingType
             uint remainingTime = PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
             require(_validityUpto > remainingTime);
             uint depositAmount = SafeMath.div(SafeMath.mul(_memberStake,GD.depositPercVote()),100);
-            uint finalAmount = depositAmount + GD.getDepositedTokens(msg.sender,_proposalId,'V');
-            GD.setDepositTokens(msg.sender,_proposalId,'V',finalAmount);
-            GBTS.lockToken(msg.sender,SafeMath.sub(_memberStake,finalAmount),_validityUpto,_v,_r,_s,_lockTokenTxHash);
+            depositAmount = depositAmount + GD.getDepositedTokens(msg.sender,_proposalId,'V');
+            GD.setDepositTokens(msg.sender,_proposalId,'V',depositAmount);
+            uint lock = SafeMath.sub(_memberStake,depositAmount);
+            GBTS.lockToken(msg.sender,lock,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         }
         else
             GBTS.lockToken(msg.sender,_memberStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
