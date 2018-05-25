@@ -507,6 +507,15 @@ contract governanceData {
         voteId = AddressProposalVote[_memberAddress][_proposalId];
     }
 
+    function checkVoteId_againstMember(address _memberAddress,uint _proposalId)constant returns(bool)
+    {
+        voteId = AddressProposalVote[_memberAddress][_proposalId];
+        if(voteId == 0)
+            return false;
+        else
+            return true;
+    }
+
     /// @dev Gets voter address
     /// @param _voteId Vote id
     /// @return _voterAddress Voter address
