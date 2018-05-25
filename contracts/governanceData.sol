@@ -22,7 +22,7 @@ import "./Governance.sol";
 
 contract governanceData {
   
-    event Proposal(address indexed proposalOwner,uint256 indexed proposalId,uint256 dateAdd,string proposalDescHash);
+    event Proposal(address indexed proposalOwner,uint256 indexed proposalId,uint256 dateAdd,string proposalTitle,string proposalSD,string proposalDescHash);
     event Solution(uint256 indexed proposalId,address indexed solutionOwner,address indexed solutionId,string solutionDescHash,uint256 dateAdd,uint256 solutionStake);
     event Reputation(address indexed from,uint256 indexed proposalId, string description, uint32 reputationPoints,bytes4 typeOf);
     event Vote(address indexed from,uint256 indexed proposalId,uint256 dateAdd,uint256 voteStakeGBT,uint256 voteId);
@@ -70,9 +70,9 @@ contract governanceData {
     /// @param _proposalId Proposal id
     /// @param _dateAdd Date when proposal was added
     /// @param _proposalDescHash Proposal description hash
-    function callProposalEvent(address _proposalOwner,uint _proposalId,uint _dateAdd,string _proposalDescHash) onlyInternal
+    function callProposalEvent(address _proposalOwner,uint _proposalId,uint _dateAdd,string _proposalTitle,string _proposalSD,string _proposalDescHash) onlyInternal
     {
-        Proposal(_proposalOwner,_proposalId,_dateAdd,_proposalDescHash);   
+        Proposal(_proposalOwner,_proposalId,_dateAdd,_proposalTitle,_proposalSD,_proposalDescHash);   
     }
 
     /// @dev Calls event to update the reputation of the member
@@ -763,9 +763,9 @@ contract governanceData {
     }
 
     /// @dev Sets proposal description 
-    function setProposalDetailsAfterEdit(uint _proposalId,string _proposalDescHash) onlyInternal
+    function setProposalDetailsAfterEdit(uint _proposalId,string _proposalTitle,string _proposalSD,string _proposalDescHash) onlyInternal
     {
-        Proposal(allProposal[_proposalId].owner,_proposalId,now,_proposalDescHash);   
+        Proposal(allProposal[_proposalId].owner,_proposalId,now,_proposalTitle,_proposalSD,_proposalDescHash);   
     }
 
     /// @dev Sets proposal's uploaded date
@@ -910,17 +910,17 @@ contract governanceData {
     }
 
     /// @dev Adds new proposal
-    function addNewProposal(uint _proposalId,address _memberAddress,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress,uint _dateAdd) onlyInternal
+    function addNewProposal(uint _proposalId,address _memberAddress,string _proposalTitle,string _proposalSD,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress,uint _dateAdd) onlyInternal
     {
         allProposalData[_proposalId].category = _categoryId;
-        createProposal1(_proposalId,_memberAddress,_proposalDescHash,_votingTypeAddress,_dateAdd);
+        createProposal1(_proposalId,_memberAddress,_proposalTitle,_proposalSD,_proposalDescHash,_votingTypeAddress,_dateAdd);
     }  
     
     /// @dev Creates new proposal
-    function createProposal1(uint _proposalId,address _memberAddress,string _proposalDescHash,address _votingTypeAddress,uint _dateAdd) onlyInternal
+    function createProposal1(uint _proposalId,address _memberAddress,string _proposalTitle ,string  _proposalSD,string _proposalDescHash,address _votingTypeAddress,uint _dateAdd) onlyInternal
     {
         allProposal.push(proposal(_memberAddress,_dateAdd,_votingTypeAddress));
-        Proposal(_memberAddress,_proposalId,_dateAdd,_proposalDescHash);
+        Proposal(_memberAddress,_proposalId,_dateAdd,_proposalTitle ,_proposalSD,_proposalDescHash);
     }
 
     /// @dev Gets final solution index won after majority voting.
