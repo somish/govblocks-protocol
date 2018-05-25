@@ -32,6 +32,12 @@ contract governanceData {
     event ProposalStatus(uint256 indexed proposalId,uint256 proposalStatus,uint256 dateAdd);
     event ProposalVersion(uint256 indexed proposalId,uint256 indexed versionNumber,string proposalDescHash,uint256 dateAdd);
     event ProposalStake(address indexed proposalOwner,uint256 indexed proposalId,uint dateUpd,uint256 proposalStake);
+    event ProposalWithSolution(address indexed proposalOwner,uint256 proposald,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake)
+    
+    function callProposalWithSolutionEvent(address indexed proposalOwner,uint256 proposald,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake)
+    {
+        ProposalWithSolution(proposalOwner,proposald,proposalDescHash,solutionDescHash,dateAdd,stake);
+    }
 
     function callProposalStakeEvent(address _proposalOwner,uint _proposalId,uint _dateUpd,uint _proposalStake)
     {
