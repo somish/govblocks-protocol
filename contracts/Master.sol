@@ -444,6 +444,11 @@ contract Master is Ownable {
     {
         require(msg.sender == GBMAddress);
         GBMAddress == _GBMnewAddress;
+        PC=ProposalCategory(allContractVersions[versionLength-1]['PC']);
+        PC.changeGBMAddress(_GBMnewAddress);
+
+        MR=memberRoles(allContractVersions[versionLength-1]['MR'])
+        MR.changeGBMAddress(_GBMnewAddress);
     }
 
     /// @dev Changes master in GovBlocks master
