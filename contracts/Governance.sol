@@ -115,17 +115,17 @@ contract Governance {
   /// @param _votingTypeId Voting type id
   /// @param _categoryId Category id
   /// @param _dateAdd Date the proposal was added
-  function createProposal(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _dateAdd) public
+  function createProposal(string _proposalTitle,string _proposalSD,string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _dateAdd) public
   {
       uint _proposalId = GD.getProposalLength();
       address votingAddress = GD.getVotingTypeAddress(_votingTypeId); 
       if(_categoryId > 0)
       {
-          GD.addNewProposal(_proposalId,msg.sender,_proposalDescHash,_categoryId,votingAddress,_dateAdd);
+          GD.addNewProposal(_proposalId,msg.sender,_proposalTitle,_proposalSD,_proposalDescHash,_categoryId,votingAddress,_dateAdd);
           GD.setProposalIncentive(_proposalId,PC.getCatIncentive(_categoryId));
       }
       else
-          GD.createProposal1(_proposalId,msg.sender,_proposalDescHash,votingAddress,now);          
+          GD.createProposal1(_proposalId,msg.sender,_proposalTitle,_proposalSD,_proposalDescHash,votingAddress,now);          
   }
 
   /// @dev Creates a new proposal (Stake in ether)
@@ -133,10 +133,10 @@ contract Governance {
   /// @param _votingTypeId Voting type id
   /// @param _categoryId Category id
   /// @param _solutionHash Solution hash
-  function createProposalwithSolution_inEther(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,string _solutionHash,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) payable
+  function createProposalwithSolution_inEther(string _proposalTitle,string _proposalSD,string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,string _solutionHash,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) payable
   {
      uint tokenAmount = GBTS.buyToken.value(msg.value)();
-     createProposalwithSolution(_proposalDescHash, _votingTypeId, _categoryId, tokenAmount,_solutionHash,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+     createProposalwithSolution(_proposalTitle,_proposalSD,_proposalDescHash, _votingTypeId, _categoryId, tokenAmount,_solutionHash,_validityUpto,_v,_r,_s,_lockTokenTxHash);
   }
  
   /// @dev Creates a new proposal
@@ -145,7 +145,7 @@ contract Governance {
   /// @param _categoryId Category id
   /// @param _proposalSolutionStake Proposal solution stake
   /// @param _solutionHash Solution hash
-  function createProposalwithSolution(string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _proposalSolutionStake,string _solutionHash,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) public
+  function createProposalwithSolution(string _proposalTitle,string _proposalSD,string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _proposalSolutionStake,string _solutionHash,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) public
   {
       uint proposalDateAdd = now;
       uint _proposalId = GD.getProposalLength();
@@ -153,7 +153,7 @@ contract Governance {
       VT=VotingType(VTAddress);
 
       GD.setSolutionAdded(_proposalId,_memberAddress);
-      createProposal(_proposalDescHash,_votingTypeId,_categoryId,proposalDateAdd);
+      createProposal(_proposalTitle,_proposalSD,_proposalDescHash,_votingTypeId,_categoryId,proposalDateAdd);
       openProposalForVoting(_proposalId,_categoryId,_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
       VT.addSolution(_proposalId,msg.sender,0,_solutionHash,proposalDateAdd,_validityUpto,_v,_r,_s,_lockTokenTxHash);
       GD.callProposalWithSolutionEvent(msg.sender._proposalId,_proposalDescHash,_solutionHash,proposalDateAdd,_proposalSolutionStake)
