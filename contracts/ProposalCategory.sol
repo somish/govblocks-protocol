@@ -53,12 +53,6 @@ contract ProposalCategory
         _; 
     }
     
-    modifier onlyGBM
-    {
-        require(msg.sender == GBMAddress);
-        _;
-    }
-
     modifier onlyMaster {
         require(msg.sender == masterAddress);
         _; 
@@ -66,7 +60,7 @@ contract ProposalCategory
 
     /// @dev Changes GovBlocks master address
     /// @param _GBMAddress New GovBlocks master address
-    function changeGBMAddress(address _GBMAddress) onlyGBM
+    function changeGBMAddress(address _GBMAddress) onlyMaster
     {
         GBMAddress = _GBMAddress;
     }
@@ -285,11 +279,11 @@ contract ProposalCategory
     function getRemainingClosingTime(uint _proposalId,uint _categoryId,uint _index) constant returns (uint totalTime)
     {      
         uint pClosingTime;
-        for(uint i=0; i<getCloseTimeLength(_categoryId); i++)
+        for(uint i=_index; i<getCloseTimeLength(_categoryId); i++)
         {
-            pClosingTime = pClosingTime + getClosingTimeAtIndex(_categoryId,_index);
+            pClosingTime = pClosingTime + getClosingTimeAtIndex(_categoryId,i);
         }
-    // date Add in events ASK HERE
+
         totalTime = (pClosingTime+GD.tokenHoldingTime()+GD.getProposalDateUpd(_proposalId))-now; 
         return totalTime;
     }
