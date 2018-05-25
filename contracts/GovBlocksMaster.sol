@@ -448,10 +448,6 @@ contract GovBlocksMaster
         {
           GD.changeGBTStakeValue(_value);
         }
-        else if(_typeOf == "RF")
-        {
-          GD.changeGlobalRiskFactor(_value);
-        }
          else if(_typeOf == "MSF")
         {
           GD.changeMembershipScalingFator(_value);

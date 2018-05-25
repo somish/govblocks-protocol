@@ -185,7 +185,6 @@ contract governanceData {
     uint public quorumPercentage;
     uint public pendingProposalStart;
     uint public GBTStakeValue; 
-    uint public globalRiskFactor; 
     uint public membershipScalingFactor;
     uint public scalingWeight;
     uint public allVotesTotal;
@@ -352,7 +351,6 @@ contract governanceData {
         pendingProposalStart=0;
         quorumPercentage=25;
         GBTStakeValue=0;
-        globalRiskFactor=5;
         membershipScalingFactor=1;
         scalingWeight=1;
         depositPercProposal=30;
@@ -615,12 +613,6 @@ contract governanceData {
 
 // VERSION 2.0 : Configurable parameters.
 
-
-    /// @dev Changes risk factor that helps in calculation of reward distribution
-    function changeGlobalRiskFactor(uint _riskFactor) onlyGBM
-    {
-        globalRiskFactor = _riskFactor;
-    }
 
     /// @dev Changes stake value that helps in calculation of reward distribution
     function changeGBTStakeValue(uint _GBTStakeValue) onlyGBM 
