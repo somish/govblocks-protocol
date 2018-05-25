@@ -23,7 +23,7 @@ import "./Governance.sol";
 contract governanceData {
   
     event Proposal(address indexed proposalOwner,uint256 indexed proposalId,uint256 dateAdd,string proposalDescHash);
-    event Solution(uint256 indexed proposalId,address indexed solutionOwner,string solutionDescHash,uint256 dateAdd,uint256 solutionStake);
+    event Solution(uint256 indexed proposalId,address indexed solutionOwner,address indexed solutionId,string solutionDescHash,uint256 dateAdd,uint256 solutionStake);
     event Reputation(address indexed from,uint256 indexed proposalId, string description, uint32 reputationPoints,bytes4 typeOf);
     event Vote(address indexed from,uint256 indexed proposalId,uint256 dateAdd,uint256 voteStakeGBT,uint256 voteId);
     event Reward(address indexed to,uint256 indexed proposalId,string description,uint256 amount);
@@ -60,9 +60,9 @@ contract governanceData {
     /// @param solutionDescHash Solution description hash
     /// @param dateAdd Date the solution was added
     /// @param solutionStake Stake of the solution provider
-    function callSolutionEvent(uint256 proposalId,address solutionOwner,string solutionDescHash,uint256 dateAdd,uint256 solutionStake) onlyInternal
+    function callSolutionEvent(uint256 proposalId,address solutionOwner,uint solutionId,string solutionDescHash,uint256 dateAdd,uint256 solutionStake) onlyInternal
     {
-        Solution(proposalId,solutionOwner,solutionDescHash,dateAdd,solutionStake);
+        Solution(proposalId,solutionOwner,solutionId,solutionDescHash,dateAdd,solutionStake);
     }
 
     /// @dev Calls proposal event
@@ -362,6 +362,7 @@ contract governanceData {
         depositPercProposal=30;
         depositPercSolution=30;
         depositPercVote=40;
+        tokenHoldingTime=259200;  // In seconds
     }
     
 
