@@ -69,15 +69,14 @@ contract  memberRoles
       _; 
   }
   
-  modifier onlyGBM
-  {
-        require(msg.sender == GBMAddress);
-      _;
-  }
-  
+  modifier onlyMaster {
+        require(msg.sender == masterAddress);
+        _; 
+    }
+
   /// @dev Changes GovBlocks master address
   /// @param _GBMAddress New GovBlocks master address
-  function changeGBMAddress(address _GBMAddress) onlyGBM
+  function changeGBMAddress(address _GBMAddress) onlyMaster
   {
       require(GBMAddress != 0x00);
       GBMAddress = _GBMAddress;
