@@ -170,6 +170,7 @@ contract simpleVoting is VotingType
         GD.setVoteId_againstMember(_memberAddress,_proposalId,voteId);
         GD.setVoteId_againstProposalRole(_proposalId,_roleId,voteId);
         GOV.checkRoleVoteClosing(_proposalId,_roleId);
+        GD.setVoteValue(voteId,finalVoteValue);
     }
     
     /// @dev Closes proposal for voting
@@ -281,8 +282,9 @@ contract simpleVoting is VotingType
           else
             GBTS.lockToken(msg.sender,_proposalStake,validityUpto,_v,_r,_s,_lockTokenTxHash);
         } 
-            
-        GD.callSolutionEvent(_proposalId,msg.sender,_solutionHash,_dateAdd,_solutionStake);    
+           
+        uint solutionId=GD.getTotalSolutions(_proposalId); 
+        GD.callSolutionEvent(_proposalId,msg.sender,solutionId,_solutionHash,_dateAdd,_solutionStake);    
     }
     
 
