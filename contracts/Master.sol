@@ -96,6 +96,11 @@ contract Master is Ownable {
         _; 
     }
 
+    function isGBM(address _GBMaddress)constant returns(bool check)
+    {
+        require(_GBMaddress == GBMAddress);
+    }
+
     /// @dev Checks for authorized Member for Dapp
     /// @param _memberaddress Address to be checked
     /// @return check Check flag value (authorized GovBlocks owner = 1)
@@ -272,13 +277,13 @@ contract Master is Ownable {
         PC=ProposalCategory(allContractVersions[version]['PC']);
 
         if(GD.constructorCheck() == false)
-            GD.GovernanceDataInitiate(GBMAddress);
+            GD.GovernanceDataInitiate();
 
         if(MR.constructorCheck() == false)
-            MR.MemberRolesInitiate(GBMAddress);
+            MR.MemberRolesInitiate();
             
         if(PC.constructorCheck() == false)
-            PC.ProposalCategoryInitiate(GBMAddress);
+            PC.ProposalCategoryInitiate();
     }
 
    /// @dev Links contracts to one another
@@ -365,11 +370,6 @@ contract Master is Ownable {
     {
         require(msg.sender == GBMAddress);
         GBMAddress == _GBMnewAddress;
-        PC=ProposalCategory(allContractVersions[versionLength-1]['PC']);
-        PC.changeGBMAddress(_GBMnewAddress);
-
-        MR=memberRoles(allContractVersions[versionLength-1]['MR'])
-        MR.changeGBMAddress(_GBMnewAddress);
     }
 
     /// @dev Changes master in GovBlocks master
@@ -388,12 +388,6 @@ contract Master is Ownable {
     {
       GBM=GovBlocksMaster(GBMAddress);
       GBM.changeDappTokenAddress(_gbUserName,_newTokenAddress);
-    }
-
-    function changeDappAuthorizedMember(bytes32 _gbUserName,address _newAuthorizedMember)
-    {
-       GBM=GovBlocksMaster(GBMAddress);
-       GBM.changeAuthorizedGB(_gbUserName,_newAuthorizedMember);
     }
   
     /// @dev Sets the length of version
