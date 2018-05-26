@@ -23,7 +23,7 @@ import "./Governance.sol";
 contract governanceData {
   
     event Proposal(address indexed proposalOwner,uint256 indexed proposalId,uint256 dateAdd,string proposalTitle,string proposalSD,string proposalDescHash);
-    event Solution(uint256 indexed proposalId,address indexed solutionOwner,address indexed solutionId,string solutionDescHash,uint256 dateAdd,uint256 solutionStake);
+    event Solution(uint256 indexed proposalId,address indexed solutionOwner,uint256 indexed solutionId,string solutionDescHash,uint256 dateAdd,uint256 solutionStake);
     event Reputation(address indexed from,uint256 indexed proposalId, string description, uint32 reputationPoints,bytes4 typeOf);
     event Vote(address indexed from,uint256 indexed proposalId,uint256 dateAdd,uint256 voteStakeGBT,uint256 voteId);
     event Reward(address indexed to,uint256 indexed proposalId,string description,uint256 amount);
@@ -32,9 +32,9 @@ contract governanceData {
     event ProposalStatus(uint256 indexed proposalId,uint256 proposalStatus,uint256 dateAdd);
     event ProposalVersion(uint256 indexed proposalId,uint256 indexed versionNumber,string proposalDescHash,uint256 dateAdd);
     event ProposalStake(address indexed proposalOwner,uint256 indexed proposalId,uint dateUpd,uint256 proposalStake);
-    event ProposalWithSolution(address indexed proposalOwner,uint256 proposald,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake)
+    event ProposalWithSolution(address indexed proposalOwner,uint256 proposald,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake);
     
-    function callProposalWithSolutionEvent(address indexed proposalOwner,uint256 proposald,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake)
+    function callProposalWithSolutionEvent(address proposalOwner,uint256 proposald,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake)
     {
         ProposalWithSolution(proposalOwner,proposald,proposalDescHash,solutionDescHash,dateAdd,stake);
     }
@@ -507,7 +507,7 @@ contract governanceData {
 
     function checkVoteId_againstMember(address _memberAddress,uint _proposalId)constant returns(bool)
     {
-        voteId = AddressProposalVote[_memberAddress][_proposalId];
+        uint voteId = AddressProposalVote[_memberAddress][_proposalId];
         if(voteId == 0)
             return false;
         else

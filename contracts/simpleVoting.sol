@@ -51,7 +51,7 @@ contract simpleVoting is VotingType
         _; 
     }
 
-   modifier validateStake(_proposalId,_stake) {    
+   modifier validateStake(uint _proposalId,uint _stake) {    
         uint stake = _stake/(10**GBTS.decimals());
         uint _category = GD.getProposalCategory(_proposalId);
         require(stake <= PC.getMaxStake(_category) && stake >= PC.getMinStake(_category));
@@ -127,7 +127,10 @@ contract simpleVoting is VotingType
         require(MS.isInternal(msg.sender) == true || msg.sender == _memberAddress);
         require(alreadyAdded(_proposalId,_memberAddress) == false);
         if(msg.sender == _memberAddress) 
-            receiveStake('S',_proposalId,_solutionStake,_solutionHash,_dateAdd,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+            receiveStake('S',_proposalId,_solutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+        uint solutionId=GD.getTotalSolutions(_proposalId); 
+        GD.callSolutionEvent(_proposalId,msg.sender,solutionId,_solutionHash,_dateAdd,_solutionStake);    
+
     }
 
 
@@ -156,10 +159,12 @@ contract simpleVoting is VotingType
     /// @param _voteStake Amount payable in GBT tokens
     function proposalVoting(uint _proposalId,uint[] _solutionChosen,uint _voteStake,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) public validateStake(_proposalId,_voteStake)
     {
-        require(validateMember(_proposalId,_solutionChosen) == true)
+        require(validateMember(_proposalId,_solutionChosen) == true);
         require(GD.getProposalStatus(_proposalId) == 2);
         
-        receiveStake('V',_voteStake,_proposalId,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+        uint32 _mrSequence;
+        (_mrSequence,,) = PC.getCategoryData3(GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
+        receiveStake('V',_proposalId,_voteStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         castVote(_proposalId,_solutionChosen,msg.sender,_voteStake,_mrSequence);    
     }
 
@@ -178,6 +183,8 @@ contract simpleVoting is VotingType
         GD.setVoteId_againstProposalRole(_proposalId,_roleId,voteId);
         GOV.checkRoleVoteClosing(_proposalId,_roleId);
         GD.setVoteValue(voteId,finalVoteValue);
+        GD.callVoteEvent(_memberAddress,_proposalId,now,_voteStake,voteId);
+
     }
     
     /// @dev Closes proposal for voting
@@ -227,8 +234,6 @@ contract simpleVoting is VotingType
     /// @dev Adds solution against proposal.
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
-    /// @param _solutionHash Solution hash
-    /// @param _dateAdd Date proposal was added
     function alreadyAdded(uint _proposalId,address _memberAddress) constant returns(bool)
     {
         for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
@@ -240,10 +245,7 @@ contract simpleVoting is VotingType
 
     /// @dev Receives solution stake against solution in simple voting
     /// @param _proposalId Proposal id
-    /// @param _solutionStake Solution stake
-    /// @param _solutionHash Solution hash
-    /// @param _dateAdd Date when solution was added
-    function receiveStake(uint8 _type,uint _proposalId,uint _solutionStake,string _solutionHash,uint _dateAdd,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal
+    function receiveStake(bytes2 _type,uint _proposalId,uint _Stake,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal
     {
         uint8 currVotingId = GD.getProposalCurrentVotingId(_proposalId);uint depositedTokens;
         uint depositPerc = GD.depositPercSolution();
@@ -252,14 +254,14 @@ contract simpleVoting is VotingType
         else
              depositedTokens = GD.getDepositedTokens(msg.sender,_proposalId,'V');
 
-        uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake,depositPerc),100) + depositedTokens;
+        uint depositAmount = SafeMath.div(SafeMath.mul(_Stake,depositPerc),100) + depositedTokens;
 
-        if(_proposalStake != 0)
+        if(_Stake != 0)
         {
-          require(validityUpto > PC.getRemainingClosingTime(_proposalId,_categoryId,currVotingId));
+          require(_validityUpto > PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),currVotingId));
           if(depositPerc !=0 && depositPerc!= 100)
           {
-            GBTS.lockToken(msg.sender,SafeMath.sub(_proposalStake,depositAmount),validityUpto,_v,_r,_s,_lockTokenTxHash);
+            GBTS.lockToken(msg.sender,SafeMath.sub(_Stake,depositAmount),_validityUpto,_v,_r,_s,_lockTokenTxHash);
             if(_type == 'S')
                 GD.setDepositTokens(msg.sender,_proposalId,'S',depositAmount);  
             else
@@ -268,16 +270,13 @@ contract simpleVoting is VotingType
           else if(depositPerc == 100)
           {
             if(_type == 'S')
-                GD.setDepositTokens(msg.sender,_proposalId,'S',_proposalStake); 
+                GD.setDepositTokens(msg.sender,_proposalId,'S',_Stake); 
             else
-                GD.setDepositTokens(msg.sender,_proposalId,'V',_proposalStake); 
+                GD.setDepositTokens(msg.sender,_proposalId,'V',_Stake); 
           }
           else
-            GBTS.lockToken(msg.sender,_proposalStake,validityUpto,_v,_r,_s,_lockTokenTxHash);
+            GBTS.lockToken(msg.sender,_Stake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         } 
-           
-        uint solutionId=GD.getTotalSolutions(_proposalId); 
-        GD.callSolutionEvent(_proposalId,msg.sender,solutionId,_solutionHash,_dateAdd,_solutionStake);    
     }
 
     function validateMember(uint _proposalId,uint[] _solutionChosen)constant returns(bool)

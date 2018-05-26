@@ -72,12 +72,12 @@ contract  memberRoles
     }
 
     modifier onlyGBM {
-        MS=Master(masterAddress)
+        MS=Master(masterAddress);
         require(MS.isGBM(msg.sender) == true);
         _;
     }
 
-    modifier checkRoleAuthority(_memberRroleId){
+    modifier checkRoleAuthority(uint _memberRoleId){
       MS=Master(masterAddress);
       require(MS.isGBM(msg.sender) == true || msg.sender == authorizedAddress_againstRole[_memberRoleId]);
        _;

@@ -67,8 +67,8 @@ contract ProposalCategory
         _; 
     }
     
-    modifier onlyGBM(arr1,arr2,arr3) {
-        MS=Master(masterAddress)
+    modifier onlyGBM(uint8[] arr1,uint[] arr2,uint[]arr3) {
+        MS=Master(masterAddress);
         require(MS.isGBM(msg.sender) == true);
         require(arr1.length == arr2.length && arr1.length == arr3.length);
         _;
@@ -112,11 +112,11 @@ contract ProposalCategory
         
         allCategory.push(category("QmcEP2ELejTFsaLCeiukMNS9HSg6mxitFubHEuuLDSLbYt",roleSeq,majVote,majVote,0,0,0,0,0,0));
         allCategory.push(category("QmeX5jkkSFPrsehqsit7zMWmTXB6pTeSHscE3HRiA1R9t5",roleSeq,majVote,closeTime,0,100,10,20,20,20));
-        allCategory.push(category("Qmb2RQ4t6b7BEevbMqF4jjjZxEbp5bspHAX8ZdL8s7t8N8",roleSeq,majVote,closeTime,0,100,0,20,20,20))
-        allCategory.push(category("QmeYFNJvVH6nkk2fFjnzgxQm9szxV3ocpFnKE2wBWaVhDN",roleSeq,majVote,closeTime,0,100,0,20,20,20))
-        allCategory.push(category("QmcAiWumEJaF6jLg14eaLU9WgdKLSy8bzPLNHMCSUZxU9a",roleSeq,majVote,closeTime,0,100,0,20,20,20))
-        allCategory.push(category("QmWTbFV1TW3Pw79tCwuJUwNyXKZVkxzkW1xW4sL9CYzUmA",roleSeq,majVote,closeTime,0,100,0,20,20,20))
-        allCategory.push(category("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8",roleSeq,majVote,closeTime,0,100,0,20,20,20))
+        allCategory.push(category("Qmb2RQ4t6b7BEevbMqF4jjjZxEbp5bspHAX8ZdL8s7t8N8",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("QmeYFNJvVH6nkk2fFjnzgxQm9szxV3ocpFnKE2wBWaVhDN",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("QmcAiWumEJaF6jLg14eaLU9WgdKLSy8bzPLNHMCSUZxU9a",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("QmWTbFV1TW3Pw79tCwuJUwNyXKZVkxzkW1xW4sL9CYzUmA",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8",roleSeq,majVote,closeTime,0,100,0,20,20,20));
         constructorCheck = true;
     }
 
@@ -141,7 +141,7 @@ contract ProposalCategory
     /// @param _minStake Minimum stake
     /// @param _maxStake Maximum stake
     /// @param _defaultIncentive Default incentive
-    function updateCategory(uint _categoryId,string _descHash,uint8[] _roleName,uint[] _majorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake, uint _defaultIncentive) onlyGBM(_roleName,_majorityVote,_closingTime)
+    function updateCategory(uint _categoryId,string _descHash,uint8[] _roleName,uint[] _majorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake, uint _defaultIncentive) onlyGBM(_roleName,_majorityVote,_closingTime)
     {
         allCategory[_categoryId].categoryDescHash = _descHash;
         allCategory[_categoryId].minStake = _minStake;

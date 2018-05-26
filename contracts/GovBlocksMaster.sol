@@ -380,7 +380,7 @@ contract GovBlocksMaster
         uint16 versionNo = MS.versionLength()-1; 
         PCAddress = MS.allContractVersions(versionNo,"PC");
         PC=ProposalCategory(PCAddress);
-        PC.updateCategory(_categoryId,_categoryData);
+        // PC.updateCategory(_categoryId,_categoryData);
     }
 
     /// @dev Configures global parameters for reputation weights

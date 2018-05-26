@@ -70,22 +70,6 @@ contract StandardVotingType
         require(msg.sender == masterAddress);
         _;
     }
-    
-    // function changeOtherContractAddress(bytes4 _contractName) onlyInternal 
-    // {
-    //     SVAddress = _SVaddress;
-    //     RBAddress = _RBaddress;
-    //     FWAddress = _FWaddress;
-    // }
-
-    // function changeAllContractsAddress(address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _governanceContractAddress,address _poolContractAddress) onlyInternal 
-    // {
-    //     GDAddress = _GDcontractAddress;
-    //     MRAddress = _MRcontractAddress;
-    //     PCAddress = _PCcontractAddress;
-    //     G1Address = _governanceContractAddress;
-    //     P1Address = _poolContractAddress;
-    // }
 
     /// @dev Changes Global objects of the contracts || Uses latest version
     /// @param contractName Contract name 
@@ -132,7 +116,7 @@ contract StandardVotingType
         uint totalVoteValue=0; uint8 category = GD.getProposalCategory(_proposalId);
         uint8 currentVotingId =GD.getProposalCurrentVotingId(_proposalId);
         uint32 _mrSequenceId = PC.getRoleSequencAtIndex(category,currentVotingId);
-        require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId)==1); //1
+        require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId)==1); 
         
         uint[] memory finalVoteValue = new uint[](GD.getTotalSolutions(_proposalId)); 
         for(uint8 i=0; i<GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequenceId); i++)
@@ -236,29 +220,6 @@ contract StandardVotingType
                 return true;
         }
     }
-
-
-    // function checkForSolution(uint _proposalId,address _memberAddress) internal constant returns(uint check)
-    // {
-    //     for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
-    //     {
-    //         if(GD.getSolutionAddedByProposalId(_memberAddress,i) == _memberAddress)
-    //             check = 1;
-    //         else 
-    //             check = 0;
-    //     }
-    // }
-
-    // function addSolutionSVT(uint _proposalId,address _memberAddress,string _solutionHash,uint _dateAdd) onlyInternal
-    // {
-    //     GBTS=GBTStandardToken(GBTSAddress);
-    //     require(checkForSolution(_proposalId,_memberAddress) == 0);
-
-    //     uint currentVotingId;
-    //     (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
-    //     require(currentVotingId == 0 && GD.getProposalStatus(_proposalId) == 2 && GBTS.balanceOf(_memberAddress) != 0 && GD.getVoteId_againstMember(_memberAddress,_proposalId) == 0);
-    // }
-
 }
 
 
