@@ -65,7 +65,7 @@ contract GovBlocksMaster
     /// @dev Changes authorized GovBlocks owner
     /// @param dAppName dApp username
     /// @param _memberAddress Address of the member
-    function changeAuthorizedGB(bytes32 dAppName,address _memberAddress)
+    function changedAppAuthorizedGB(bytes32 dAppName,address _memberAddress)
     {
       if(govBlocksDapps[dAppName].authGBAddress == 0x00)
         govBlocksDapps[dAppName].authGBAddress = _memberAddress;
@@ -131,7 +131,7 @@ contract GovBlocksMaster
         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
-        changeAuthorizedGB(_gbUserName,msg.sender);
+        changedAppAuthorizedGB(_gbUserName,msg.sender);
         MS=Master(_newMasterAddress);
         MS.setOwner(msg.sender);
     }
@@ -179,19 +179,6 @@ contract GovBlocksMaster
                 throw;
         }   
     }
- 
-    // /// @dev Changes dApp description hash
-    // /// @param _gbUserName GovBlocks username
-    // /// @param _dappDescriptionHash dApp new description hash
-    // function changeDappDescHash(bytes32 _gbUserName,string _dappDescriptionHash)
-    // { 
-    //     if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
-    //     {
-    //         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
-    //     }
-    //     else
-    //         throw;
-    // }
 
     /// @dev Sets byte code and abi
     /// @param _byteCodeHash Byte code hash
@@ -202,17 +189,6 @@ contract GovBlocksMaster
         contractsAbiHash = _abiHash;
     }
 
-    /// @dev Changes all below address
-    /// @param _GDAddress Governance data new address
-    /// @param _SVAddress Standard voting new address
-    /// @param _GOVAddress Governance new address
-    // function changeAllAddress(address _GDAddress,address _SVAddress,address _GOVAddress) onlyOwner
-    // {
-    //    GDAddress = _GDAddress;
-    //    SVAddress = _SVAddress;
-    //    GOVAddress = _GOVAddress;
-    // }
-    
     /// @dev Sets hash value for dApp user
     /// @param _hash Hash value 
     function setDappUser(string _hash)
