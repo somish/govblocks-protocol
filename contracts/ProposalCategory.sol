@@ -30,16 +30,25 @@ contract ProposalCategory
         uint8 maxStake;
         uint defaultIncentive;
         uint rewardPercProposal;
-        uint rewardPercOption;
+        uint rewardPercSolution;
         uint rewardPercVote;
     }
 
+    struct subCategory
+    {
+        string categoryName;
+        bytes32 functionName;
+        address contractAt;
+    }
+
+    subCategory[] public allSubCategory;
     category[] public allCategory;
+    mapping(uint8=>uint8) getSubCategoryId;
+    mapping(uint8=>uint[]) getAllSubCategory;
     Master MS;  
     memberRoles MR;
     governanceData GD;
     address masterAddress;
-    address GBMAddress;
 
     modifier onlyInternal {
         MS=Master(masterAddress);
@@ -47,7 +56,7 @@ contract ProposalCategory
         _; 
     }
     
-     modifier onlyOwner {
+    modifier onlyOwner {
         MS=Master(masterAddress);
         require(MS.isOwner(msg.sender) == true);
         _; 
@@ -57,14 +66,15 @@ contract ProposalCategory
         require(msg.sender == masterAddress);
         _; 
     }
-
-    /// @dev Changes GovBlocks master address
-    /// @param _GBMAddress New GovBlocks master address
-    function changeGBMAddress(address _GBMAddress) onlyMaster
-    {
-        GBMAddress = _GBMAddress;
-    }
     
+    modifier onlyGBM(arr1,arr2,arr3) {
+        MS=Master(masterAddress)
+        require(MS.isGBM(msg.sender) == true);
+        require(arr1.length == arr2.length && arr1.length == arr3.length);
+        _;
+    }
+
+
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) 
@@ -90,33 +100,23 @@ contract ProposalCategory
     }
 
     /// @dev Initiates proposal category
-    /// @param _GBMAddress New GovBlocks master address
-    function ProposalCategoryInitiate(address _GBMAddress)
+    function ProposalCategoryInitiate()
     {
         require(constructorCheck == false);
-        GBMAddress = _GBMAddress;
         uint8[] memory roleSeq=new uint8[](1); 
         uint[] memory majVote=new uint[](1);
         uint[] memory closeTime=new uint[](1);
         roleSeq[0]=1;
         majVote[0]=50;
-        closeTime[0]=900;
+        closeTime[0]=1800;
         
         allCategory.push(category("QmcEP2ELejTFsaLCeiukMNS9HSg6mxitFubHEuuLDSLbYt",roleSeq,majVote,majVote,0,0,0,0,0,0));
         allCategory.push(category("QmeX5jkkSFPrsehqsit7zMWmTXB6pTeSHscE3HRiA1R9t5",roleSeq,majVote,closeTime,0,100,10,20,20,20));
-        // allCategory.push(category("Qmb2RQ4t6b7BEevbMqF4jjjZxEbp5bspHAX8ZdL8s7t8N8",roleSeq,majVote,closeTime,0,0,0,0,0,0))
-        // allCategory.push(category("QmeYFNJvVH6nkk2fFjnzgxQm9szxV3ocpFnKE2wBWaVhDN",roleSeq,majVote,closeTime,0,0,0,0,0,0))
-        // allCategory.push(category("QmcAiWumEJaF6jLg14eaLU9WgdKLSy8bzPLNHMCSUZxU9a",roleSeq,majVote,closeTime,0,0,0,0,0,0))
-        // allCategory.push(category("QmWTbFV1TW3Pw79tCwuJUwNyXKZVkxzkW1xW4sL9CYzUmA",roleSeq,majVote,closeTime,0,0,0,0,0,0))
-        // allCategory.push(category("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8",roleSeq,majVote,closeTime,0,0,0,0,0,0))
-        
-        // addNewCategory("QmcEP2ELejTFsaLCeiukMNS9HSg6mxitFubHEuuLDSLbYt");
-        // addNewCategory("QmeX5jkkSFPrsehqsit7zMWmTXB6pTeSHscE3HRiA1R9t5");
-        // addNewCategory("Qmb2RQ4t6b7BEevbMqF4jjjZxEbp5bspHAX8ZdL8s7t8N8");
-        // addNewCategory("QmeYFNJvVH6nkk2fFjnzgxQm9szxV3ocpFnKE2wBWaVhDN");
-        // addNewCategory("QmcAiWumEJaF6jLg14eaLU9WgdKLSy8bzPLNHMCSUZxU9a");
-        // addNewCategory("QmWTbFV1TW3Pw79tCwuJUwNyXKZVkxzkW1xW4sL9CYzUmA");
-        // addNewCategory("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8");
+        allCategory.push(category("Qmb2RQ4t6b7BEevbMqF4jjjZxEbp5bspHAX8ZdL8s7t8N8",roleSeq,majVote,closeTime,0,100,0,20,20,20))
+        allCategory.push(category("QmeYFNJvVH6nkk2fFjnzgxQm9szxV3ocpFnKE2wBWaVhDN",roleSeq,majVote,closeTime,0,100,0,20,20,20))
+        allCategory.push(category("QmcAiWumEJaF6jLg14eaLU9WgdKLSy8bzPLNHMCSUZxU9a",roleSeq,majVote,closeTime,0,100,0,20,20,20))
+        allCategory.push(category("QmWTbFV1TW3Pw79tCwuJUwNyXKZVkxzkW1xW4sL9CYzUmA",roleSeq,majVote,closeTime,0,100,0,20,20,20))
+        allCategory.push(category("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8",roleSeq,majVote,closeTime,0,100,0,20,20,20))
         constructorCheck = true;
     }
 
@@ -128,43 +128,12 @@ contract ProposalCategory
     /// @param _minStake Minimum stake
     /// @param _maxStake Maximum stake
     /// @param _defaultIncentive Default incentive
-    function addNewCategory(string _categoryData,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake,uint8 _defaultIncentive) 
+    function addNewCategory(string _categoryData,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake,uint8 _defaultIncentive) onlyGBM(_memberRoleSequence,_memberRoleMajorityVote,_closingTime)
     {
-        require(msg.sender == GBMAddress);
-        require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleSequence.length == _closingTime.length);
         allCategory.push(category(_categoryData,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive,0,0,0));    
     }
 
-    /// @dev Updates category
-    /// @param _categoryId Category id
-    /// @param _categoryData Category data
-    function updateCategory(uint _categoryId,string _categoryData) 
-    {
-        require(msg.sender == GBMAddress);
-            allCategory[_categoryId].categoryDescHash = _categoryData;
-    }
-
-    /// @dev Sets closing time for the category
-    /// @param _categoryId Category id
-    /// @param _time Closing time
-    function setClosingTime(uint _categoryId,uint24 _time)
-    {
-        allCategory[_categoryId].closingTime.push(_time);
-    }
-
-    /// @dev Sets role sequence for categoryId=_categoryId and role sequence=_roleSequence
-    function setRoleSequence(uint _categoryId,uint8 _roleSequence)
-    {
-        allCategory[_categoryId].memberRoleSequence.push(_roleSequence);
-    }
-
-    /// @dev Sets majority vote for category id=_categoryId and majority value=_majorityVote
-    function setMajorityVote(uint _categoryId,uint _majorityVote)
-    {
-        allCategory[_categoryId].memberRoleMajorityVote.push(_majorityVote);
-    }
-
-    /// @dev Updates category details
+        /// @dev Updates category details
     /// @param _categoryId Category id
     /// @param _roleName Role name
     /// @param _majorityVote Majority of votes
@@ -172,9 +141,9 @@ contract ProposalCategory
     /// @param _minStake Minimum stake
     /// @param _maxStake Maximum stake
     /// @param _defaultIncentive Default incentive
-    function updateCategoryDetails(uint _categoryId,uint8[] _roleName,uint[] _majorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake, uint _defaultIncentive) internal
+    function updateCategory(uint _categoryId,string _descHash,uint8[] _roleName,uint[] _majorityVote,uint24[] _closingTime,uint8 _minStake,uint8 _maxStake, uint _defaultIncentive) onlyGBM(_roleName,_majorityVote,_closingTime)
     {
-        require(_roleName.length == _majorityVote.length && _roleName.length == _closingTime.length);
+        allCategory[_categoryId].categoryDescHash = _descHash;
         allCategory[_categoryId].minStake = _minStake;
         allCategory[_categoryId].maxStake = _maxStake;
         allCategory[_categoryId].defaultIncentive = _defaultIncentive;
@@ -189,86 +158,6 @@ contract ProposalCategory
             allCategory[_categoryId].memberRoleMajorityVote[i] = _majorityVote[i];
             allCategory[_categoryId].closingTime[i] = _closingTime[i];
         }
-    }
-
-    /// @dev Changes role name by category id
-    /// @param _categoryId Category id
-    /// @param _roleName Role name 
-    function changeRoleNameById(uint _categoryId,uint8[] _roleName) internal
-    {
-        allCategory[_categoryId].memberRoleSequence=new uint8[](_roleName.length);
-        for(uint i=0; i<_roleName.length; i++)
-        {
-            allCategory[_categoryId].memberRoleSequence[i] = _roleName[i];
-        }
-    }
-
-    /// @dev Changes majority of vote of a category by id
-    /// @param _categoryId Category id
-    /// @param _majorityVote Majority of votes
-    function changeMajorityVoteById(uint _categoryId,uint[] _majorityVote) internal
-    {
-        allCategory[_categoryId].memberRoleMajorityVote=new uint[](_majorityVote.length);
-        for(uint i=0; i<_majorityVote.length; i++)
-        {
-            allCategory[_categoryId].memberRoleMajorityVote[i] = _majorityVote[i];
-        }
-    }    
-
-    /// @dev Changes closing time by cateory id
-    /// @param _categoryId Category id
-    /// @param _closingTime Closing time
-    function changeClosingTimeById(uint _categoryId,uint24[] _closingTime) internal
-    {
-        allCategory[_categoryId].closingTime=new uint24[](_closingTime.length);
-        for(uint i=0; i<_closingTime.length; i++)
-        {
-            allCategory[_categoryId].closingTime[i] = _closingTime[i];
-        }
-    }
-
-    /// @dev Changes minimum stake by id
-    /// @param _categoryId Category id
-    /// @param _minStake Minimum stake
-    function changeMinStakeById(uint _categoryId,uint8 _minStake) internal
-    {
-        allCategory[_categoryId].minStake = _minStake;
-    }
-
-    /// @dev Changes maximum stake by category id
-    function changeMaxStakeById(uint _categoryId,uint8 _maxStake) internal
-    {
-        allCategory[_categoryId].maxStake = _maxStake;
-    }
-    
-    /// @dev Changes incentive by category id
-    function changeIncentiveById(uint _categoryId,uint _incentive) internal
-    {
-        allCategory[_categoryId].defaultIncentive = _incentive;
-    }
-
-    /// @dev Changes reward percentage proposal by category id
-    /// @param _categoryId Category id
-    /// @param _value Reward percentage value
-    function changeRewardPercProposal(uint _categoryId,uint _value) internal
-    {
-        allCategory[_categoryId].rewardPercProposal = _value;
-    }
-
-    /// @dev Changes reward percentage option by category id
-    /// @param _categoryId Category id
-    /// @param _value Reward percentage value
-    function changeRewardPercOption(uint _categoryId,uint _value) internal
-    {
-        allCategory[_categoryId].rewardPercOption = _value;    
-    }
-
-    /// @dev Changes reward percentage vote by category id
-    /// @param _categoryId Category id
-    /// @param _value 
-    function changeRewardPercVote(uint _categoryId,uint _value) internal
-    {
-        allCategory[_categoryId].rewardPercVote = _value;
     }
 
     /// @dev Gets remaining closing time
@@ -297,7 +186,7 @@ contract ProposalCategory
     /// @dev Gets reward percentage option by category id
     function getRewardPercSolution(uint _categoryId)constant returns(uint)
     {
-        return allCategory[_categoryId].rewardPercOption;
+        return allCategory[_categoryId].rewardPercSolution;
     }
 
     /// @dev Gets reward percentage vote by category id    
@@ -441,4 +330,107 @@ contract ProposalCategory
     {
         return (allCategory[_categoryId].memberRoleSequence[_currVotingIndex],allCategory[_categoryId].memberRoleMajorityVote[_currVotingIndex],allCategory[_categoryId].closingTime[_currVotingIndex]);
     }
+
+    // /// @dev Sets closing time for the category
+    // /// @param _categoryId Category id
+    // /// @param _time Closing time
+    // function setClosingTime(uint _categoryId,uint24 _time)
+    // {
+    //     allCategory[_categoryId].closingTime.push(_time);
+    // }
+
+    // /// @dev Sets role sequence for categoryId=_categoryId and role sequence=_roleSequence
+    // function setRoleSequence(uint _categoryId,uint8 _roleSequence)
+    // {
+    //     allCategory[_categoryId].memberRoleSequence.push(_roleSequence);
+    // }
+
+    // /// @dev Sets majority vote for category id=_categoryId and majority value=_majorityVote
+    // function setMajorityVote(uint _categoryId,uint _majorityVote)
+    // {
+    //     allCategory[_categoryId].memberRoleMajorityVote.push(_majorityVote);
+    // }
+
+
+    // /// @dev Changes role name by category id
+    // /// @param _categoryId Category id
+    // /// @param _roleName Role name 
+    // function changeRoleNameById(uint _categoryId,uint8[] _roleName) internal
+    // {
+    //     allCategory[_categoryId].memberRoleSequence=new uint8[](_roleName.length);
+    //     for(uint i=0; i<_roleName.length; i++)
+    //     {
+    //         allCategory[_categoryId].memberRoleSequence[i] = _roleName[i];
+    //     }
+    // }
+
+    // /// @dev Changes majority of vote of a category by id
+    // /// @param _categoryId Category id
+    // /// @param _majorityVote Majority of votes
+    // function changeMajorityVoteById(uint _categoryId,uint[] _majorityVote) internal
+    // {
+    //     allCategory[_categoryId].memberRoleMajorityVote=new uint[](_majorityVote.length);
+    //     for(uint i=0; i<_majorityVote.length; i++)
+    //     {
+    //         allCategory[_categoryId].memberRoleMajorityVote[i] = _majorityVote[i];
+    //     }
+    // }    
+
+    // /// @dev Changes closing time by cateory id
+    // /// @param _categoryId Category id
+    // /// @param _closingTime Closing time
+    // function changeClosingTimeById(uint _categoryId,uint24[] _closingTime) internal
+    // {
+    //     allCategory[_categoryId].closingTime=new uint24[](_closingTime.length);
+    //     for(uint i=0; i<_closingTime.length; i++)
+    //     {
+    //         allCategory[_categoryId].closingTime[i] = _closingTime[i];
+    //     }
+    // }
+
+    // /// @dev Changes minimum stake by id
+    // /// @param _categoryId Category id
+    // /// @param _minStake Minimum stake
+    // function changeMinStakeById(uint _categoryId,uint8 _minStake) internal
+    // {
+    //     allCategory[_categoryId].minStake = _minStake;
+    // }
+
+    // /// @dev Changes maximum stake by category id
+    // function changeMaxStakeById(uint _categoryId,uint8 _maxStake) internal
+    // {
+    //     allCategory[_categoryId].maxStake = _maxStake;
+    // }
+    
+    // /// @dev Changes incentive by category id
+    // function changeIncentiveById(uint _categoryId,uint _incentive) internal
+    // {
+    //     allCategory[_categoryId].defaultIncentive = _incentive;
+    // }
+
+    // /// @dev Changes reward percentage proposal by category id
+    // /// @param _categoryId Category id
+    // /// @param _value Reward percentage value
+    // function changeRewardPercProposal(uint _categoryId,uint _value) internal
+    // {
+    //     allCategory[_categoryId].rewardPercProposal = _value;
+    // }
+
+    // /// @dev Changes reward percentage option by category id
+    // /// @param _categoryId Category id
+    // /// @param _value Reward percentage value
+    // function changeRewardPercSolution(uint _categoryId,uint _value) internal
+    // {
+    //     allCategory[_categoryId].rewardPercSolution = _value;    
+    // }
+
+    // /// @dev Changes reward percentage vote by category id
+    // /// @param _categoryId Category id
+    // /// @param _value 
+    // function changeRewardPercVote(uint _categoryId,uint _value) internal
+    // {
+    //     allCategory[_categoryId].rewardPercVote = _value;
+    // }
+
+   
 }
