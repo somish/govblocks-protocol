@@ -26,9 +26,8 @@ contract  memberRoles
   bytes32[] memberRole;
   uint8 authorizedAddress_toCategorize;
   bool public constructorCheck;
-  Master MS; 
   address public masterAddress;
-  address public GBMAddress;
+  Master MS; 
   BasicToken BT;
 
   struct memberRoleDetails
@@ -42,8 +41,7 @@ contract  memberRoles
   mapping(uint32=>memberRoleDetails) memberRoleData;
 
   /// @dev Initiates member roles
-  /// @param _GBMAddress GovBlocks master address
-  function MemberRolesInitiate(address _GBMAddress)
+  function MemberRolesInitiate()
   {
     require(constructorCheck == false);
         memberRole.push("");
@@ -51,36 +49,39 @@ contract  memberRoles
         memberRole.push("Token Holder");
         authorizedAddress_toCategorize=1;
         setOwnerRole();
-        GBMAddress = _GBMAddress;
         constructorCheck = true;
   }
 
-  modifier onlyInternal 
-  {
+   modifier onlyInternal 
+   {
       MS=Master(masterAddress);
       require(MS.isInternal(msg.sender) == true);
       _; 
-  }
+   }
   
-  modifier onlyOwner 
-  {
+   modifier onlyOwner 
+   {
       MS=Master(masterAddress);
       require(MS.isOwner(msg.sender) == true);
       _; 
-  }
+   }
   
-  modifier onlyMaster {
+    modifier onlyMaster {
         require(msg.sender == masterAddress);
         _; 
     }
 
-  /// @dev Changes GovBlocks master address
-  /// @param _GBMAddress New GovBlocks master address
-  function changeGBMAddress(address _GBMAddress) onlyMaster
-  {
-      require(GBMAddress != 0x00);
-      GBMAddress = _GBMAddress;
-  }
+    modifier onlyGBM {
+        MS=Master(masterAddress)
+        require(MS.isGBM(msg.sender) == true);
+        _;
+    }
+
+    modifier checkRoleAuthority(_memberRroleId){
+      MS=Master(masterAddress);
+      require(MS.isGBM(msg.sender) == true || msg.sender == authorizedAddress_againstRole[_memberRoleId]);
+       _;
+    }
 
   /// @dev Changes master's contract address
   /// @param _masterContractAddress New master address
@@ -143,9 +144,8 @@ contract  memberRoles
   /// @param _memberAddress Member address
   /// @param _memberRoleId Member role id
   /// @param _typeOf Type of role id of the member
-  function updateMemberRole(address _memberAddress,uint32 _memberRoleId,bool _typeOf)
+  function updateMemberRole(address _memberAddress,uint32 _memberRoleId,bool _typeOf) checkRoleAuthority(_memberRoleId)
   {
-      require(msg.sender == GBMAddress || msg.sender == authorizedAddress_againstRole[_memberRoleId]);
       if(_typeOf == true)
       {
         require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == false);
@@ -158,16 +158,14 @@ contract  memberRoles
         require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == true);
         memberRoleData[_memberRoleId].memberCounter = SafeMath.sub32(memberRoleData[_memberRoleId].memberCounter,1);
         memberRoleData[_memberRoleId].memberActive[_memberAddress] = false;
-        memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
       }
   }
 
   /// @dev Changes member role id's changable member 
   /// @param _memberRoleId Member role id
   /// @param _newCanAddMember New authorized address against role id. (Responsible to assign/remove any address from Role)
-  function changeCanAddMember(uint32 _memberRoleId, address _newCanAddMember)
+  function changeCanAddMember(uint32 _memberRoleId, address _newCanAddMember) checkRoleAuthority(_memberRoleId)
   {
-      require(msg.sender == authorizedAddress_againstRole[_memberRoleId]);
       authorizedAddress_againstRole[_memberRoleId] = _newCanAddMember;
   }
 
@@ -182,9 +180,8 @@ contract  memberRoles
   /// @param _newRoleName New role name
   /// @param _roleDescription New description hash
   /// @param _canAddMembers Authorized member against every role id
-  function addNewMemberRole(bytes32 _newRoleName,string _roleDescription, address _canAddMembers) 
+  function addNewMemberRole(bytes32 _newRoleName,string _roleDescription, address _canAddMembers) onlyGBM
   {
-      require(msg.sender == GBMAddress);
       uint rolelength = getTotalMemberRoles();
       memberRole.push(_newRoleName);  
       authorizedAddress_againstRole[rolelength] = _canAddMembers;
@@ -197,9 +194,9 @@ contract  memberRoles
   /// @return allMemberAddress Member addresses of specified role id
   function getAllAddressByRoleId(uint32 _memberRoleId) public constant returns(uint32,address[] allMemberAddress)
   {
-      uint length = getMemberCounter(_memberRoleId);uint8 j=0;
+      uint length = getAllMemberLength(_memberRoleId);uint8 j=0;
       allMemberAddress = new address[](length);
-      for(uint8 i=0; i<getAllMemberLength(_memberRoleId); i++)
+      for(uint8 i=0; i<length; i++)
       {
           address member = memberRoleData[_memberRoleId].memberAddress[i];
           if(memberRoleData[_memberRoleId].memberActive[member] == true)
@@ -216,17 +213,12 @@ contract  memberRoles
   /// @return memberRoleData[_memberRoleId].memberAddress.length Member length
   function getAllMemberLength(uint32 _memberRoleId) public constant returns(uint)
   {
-     return memberRoleData[_memberRoleId].memberAddress.length;    
+     return memberRoleData[_memberRoleId].memberCounter;    
   }
 
   function getAllMemberAddressById(uint32 _memberRoleId,uint _index)constant returns(address)
   {
      return memberRoleData[_memberRoleId].memberAddress[_index];
-  }
-
-  function getMemberCounter(uint32 _memberRoleId)constant returns(uint32)
-  {
-     return memberRoleData[_memberRoleId].memberCounter;
   }
 
   function getAuthrizedMember_againstRole(uint32 _memberRoleId)constant returns(address)
@@ -273,25 +265,4 @@ contract  memberRoles
   {
     return memberRole.length;
   }
-
-  // /// @dev Gets the role id assigned to a member when given member address
-  // /// @param _memberAddress Member address
-  // /// @return memberRoleId Role id of the member address
-  // function getMemberRoleIdByAddress(address _memberAddress) public constant returns(uint memberRoleId)
-  // {
-  //     MS=Master(masterAddress); 
-  //     address tokenAddress;
-  //     tokenAddress=MS.getDappTokenAddress();
-  //     BT=BasicToken(tokenAddress);
-  //     memberRoleId = memberAddressToMemberRole[_memberAddress];
-      
-  //     if(memberRoleId >=1)
-  //         memberRoleId = memberAddressToMemberRole[_memberAddress];
-  //     else if(BT.balanceOf(_memberAddress) <= 0)
-  //         memberRoleId = memberAddressToMemberRole[_memberAddress];
-  //     else
-  //         memberRoleId = 2;
-  // }
-
- 
 }
