@@ -216,7 +216,6 @@ contract governanceData {
     GBTStandardToken GBTS;
     Governance GOV;
     address masterAddress;
-    address GBMAddress;
     address GBTSAddress;
     address constant null_address = 0x00;
 
@@ -241,7 +240,8 @@ contract governanceData {
 
     modifier onlyGBM
     {
-        require(msg.sender == GBMAddress);
+        MS=Master(masterAddress);
+        require(MS.isGBM(msg.sender) == true);
         _;
     }
     
@@ -259,13 +259,6 @@ contract governanceData {
         }
     }
 
-    /// @dev Changes GovBlocks master address
-    /// @param _GBMAddress new GovBlocks master address
-    function changeGBMAddress(address _GBMAddress) onlyGBM
-    {
-        GBMAddress = _GBMAddress;
-    }
-    
     /// @dev Changes GovBlocks standard token address
     /// @param _GBTAddress New GovBlocks token address
     function changeGBTSAddress(address _GBTAddress) onlyMaster
@@ -293,11 +286,9 @@ contract governanceData {
     }
     
     /// @dev Initiates governance data
-    /// @param _GBMAddress GovBlocks master address
-    function GovernanceDataInitiate(address _GBMAddress) 
+    function GovernanceDataInitiate() 
     {
         require(constructorCheck == false);
-            GBMAddress = _GBMAddress;
             setGlobalParameters();
             addStatus();
             addMemberReputationPoints();
