@@ -168,8 +168,9 @@ contract Governance {
   {
       uint proposalDateAdd = now;
       uint _proposalId = GD.getProposalLength();
+      address VTAddress=GD.getVotingTypeAddress(_votingTypeId);
       createProposal(_proposalTitle,_proposalSD,_proposalDescHash,_votingTypeId,_categoryId,proposalDateAdd);
-      proposalSubmission(proposalDateAdd,_proposalId,_proposalDescHash,_votingTypeId,_categoryId,_proposalSolutionStake,_solutionHash,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+      proposalSubmission(proposalDateAdd,_proposalId,_proposalDescHash,VTAddress,_categoryId,_proposalSolutionStake,_solutionHash,_validityUpto,_v,_r,_s,_lockTokenTxHash);
   }
 
 
@@ -189,7 +190,8 @@ contract Governance {
   function submitProposalWithSolution(uint _proposalId,uint _proposalSolutionStake,string _solutionHash,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) public onlyProposalOwner(_proposalId)
   {
       uint proposalDateAdd = GD.getProposalDateUpd(_proposalId);
-      proposalSubmission(proposalDateAdd,_proposalId,"",0,0,_proposalSolutionStake,_solutionHash,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+      address VTAddress=GD.getProposalVotingType(_proposalId);
+      proposalSubmission(proposalDateAdd,_proposalId,"",VTAddress,0,_proposalSolutionStake,_solutionHash,_validityUpto,_v,_r,_s,_lockTokenTxHash);
   }
  
   /// @dev Categorizes proposal to proceed further. _reward is the company's incentive to distribute to end members
@@ -227,14 +229,13 @@ contract Governance {
   
   function openProposalForVoting1(uint _proposalId,uint _categoryId,uint _proposalStake,uint validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal validateStake(_categoryId,_proposalStake)
   {
-      uint8 currVotingId = GD.getProposalCurrentVotingId(_proposalId);
-      uint closingTime = SafeMath.add(PC.getClosingTimeAtIndex(_categoryId,0),GD.getProposalDateUpd(_proposalId));
+        uint _currVotingStatus = GD.getProposalCurrentVotingId(_proposalId);
       uint depositPerc = GD.depositPercProposal();
       uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake,GD.depositPercProposal()),100);
      
       if(_proposalStake != 0)
       {
-          require(validityUpto > PC.getRemainingClosingTime(_proposalId,_categoryId,currVotingId));
+          require(validityUpto > PC.getRemainingClosingTime(_proposalId,_categoryId,_currVotingStatus));
           if(depositPerc !=0 && depositPerc!= 100)
           {
             GBTS.lockToken(msg.sender,SafeMath.sub(_proposalStake,depositAmount),validityUpto,_v,_r,_s,_lockTokenTxHash);
@@ -247,17 +248,17 @@ contract Governance {
       }
 
       GD.changeProposalStatus(_proposalId,2);
-      callOraclize(_proposalId,closingTime); 
+      callOraclize(_proposalId); 
       GD.callProposalStakeEvent(msg.sender,_proposalId,now,_proposalStake); 
   }
   
   /// @dev Call oraclize for closing proposal
   /// @param _proposalId Proposal id
-  /// @param _closeTime Closing time of the proposal
-  function callOraclize(uint _proposalId,uint _closeTime) internal
+  function callOraclize(uint _proposalId) internal
   {
-      P1.closeProposalOraclise(_proposalId,_closeTime);
-      GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),_closeTime);
+      uint closingTime = SafeMath.add(PC.getClosingTimeAtIndex(GD.getProposalCategory(_proposalId),0),GD.getProposalDateUpd(_proposalId));
+      P1.closeProposalOraclise(_proposalId,closingTime);
+      GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),closingTime);
   }
 
   /// @dev Edits a proposal and only owner of a proposal can edit it
@@ -350,7 +351,10 @@ contract Governance {
   function checkRoleVoteClosing(uint _proposalId,uint32 _roleId) onlyInternal
   {
      if(checkForClosing(_proposalId,_roleId)==1){}
-      callOraclize(_proposalId,0);
+     {
+        P1.closeProposalOraclise(_proposalId,0);
+        GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),0);
+     }
    }
 
   /// @dev Gets statuses of proposals for member
@@ -757,18 +761,22 @@ contract Governance {
     }
     
 
-    function proposalSubmission(uint proposalDateAdd,uint _proposalId,string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _proposalSolutionStake,string _solutionHash,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal
+    function proposalSubmission(uint proposalDateAdd,uint _proposalId,string _proposalDescHash,address _VTAddress,uint8 _categoryId,uint _proposalSolutionStake,string _solutionHash,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal
     {
-        address VTAddress = GD.getProposalVotingType(_proposalId);
-        VT=VotingType(VTAddress);
+        VT=VotingType(_VTAddress);
         GD.setSolutionAdded(_proposalId,msg.sender);
         if(_categoryId == 0)
           openProposalForVoting(_proposalId,GD.getProposalCategory(_proposalId),_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         else
           openProposalForVoting(_proposalId,_categoryId,_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
-        VT.addSolution(_proposalId,msg.sender,0,_solutionHash,proposalDateAdd,_validityUpto,_v,_r,_s,_lockTokenTxHash);
-        GD.callProposalWithSolutionEvent(msg.sender,_proposalId,"",_solutionHash,proposalDateAdd,_proposalSolutionStake);
+    
+        proposalSubmission1(_proposalId,proposalDateAdd, _solutionHash, _validityUpto, _v, _r, _s,_lockTokenTxHash,_proposalSolutionStake);        
     }
 
-
+    function proposalSubmission1(uint _proposalId,uint proposalDateAdd,string _solutionHash,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash,uint _proposalSolutionStake) internal
+    {
+        VT.addSolution(_proposalId,msg.sender,0,_solutionHash,proposalDateAdd,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+        GD.callProposalWithSolutionEvent(msg.sender,_proposalId,"",_solutionHash,proposalDateAdd,_proposalSolutionStake);    
+    
+    }
 }
