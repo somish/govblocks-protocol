@@ -372,7 +372,7 @@ contract GovBlocksMaster
     /// @param _gbUserName GovBlocks username
     /// @param _categoryId Category id 
     /// @param _categoryData Category data
-    function updateCategoryGB(bytes32 _gbUserName,uint _categoryId,string _categoryData) 
+    function updateCategoryGB(bytes32 _gbUserName,uint _categoryId,string _categoryData,uint8[] _roleName,uint[] _majorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake, uint _defaultIncentive) 
     {
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
         address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
@@ -380,7 +380,7 @@ contract GovBlocksMaster
         uint16 versionNo = MS.versionLength()-1; 
         PCAddress = MS.allContractVersions(versionNo,"PC");
         PC=ProposalCategory(PCAddress);
-        // PC.updateCategory(_categoryId,_categoryData);
+        PC.updateCategory(_categoryId,_categoryData,_roleName,_majorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive);
     }
 
     /// @dev Configures global parameters for reputation weights
