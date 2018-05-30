@@ -47,37 +47,6 @@ contract ProposalCategory
     // mapping(uint8=>uint8) categoryIdBySubId; // Given SubcategoryidThen CategoryId
     mapping(uint8=>uint[]) allSubId_byCategory;
     
-    function getSubCategoryDetails(uint8 _subCategoryId)constant returns(string,bytes32,address,uint8)
-    {
-        return (allSubCategory[_subCategoryId].categoryName,allSubCategory[_subCategoryId].functionName,allSubCategory[_subCategoryId].contractAt,allSubCategory[_subCategoryId].categoryId);
-    }
-    
-    function getSubCategoryId_atIndex(uint8 _categoryId,uint _index)constant returns(uint _subCategoryId)
-    {
-       return allSubId_byCategory[_categoryId][_index];     
-    }
-    
-    function addNewSubCategory(string _categoryName,bytes32 _functionName,address _contractAt,uint8 _mainCategoryId)
-    {
-        allSubId_byCategory[_mainCategoryId].push(allSubCategory.length);
-        allSubCategory.push(subCategory(_categoryName,_functionName,_contractAt,_mainCategoryId));
-    }
-
-    function getAllSubIds_byCategory(uint8 _categoryId)constant returns(uint[])
-    {
-        return allSubId_byCategory[_categoryId];
-    }
-
-    function getAllSubIdsLength_byCategory(uint8 _categoryId)constant returns(uint)
-    {
-        return allSubId_byCategory[_categoryId].length;
-    }
-
-    function getCategoryId_bySubId(uint8 _subCategoryId)constant returns(uint8)
-    {
-        return allSubCategory[_subCategoryId].categoryId;
-    }
-    
     Master MS;  
     memberRoles MR;
     governanceData GD;
@@ -107,6 +76,12 @@ contract ProposalCategory
         _;
     }
 
+    modifier onlyGBMSubCategory() 
+    { 
+            MS=Master(masterAddress);
+            require(MS.isGBM(msg.sender) == true);
+        _; 
+    }
 
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
@@ -191,6 +166,43 @@ contract ProposalCategory
             allCategory[_categoryId].memberRoleMajorityVote[i] = _majorityVote[i];
             allCategory[_categoryId].closingTime[i] = _closingTime[i];
         }
+    }
+
+    function addNewSubCategory(string _categoryName,bytes32 _functionName,address _contractAt,uint8 _mainCategoryId) onlyGBMSubCategory
+    {
+        allSubId_byCategory[_mainCategoryId].push(allSubCategory.length);
+        allSubCategory.push(subCategory(_categoryName,_functionName,_contractAt,_mainCategoryId));
+    }
+
+    function updateSubCategory(uint8 _subCategoryId,bytes32 _functionName,address _contractAt) onlyGBMSubCategory
+    {
+        allSubCategory[_subCategoryId].functionName = _functionName;
+        allSubCategory[_subCategoryId].contractAt = _contractAt;
+    }
+
+    function getSubCategoryDetails(uint8 _subCategoryId)constant returns(string,bytes32,address,uint8)
+    {
+        return (allSubCategory[_subCategoryId].categoryName,allSubCategory[_subCategoryId].functionName,allSubCategory[_subCategoryId].contractAt,allSubCategory[_subCategoryId].categoryId);
+    }
+    
+    function getSubCategoryId_atIndex(uint8 _categoryId,uint _index)constant returns(uint _subCategoryId)
+    {
+       return allSubId_byCategory[_categoryId][_index];     
+    }
+
+    function getAllSubIds_byCategory(uint8 _categoryId)constant returns(uint[])
+    {
+        return allSubId_byCategory[_categoryId];
+    }
+
+    function getAllSubIdsLength_byCategory(uint8 _categoryId)constant returns(uint)
+    {
+        return allSubId_byCategory[_categoryId].length;
+    }
+
+    function getCategoryId_bySubId(uint8 _subCategoryId)constant returns(uint8)
+    {
+        return allSubCategory[_subCategoryId].categoryId;
     }
 
     /// @dev Gets remaining closing time
