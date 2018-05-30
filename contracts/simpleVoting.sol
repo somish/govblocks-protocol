@@ -126,13 +126,20 @@ contract simpleVoting is VotingType
         MS=Master(masterAddress);
         require(MS.isInternal(msg.sender) == true || msg.sender == _memberAddress);
         require(alreadyAdded(_proposalId,_memberAddress) == false);
-        if(msg.sender == _memberAddress) 
-            receiveStake('S',_proposalId,_solutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
-        uint solutionId=GD.getTotalSolutions(_proposalId); 
-        GD.callSolutionEvent(_proposalId,msg.sender,solutionId,_solutionHash,_dateAdd,_solutionStake);    
+        // if(msg.sender == _memberAddress) 
+        //     receiveStake('S',_proposalId,_solutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+       addSolution1(_proposalId,_memberAddress,_solutionStake,_solutionHash,_dateAdd,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+       
 
     }
-
+    
+    function addSolution1(uint _proposalId,address _memberAddress,uint _solutionStake,string _solutionHash,uint _dateAdd,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash)internal
+    {
+         if(msg.sender == _memberAddress) 
+            receiveStake('S',_proposalId,_solutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+             uint solutionId=GD.getTotalSolutions(_proposalId); 
+        GD.callSolutionEvent(_proposalId,msg.sender,solutionId,_solutionHash,_dateAdd,_solutionStake);    
+    }
 
     /// @dev Adds solution
     /// @param _proposalId Proposal id
@@ -162,10 +169,12 @@ contract simpleVoting is VotingType
         require(validateMember(_proposalId,_solutionChosen) == true);
         require(GD.getProposalStatus(_proposalId) == 2);
         
-        uint32 _mrSequence;
-        (_mrSequence,,) = PC.getCategoryData3(GD.getProposalCategory(_proposalId),GD.getProposalCurrentVotingId(_proposalId));
+        // uint32 _mrSequence;
+        // uint category=GD.getProposalCategory(_proposalId);
+        // uint currVotingId=GD.getProposalCurrentVotingId(_proposalId);
+        // (_mrSequence,,) = PC.getCategoryData3(category,currVotingId);
         receiveStake('V',_proposalId,_voteStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
-        castVote(_proposalId,_solutionChosen,msg.sender,_voteStake,_mrSequence);    
+        castVote(_proposalId,_solutionChosen,msg.sender,_voteStake);    
     }
 
    
@@ -174,11 +183,15 @@ contract simpleVoting is VotingType
     /// @param _solutionChosen solution chosen
     /// @param _memberAddress Member address
     /// @param _voteStake Vote stake
-    /// @param _roleId Role id
-    function castVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _voteStake,uint32 _roleId) internal
+
+    function castVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _voteStake) internal
     {
         uint voteId = GD.allVotesTotal();
         uint finalVoteValue = SVT.setVoteValue_givenByMember(_memberAddress,_proposalId,_voteStake);
+        uint32 _roleId;
+        uint category=GD.getProposalCategory(_proposalId);
+        uint currVotingId=GD.getProposalCurrentVotingId(_proposalId);
+        (_roleId,,) = PC.getCategoryData3(category,currVotingId);
         GD.setVoteId_againstMember(_memberAddress,_proposalId,voteId);
         GD.setVoteId_againstProposalRole(_proposalId,_roleId,voteId);
         GOV.checkRoleVoteClosing(_proposalId,_roleId);
