@@ -357,7 +357,7 @@ contract GovBlocksMaster
     /// @dev Adds new category in GovBlocks
     /// @param _gbUserName GovBlocks username
     /// @param _descHash GovBlocks description hash
-    function addNewCategoryGB(bytes32 _gbUserName,string _descHash) 
+    function addNewCategoryGB(bytes32 _gbUserName,string _descHash,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake,uint8 _defaultIncentive) 
     {
         require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
         address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
@@ -365,7 +365,7 @@ contract GovBlocksMaster
         uint16 versionNo = MS.versionLength()-1; 
         PCAddress = MS.allContractVersions(versionNo,"PC");
         PC=ProposalCategory(PCAddress);
-        // PC.addNewCategory(_descHash);
+        PC.addNewCategory(_descHash,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive);
     }
 
     /// @dev Updates category in GovBlocks
@@ -381,6 +381,35 @@ contract GovBlocksMaster
         PCAddress = MS.allContractVersions(versionNo,"PC");
         PC=ProposalCategory(PCAddress);
         PC.updateCategory(_categoryId,_categoryData,_roleName,_majorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive);
+    }
+
+    /// @dev Adds new category in GovBlocks
+    /// @param _gbUserName GovBlocks username
+    /// @param _descHash GovBlocks description hash
+    function addNewSubCategoryGB(bytes32 _gbUserName,string _categoryName,bytes32 _functionName,address _contractAt,uint8 _mainCategoryId) 
+    {
+        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
+        address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
+        MS=Master(master);
+        uint16 versionNo = MS.versionLength()-1; 
+        PCAddress = MS.allContractVersions(versionNo,"PC");
+        PC=ProposalCategory(PCAddress);
+        PC.addNewSubCategory(_categoryName,_functionName,_contractAt,_mainCategoryId);
+    }
+
+    /// @dev Updates category in GovBlocks
+    /// @param _gbUserName GovBlocks username
+    /// @param _categoryId Category id 
+    /// @param _categoryData Category data
+    function updateSubCategoryGB(bytes32 _gbUserName,uint8 _subCategoryId,bytes32 _functionName,address _contractAt) 
+    {
+        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
+        address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
+        MS=Master(master);
+        uint16 versionNo = MS.versionLength()-1; 
+        PCAddress = MS.allContractVersions(versionNo,"PC");
+        PC=ProposalCategory(PCAddress);
+        PC.updateSubCategory(_subCategoryId,_functionName,_contractAt);
     }
 
     /// @dev Configures global parameters for reputation weights
