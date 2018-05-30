@@ -53,7 +53,9 @@ contract simpleVoting is VotingType
 
    modifier validateStake(uint _proposalId,uint _stake) {    
         uint stake = _stake/(10**GBTS.decimals());
-        uint _category = GD.getProposalCategory(_proposalId);
+        uint _category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
+
+        // uint _category = GD.getProposalCategory(_proposalId);
         require(stake <= PC.getMaxStake(_category) && stake >= PC.getMinStake(_category));
         _; 
     }
@@ -189,7 +191,9 @@ contract simpleVoting is VotingType
         uint voteId = GD.allVotesTotal();
         uint finalVoteValue = SVT.setVoteValue_givenByMember(_memberAddress,_proposalId,_voteStake);
         uint32 _roleId;
-        uint category=GD.getProposalCategory(_proposalId);
+        uint category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
+        
+        // uint category=GD.getProposalCategory(_proposalId);
         uint currVotingId=GD.getProposalCurrentVotingId(_proposalId);
         (_roleId,,) = PC.getCategoryData3(category,currVotingId);
         GD.setVoteId_againstMember(_memberAddress,_proposalId,voteId);
@@ -268,10 +272,11 @@ contract simpleVoting is VotingType
              depositedTokens = GD.getDepositedTokens(msg.sender,_proposalId,'V');
 
         uint depositAmount = SafeMath.div(SafeMath.mul(_Stake,depositPerc),100) + depositedTokens;
-
+        uint category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
+        
         if(_Stake != 0)
         {
-          require(_validityUpto > PC.getRemainingClosingTime(_proposalId,GD.getProposalCategory(_proposalId),currVotingId));
+          require(_validityUpto > PC.getRemainingClosingTime(_proposalId,category,currVotingId));
           if(depositPerc !=0 && depositPerc!= 100)
           {
             GBTS.lockToken(msg.sender,SafeMath.sub(_Stake,depositAmount),_validityUpto,_v,_r,_s,_lockTokenTxHash);
