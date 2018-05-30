@@ -80,17 +80,6 @@ contract Governance {
         _; 
     }
 
-    
-
-
-    // function changeAllContractsAddress(address _GDContractAddress,address _MRContractAddress,address _PCContractAddress,address _PoolContractAddress) onlyInternal
-    // {
-    //    GD = governanceData(_GDContractAddress);
-    //    PC = ProposalCategory(_PCContractAddress);
-    //    MR = memberRoles(_MRContractAddress);
-    //    P1 = ProposalCategory(_PoolContractAddress);
-    // }
-
     /// @dev Changes Global objects of the contracts || Uses latest version
     /// @param contractName Contract name 
     /// @param contractAddress Contract addresses
@@ -229,12 +218,20 @@ contract Governance {
   
   function openProposalForVoting1(uint _proposalId,uint _categoryId,uint _proposalStake,uint validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal validateStake(_categoryId,_proposalStake)
   {
+      openProposalForVoting2(_proposalId,_categoryId,_proposalStake,validityUpto,_v,_r,_s,_lockTokenTxHash);
+      GD.changeProposalStatus(_proposalId,2);
+      callOraclize(_proposalId); 
+      GD.callProposalStakeEvent(msg.sender,_proposalId,now,_proposalStake); 
+  }
+  
+  function openProposalForVoting2(uint _proposalId,uint _categoryId,uint _proposalStake,uint validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal
+  {
+        uint depositPerc = GD.depositPercProposal();
         uint _currVotingStatus = GD.getProposalCurrentVotingId(_proposalId);
-      uint depositPerc = GD.depositPercProposal();
-      uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake,GD.depositPercProposal()),100);
-     
-      if(_proposalStake != 0)
-      {
+        uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake,GD.depositPercProposal()),100);
+        
+        if(_proposalStake != 0)
+        {
           require(validityUpto > PC.getRemainingClosingTime(_proposalId,_categoryId,_currVotingStatus));
           if(depositPerc !=0 && depositPerc!= 100)
           {
@@ -245,11 +242,7 @@ contract Governance {
             GD.setDepositTokens(msg.sender,_proposalId,'P',_proposalStake); 
           else
             GBTS.lockToken(msg.sender,_proposalStake,validityUpto,_v,_r,_s,_lockTokenTxHash);
-      }
-
-      GD.changeProposalStatus(_proposalId,2);
-      callOraclize(_proposalId); 
-      GD.callProposalStakeEvent(msg.sender,_proposalId,now,_proposalStake); 
+        }
   }
   
   /// @dev Call oraclize for closing proposal
@@ -777,6 +770,5 @@ contract Governance {
     {
         VT.addSolution(_proposalId,msg.sender,0,_solutionHash,proposalDateAdd,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         GD.callProposalWithSolutionEvent(msg.sender,_proposalId,"",_solutionHash,proposalDateAdd,_proposalSolutionStake);    
-    
     }
 }
