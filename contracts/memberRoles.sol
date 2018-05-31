@@ -44,11 +44,11 @@ contract  memberRoles
   function MemberRolesInitiate()
   {
     require(constructorCheck == false);
-        memberRole.push("");
-        memberRole.push("Advisory Board");
-        memberRole.push("Token Holder");
-        authorizedAddress_toCategorize=1;
+        addNewMemberRole("","",0x00);
+        addNewMemberRole("Advisory Board","Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.",MS.owner());
+        addNewMemberRole("Token Holder","Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.",0x00);
         setOwnerRole();
+        authorizedAddress_toCategorize=1;
         constructorCheck = true;
   }
 
@@ -164,9 +164,15 @@ contract  memberRoles
   /// @dev Changes member role id's changable member 
   /// @param _memberRoleId Member role id
   /// @param _newCanAddMember New authorized address against role id. (Responsible to assign/remove any address from Role)
-  function changeCanAddMember(uint32 _memberRoleId, address _newCanAddMember) checkRoleAuthority(_memberRoleId)
+  function changeCanAddMember(uint32 _memberRoleId, address _newCanAddMember) 
   {
-      authorizedAddress_againstRole[_memberRoleId] = _newCanAddMember;
+      if(authorizedAddress_againstRole[_memberRoleId] == 0x00)
+        authorizedAddress_againstRole[_memberRoleId] = _newCanAddMember;
+      else
+      { 
+        require(msg.sender == authorizedAddress_againstRole[_memberRoleId]);
+        authorizedAddress_againstRole[_memberRoleId] = _newCanAddMember;
+      }
   }
 
   /// @dev Changes the role id of the member who is authorized to categorize the proposal
