@@ -67,9 +67,6 @@ contract GovBlocksMaster
     /// @param _memberAddress Address of the member
     function changedAppAuthorizedGB(bytes32 dAppName,address _memberAddress)
     {
-      if(govBlocksDapps[dAppName].authGBAddress == 0x00)
-        govBlocksDapps[dAppName].authGBAddress = _memberAddress;
-      else
         require(msg.sender == govBlocksDapps[dAppName].authGBAddress);
         govBlocksDapps[dAppName].authGBAddress = _memberAddress;
     }
@@ -78,10 +75,10 @@ contract GovBlocksMaster
     /// @param dAppName dApp username
     /// @param _memberAddress Member's address to be checked for GovBlocks owner
     /// @return auth Authentication flag
-    function isAuthorizedGBOwner(bytes32 dAppName,address _memberAddress)constant returns(uint auth)
+    function isAuthorizedGBOwner(bytes32 dAppName,address _memberAddress)constant returns(bool)
     {
        if(govBlocksDapps[dAppName].authGBAddress == _memberAddress)
-          auth = 1;
+        return true;
     } 
 
     /// @dev Transfers ownership to new owner (of GBT contract address)
@@ -107,7 +104,7 @@ contract GovBlocksMaster
 
     /// @dev Updates GovBlocks master address
     /// @param _newGBMAddress New GovBlocks master address
-    function updateGBMAddress(address _newGBMAddress) onlyOwner
+    function updateGBMAddress(address _newGBMAddress) internal
     {
         for(uint i=0;i<allGovBlocksUsers.length; i++)
         {
@@ -141,21 +138,9 @@ contract GovBlocksMaster
     /// @param _newMasterAddress dApp new master address
     function changeDappMasterAddress(bytes32 _gbUserName,address _newMasterAddress)
     {
-      if( govBlocksDapps[_gbUserName].masterAddress == 0x000)
-        {       
-            govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
-            govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
-        }
-      else
-        {            
-            if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
-                {
-                    govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
-                govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
-            }
-            else
-                throw;
-        }   
+        require(msg.sender ==  govBlocksDapps[_gbUserName].authGBAddress);
+        govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
+        govBlocksDappByAddress[_newMasterAddress] = _gbUserName; 
     }
 
     /// @dev Changes dApp token address
@@ -163,21 +148,9 @@ contract GovBlocksMaster
     /// @param _dappTokenAddress dApp new token address
     function changeDappTokenAddress(bytes32 _gbUserName,address _dappTokenAddress)
     {
-       if( govBlocksDapps[_gbUserName].tokenAddress == 0x000)
-       {
+        require(msg.sender ==  govBlocksDapps[_gbUserName].authGBAddress);
             govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
-            govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
-        }
-       else
-        {            
-            if(msg.sender ==  govBlocksDapps[_gbUserName].masterAddress)
-                {
-                    govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
-                    govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
-            }
-            else
-                throw;
-        }   
+            govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;   
     }
 
     /// @dev Sets byte code and abi
@@ -202,6 +175,11 @@ contract GovBlocksMaster
     function getByteCodeAndAbi()constant returns(string byteCode, string abiHash)
     {
       return (byteCodeHash,contractsAbiHash);
+    }
+
+    function getDappAuthorizedAddress(bytes32 _gbUserName)constant returns(address)
+    {
+        return govBlocksDapps[_gbUserName].authGBAddress;
     }
 
     /// @dev Gets GovBlocks user details
@@ -322,6 +300,15 @@ contract GovBlocksMaster
     
     // ACTION AFTER PROPOSAL PASS function
 
+    function getContractInstance_byDapp(bytes32 _gbUserName,bytes2 _typeOf) internal constant returns(address contractAddress) 
+    {
+        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == true);
+        address master = govBlocksDapps[_gbUserName].masterAddress; 
+        MS=Master(master);
+        uint16 versionNo = MS.versionLength()-1; 
+        contractAddress = MS.allContractVersions(versionNo,_typeOf);
+        return contractAddress;
+    }
 
     /// @dev Adds new member roles in GovBlocks
     /// @param _gbUserName GovBlocks new username
@@ -329,11 +316,7 @@ contract GovBlocksMaster
     /// @param _roleDescription GovBlocks new description hash
     function addNewMemberRoleGB(bytes32 _gbUserName,bytes32 _newRoleName,string _roleDescription, address _canAddMembers) 
     {
-        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
-        address master = govBlocksDapps[_gbUserName].masterAddress; address MRAddress;
-        MS=Master(master);
-        uint16 versionNo = MS.versionLength()-1; 
-        MRAddress = MS.allContractVersions(versionNo,"MR");
+        address MRAddress = getContractInstance_byDapp(_gbUserName,"MR");
         MR=memberRoles(MRAddress);
         MR.addNewMemberRole(_newRoleName, _roleDescription, _canAddMembers);
     }
@@ -345,11 +328,7 @@ contract GovBlocksMaster
     /// @param _typeOf Typeof role of the member
     function updateMemberRoleGB(bytes32 _gbUserName,address _memberAddress,uint32 _memberRoleId,bool _typeOf) 
     {
-        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
-        address master = govBlocksDapps[_gbUserName].masterAddress; address MRAddress;
-        MS=Master(master);
-        uint16 versionNo = MS.versionLength()-1; 
-        MRAddress = MS.allContractVersions(versionNo,"MR");
+        address MRAddress = getContractInstance_byDapp(_gbUserName,"MR");
         MR=memberRoles(MRAddress);
         MR.updateMemberRole(_memberAddress,_memberRoleId,_typeOf);
     }
@@ -359,11 +338,7 @@ contract GovBlocksMaster
     /// @param _descHash GovBlocks description hash
     function addNewCategoryGB(bytes32 _gbUserName,string _descHash,uint8[] _memberRoleSequence,uint[] _memberRoleMajorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake,uint8 _defaultIncentive) 
     {
-        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
-        address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
-        MS=Master(master);
-        uint16 versionNo = MS.versionLength()-1; 
-        PCAddress = MS.allContractVersions(versionNo,"PC");
+        address PCAddress = getContractInstance_byDapp(_gbUserName,"PC");
         PC=ProposalCategory(PCAddress);
         PC.addNewCategory(_descHash,_memberRoleSequence,_memberRoleMajorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive);
     }
@@ -374,40 +349,25 @@ contract GovBlocksMaster
     /// @param _categoryData Category data
     function updateCategoryGB(bytes32 _gbUserName,uint _categoryId,string _categoryData,uint8[] _roleName,uint[] _majorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake, uint _defaultIncentive) 
     {
-        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
-        address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
-        MS=Master(master);
-        uint16 versionNo = MS.versionLength()-1; 
-        PCAddress = MS.allContractVersions(versionNo,"PC");
+        address PCAddress = getContractInstance_byDapp(_gbUserName,"PC");
         PC=ProposalCategory(PCAddress);
         PC.updateCategory(_categoryId,_categoryData,_roleName,_majorityVote,_closingTime,_minStake,_maxStake,_defaultIncentive);
     }
 
     /// @dev Adds new category in GovBlocks
     /// @param _gbUserName GovBlocks username
-    /// @param _descHash GovBlocks description hash
     function addNewSubCategoryGB(bytes32 _gbUserName,string _categoryName,bytes32 _functionName,address _contractAt,uint8 _mainCategoryId) 
     {
-        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
-        address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
-        MS=Master(master);
-        uint16 versionNo = MS.versionLength()-1; 
-        PCAddress = MS.allContractVersions(versionNo,"PC");
+        address PCAddress = getContractInstance_byDapp(_gbUserName,"PC");
         PC=ProposalCategory(PCAddress);
         PC.addNewSubCategory(_categoryName,_functionName,_contractAt,_mainCategoryId);
     }
 
     /// @dev Updates category in GovBlocks
     /// @param _gbUserName GovBlocks username
-    /// @param _categoryId Category id 
-    /// @param _categoryData Category data
     function updateSubCategoryGB(bytes32 _gbUserName,uint8 _subCategoryId,bytes32 _functionName,address _contractAt) 
     {
-        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
-        address master = govBlocksDapps[_gbUserName].masterAddress; address PCAddress;
-        MS=Master(master);
-        uint16 versionNo = MS.versionLength()-1; 
-        PCAddress = MS.allContractVersions(versionNo,"PC");
+        address PCAddress =getContractInstance_byDapp(_gbUserName,"PC");
         PC=ProposalCategory(PCAddress);
         PC.updateSubCategory(_subCategoryId,_functionName,_contractAt);
     }
@@ -418,11 +378,7 @@ contract GovBlocksMaster
     /// @param _value Quorum percentage value
     function configureGlobalParameters(bytes32 _gbUserName,bytes16 _typeOf,uint32 _value)
     {
-        require(isAuthorizedGBOwner(_gbUserName,msg.sender) == 1);
-        address master = govBlocksDapps[_gbUserName].masterAddress; address GDAddress;
-        MS=Master(master);
-        uint16 versionNo = MS.versionLength()-1; 
-        GDAddress = MS.allContractVersions(versionNo,"GD");
+        address GDAddress = getContractInstance_byDapp(_gbUserName,"GD");
         GD=governanceData(GDAddress);
 
         if(_typeOf == "APO")
@@ -448,7 +404,7 @@ contract GovBlocksMaster
         else if(_typeOf == "SVM")
         {
           GD.changeMemberSub(_value);
-        }//
+        }
         else if(_typeOf == "GBTS")
         {
           GD.changeGBTStakeValue(_value);
