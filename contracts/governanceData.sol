@@ -32,11 +32,11 @@ contract governanceData {
     event ProposalStatus(uint256 indexed proposalId,uint256 proposalStatus,uint256 dateAdd);
     event ProposalVersion(uint256 indexed proposalId,uint256 indexed versionNumber,string proposalDescHash,uint256 dateAdd);
     event ProposalStake(address indexed proposalOwner,uint256 indexed proposalId,uint dateUpd,uint256 proposalStake);
-    event ProposalWithSolution(address indexed proposalOwner,uint256 proposald,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake);
+    event ProposalWithSolution(address indexed proposalOwner,uint256 indexed proposalId,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake);
     
-    function callProposalWithSolutionEvent(address proposalOwner,uint256 proposald,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake)
+    function callProposalWithSolutionEvent(address proposalOwner,uint256 proposalId,string proposalDescHash, string solutionDescHash, uint256 dateAdd,uint stake)
     {
-        ProposalWithSolution(proposalOwner,proposald,proposalDescHash,solutionDescHash,dateAdd,stake);
+        ProposalWithSolution(proposalOwner,proposalId,proposalDescHash,solutionDescHash,dateAdd,stake);
     }
 
     function callProposalStakeEvent(address _proposalOwner,uint _proposalId,uint _dateUpd,uint _proposalStake)
@@ -753,12 +753,6 @@ contract governanceData {
         setProposalVersion(_proposalId,versionNo);
     }
 
-    /// @dev Sets proposal description 
-    function setProposalDetailsAfterEdit(uint _proposalId,string _proposalTitle,string _proposalSD,string _proposalDescHash) onlyInternal
-    {
-        Proposal(allProposal[_proposalId].owner,_proposalId,now,_proposalTitle,_proposalSD,_proposalDescHash);   
-    }
-
     /// @dev Sets proposal's uploaded date
     function setProposalDateUpd(uint _proposalId) onlyInternal
     {
@@ -901,17 +895,16 @@ contract governanceData {
     }
 
     /// @dev Adds new proposal
-    function addNewProposal(uint _proposalId,address _memberAddress,string _proposalTitle,string _proposalSD,string _proposalDescHash,uint8 _categoryId,address _votingTypeAddress,uint _dateAdd) onlyInternal
+    function addNewProposal(uint _proposalId,address _memberAddress,uint8 _categoryId,address _votingTypeAddress,uint _dateAdd) onlyInternal
     {
-        allProposalData[_proposalId].category = _categoryId;
-        createProposal1(_proposalId,_memberAddress,_proposalTitle,_proposalSD,_proposalDescHash,_votingTypeAddress,_dateAdd);
+        allProposal.push(proposal(_memberAddress,_dateAdd,_votingTypeAddress));
+        allProposalData[_proposalId].category = _categoryId; 
     }  
     
     /// @dev Creates new proposal
-    function createProposal1(uint _proposalId,address _memberAddress,string _proposalTitle ,string  _proposalSD,string _proposalDescHash,address _votingTypeAddress,uint _dateAdd) onlyInternal
+    function createProposal1(uint _proposalId,address _memberAddress,address _votingTypeAddress,uint _dateAdd) onlyInternal
     {
         allProposal.push(proposal(_memberAddress,_dateAdd,_votingTypeAddress));
-        Proposal(_memberAddress,_proposalId,_dateAdd,_proposalTitle ,_proposalSD,_proposalDescHash);
     }
 
     /// @dev Gets final solution index won after majority voting.
@@ -936,6 +929,74 @@ contract governanceData {
     {
         return (_proposalId,getDepositedTokens(_memberAddress,_proposalId,"P"),getDepositedTokens(_memberAddress,_proposalId,"S"),getDepositedTokens(_memberAddress,_proposalId,"V"));
     }
+
+    /// @dev Gets statuses of proposals
+  /// @param _proposalLength Proposal length
+  /// @param _draftProposals Proposal draft
+  /// @param _pendingProposals Pending proposals
+  /// @param _acceptedProposals Accepted proposals
+  /// @param _rejectedProposals Rejected proposals
+  function getStatusOfProposals()constant returns (uint _proposalLength,uint _draftProposals,uint _pendingProposals,uint _acceptedProposals,uint _rejectedProposals)
+  {
+    uint proposalStatus;
+    _proposalLength=getProposalLength();
+
+    for(uint i=0;i<_proposalLength;i++){
+      proposalStatus=getProposalStatus(i);
+      if(proposalStatus<2)
+          _draftProposals++;
+      else if(proposalStatus==2)
+        _pendingProposals++;
+      else if(proposalStatus==3)
+        _acceptedProposals++;
+      else if(proposalStatus>=4)
+        _rejectedProposals++;
+        }
+  }
+
+  
+  /// @dev Gets statuses of proposals for member
+  /// @param _proposalsIds Proposal ids
+  /// @return proposalLength Proposal length
+  /// @return draftProposals Proposal draft
+  /// @return pendingProposals Pending proposals
+  /// @return acceptedProposals Accepted proposals
+  /// @return rejectedProposals Rejected proposals
+  function getStatusOfProposalsForMember(uint[] _proposalsIds)constant returns (uint proposalLength,uint draftProposals,uint pendingProposals,uint acceptedProposals,uint rejectedProposals)
+    {
+        uint proposalStatus;
+        proposalLength=getProposalLength();
+
+         for(uint i=0;i<_proposalsIds.length; i++)
+         {
+           proposalStatus=getProposalStatus(_proposalsIds[i]);
+           if(proposalStatus<2)
+               draftProposals++;
+           else if(proposalStatus==2)
+             pendingProposals++;
+           else if(proposalStatus==3)
+             acceptedProposals++;
+           else if(proposalStatus>=4)
+             rejectedProposals++;
+         }
+   }
+ 
+    /// @dev Gets all solution ids length by address
+    /// @param _memberAddress Member address
+    /// @return totalSolutionProposalCount Total solution proposal count
+    function getAllSolutionIdsLength_byAddress(address _memberAddress)constant returns(uint totalSolutionProposalCount)
+    {
+        uint length = getProposalLength();
+        for(uint i=0; i<length; i++)
+        {
+            for(uint j=0; j<getTotalSolutions(i); j++)
+            {
+                if(_memberAddress == getSolutionAddedByProposalId(i,j))
+                    totalSolutionProposalCount++;
+            }
+        }
+    }
+  
 
 
 // UPDATED CONTRACTS :
