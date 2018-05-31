@@ -30,11 +30,6 @@ contract Governance {
     
   using SafeMath for uint;
   using Math for uint;
-//   address GDAddress;
-//   address PCAddress;
-//   address MRAddress;
-//   address GBTSAddress;
-//   address BTAddress;
   address P1Address;
   address masterAddress;
   GBTStandardToken GBTS;
@@ -77,7 +72,6 @@ contract Governance {
       modifier validateStake(uint8 _categoryId,uint _proposalStake) {    
         uint _Stake = _proposalStake/(10**GBTS.decimals());
         uint category = PC.getCategoryId_bySubId(_categoryId);
-
         require(_Stake <= PC.getMaxStake(category) && _Stake >= PC.getMinStake(category));
         _; 
     }
@@ -127,17 +121,18 @@ contract Governance {
   /// @param _dateAdd Date the proposal was added
   function createProposal(string _proposalTitle,string _proposalSD,string _proposalDescHash,uint _votingTypeId,uint8 _categoryId,uint _dateAdd) public
   {
-      uint _proposalId = GD.getProposalLength();
       address votingAddress = GD.getVotingTypeAddress(_votingTypeId); 
       uint8 category = PC.getCategoryId_bySubId(_categoryId);
+      uint _proposalId = GD.getProposalLength();
+      callProposalEventGD(msg.sender,_proposalId,now,_proposalTitle,_proposalSD,_proposalDescHash);
+
       if(category > 0)
       {
-
-          GD.addNewProposal(_proposalId,msg.sender,_proposalTitle,_proposalSD,_proposalDescHash,category,votingAddress,_dateAdd);
+          GD.addNewProposal(_proposalId,msg.sender,category,votingAddress,_dateAdd);
           GD.setProposalIncentive(_proposalId,PC.getCatIncentive(category));
       }
       else
-          GD.createProposal1(_proposalId,msg.sender,_proposalTitle,_proposalSD,_proposalDescHash,votingAddress,now);          
+        GD.createProposal1(_proposalId,msg.sender,votingAddress,now);          
   }
 
   /// @dev Creates a new proposal (Stake in ether)
@@ -194,7 +189,7 @@ contract Governance {
   function categorizeProposal(uint _proposalId , uint8 _categoryId,uint _dappIncentive) public checkProposalValidity(_proposalId)
   {
       require(MR.checkRoleId_byAddress(msg.sender,MR.getAuthorizedMemberId()) == true);
-      require (_dappIncentive <= GBTS.balanceOf(P1Address));
+      require(_dappIncentive <= GBTS.balanceOf(P1Address));
 
       GD.setProposalIncentive(_proposalId,_dappIncentive);
       GD.setProposalCategory(_proposalId,_categoryId);
@@ -209,27 +204,19 @@ contract Governance {
      openProposalForVoting(_proposalId, _categoryId, tokenAmount,_validityUpto,_v,_r,_s,_lockTokenTxHash);
   }
 
-
   /// @dev Proposal's complexity level and reward are added
   /// @param  _proposalId Proposal id
   /// @param  _categoryId Proposal category id
   /// @param  _proposalStake Token amount
-  function openProposalForVoting(uint _proposalId,uint8 _categoryId,uint _proposalStake,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId)
+  function openProposalForVoting(uint _proposalId,uint8 _categoryId,uint _proposalStake,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) public validateStake(_categoryId,_proposalStake) onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId)
   {
       uint category = PC.getCategoryId_bySubId(_categoryId);
       require(category != 0);
-      openProposalForVoting1(_proposalId,_categoryId,_proposalStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+      openProposalForVoting2(_proposalId,_categoryId,_proposalStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+     
   }
-  
-  function openProposalForVoting1(uint _proposalId,uint8 _categoryId,uint _proposalStake,uint validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal validateStake(_categoryId,_proposalStake)
-  {
-      openProposalForVoting2(_proposalId,_categoryId,_proposalStake,validityUpto,_v,_r,_s,_lockTokenTxHash);
-      GD.changeProposalStatus(_proposalId,2);
-      callOraclize(_proposalId); 
-      GD.callProposalStakeEvent(msg.sender,_proposalId,now,_proposalStake); 
-  }
-  
-  function openProposalForVoting2(uint _proposalId,uint _categoryId,uint _proposalStake,uint validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal
+
+  function openProposalForVoting2(uint _proposalId,uint8 _categoryId,uint _proposalStake,uint validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal 
   {
         uint depositPerc = GD.depositPercProposal();
         uint _currVotingStatus = GD.getProposalCurrentVotingId(_proposalId);
@@ -248,6 +235,10 @@ contract Governance {
           else
             GBTS.lockToken(msg.sender,_proposalStake,validityUpto,_v,_r,_s,_lockTokenTxHash);
         }
+        
+         GD.changeProposalStatus(_proposalId,2);
+      callOraclize(_proposalId); 
+      GD.callProposalStakeEvent(msg.sender,_proposalId,now,_proposalStake); 
   }
   
   /// @dev Call oraclize for closing proposal
@@ -266,47 +257,23 @@ contract Governance {
   function editProposal(uint _proposalId,string _proposalTitle,string _proposalSD,string _proposalDescHash) public onlyProposalOwner(_proposalId)
   {
       updateProposalDetails1(_proposalId,_proposalTitle,_proposalSD,_proposalDescHash);
-      GD.changeProposalStatus(_proposalId,1);
       uint _categoryId = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
       if(_categoryId > 0)
         GD.setProposalCategory(_proposalId,0);
   }
 
-   /// @dev Edits the details of an existing proposal and creates new version
-   /// @param _proposalId Proposal id
-   /// @param _proposalDescHash Proposal description hash
-   function updateProposalDetails1(uint _proposalId,string _proposalTitle,string _proposalSD,string _proposalDescHash) internal
-   {
-        GD.storeProposalVersion(_proposalId,_proposalDescHash);
-        GD.setProposalDetailsAfterEdit(_proposalId,_proposalTitle,_proposalSD,_proposalDescHash);
-        GD.setProposalDateUpd(_proposalId);
-    }
-
-  /// @dev After the proposal's final decision, member reputation will get updated
+  /// @dev Edits the details of an existing proposal and creates new version
   /// @param _proposalId Proposal id
-  /// @param _finalVerdict Final verdict 
-  function updateMemberReputation(uint _proposalId,uint _finalVerdict) onlyInternal
+  /// @param _proposalDescHash Proposal description hash
+  function updateProposalDetails1(uint _proposalId,string _proposalTitle,string _proposalSD,string _proposalDescHash) internal
   {
-    address _proposalOwner =  GD.getProposalOwner(_proposalId);
-    address _finalSolutionOwner = GD.getSolutionAddedByProposalId(_proposalId,_finalVerdict);
-    uint32 addProposalOwnerPoints; uint32 addSolutionOwnerPoints; uint32 subProposalOwnerPoints; uint32 subSolutionOwnerPoints;
-    (addProposalOwnerPoints,addSolutionOwnerPoints,,subProposalOwnerPoints,subSolutionOwnerPoints,)= GD.getMemberReputationPoints();
-
-    if(_finalVerdict>0)
-    {
-        GD.setMemberReputation("Reputation credit for proposal owner - Accepted",_proposalId,_proposalOwner,SafeMath.add32(GD.getMemberReputation(_proposalOwner),addProposalOwnerPoints),addProposalOwnerPoints,"C");
-        GD.setMemberReputation("Reputation credit for solution owner - Final Solution selected by majority voting",_proposalId,_finalSolutionOwner,SafeMath.add32(GD.getMemberReputation(_finalSolutionOwner),addSolutionOwnerPoints),addSolutionOwnerPoints,"C"); 
-    }
-    else
-    {
-        GD.setMemberReputation("Reputation debit for proposal owner - Rejected",_proposalId,_proposalOwner,SafeMath.sub32(GD.getMemberReputation(_proposalOwner),subProposalOwnerPoints),subProposalOwnerPoints,"D");
-        for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
-        {
-            address memberAddress = GD.getSolutionAddedByProposalId(_proposalId,i);
-            GD.setMemberReputation("Reputation debit for solution owner - Rejected by majority voting",_proposalId,memberAddress,SafeMath.sub32(GD.getMemberReputation(memberAddress),subSolutionOwnerPoints),subSolutionOwnerPoints,"D");
-        }
-    }     
+      GD.storeProposalVersion(_proposalId,_proposalDescHash);
+      GD.setProposalDateUpd(_proposalId);
+      GD.changeProposalStatus(_proposalId,1);
+      callProposalEventGD(GD.getProposalOwner(_proposalId),_proposalId,now,_proposalTitle,_proposalSD,_proposalDescHash);
   }
+
+
 
    /// @dev Checks proposal for vote closing
   /// @param _proposalId Proposal id
@@ -324,8 +291,6 @@ contract Governance {
       uint dateUpdate;uint pStatus;uint _closingTime;uint _majorityVote;
       (,,dateUpdate,,pStatus) = GD.getProposalDetailsById1(_proposalId);
       uint _categoryId = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
-
-
       (,_closingTime,_majorityVote) = PC.getCategoryData3(_categoryId,GD.getProposalCurrentVotingId(_proposalId));
       
       if(pStatus == 2 && _roleId != 2)
@@ -360,56 +325,6 @@ contract Governance {
      }
    }
 
-  /// @dev Gets statuses of proposals for member
-  /// @param _proposalsIds Proposal ids
-  /// @return proposalLength Proposal length
-  /// @return draftProposals Proposal draft
-  /// @return pendingProposals Pending proposals
-  /// @return acceptedProposals Accepted proposals
-  /// @return rejectedProposals Rejected proposals
-  function getStatusOfProposalsForMember(uint[] _proposalsIds)constant returns (uint proposalLength,uint draftProposals,uint pendingProposals,uint acceptedProposals,uint rejectedProposals)
-    {
-        uint proposalStatus;
-        proposalLength=GD.getProposalLength();
-
-         for(uint i=0;i<_proposalsIds.length; i++)
-         {
-           proposalStatus=GD.getProposalStatus(_proposalsIds[i]);
-           if(proposalStatus<2)
-               draftProposals++;
-           else if(proposalStatus==2)
-             pendingProposals++;
-           else if(proposalStatus==3)
-             acceptedProposals++;
-           else if(proposalStatus>=4)
-             rejectedProposals++;
-         }
-   }
- 
-  /// @dev Gets statuses of proposals
-  /// @param _proposalLength Proposal length
-  /// @param _draftProposals Proposal draft
-  /// @param _pendingProposals Pending proposals
-  /// @param _acceptedProposals Accepted proposals
-  /// @param _rejectedProposals Rejected proposals
-  function getStatusOfProposals()constant returns (uint _proposalLength,uint _draftProposals,uint _pendingProposals,uint _acceptedProposals,uint _rejectedProposals)
-  {
-    // GD=governanceData(GDAddress);
-    uint proposalStatus;
-    _proposalLength=GD.getProposalLength();
-
-    for(uint i=0;i<_proposalLength;i++){
-      proposalStatus=GD.getProposalStatus(i);
-      if(proposalStatus<2)
-          _draftProposals++;
-      else if(proposalStatus==2)
-        _pendingProposals++;
-      else if(proposalStatus==3)
-        _acceptedProposals++;
-      else if(proposalStatus>=4)
-        _rejectedProposals++;
-        }
-  }
     /// @dev Changes pending proposal start variable
     function changePendingProposalStart() onlyInternal
     {
@@ -467,27 +382,35 @@ contract Governance {
     {
         uint allProposalLength = GD.getProposalLength();
         uint lastIndex = 0; uint category;uint finalVredict;uint proposalStatus;uint calcReward;
+        uint32 addProposalOwnerPoints;
+        (addProposalOwnerPoints,,,,,)=GD.getMemberReputationPoints();
 
         for(uint i=_lastRewardProposalId; i<allProposalLength; i++)
         {   
             if(_memberAddress == GD.getProposalOwner(i))
-              {
-                  (,,category,proposalStatus,finalVredict) = GD.getProposalDetailsById3(i);
-                  if(proposalStatus< 2)
-                      lastIndex = i;
-                  if(proposalStatus > 2 && finalVredict > 0 && GD.getReturnedTokensFlag(_memberAddress,i,'P') == 0)
-                  {
-                      calcReward = (PC.getRewardPercProposal(category)*GD.getProposalTotalReward(i))/100;
-                      finalRewardToDistribute = finalRewardToDistribute + calcReward + GD.getDepositedTokens(_memberAddress,i,'P');
-                      GD.callRewardEvent(_memberAddress,i,"GBT Reward for being Proposal owner - Accepted ",calcReward);
-                      GD.setReturnedTokensFlag(_memberAddress,i,'P',1);
-                  } 
-              }
+            {
+                (,,category,proposalStatus,finalVredict) = GD.getProposalDetailsById3(i);
+                if(proposalStatus< 2)
+                    lastIndex = i;
+                if(proposalStatus > 2 && finalVredict > 0 && GD.getReturnedTokensFlag(_memberAddress,i,'P') == 0)
+                {
+                    calcReward = (PC.getRewardPercProposal(category)*GD.getProposalTotalReward(i))/100;
+                    finalRewardToDistribute = finalRewardToDistribute + calcReward + GD.getDepositedTokens(_memberAddress,i,'P');
+                    
+                }
+            }
         }
 
         if(lastIndex == 0)
            lastIndex = i;
         GD.setLastRewardId_ofCreatedProposals(_memberAddress,lastIndex);
+    }
+
+    function calculateProposalReward1(address _memberAddress,uint i,uint calcReward,uint32 addProposalOwnerPoints) internal
+    {
+        GD.callRewardEvent(_memberAddress,i,"GBT Reward for being Proposal owner - Accepted ",calcReward);
+        GD.setMemberReputation("Reputation credit for proposal owner - Accepted",i,_memberAddress,SafeMath.add32(GD.getMemberReputation(_memberAddress),addProposalOwnerPoints),addProposalOwnerPoints,"C");
+        GD.setReturnedTokensFlag(_memberAddress,i,'P',1);
     }
 
     /// @dev Calculates solution reward
@@ -497,6 +420,9 @@ contract Governance {
     {
         uint allProposalLength = GD.getProposalLength(); uint calcReward;
         uint lastIndex = 0;uint i;uint proposalStatus;uint finalVerdict;uint solutionId;uint proposalId;uint totalReward;uint category;
+        uint32 addSolutionOwnerPoints; 
+        (addSolutionOwnerPoints,,,,,)=GD.getMemberReputationPoints();
+
         for(i=_lastRewardSolutionProposalId; i<allProposalLength; i++)
         {
             (proposalId,solutionId,proposalStatus,finalVerdict,totalReward,category) = getSolutionId_againstAddressProposal(_memberAddress,i);
@@ -509,15 +435,21 @@ contract Governance {
               {
                   calcReward = (PC.getRewardPercSolution(category)*totalReward)/100;
                   finalRewardToDistribute = finalRewardToDistribute + calcReward + GD.getDepositedTokens(_memberAddress,i,'S');
-                  GD.callRewardEvent(_memberAddress,i,"GBT Reward earned for being Solution owner - Final Solution by majority voting",calcReward);
-                  GD.setReturnedTokensFlag(_memberAddress,i,'S',1);
+                  calculateSolutionReward1(_memberAddress,i,calcReward,addSolutionOwnerPoints);
               }
             }
         }
 
-         if(lastIndex == 0)
+        if(lastIndex == 0)
           lastIndex = i;
         GD.setLastRewardId_ofSolutionProposals(_memberAddress,lastIndex);
+    }
+
+    function calculateSolutionReward1(address _memberAddress,uint i,uint calcReward,uint32 addSolutionOwnerPoints) internal
+    {
+        GD.callRewardEvent(_memberAddress,i,"GBT Reward earned for being Solution owner - Final Solution by majority voting",calcReward);
+        GD.setMemberReputation("Reputation credit for solution owner - Final Solution selected by majority voting",i,_memberAddress,SafeMath.add32(GD.getMemberReputation(_memberAddress),addSolutionOwnerPoints),addSolutionOwnerPoints,"C"); 
+        GD.setReturnedTokensFlag(_memberAddress,i,'S',1);
     }
 
     /// @dev Calculates vote reward 
@@ -566,7 +498,6 @@ contract Governance {
         voteValue = GD.getVoteValue(voteId);
         totalReward = GD.getProposalTotalReward(_proposalId);
         category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
-        // category = GD.getProposalCategory(_proposalId);
         totalVoteValueProposal =GD.getProposalTotalVoteValue(_proposalId);
     }
 
@@ -600,7 +531,7 @@ contract Governance {
     {
         memberReputation = GD.getMemberReputation(_memberAddress);
         totalProposal = getAllProposalIdsLength_byAddress(_memberAddress);
-        totalSolution = getAllSolutionIdsLength_byAddress(_memberAddress);
+        totalSolution = GD.getAllSolutionIdsLength_byAddress(_memberAddress);
         totalVotes = getAllVoteIdsLength_byAddress(_memberAddress);
     }
 
@@ -716,7 +647,7 @@ contract Governance {
     function getAllSolutionIds_byAddress(address _memberAddress)constant returns(uint[] proposalIds, uint[] solutionProposalIds,uint totalSolution) 
     {
         uint length = GD.getProposalLength(); uint8 m;
-        uint solutionProposalLength =  getAllSolutionIdsLength_byAddress(_memberAddress);
+        uint solutionProposalLength =  GD.getAllSolutionIdsLength_byAddress(_memberAddress);
         proposalIds = new uint[](solutionProposalLength);
         solutionProposalIds = new uint[](solutionProposalLength);
         for(uint i=0; i<length; i++)
@@ -733,21 +664,7 @@ contract Governance {
         }
     }
 
-    /// @dev Gets all solution ids length by address
-    /// @param _memberAddress Member address
-    /// @return totalSolutionProposalCount Total solution proposal count
-    function getAllSolutionIdsLength_byAddress(address _memberAddress)constant returns(uint totalSolutionProposalCount)
-    {
-        uint length = GD.getProposalLength();
-        for(uint i=0; i<length; i++)
-        {
-            for(uint j=0; j<GD.getTotalSolutions(i); j++)
-            {
-                if(_memberAddress == GD.getSolutionAddedByProposalId(i,j))
-                    totalSolutionProposalCount++;
-            }
-        }
-    }
+
 
     /// @dev Get Total tokens deposited by member till date against all proposal.
     function getAllDepositTokens_byAddress(address _memberAddress)constant returns(uint,uint,uint)
@@ -773,11 +690,8 @@ contract Governance {
         if(_categoryId == 0)
           openProposalForVoting(_proposalId,_categoryId,_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         else
-          {
-            //   uint8 category = PC.getCategoryId_bySubId(_categoryId); 
-              openProposalForVoting(_proposalId,PC.getCategoryId_bySubId(_categoryId),_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
-          }
-    
+          openProposalForVoting(_proposalId,PC.getCategoryId_bySubId(_categoryId),_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
+  
         proposalSubmission1(_proposalId,proposalDateAdd, _solutionHash,_validityUpto, _v, _r, _s,_lockTokenTxHash,_proposalSolutionStake);        
     }
 
@@ -786,4 +700,36 @@ contract Governance {
         VT.addSolution(_proposalId,msg.sender,0,_solutionHash,proposalDateAdd,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         GD.callProposalWithSolutionEvent(msg.sender,_proposalId,"",_solutionHash,proposalDateAdd,_proposalSolutionStake);    
     }
+
+    function callProposalEventGD(address _proposalOwner,uint _proposalId,uint _dateAdd,string _proposalTitle,string _proposalSD,string _proposalDescHash) internal
+    {
+       GD.callProposalEvent(_proposalOwner,_proposalId,_dateAdd,_proposalTitle,_proposalSD,_proposalDescHash);
+    }
+
+  //    /// @dev After the proposal's final decision, member reputation will get updated
+  // /// @param _proposalId Proposal id
+  // /// @param _finalVerdict Final verdict 
+  // function updateMemberReputation(uint _proposalId,uint _finalVerdict) onlyInternal
+  // {
+  //   address _proposalOwner =  GD.getProposalOwner(_proposalId);
+  //   address _finalSolutionOwner = GD.getSolutionAddedByProposalId(_proposalId,_finalVerdict);
+  //   uint32 addProposalOwnerPoints; uint32 addSolutionOwnerPoints; uint32 subProposalOwnerPoints; uint32 subSolutionOwnerPoints;
+  //   (addProposalOwnerPoints,addSolutionOwnerPoints,,subProposalOwnerPoints,subSolutionOwnerPoints,)= GD.getMemberReputationPoints();
+
+  //   if(_finalVerdict>0)
+  //   {
+  //       GD.setMemberReputation("Reputation credit for proposal owner - Accepted",_proposalId,_proposalOwner,SafeMath.add32(GD.getMemberReputation(_proposalOwner),addProposalOwnerPoints),addProposalOwnerPoints,"C");
+  //       GD.setMemberReputation("Reputation credit for solution owner - Final Solution selected by majority voting",_proposalId,_finalSolutionOwner,SafeMath.add32(GD.getMemberReputation(_finalSolutionOwner),addSolutionOwnerPoints),addSolutionOwnerPoints,"C"); 
+  //   }
+  //   else
+  //   {
+  //       GD.setMemberReputation("Reputation debit for proposal owner - Rejected",_proposalId,_proposalOwner,SafeMath.sub32(GD.getMemberReputation(_proposalOwner),subProposalOwnerPoints),subProposalOwnerPoints,"D");
+  //       for(uint i=0; i<GD.getTotalSolutions(_proposalId); i++)
+  //       {
+  //           address memberAddress = GD.getSolutionAddedByProposalId(_proposalId,i);
+  //           GD.setMemberReputation("Reputation debit for solution owner - Rejected by majority voting",_proposalId,memberAddress,SafeMath.sub32(GD.getMemberReputation(memberAddress),subSolutionOwnerPoints),subSolutionOwnerPoints,"D");
+  //       }
+  //   }     
+  // }
+  
 }
