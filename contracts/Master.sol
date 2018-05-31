@@ -86,7 +86,7 @@ contract Master is Ownable {
     modifier onlyAuthorizedGB
     {
         GBM=GovBlocksMaster(GBMAddress);
-        require(GBM.isAuthorizedGBOwner(DappName,msg.sender) == 1);
+        require(GBM.isAuthorizedGBOwner(DappName,msg.sender) == true);
         _;
     }
 
@@ -107,7 +107,7 @@ contract Master is Ownable {
     function isAuthGB(address _memberaddress) constant returns(bool check)
     {
         GBM=GovBlocksMaster(GBMAddress);
-        require(GBM.isAuthorizedGBOwner(DappName,_memberaddress) == 1);
+        require(GBM.isAuthorizedGBOwner(DappName,_memberaddress) == true);
             check = true;
     }
 
@@ -203,14 +203,13 @@ contract Master is Ownable {
     function switchToRecentVersion() 
     {
         uint16 version = versionLength-1;
-        GBM=GovBlocksMaster(GBMAddress);
-        require((version == 0 && msg.sender== owner) || GBM.isAuthorizedGBOwner(DappName,msg.sender) == 1);
-    
+        // require((version == 0 && msg.sender== owner) || GBM.isAuthorizedGBOwner(DappName,msg.sender) == true);
+        require(isValidateOwner() == true);
         addInContractChangeDate(now,version);
         changeAllAddress(version);
         changeMasterAddress(allContractVersions[version]['MS'],version);
-        callConstructorGDMRPC(version);
-        changeOtherAddress(version);
+        // callConstructorGDMRPC(version);
+        // changeOtherAddress(version);
     }
 
     /// @dev Stores the date when version of contracts get switched
@@ -225,7 +224,8 @@ contract Master is Ownable {
     /// @param _version Version of the new contracts
     function changeAllAddress(uint16 _version) internal
     {
-         for(uint8 i=0; i < allContractNames.length; i++){
+        for(uint8 i=0; i < allContractNames.length; i++)
+        {
            addRemoveAddress(_version,allContractNames[i]);
         }
     }
@@ -266,15 +266,7 @@ contract Master is Ownable {
 
         MR=memberRoles(allContractVersions[version]['MR']);
         MR.changeMasterAddress(_masterAddress);
-    }
 
-    /// @dev Calls contructor of governance data, member roles, proposal category contracts
-    /// @param version Version of the new contracts
-    function callConstructorGDMRPC(uint16 version)  internal
-    {
-        GD=governanceData(allContractVersions[version]['GD']);
-        MR=memberRoles(allContractVersions[version]['MR']);
-        PC=ProposalCategory(allContractVersions[version]['PC']);
 
         if(GD.constructorCheck() == false)
             GD.GovernanceDataInitiate();
@@ -284,72 +276,140 @@ contract Master is Ownable {
             
         if(PC.constructorCheck() == false)
             PC.ProposalCategoryInitiate();
-    }
 
-   /// @dev Links contracts to one another
-   function changeOtherAddress(uint16 version)  internal
-   {  
-            GD=governanceData(allContractVersions[version]['GD']);
-            PC=ProposalCategory(allContractVersions[version]['PC']);
-            SV=simpleVoting(allContractVersions[version]['SV']);
-            SVT=StandardVotingType(allContractVersions[version]['VT']);
-            GOV=Governance(allContractVersions[version]['GV']);
 
-            uint8 i;
-            for( i=0; i<allContractNames.length; i++)
-            {
-               if(contract_dependency_new['GD'][allContractNames[i]] == true)
-               {
-                    if(version == 0)
-                       GD.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                    else if(allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['GD'] != allContractVersions[version]['GD'])
-                       GD.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-               }
-
-               if(contract_dependency_new['PC'][allContractNames[i]] == true)
-               {
-                    if(version == 0)
-                       PC.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                    else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['PC'] != allContractVersions[version]['PC'])
-                       PC.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-               }
-
-               if(contract_dependency_new['SV'][allContractNames[i]] == true)
-               {
-                   if(version == 0)
-                       SV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                   else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['SV'] != allContractVersions[version]['SV'])
-                       SV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-               }
-
-               if(contract_dependency_new['VT'][allContractNames[i]] == true)
-               {
-                    if(version == 0)
-                       SVT.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                    else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['VT'] != allContractVersions[version]['VT'])
-                       SVT.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-               }
-
-               if(contract_dependency_new['GV'][allContractNames[i]] == true)
-               {
-                    if(version == 0)
-                       GOV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-                    else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['GV'] != allContractVersions[version]['GV'])
-                       GOV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
-               }
+        uint8 i;
+        for( i=0; i<allContractNames.length; i++)
+        {
+           if(contract_dependency_new['GD'][allContractNames[i]] == true)
+           {
+                if(version == 0)
+                   GD.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+                else if(allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['GD'] != allContractVersions[version]['GD'])
+                   GD.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
            }
 
-        changeGBTAddress(allContractVersions[version]['GS']);
-   }
+           if(contract_dependency_new['PC'][allContractNames[i]] == true)
+           {
+                if(version == 0)
+                   PC.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+                else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['PC'] != allContractVersions[version]['PC'])
+                   PC.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+           }
+
+           if(contract_dependency_new['SV'][allContractNames[i]] == true)
+           {
+               if(version == 0)
+                   SV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+               else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['SV'] != allContractVersions[version]['SV'])
+                   SV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+           }
+
+           if(contract_dependency_new['VT'][allContractNames[i]] == true)
+           {
+                if(version == 0)
+                   SVT.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+                else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['VT'] != allContractVersions[version]['VT'])
+                   SVT.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+           }
+
+           if(contract_dependency_new['GV'][allContractNames[i]] == true)
+           {
+                if(version == 0)
+                   GOV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+                else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['GV'] != allContractVersions[version]['GV'])
+                   GOV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+           }
+       }
+
+       changeGBTAddress(allContractVersions[version]['GS']);
+    }
+
+   //  /// @dev Calls contructor of governance data, member roles, proposal category contracts
+   //  /// @param version Version of the new contracts
+   //  function callConstructorGDMRPC(uint16 version)  internal
+   //  {
+   //      GD=governanceData(allContractVersions[version]['GD']);
+   //      MR=memberRoles(allContractVersions[version]['MR']);
+   //      PC=ProposalCategory(allContractVersions[version]['PC']);
+
+   //      if(GD.constructorCheck() == false)
+   //          GD.GovernanceDataInitiate();
+
+   //      if(MR.constructorCheck() == false)
+   //          MR.MemberRolesInitiate();
+            
+   //      if(PC.constructorCheck() == false)
+   //          PC.ProposalCategoryInitiate();
+   //  }
+
+   // /// @dev Links contracts to one another
+   // function changeOtherAddress(uint16 version)  internal
+   // {  
+   //          GD=governanceData(allContractVersions[version]['GD']);
+   //          PC=ProposalCategory(allContractVersions[version]['PC']);
+   //          SV=simpleVoting(allContractVersions[version]['SV']);
+   //          SVT=StandardVotingType(allContractVersions[version]['VT']);
+   //          GOV=Governance(allContractVersions[version]['GV']);
+
+   //          uint8 i;
+   //          for( i=0; i<allContractNames.length; i++)
+   //          {
+   //             if(contract_dependency_new['GD'][allContractNames[i]] == true)
+   //             {
+   //                  if(version == 0)
+   //                     GD.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //                  else if(allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['GD'] != allContractVersions[version]['GD'])
+   //                     GD.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //             }
+
+   //             if(contract_dependency_new['PC'][allContractNames[i]] == true)
+   //             {
+   //                  if(version == 0)
+   //                     PC.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //                  else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['PC'] != allContractVersions[version]['PC'])
+   //                     PC.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //             }
+
+   //             if(contract_dependency_new['SV'][allContractNames[i]] == true)
+   //             {
+   //                 if(version == 0)
+   //                     SV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //                 else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['SV'] != allContractVersions[version]['SV'])
+   //                     SV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //             }
+
+   //             if(contract_dependency_new['VT'][allContractNames[i]] == true)
+   //             {
+   //                  if(version == 0)
+   //                     SVT.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //                  else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['VT'] != allContractVersions[version]['VT'])
+   //                     SVT.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //             }
+
+   //             if(contract_dependency_new['GV'][allContractNames[i]] == true)
+   //             {
+   //                  if(version == 0)
+   //                     GOV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //                  else if( allContractVersions[version-1][allContractNames[i]] !=  allContractVersions[version][allContractNames[i]] || allContractVersions[version-1]['GV'] != allContractVersions[version]['GV'])
+   //                     GOV.changeAddress(allContractNames[i], allContractVersions[version][allContractNames[i]]);
+   //             }
+   //         }
+
+   //      changeGBTAddress(allContractVersions[version]['GS']);
+   // }
 
     /// @dev Changes GBT token address in GD, SV, SVT and governance contracts
     /// @param _tokenAddress Address of the GBT token
     function changeGBTAddress(address _tokenAddress) 
     {
-        GBM=GovBlocksMaster(GBMAddress);
+        // GBM=GovBlocksMaster(GBMAddress);
         uint16 version = versionLength-1;
-        if((version == 0 && msg.sender== owner) || msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(DappName,msg.sender) == 1)
-        { 
+        // if((version == 0 && msg.sender== owner) || msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(DappName,msg.sender) == true)
+        // { 
+            
+            require (isValidateOwner() == true);
+            
             SV=simpleVoting(allContractVersions[version]['SV']);
             SV.changeGBTSAddress(_tokenAddress);
             
@@ -361,7 +421,15 @@ contract Master is Ownable {
 
             P1=Pool(allContractVersions[version]['PL']);
             P1.changeGBTSAddress(_tokenAddress);
-        }
+        // }
+    }
+
+    function isValidateOwner() constant returns(bool)
+    {
+        GBM=GovBlocksMaster(GBMAddress);
+        uint16 version = versionLength-1;
+        if((version == 0 && msg.sender== owner) || msg.sender == GBMAddress || GBM.isAuthorizedGBOwner(DappName,msg.sender) == true)
+         return true;
     }
 
     /// @dev Changes GovBlocks Master address
@@ -372,23 +440,23 @@ contract Master is Ownable {
         GBMAddress == _GBMnewAddress;
     }
 
-    /// @dev Changes master in GovBlocks master
-    /// @param _gbUserName GovBlocks username
-    /// @param _newMasterAddress New master address
-    function changeDappMasterin_GBM(bytes32 _gbUserName,address _newMasterAddress) onlyOwner
-    {
-      GBM=GovBlocksMaster(GBMAddress);
-      GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
-    }
+    // /// @dev Changes master in GovBlocks master
+    // /// @param _gbUserName GovBlocks username
+    // /// @param _newMasterAddress New master address
+    // function changeDappMasterin_GBM(bytes32 _gbUserName,address _newMasterAddress) onlyOwner
+    // {
+    //   GBM=GovBlocksMaster(GBMAddress);
+    //   GBM.changeDappMasterAddress(_gbUserName,_newMasterAddress);
+    // }
 
-    /// @dev Changes token address in GovBlocks master
-    /// @param _gbUserName GovBlocks username
-    /// @param _newTokenAddress New token address for dApp
-    function changeDappTokenAddressin_GBM(bytes32 _gbUserName,address _newTokenAddress) onlyOwner
-    {
-      GBM=GovBlocksMaster(GBMAddress);
-      GBM.changeDappTokenAddress(_gbUserName,_newTokenAddress);
-    }
+    // /// @dev Changes token address in GovBlocks master
+    // /// @param _gbUserName GovBlocks username
+    // /// @param _newTokenAddress New token address for dApp
+    // function changeDappTokenAddressin_GBM(bytes32 _gbUserName,address _newTokenAddress) onlyOwner
+    // {
+    //   GBM=GovBlocksMaster(GBMAddress);
+    //   GBM.changeDappTokenAddress(_gbUserName,_newTokenAddress);
+    // }
   
     /// @dev Sets the length of version
     /// @param _length Length of the version
@@ -424,12 +492,4 @@ contract Master is Ownable {
        }
     }
 
-    /// @dev Changes dApp token in GovBlocks master
-    /// @return dappTokenAddress New dApp token address
-    function getDappTokenAddress()constant returns(address dappTokenAddress)
-    {
-        GBM=GovBlocksMaster(GBMAddress);
-        dappTokenAddress=GBM.getDappTokenAddress(DappName);
-        return (dappTokenAddress);
-    }
 }
