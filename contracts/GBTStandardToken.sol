@@ -78,21 +78,21 @@ contract GBTStandardToken is ERC20Basic, ERC20
     function lockToken(address _memberAddress,uint _amount,uint _validUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash)
     {
         require(verifyTxHash[_lockTokenTxHash] == false);
-        require(verifySign(_memberAddress,_amount,_validUpto,_lockTokenTxHash,_v,_r,_s));
+        require(verifySign(_memberAddress,msg.sender,_amount,_validUpto,_lockTokenTxHash,_v,_r,_s));
         
         user_lockToken[_memberAddress].push(lock(_amount,_validUpto));
         verifyTxHash[_lockTokenTxHash] = true; 
     }
 
-    function verifySign(address _memberAddress,uint _amount,uint _validUpto,bytes32 _lockTokenTxHash,uint8 _v,bytes32 _r,bytes32 _s) constant  returns(bool)
+    function verifySign(address _memberAddress,address _spender,uint _amount,uint _validUpto,bytes32 _lockTokenTxHash,uint8 _v,bytes32 _r,bytes32 _s) constant  returns(bool)
     {
-        bytes32 hash = getOrderHash(_memberAddress,_amount,_validUpto,_lockTokenTxHash);
+        bytes32 hash = getOrderHash(_memberAddress,_spender,_amount,_validUpto,_lockTokenTxHash);
         return isValidSignature(hash,_memberAddress,_v,_r,_s);
     }
    
-    function getOrderHash(address _memberAddress,uint _amount,uint _validUpto, bytes32 _lockTokenTxHash) constant returns (bytes32)
+    function getOrderHash(address _memberAddress,address  _spender,uint _amount,uint _validUpto, bytes32 _lockTokenTxHash) constant returns (bytes32)
     {
-        return keccak256(_memberAddress,_amount,_validUpto);
+        return keccak256(_memberAddress,_spender,_amount,_validUpto);
     }
     
     function isValidSignature(bytes32 hash, address _memberaddress,uint8 v, bytes32 r, bytes32 s) constant  returns(bool)

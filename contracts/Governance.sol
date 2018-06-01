@@ -502,10 +502,8 @@ contract Governance {
     }
 
 
-
 // VERSION 2.0 USER DETAILS :
   
-
 
     /// @dev Calculates member reward to be claimed
     /// @param _memberAddress Member address
@@ -663,8 +661,6 @@ contract Governance {
             }
         }
     }
-
-
 
     /// @dev Get Total tokens deposited by member till date against all proposal.
     function getAllDepositTokens_byAddress(address _memberAddress)constant returns(uint,uint,uint)
