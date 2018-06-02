@@ -128,7 +128,7 @@ contract GovBlocksMaster
         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
-        changedAppAuthorizedGB(_gbUserName,msg.sender);
+        govBlocksDapps[_gbUserName].authGBAddress = msg.sender;
         MS=Master(_newMasterAddress);
         MS.setOwner(msg.sender);
     }
@@ -299,6 +299,7 @@ contract GovBlocksMaster
 
     
     // ACTION AFTER PROPOSAL PASS function
+
 
     function getContractInstance_byDapp(bytes32 _gbUserName,bytes2 _typeOf) internal constant returns(address contractAddress) 
     {
