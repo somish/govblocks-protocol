@@ -118,13 +118,13 @@ contract ProposalCategory
         majVote[0]=50;
         closeTime[0]=1800;
         
-        allCategory.push(category("QmcEP2ELejTFsaLCeiukMNS9HSg6mxitFubHEuuLDSLbYt",roleSeq,majVote,majVote,0,0,0,0,0,0));
-        allCategory.push(category("QmeX5jkkSFPrsehqsit7zMWmTXB6pTeSHscE3HRiA1R9t5",roleSeq,majVote,closeTime,0,100,10,20,20,20));
-        allCategory.push(category("Qmb2RQ4t6b7BEevbMqF4jjjZxEbp5bspHAX8ZdL8s7t8N8",roleSeq,majVote,closeTime,0,100,0,20,20,20));
-        allCategory.push(category("QmeYFNJvVH6nkk2fFjnzgxQm9szxV3ocpFnKE2wBWaVhDN",roleSeq,majVote,closeTime,0,100,0,20,20,20));
-        allCategory.push(category("QmcAiWumEJaF6jLg14eaLU9WgdKLSy8bzPLNHMCSUZxU9a",roleSeq,majVote,closeTime,0,100,0,20,20,20));
-        allCategory.push(category("QmWTbFV1TW3Pw79tCwuJUwNyXKZVkxzkW1xW4sL9CYzUmA",roleSeq,majVote,closeTime,0,100,0,20,20,20));
-        allCategory.push(category("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("QmXzRmzJ8sJFYf8UgW3vAiHSh7ha4YvxJpvEHcfvzjgbAT",roleSeq,majVote,closeTime,0,0,0,0,0,0));
+        allCategory.push(category("QmZUeoP9g1hNzKQ8WHGkkwmMLq3fTeSFJPwSPKXJ49wG6G",roleSeq,majVote,closeTime,0,100,10,20,20,20));
+        allCategory.push(category("QmYGFMsRq2MyW9eDutHij6Wa8CARygxhCASLyYm5GpeksQ",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("QmZ59ZaioUCw2pM3hERiZaFE8LNMZSC4d6xVN28D95R6qs",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("QmfQvZmENE3SLa6AKSFgWCBrMy6akBiXfGfCMVc5q1mBW9",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("QmRuxEtR7jNyh9urbraFSsCVurxSTkyx7DgTTZkERqa3BW",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8",roleSeq,majVote,closeTime,0,10,0,20,20,20));
         constructorCheck = true;
     }
 
