@@ -66,20 +66,22 @@ contract  memberRoles
       _; 
    }
   
-    modifier onlyMaster {
-        require(msg.sender == masterAddress);
-        _; 
-    }
+   function isMaster() constant returns(bool)
+   {
+      if(msg.sender == masterAddress)
+        return true;
+   }
 
-    modifier onlyGBM {
-        MS=Master(masterAddress);
-        require(MS.isGBM(msg.sender) == true);
-        _;
-    }
-
-    modifier checkRoleAuthority(uint _memberRoleId){
+   function isGBM()constant returns(bool)
+   {
       MS=Master(masterAddress);
-      require(MS.isGBM(msg.sender) == true || msg.sender == authorizedAddress_againstRole[_memberRoleId]);
+      if(MS.isGBM(msg.sender) == true)
+        return true;
+   }
+
+    modifier checkRoleAuthority(uint _memberRoleId)
+    {
+      require(isGBM() == true || msg.sender == authorizedAddress_againstRole[_memberRoleId]);
        _;
     }
 
@@ -186,8 +188,9 @@ contract  memberRoles
   /// @param _newRoleName New role name
   /// @param _roleDescription New description hash
   /// @param _canAddMembers Authorized member against every role id
-  function addNewMemberRole(bytes32 _newRoleName,string _roleDescription, address _canAddMembers) onlyGBM
+  function addNewMemberRole(bytes32 _newRoleName,string _roleDescription, address _canAddMembers) 
   {
+      require(isMaster() == true || isGBM() == true);
       uint rolelength = getTotalMemberRoles();
       memberRole.push(_newRoleName);  
       authorizedAddress_againstRole[rolelength] = _canAddMembers;
