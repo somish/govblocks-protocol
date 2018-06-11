@@ -22,7 +22,7 @@ contract ProposalCategory
     bool public constructorCheck;
     struct category
     {
-        string categoryDescHash;
+        string name;
         uint8[] memberRoleSequence;
         uint[] memberRoleMajorityVote;
         uint[] closingTime;
@@ -37,8 +37,7 @@ contract ProposalCategory
     struct subCategory
     {
         string categoryName;
-        bytes32 functionName;
-        address contractAt;
+        string actionHash;
         uint8 categoryId;
     }
 
@@ -118,13 +117,35 @@ contract ProposalCategory
         majVote[0]=50;
         closeTime[0]=1800;
         
-        allCategory.push(category("QmXzRmzJ8sJFYf8UgW3vAiHSh7ha4YvxJpvEHcfvzjgbAT",roleSeq,majVote,closeTime,0,0,0,0,0,0));
-        allCategory.push(category("QmZUeoP9g1hNzKQ8WHGkkwmMLq3fTeSFJPwSPKXJ49wG6G",roleSeq,majVote,closeTime,0,100,10,20,20,20));
-        allCategory.push(category("QmYGFMsRq2MyW9eDutHij6Wa8CARygxhCASLyYm5GpeksQ",roleSeq,majVote,closeTime,0,100,0,20,20,20));
-        allCategory.push(category("QmZ59ZaioUCw2pM3hERiZaFE8LNMZSC4d6xVN28D95R6qs",roleSeq,majVote,closeTime,0,100,0,20,20,20));
-        allCategory.push(category("QmfQvZmENE3SLa6AKSFgWCBrMy6akBiXfGfCMVc5q1mBW9",roleSeq,majVote,closeTime,0,100,0,20,20,20));
-        allCategory.push(category("QmRuxEtR7jNyh9urbraFSsCVurxSTkyx7DgTTZkERqa3BW",roleSeq,majVote,closeTime,0,100,0,20,20,20));
-        allCategory.push(category("QmWjCR7sMyxHa3MwExSYkEZNdiugUvqukz2wkiVqFvEVu8",roleSeq,majVote,closeTime,0,10,0,20,20,20));
+        allCategory.push(category("Uncategorized",roleSeq,majVote,closeTime,0,0,0,0,0,0));
+        allCategory.push(category("Change to member role",roleSeq,majVote,closeTime,0,100,10,20,20,20));
+        //allCategory.push(category("QmYGFMsRq2MyW9eDutHij6Wa8CARygxhCASLyYm5GpeksQ",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("Changes to categories",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        // allCategory.push(category("QmfQvZmENE3SLa6AKSFgWCBrMy6akBiXfGfCMVc5q1mBW9",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("Changes in governance parameters",roleSeq,majVote,closeTime,0,100,0,20,20,20));
+        allCategory.push(category("Others not specified",roleSeq,majVote,closeTime,0,10,0,20,20,20));
+        
+        allSubId_byCategory[0].push(0);
+        allSubCategory.push(subCategory("Uncategorized","",0));
+        
+        allSubId_byCategory[1].push(1);
+        allSubCategory.push(subCategory("Add new member role","QmZUeoP9g1hNzKQ8WHGkkwmMLq3fTeSFJPwSPKXJ49wG6G",1));
+        
+        allSubId_byCategory[1].push(0);
+        allSubCategory.push(subCategory("Update member role","QmYGFMsRq2MyW9eDutHij6Wa8CARygxhCASLyYm5GpeksQ",1));
+        
+        allSubId_byCategory[2].push(0);
+        allSubCategory.push(subCategory("Add new category","QmZ59ZaioUCw2pM3hERiZaFE8LNMZSC4d6xVN28D95R6qs",2));
+        
+        allSubId_byCategory[2].push(1);
+        allSubCategory.push(subCategory("Edit category","QmfQvZmENE3SLa6AKSFgWCBrMy6akBiXfGfCMVc5q1mBW9",2));
+        
+        allSubId_byCategory[3].push(0);
+        allSubCategory.push(subCategory("Configure parameters","QmRuxEtR7jNyh9urbraFSsCVurxSTkyx7DgTTZkERqa3BW",3));
+        
+        allSubId_byCategory[4].push(0);
+        allSubCategory.push(subCategory("Others, not specified","",4));
+        
         constructorCheck = true;
     }
 
@@ -151,7 +172,7 @@ contract ProposalCategory
     /// @param _defaultIncentive Default incentive
     function updateCategory(uint _categoryId,string _descHash,uint8[] _roleName,uint[] _majorityVote,uint[] _closingTime,uint8 _minStake,uint8 _maxStake, uint _defaultIncentive) onlyGBM(_roleName,_majorityVote,_closingTime)
     {
-        allCategory[_categoryId].categoryDescHash = _descHash;
+        allCategory[_categoryId].name = _descHash;
         allCategory[_categoryId].minStake = _minStake;
         allCategory[_categoryId].maxStake = _maxStake;
         allCategory[_categoryId].defaultIncentive = _defaultIncentive;
@@ -168,21 +189,21 @@ contract ProposalCategory
         }
     }
 
-    function addNewSubCategory(string _categoryName,bytes32 _functionName,address _contractAt,uint8 _mainCategoryId) onlyGBMSubCategory
+    function addNewSubCategory(string _categoryName,string actionHash,uint8 _mainCategoryId) onlyGBMSubCategory
     {
         allSubId_byCategory[_mainCategoryId].push(allSubCategory.length);
-        allSubCategory.push(subCategory(_categoryName,_functionName,_contractAt,_mainCategoryId));
+        allSubCategory.push(subCategory(_categoryName,actionHash,_mainCategoryId));
     }
 
-    function updateSubCategory(uint8 _subCategoryId,bytes32 _functionName,address _contractAt) onlyGBMSubCategory
+    function updateSubCategory(uint8 _subCategoryId,string _actionHash) onlyGBMSubCategory
     {
-        allSubCategory[_subCategoryId].functionName = _functionName;
-        allSubCategory[_subCategoryId].contractAt = _contractAt;
+        allSubCategory[_subCategoryId].actionHash=_actionHash;
+        
     }
 
-    function getSubCategoryDetails(uint8 _subCategoryId)constant returns(string,bytes32,address,uint8)
+    function getSubCategoryDetails(uint8 _subCategoryId)constant returns(string,string,uint8)
     {
-        return (allSubCategory[_subCategoryId].categoryName,allSubCategory[_subCategoryId].functionName,allSubCategory[_subCategoryId].contractAt,allSubCategory[_subCategoryId].categoryId);
+        return (allSubCategory[_subCategoryId].categoryName,allSubCategory[_subCategoryId].actionHash,allSubCategory[_subCategoryId].categoryId);
     }
     
     function getSubCategoryId_atIndex(uint8 _categoryId,uint _index)constant returns(uint _subCategoryId)
@@ -364,7 +385,7 @@ contract ProposalCategory
     /// @return allCategory[_categoryId].categoryDescHash Hash of description of category id '_categoryId'
     function getCategoryData1(uint _categoryId) constant returns(string)
     {
-        return allCategory[_categoryId].categoryDescHash;
+        return allCategory[_categoryId].name;
     }
 
     /// @dev Gets Category data depending upon current voting index in Voting sequence.

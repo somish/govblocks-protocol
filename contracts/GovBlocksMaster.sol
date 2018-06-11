@@ -28,7 +28,7 @@ contract GovBlocksMaster
     governanceData GD;
     address public owner;
     address GBTAddress;
-    address public authGBOwner;
+    
 
     struct GBDapps
     {
@@ -59,7 +59,7 @@ contract GovBlocksMaster
       require(owner == 0x00);
       owner = msg.sender; 
       GBTAddress = _GBTAddress;
-      updateGBMAddress(address(this));  
+    //   updateGBMAddress(address(this));  
     } 
 
     /// @dev Changes authorized GovBlocks owner
@@ -128,7 +128,7 @@ contract GovBlocksMaster
         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
-        govBlocksDapps[_gbUserName].authGBAddress = msg.sender;
+        govBlocksDapps[_gbUserName].authGBAddress = owner;
         MS=Master(_newMasterAddress);
         MS.setOwner(msg.sender);
     }
@@ -357,27 +357,27 @@ contract GovBlocksMaster
 
     /// @dev Adds new category in GovBlocks
     /// @param _gbUserName GovBlocks username
-    function addNewSubCategoryGB(bytes32 _gbUserName,string _categoryName,bytes32 _functionName,address _contractAt,uint8 _mainCategoryId) 
+    function addNewSubCategoryGB(bytes32 _gbUserName,string _categoryName,string _actionHash,uint8 _mainCategoryId) 
     {
         address PCAddress = getContractInstance_byDapp(_gbUserName,"PC");
         PC=ProposalCategory(PCAddress);
-        PC.addNewSubCategory(_categoryName,_functionName,_contractAt,_mainCategoryId);
+        PC.addNewSubCategory(_categoryName,_actionHash,_mainCategoryId);
     }
 
     /// @dev Updates category in GovBlocks
     /// @param _gbUserName GovBlocks username
-    function updateSubCategoryGB(bytes32 _gbUserName,uint8 _subCategoryId,bytes32 _functionName,address _contractAt) 
+    function updateSubCategoryGB(bytes32 _gbUserName,uint8 _subCategoryId,string _actionHash) 
     {
         address PCAddress =getContractInstance_byDapp(_gbUserName,"PC");
         PC=ProposalCategory(PCAddress);
-        PC.updateSubCategory(_subCategoryId,_functionName,_contractAt);
+        PC.updateSubCategory(_subCategoryId,_actionHash);
     }
 
     /// @dev Configures global parameters for reputation weights
     /// @param _gbUserName GovBlocks username
     /// @param _typeOf Typeof role of the member
     /// @param _value Quorum percentage value
-    function configureGlobalParameters(bytes32 _gbUserName,bytes16 _typeOf,uint32 _value)
+    function configureGlobalParameters(bytes32 _gbUserName,bytes4 _typeOf,uint32 _value)
     {
         address GDAddress = getContractInstance_byDapp(_gbUserName,"GD");
         GD=governanceData(GDAddress);
