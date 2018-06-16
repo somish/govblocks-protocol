@@ -131,19 +131,19 @@ contract ProposalCategory
         allSubId_byCategory[1].push(1);
         allSubCategory.push(subCategory("Add new member role","QmZUeoP9g1hNzKQ8WHGkkwmMLq3fTeSFJPwSPKXJ49wG6G",1));
         
-        allSubId_byCategory[1].push(0);
+        allSubId_byCategory[1].push(2);
         allSubCategory.push(subCategory("Update member role","QmYGFMsRq2MyW9eDutHij6Wa8CARygxhCASLyYm5GpeksQ",1));
         
-        allSubId_byCategory[2].push(0);
+        allSubId_byCategory[2].push(3);
         allSubCategory.push(subCategory("Add new category","QmZ59ZaioUCw2pM3hERiZaFE8LNMZSC4d6xVN28D95R6qs",2));
         
-        allSubId_byCategory[2].push(1);
+        allSubId_byCategory[2].push(4);
         allSubCategory.push(subCategory("Edit category","QmfQvZmENE3SLa6AKSFgWCBrMy6akBiXfGfCMVc5q1mBW9",2));
         
-        allSubId_byCategory[3].push(0);
+        allSubId_byCategory[3].push(5);
         allSubCategory.push(subCategory("Configure parameters","QmRuxEtR7jNyh9urbraFSsCVurxSTkyx7DgTTZkERqa3BW",3));
         
-        allSubId_byCategory[4].push(0);
+        allSubId_byCategory[4].push(6);
         allSubCategory.push(subCategory("Others, not specified","",4));
         
         constructorCheck = true;
@@ -395,6 +395,13 @@ contract ProposalCategory
     function getCategoryData3(uint _categoryId,uint _currVotingIndex)constant returns(uint8 roleSequence,uint majorityVote,uint closingTime)
     {
         return (allCategory[_categoryId].memberRoleSequence[_currVotingIndex],allCategory[_categoryId].memberRoleMajorityVote[_currVotingIndex],allCategory[_categoryId].closingTime[_currVotingIndex]);
+    }
+    
+    /// @dev Gets Category and SubCategory name from Proposal ID.
+    function getCatAndSubNameByPropId(uint _proposalId) constant returns(string categoryName, string subCategoryName)
+    {
+      categoryName = allCategory[getCategoryId_bySubId(GD.getProposalCategory(_proposalId))].name;
+      subCategoryName = allSubCategory[GD.getProposalCategory(_proposalId)].categoryName;
     }
 
     // /// @dev Sets closing time for the category
