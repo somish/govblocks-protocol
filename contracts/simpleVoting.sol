@@ -137,7 +137,8 @@ contract simpleVoting is VotingType
     
     function addSolution1(uint _proposalId,address _memberAddress,uint _solutionStake,string _solutionHash,uint _dateAdd,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash)internal
     {
-         if(msg.sender == _memberAddress) 
+        require(GD.getProposalCategory(_proposalId)>0);
+        if(msg.sender == _memberAddress) 
             receiveStake('S',_proposalId,_solutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         uint solutionId=GD.getTotalSolutions(_proposalId); 
         GD.setSolutionAdded(_proposalId,_memberAddress);
