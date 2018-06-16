@@ -92,7 +92,7 @@ contract GBTStandardToken is ERC20Basic, ERC20
    
     function getOrderHash(address _memberAddress,address  _spender,uint _amount,uint _validUpto, bytes32 _lockTokenTxHash) constant returns (bytes32)
     {
-        return keccak256(_memberAddress,_spender,_amount,_validUpto);
+        return keccak256(_memberAddress,_spender,_amount,_validUpto,_lockTokenTxHash);
     }
     
     function isValidSignature(bytes32 hash, address _memberaddress,uint8 v, bytes32 r, bytes32 s) constant  returns(bool)
