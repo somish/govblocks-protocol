@@ -794,6 +794,16 @@ contract governanceData {
     {
         return (allProposalData[_proposalId].propStatus,allProposalData[_proposalId].finalVerdict);
     }
+        
+    /// @dev Gets proposal details of given proposal id
+    function getProposalDetailsById6(uint _proposalId)public constant returns(uint proposalId, uint status, uint totalVotes, uint totalSolutions, uint commonIncentive)
+    {
+      proposalId = _proposalId;
+      status = getProposalStatus(_proposalId);
+      totalVotes = getProposalTotalVoteValue(_proposalId);
+      totalSolutions = getTotalSolutions(_proposalId);
+      commonIncentive = getProposalIncentive(_proposalId);
+    }
 
     /// @dev Gets date when proposal is updated
     function getProposalDateUpd(uint _proposalId)constant returns(uint)
