@@ -680,14 +680,9 @@ contract Governance {
 
     function proposalSubmission(uint proposalDateAdd,uint _proposalId,address _VTAddress,uint8 _categoryId,uint _proposalSolutionStake,string _solutionHash,uint _validityUpto,uint8 _v,bytes32 _r,bytes32 _s,bytes32 _lockTokenTxHash) internal
     {
+        require(_categoryId > 0);
         VT=VotingType(_VTAddress);
-        GD.setSolutionAdded(_proposalId,msg.sender);
-        
-        if(_categoryId == 0)
-          openProposalForVoting(_proposalId,_categoryId,_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
-        else
-          openProposalForVoting(_proposalId,PC.getCategoryId_bySubId(_categoryId),_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
-  
+        openProposalForVoting(_proposalId,_categoryId,_proposalSolutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         proposalSubmission1(_proposalId,proposalDateAdd, _solutionHash,_validityUpto, _v, _r, _s,_lockTokenTxHash,_proposalSolutionStake);        
     }
 
