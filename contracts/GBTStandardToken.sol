@@ -61,7 +61,6 @@ contract GBTStandardToken is ERC20Basic, ERC20
    function transfer_message(address _to, uint256 _value,bytes32 _message) public returns (bool) {
     bool trf= transfer(_to,_value);
     if(_message!="" && trf == true)
-    if(trf == true)
         TransferGBT(msg.sender, _to, _value,_message);
     return true;
   }
@@ -242,6 +241,7 @@ event Mint(address indexed to, uint256 amount);
     balances[_to] = balances[_to].add(_amount);
     Mint(_to, _amount);
     Transfer(address(0), _to, _amount);
+    TransferGBT(address(0), _to, _amount,"Bought Tokens");
     return true;
   }
 
