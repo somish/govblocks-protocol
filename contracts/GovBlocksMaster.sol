@@ -97,7 +97,8 @@ contract GovBlocksMaster
         {
           address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
           MS=Master(masterAddress);
-          MS.changeGBTAddress(_GBTContractAddress);
+          if(MS.versionLength()>0)
+            MS.changeGBTAddress(_GBTContractAddress);
         }  
     }
 
@@ -110,7 +111,8 @@ contract GovBlocksMaster
         {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             MS=Master(masterAddress);
-            MS.changeGBMAddress(_newGBMAddress);
+            if(MS.versionLength()>0)
+                MS.changeGBMAddress(_newGBMAddress);
         }
     }
 

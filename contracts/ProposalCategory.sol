@@ -96,7 +96,7 @@ contract ProposalCategory
         }
     }
 
-    function changeAddress(bytes4 contractName, address contractAddress) onlyInternal
+    /*function changeAddress(bytes4 contractName, address contractAddress) onlyInternal
     {
         if(contractName == 'MR'){
             MR = memberRoles(contractAddress);
@@ -104,6 +104,11 @@ contract ProposalCategory
         else if(contractName == 'GD'){
             GD = governanceData(contractAddress);
         }
+    }*/
+    /// @dev @dev updates all dependency addresses to latest ones from Master
+    function updateAddress(address[] _newAddresses) onlyInternal{
+        GD = governanceData(_newAddresses[1]);
+        MR = memberRoles(_newAddresses[2]);
     }
 
     /// @dev Initiates proposal category

@@ -82,6 +82,7 @@ contract simpleVoting is VotingType
         }
     }
 
+    /*
     /// @dev Changes Global objects of the contracts || Uses latest version
     /// @param contractName Contract name 
     /// @param contractAddress Contract addresses
@@ -99,6 +100,15 @@ contract simpleVoting is VotingType
             GOV = Governance(contractAddress);
             govAddress = contractAddress;
         }
+    }*/
+
+    function updateAddress(address[] _newAddresses) onlyInternal{
+        GD = governanceData(_newAddresses[1]);
+        MR = memberRoles(_newAddresses[2]);
+        PC = ProposalCategory(_newAddresses[3]);
+        SVT = StandardVotingType(_newAddresses[5]);
+        GOV = Governance(_newAddresses[6]);
+        govAddress = _newAddresses[6];
     }
 
     /// @dev Changes GBT controller address

@@ -266,6 +266,7 @@ contract governanceData {
         GBTSAddress = _GBTAddress;
     }  
     
+    /*
     /// @dev Changes Global objects of the contracts || Uses latest version
     /// @param contractName Contract name 
     /// @param contractAddress Contract addresses
@@ -283,8 +284,14 @@ contract governanceData {
         else if(contractName == 'FW'){
           editVotingTypeDetails(2,contractAddress);
         }
+    }*/
+
+    /// @dev updates all dependency addresses to latest ones from Master
+    function updateAddress(address[] _newAddresses) onlyInternal{
+        GOV = Governance(_newAddresses[6]);
+        editVotingTypeDetails(0,_newAddresses[4]);
     }
-    
+
     /// @dev Initiates governance data
     function GovernanceDataInitiate() 
     {

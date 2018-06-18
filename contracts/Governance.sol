@@ -75,7 +75,8 @@ contract Governance {
         require(_Stake <= PC.getMaxStake(category) && _Stake >= PC.getMinStake(category));
         _; 
     }
-
+    
+    /*
     /// @dev Changes Global objects of the contracts || Uses latest version
     /// @param contractName Contract name 
     /// @param contractAddress Contract addresses
@@ -91,7 +92,16 @@ contract Governance {
             P1 = Pool(contractAddress);
             P1Address = contractAddress;
         }
-    }
+    }*/
+
+  /// @dev @dev updates all dependency addresses to latest ones from Master
+  function updateAddress(address[] _newAddresses) onlyInternal{
+    GD = governanceData(_newAddresses[1]);
+    MR = memberRoles(_newAddresses[2]);
+    PC = ProposalCategory(_newAddresses[3]);
+    P1 = Pool(_newAddresses[7]);
+    P1Address = _newAddresses[7];
+  }
 
   /// @dev Changes GBT standard token address
   /// @param _GBTSAddress New GBT standard token address
@@ -113,6 +123,7 @@ contract Governance {
           masterAddress = _MasterAddress;
     }
   }
+
   
   /// @dev Creates a new proposal
   /// @param _proposalDescHash Proposal description hash
