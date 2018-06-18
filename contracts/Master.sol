@@ -42,7 +42,7 @@ contract Master is Ownable {
     changeVersion[] public contractChangeDate;
     mapping(address=>bool) public contracts_active;
     mapping(uint16=>mapping(bytes2=>address)) public allContractVersions;
-    mapping(bytes2=>mapping(bytes2=>bool)) contract_dependency_new;
+    //mapping(bytes2=>mapping(bytes2=>bool)) contract_dependency_new;
 
     GovBlocksMaster GBM;
     GBTStandardToken GBTS;
@@ -214,8 +214,8 @@ contract Master is Ownable {
         // require((version == 0 && msg.sender== owner) || GBM.isAuthorizedGBOwner(DappName,msg.sender) == true);
         require(isValidateOwner() == true);
         addInContractChangeDate(now,version);
-        changeAllAddress(version);
         changeMasterAddress(allContractVersions[version]['MS'],version);
+        changeAllAddress(version);
         // callConstructorGDMRPC(version);
         // changeOtherAddress(version);
     }
