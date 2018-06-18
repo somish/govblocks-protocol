@@ -17,11 +17,11 @@ pragma solidity ^0.4.8;
 
 import "./governanceData.sol";
 import "./simpleVoting.sol";
-import "./RankBasedVoting.sol";
-import "./FeatureWeighted.sol";
+//import "./RankBasedVoting.sol";
+//import "./FeatureWeighted.sol";
 import "./memberRoles.sol";
 import "./ProposalCategory.sol";
-import "./StandardVotingType.sol";
+//import "./StandardVotingType.sol";
 import "./Governance.sol";
 import "./Pool.sol";
 import "./GBTStandardToken.sol";
@@ -52,9 +52,9 @@ contract Master is Ownable {
     memberRoles MR;
     ProposalCategory PC;
     simpleVoting SV;
-    RankBasedVoting RB;
-    FeatureWeighted FW;
-    StandardVotingType SVT;
+    //RankBasedVoting RB;
+    //FeatureWeighted FW;
+    //StandardVotingType SVT;
     bool constructorCheck;
     address public GBMAddress;
 
@@ -242,8 +242,8 @@ contract Master is Ownable {
         SV=simpleVoting(allContractVersions[_version]['SV']);
         SV.updateAddress(getLatestAddresses());
 
-        SVT=StandardVotingType(allContractVersions[_version]['VT']);
-        SVT.updateAddress(getLatestAddresses());
+        //SVT=StandardVotingType(allContractVersions[_version]['VT']);
+        //SVT.updateAddress(getLatestAddresses());
 
         GOV=Governance(allContractVersions[_version]['GV']);
         GOV.updateAddress(getLatestAddresses());
@@ -280,8 +280,8 @@ contract Master is Ownable {
         SV=simpleVoting(allContractVersions[version]['SV']);
         SV.changeMasterAddress(_masterAddress);
 
-        SVT=StandardVotingType(allContractVersions[version]['VT']);
-        SVT.changeMasterAddress(_masterAddress);
+        //SVT=StandardVotingType(allContractVersions[version]['VT']);
+        //SVT.changeMasterAddress(_masterAddress);
 
         GOV=Governance(allContractVersions[version]['GV']);
         GOV.changeMasterAddress(_masterAddress);
@@ -446,8 +446,8 @@ contract Master is Ownable {
             GOV=Governance(allContractVersions[version]['GV']);
             GOV.changeGBTSAddress(_tokenAddress);
             
-            SVT=StandardVotingType(allContractVersions[version]['VT']);
-            SVT.changeGBTSAddress(_tokenAddress);
+            //SVT=StandardVotingType(allContractVersions[version]['VT']);
+            //SVT.changeGBTSAddress(_tokenAddress);
 
             P1=Pool(allContractVersions[version]['PL']);
             P1.changeGBTSAddress(_tokenAddress);

@@ -105,7 +105,7 @@ contract ProposalCategory
             GD = governanceData(contractAddress);
         }
     }*/
-    /// @dev @dev updates all dependency addresses to latest ones from Master
+    /// @dev updates all dependency addresses to latest ones from Master
     function updateAddress(address[] _newAddresses) onlyInternal{
         GD = governanceData(_newAddresses[1]);
         MR = memberRoles(_newAddresses[2]);

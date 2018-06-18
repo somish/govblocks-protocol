@@ -18,12 +18,16 @@ pragma solidity ^0.4.8;
 
 import "./VotingType.sol";
 import "./Master.sol";
-import "./StandardVotingType.sol";
+//import "./StandardVotingType.sol";
 import "./governanceData.sol";
 import "./Governance.sol";
 import "./memberRoles.sol";
 import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
+import "./GovBlocksMaster.sol";
+import "./BasicToken.sol";
+import "./Pool.sol";
+
 
 contract simpleVoting is VotingType
 {
@@ -34,11 +38,16 @@ contract simpleVoting is VotingType
     memberRoles MR;
     Governance GOV;
     ProposalCategory PC;
-    StandardVotingType SVT;
     Master MS;
     address govAddress;
     bool public constructorCheck;
     address public masterAddress;
+
+
+    GovBlocksMaster GBM;
+    BasicToken BT;
+    Pool P1;
+    VotingType VT;
 
     modifier onlyInternal {
         MS=Master(masterAddress);
@@ -106,9 +115,9 @@ contract simpleVoting is VotingType
         GD = governanceData(_newAddresses[1]);
         MR = memberRoles(_newAddresses[2]);
         PC = ProposalCategory(_newAddresses[3]);
-        SVT = StandardVotingType(_newAddresses[5]);
         GOV = Governance(_newAddresses[6]);
         govAddress = _newAddresses[6];
+        P1 = Pool(_newAddresses[7]);
     }
 
     /// @dev Changes GBT controller address
@@ -201,7 +210,7 @@ contract simpleVoting is VotingType
     function castVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _voteStake) internal
     {
         uint voteId = GD.allVotesTotal();
-        uint finalVoteValue = SVT.setVoteValue_givenByMember(_memberAddress,_proposalId,_voteStake);
+        uint finalVoteValue = setVoteValue_givenByMember(_memberAddress,_proposalId,_voteStake);
         uint32 _roleId;
         uint category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
         
@@ -212,16 +221,13 @@ contract simpleVoting is VotingType
         GD.setVoteId_againstProposalRole(_proposalId,_roleId,voteId);
         GOV.checkRoleVoteClosing(_proposalId,_roleId);
         GD.setVoteValue(voteId,finalVoteValue);
+
+        GD.setSolutionChosen(voteId, _solutionChosen[0]);
+
         GD.callVoteEvent(_memberAddress,_proposalId,now,_voteStake,voteId);
 
     }
     
-    /// @dev Closes proposal for voting
-    /// @param _proposalId Proposal id
-    function closeProposalVote(uint _proposalId) public
-    {
-        SVT.closeProposalVoteSVT(_proposalId);
-    }
 
     /// @dev Gives rewards to respective members after final decision
     /// @param _proposalId Proposal id
@@ -326,7 +332,130 @@ contract simpleVoting is VotingType
 
 
 
+    /// @dev Sets vote value given by member
+    /// @param _memberAddress Member address
+    /// @param _proposalId Proposal id
+    /// @param _memberStake Member stake
+    /// @return finalVoteValue Final vote value
+    function setVoteValue_givenByMember(address _memberAddress,uint _proposalId,uint _memberStake) onlyInternal returns (uint finalVoteValue)
+    {
+        uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(_memberAddress),100),100)),GBTS.totalSupply());
+        uint value= SafeMath.mul(Math.max256(_memberStake,GD.scalingWeight()),Math.max256(tokensHeld,GD.membershipScalingFactor()));
+        finalVoteValue = SafeMath.mul(GD.getMemberReputation(_memberAddress),value);
+    }  
+    
+    /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
+    /// @param _proposalId Proposal id
+    function closeProposalVote(uint _proposalId) onlyInternal
+    {   
+        uint totalVoteValue=0; uint8 category = GD.getProposalCategory(_proposalId);
+        uint8 currentVotingId =GD.getProposalCurrentVotingId(_proposalId);
+        uint32 _mrSequenceId = PC.getRoleSequencAtIndex(category,currentVotingId);
+        require(GOV.checkProposalVoteClosing(_proposalId,_mrSequenceId)==1); 
+        
+        uint[] memory finalVoteValue = new uint[](GD.getTotalSolutions(_proposalId)); 
+        for(uint8 i=0; i<GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequenceId); i++)
+        {
+            uint voteId = GD.getVoteId_againstProposalRole(_proposalId,_mrSequenceId,i);
+            uint solutionChosen = GD.getSolutionByVoteIdAndIndex(voteId,0);
+            uint voteValue = GD.getVoteValue(voteId);
+            totalVoteValue = totalVoteValue + voteValue;
+            finalVoteValue[solutionChosen] = finalVoteValue[solutionChosen] + voteValue;
 
+        }
+
+        uint8 max=0;  
+        for(i = 0; i < finalVoteValue.length; i++)
+        {
+            if(finalVoteValue[max] < finalVoteValue[i])
+            {  
+                max = i; 
+            }
+        }
+        
+        if(checkForThreshold(_proposalId,_mrSequenceId))
+        {
+            closeProposalVote1(finalVoteValue[max],totalVoteValue,category,_proposalId,max);
+        }   
+        else
+        {
+            uint8 interVerdict = GD.getProposalIntermediateVerdict(_proposalId);
+
+            GOV.updateProposalDetails(_proposalId,currentVotingId,max,interVerdict);
+            if(GD.getProposalCurrentVotingId(_proposalId)+1 < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
+                GD.changeProposalStatus(_proposalId,7);
+            else
+                GD.changeProposalStatus(_proposalId,6);
+            GOV.changePendingProposalStart();
+        }
+    }
+
+    function closeProposalVote1(uint maxVoteValue,uint totalVoteValue,uint8 category,uint _proposalId,uint8 max) internal
+    {
+        uint _closingTime;uint _majorityVote;uint8 currentVotingId = GD.getProposalCurrentVotingId(_proposalId);
+        (,_closingTime,_majorityVote) = PC.getCategoryData3(category,currentVotingId);
+          if(SafeMath.div(SafeMath.mul(maxVoteValue,100),totalVoteValue)>=_majorityVote)
+            {
+                if(max > 0)
+                {
+                    currentVotingId = currentVotingId+1;
+                    if(currentVotingId < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
+                    {
+                        GOV.updateProposalDetails(_proposalId,currentVotingId,max,0);
+                        P1.closeProposalOraclise(_proposalId,_closingTime); 
+                        GD.callOraclizeCallEvent(_proposalId,GD.getProposalDateUpd(_proposalId),PC.getClosingTimeAtIndex(category,currentVotingId));
+                    } 
+                    else
+                    {
+                        GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
+                        GD.changeProposalStatus(_proposalId,3);
+                        giveReward_afterFinalDecision(_proposalId);
+                    }
+                }
+                else
+                {
+                    GOV.updateProposalDetails(_proposalId,currentVotingId,max,max);
+                    GD.changeProposalStatus(_proposalId,4);
+                    giveReward_afterFinalDecision(_proposalId);
+                    GOV.changePendingProposalStart();
+                } 
+            }
+            else
+            {
+                GOV.updateProposalDetails(_proposalId,currentVotingId,max,GD.getProposalIntermediateVerdict(_proposalId));
+                GD.changeProposalStatus(_proposalId,5);
+                GOV.changePendingProposalStart();
+            }    
+        
+    }
+            
+    function checkForThreshold(uint _proposalId,uint32 _mrSequenceId) internal constant returns(bool)
+    {
+        uint thresHoldValue;
+        if(_mrSequenceId == 2)
+        {
+            address dAppTokenAddress = GBM.getDappTokenAddress(MS.DappName());
+            BT=BasicToken(dAppTokenAddress);
+            uint totalTokens;
+
+            for(uint8 i=0; i<GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequenceId); i++)
+            {
+                uint voteId = GD.getVoteId_againstProposalRole(_proposalId,_mrSequenceId,i);
+                address voterAddress =GD.getVoterAddress(voteId);
+                totalTokens = totalTokens + BT.balanceOf(voterAddress);
+            }
+           
+            thresHoldValue = totalTokens*100/BT.totalSupply();
+            if(thresHoldValue > GD.quorumPercentage())
+                return true;
+        }
+        else
+        {
+            thresHoldValue = (GD.getAllVoteIdsLength_byProposalRole(_proposalId,_mrSequenceId)*100)/MR.getAllMemberLength(_mrSequenceId);
+            if(thresHoldValue >GD.quorumPercentage())
+                return true;
+        }
+    }
 
     // function changeMemberVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _GBTPayableTokenAmount) internal
     // {
