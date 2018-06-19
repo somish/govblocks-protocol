@@ -12,8 +12,8 @@
 
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
-    
-pragma solidity ^0.4.8;
+
+pragma solidity ^ 0.4.8;
 
 import "./VotingType.sol";
 import "./Governance.sol";
@@ -23,8 +23,7 @@ import "./GovBlocksMaster.sol";
 import "./governanceData.sol";
 import "./Master.sol";
 
-contract GBTController 
-{
+contract GBTController {
     // using SafeMath for uint;
     // address public GBMAddress;
     // address public owner;
@@ -45,7 +44,7 @@ contract GBTController
     //     require(msg.sender == GBMAddress);
     //     _;
     // }
-    
+
     // function GBTController(address _GBMAddress) 
     // {
     //     owner = msg.sender;
@@ -72,7 +71,7 @@ contract GBTController
     //     GBTS.subFromBalance(address(this),_value);
     //     GBTS.callTransferGBTEvent(address(this), _to, _value, _description);
     // }
-    
+
     // // function receiveGBT(address _from,uint _value, string _description) 
     // // {
     // //     GBTS=GBTStandardToken(GBTStandardTokenAddress);
@@ -92,7 +91,7 @@ contract GBTController
     //     GBTS.subFromBalance(msg.sender,_value);
     //     GBTS.callTransferGBTEvent(msg.sender, address(this), _value, _description);
     // }  
-    
+
     // function buyTokenGBT(address _to) payable 
     // {
     //     GBTS=GBTStandardToken(GBTStandardTokenAddress);

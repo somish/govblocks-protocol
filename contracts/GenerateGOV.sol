@@ -13,26 +13,23 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity ^0.4.8;
+pragma solidity ^ 0.4.8;
 
 import "./Governance.sol";
 
-contract GenerateGOV
-{
-    mapping(bytes32=>address) contractAddress;
+contract GenerateGOV {
+    mapping(bytes32 => address) contractAddress;
 
     /// @dev Gets address of governance contract by GovBlocks username
     /// @param _gbUserName GovBlocks username
     /// @return contractAddress[_gbUserName] Address of governance contract by GovBlocks username
-    function getAddress(bytes32 _gbUserName)constant returns(address)
-    {
+    function getAddress(bytes32 _gbUserName) constant returns(address) {
         return (contractAddress[_gbUserName]);
     }
-    
+
     /// @dev Generates new governance contract
     /// @param _gbUserName GovBlocks username
-    function GenerateContract(bytes32 _gbUserName)
-    {
+    function GenerateContract(bytes32 _gbUserName) {
         contractAddress[_gbUserName] = new Governance();
     }
 }

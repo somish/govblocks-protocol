@@ -13,8 +13,7 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-
-pragma solidity ^0.4.8;
+pragma solidity ^ 0.4.8;
 import "./VotingType.sol";
 import "./governanceData.sol";
 import "./StandardVotingType.sol";
@@ -28,9 +27,7 @@ import "./GBTController.sol";
 // import "./zeppelin-solidity/contracts/math/Math.sol";
 // import "./zeppelin-solidity/contracts/math/SafeMath.sol";
 
-
-contract RankBasedVoting is VotingType
-{
+contract RankBasedVoting is VotingType {
     using SafeMath for uint;
     address GDAddress;
     address MRAddress;
@@ -45,12 +42,12 @@ contract RankBasedVoting is VotingType
     Governance G1;
     BasicToken BT;
     ProposalCategory PC;
-    governanceData  GD;
+    governanceData GD;
     StandardVotingType SVT;
     uint8 constructorCheck;
     Master MS;
-    mapping (uint=>uint8) verdictOptionsByVoteId;
-     
+    mapping(uint => uint8) verdictOptionsByVoteId;
+
     // function RankBasedVotingInitiate()
     // {
     //     require(constructorCheck == 0 );
@@ -61,21 +58,19 @@ contract RankBasedVoting is VotingType
     // }
 
     modifier onlyInternal {
-        MS=Master(masterAddress);
+        MS = Master(masterAddress);
         require(MS.isInternal(msg.sender) == true);
-        _; 
+        _;
     }
 
     /// @dev Change master's contract address
-    function changeMasterAddress(address _masterContractAddress)
-    {
-        if(masterAddress == 0x000)
+    function changeMasterAddress(address _masterContractAddress) {
+        if (masterAddress == 0x000)
             masterAddress = _masterContractAddress;
-        else
-        {
-            MS=Master(masterAddress);
+        else {
+            MS = Master(masterAddress);
             require(MS.isInternal(msg.sender) == true);
-                masterAddress = _masterContractAddress;
+            masterAddress = _masterContractAddress;
         }
     }
 
@@ -88,8 +83,7 @@ contract RankBasedVoting is VotingType
     //     GBTC.receiveGBT(_member,_TokenAmount);
     // }
 
-    function changeAllContractsAddress(address _StandardVotingAddress,address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress,address _G1ContractAddress) 
-    {
+    function changeAllContractsAddress(address _StandardVotingAddress, address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress, address _G1ContractAddress) {
         SVTAddress = _StandardVotingAddress;
         GDAddress = _GDcontractAddress;
         MRAddress = _MRcontractAddress;
@@ -97,8 +91,7 @@ contract RankBasedVoting is VotingType
         G1Address = _G1ContractAddress;
     }
 
-    function changeGBTControllerAddress(address _GBTCAddress)
-    {
+    function changeGBTControllerAddress(address _GBTCAddress) {
         GBTCAddress = _GBTCAddress;
     }
 
@@ -130,7 +123,7 @@ contract RankBasedVoting is VotingType
     //     increaseTotalVotes();
     //     allVotes.push(proposalVote(msg.sender,_proposalId,_optionChosen,now,GD.getBalanceOfMember(msg.sender),_GBTPayableTokenAmount,_finalVoteValue,0));
     // }
-    
+
     // function getVoteIdByIndex(uint _proposalId,uint _roleId,uint _index)constant returns(uint voteId,uint index)
     // {
     //     index= _index;
@@ -143,203 +136,193 @@ contract RankBasedVoting is VotingType
     //     if(_memberStake != 0)
     //         GBTC.receiveGBT(msg.sender,_memberStake);
     // }
-  
-    function addVerdictOption(uint _proposalId,address _member,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash)
-    {
+
+    function addVerdictOption(uint _proposalId, address _member, uint[] _paramInt, bytes32[] _paramBytes32, address[] _paramAddress, uint _GBTPayableTokenAmount, string _optionHash) {
         // SVT=StandardVotingType(SVTAddress);
         // SVT.addVerdictOptionSVT(_proposalId,_member,_paramInt,_paramBytes32,_paramAddress,_GBTPayableTokenAmount,_optionHash);
         // payableGBTTokensRankBasedVoting(_member,_GBTPayableTokenAmount);
     }
-     
-    function initiateVerdictOption(uint _proposalId,uint[] _paramInt,bytes32[] _paramBytes32,address[] _paramAddress,uint _GBTPayableTokenAmount,string _optionHash) 
-    {
+
+    function initiateVerdictOption(uint _proposalId, uint[] _paramInt, bytes32[] _paramBytes32, address[] _paramAddress, uint _GBTPayableTokenAmount, string _optionHash) {
         // addVerdictOption(_proposalId,msg.sender,_paramInt,_paramBytes32,_paramAddress, _GBTPayableTokenAmount, _optionHash);
     }
 
-    function proposalVoting(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount)
-    {    
-    //     GD=GovernanceData(GDAddress);
-    //     MR=MemberRoles(MRAddress);
-    //     PC=ProposalCategory(PCAddress);
-    //     SVT=StandardVotingType(SVTAddress);
-    //     G1=Governance(G1Address);
+    function proposalVoting(uint _proposalId, uint[] _optionChosen, uint _GBTPayableTokenAmount) {
+        //     GD=GovernanceData(GDAddress);
+        //     MR=MemberRoles(MRAddress);
+        //     PC=ProposalCategory(PCAddress);
+        //     SVT=StandardVotingType(SVTAddress);
+        //     G1=Governance(G1Address);
 
+        //     uint8 currentVotingId; uint8 category; uint8 intermediateVerdict;
+        //     uint8 verdictOptions;
+        //     (,category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
+        //     (,,,verdictOptions) = GD.getProposalOptionAll(_proposalId);
 
-    //     uint8 currentVotingId; uint8 category; uint8 intermediateVerdict;
-    //     uint8 verdictOptions;
-    //     (,category,currentVotingId,intermediateVerdict,,) = GD.getProposalDetailsById2(_proposalId);
-    //     (,,,verdictOptions) = GD.getProposalOptionAll(_proposalId);
+        //     require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2);
+        //     require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(category,currentVotingId) && _optionChosen.length <= verdictOptions);
 
-    //     require(GD.getBalanceOfMember(msg.sender) != 0 && GD.getProposalStatus(_proposalId) == 2);
-    //     require(MR.getMemberRoleIdByAddress(msg.sender) == PC.getRoleSequencAtIndex(category,currentVotingId) && _optionChosen.length <= verdictOptions);
+        //     if(currentVotingId == 0)
+        //     {   
+        //         for(uint i=0; i<_optionChosen.length; i++)
+        //         {
+        //             require(_optionChosen[i] < verdictOptions && msg.sender != GD.getOptionAddressByProposalId(_proposalId,i));
+        //         }
+        //     }   
+        //     else
+        //         require(_optionChosen[0]==intermediateVerdict || _optionChosen[0]==0);
 
-    //     if(currentVotingId == 0)
-    //     {   
-    //         for(uint i=0; i<_optionChosen.length; i++)
-    //         {
-    //             require(_optionChosen[i] < verdictOptions && msg.sender != GD.getOptionAddressByProposalId(_proposalId,i));
-    //         }
-    //     }   
-    //     else
-    //         require(_optionChosen[0]==intermediateVerdict || _optionChosen[0]==0);
+        //     if(getVoteId_againstMember(msg.sender,_proposalId) == 0)
+        //     {
+        //         uint votelength = getTotalVotes();
+        //         submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_optionChosen,verdictOptions);
+        //         uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
 
-    //     if(getVoteId_againstMember(msg.sender,_proposalId) == 0)
-    //     {
-    //         uint votelength = getTotalVotes();
-    //         submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_optionChosen,verdictOptions);
-    //         uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
-            
-    //         allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)],GD.getBalanceOfMember(msg.sender));
-    //         ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(votelength);
-    //         AddressProposalVote[msg.sender][_proposalId] = votelength;
-    //         verdictOptionsByVoteId[votelength] = verdictOptions;
-    //         GD.setVoteIdAgainstProposal(_proposalId,votelength);
-    //         GD.addInTotalVotes(msg.sender,votelength);
-            
-    //         G1.checkRoleVoteClosing(_proposalId,getVoteLength(_proposalId,PC.getRoleSequencAtIndex(category,currentVotingId)));  
-    //         addInAllVotes(_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
-    //         transferVoteStakeRB(_GBTPayableTokenAmount);
-    //     }
-    //     else 
-    //         changeMemberVote(_proposalId,_optionChosen,_GBTPayableTokenAmount);
+        //         allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalTokenCount[MR.getMemberRoleIdByAddress(msg.sender)],GD.getBalanceOfMember(msg.sender));
+        //         ProposalRoleVote[_proposalId][MR.getMemberRoleIdByAddress(msg.sender)].push(votelength);
+        //         AddressProposalVote[msg.sender][_proposalId] = votelength;
+        //         verdictOptionsByVoteId[votelength] = verdictOptions;
+        //         GD.setVoteIdAgainstProposal(_proposalId,votelength);
+        //         GD.addInTotalVotes(msg.sender,votelength);
+
+        //         G1.checkRoleVoteClosing(_proposalId,getVoteLength(_proposalId,PC.getRoleSequencAtIndex(category,currentVotingId)));  
+        //         addInAllVotes(_proposalId,_optionChosen,_GBTPayableTokenAmount,finalVoteValue);
+        //         transferVoteStakeRB(_GBTPayableTokenAmount);
+        //     }
+        //     else 
+        //         changeMemberVote(_proposalId,_optionChosen,_GBTPayableTokenAmount);
     }
 
-    function changeMemberVote(uint _proposalId,uint[] _optionChosen,uint _GBTPayableTokenAmount) internal
-    {
-    //     MR=MemberRoles(MRAddress);
-    //     GD=GovernanceData(GDAddress);
-    //     SVT=StandardVotingType(SVTAddress);
-    //     G1=Governance(G1Address);
+    function changeMemberVote(uint _proposalId, uint[] _optionChosen, uint _GBTPayableTokenAmount) internal {
+        //     MR=MemberRoles(MRAddress);
+        //     GD=GovernanceData(GDAddress);
+        //     SVT=StandardVotingType(SVTAddress);
+        //     G1=Governance(G1Address);
 
-    //     uint voteId = getVoteId_againstMember(msg.sender,_proposalId);
-    //     uint[] optionChosen = allVotes[voteId].optionChosen;
+        //     uint voteId = getVoteId_againstMember(msg.sender,_proposalId);
+        //     uint[] optionChosen = allVotes[voteId].optionChosen;
 
-    //     uint8 verdictOptions; 
-    //     (,,,verdictOptions) = GD.getProposalOptionAll(_proposalId);
-    //     uint8 currentVotingId;
-    //     (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
+        //     uint8 verdictOptions; 
+        //     (,,,verdictOptions) = GD.getProposalOptionAll(_proposalId);
+        //     uint8 currentVotingId;
+        //     (,,currentVotingId,,,) = GD.getProposalDetailsById2(_proposalId);
 
-    //     allVotes[voteId].optionChosen = _optionChosen;
-    //     verdictOptionsByVoteId[voteId] = verdictOptions;
-    //     revertChangesInMemberVote(_proposalId,currentVotingId,optionChosen,voteId);
-    //     submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_optionChosen,verdictOptions);
+        //     allVotes[voteId].optionChosen = _optionChosen;
+        //     verdictOptionsByVoteId[voteId] = verdictOptions;
+        //     revertChangesInMemberVote(_proposalId,currentVotingId,optionChosen,voteId);
+        //     submitAndUpdateNewMemberVote(_proposalId,currentVotingId,_optionChosen,verdictOptions);
 
-    //     uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
-    //     allVotes[voteId].voteStakeGBT = _GBTPayableTokenAmount;
-    //     allVotes[voteId].voteValue = finalVoteValue;
-    //     // G1.checkRoleVoteClosing(_proposalId,getVoteLength(_proposalId,roleId));
+        //     uint finalVoteValue = SVT.setVoteValue_givenByMember(msg.sender,_proposalId,_GBTPayableTokenAmount);
+        //     allVotes[voteId].voteStakeGBT = _GBTPayableTokenAmount;
+        //     allVotes[voteId].voteValue = finalVoteValue;
+        //     // G1.checkRoleVoteClosing(_proposalId,getVoteLength(_proposalId,roleId));
     }
 
-    function revertChangesInMemberVote(uint _proposalId,uint _currentVotingId,uint[] _optionChosen,uint _voteId) internal
-    {
-    //     uint _finalVoteValue = allVotes[_voteId].voteValue;
+    function revertChangesInMemberVote(uint _proposalId, uint _currentVotingId, uint[] _optionChosen, uint _voteId) internal {
+        //     uint _finalVoteValue = allVotes[_voteId].voteValue;
 
-    //     if(_currentVotingId == 0)
-    //     {
-    //         uint previousVerdictOptions = verdictOptionsByVoteId[_voteId];
-    //         for(uint i=0; i<_optionChosen.length; i++)
-    //         {
-    //             uint sum = SafeMath.add(sum,(SafeMath.sub(previousVerdictOptions,i)));
-    //         }
+        //     if(_currentVotingId == 0)
+        //     {
+        //         uint previousVerdictOptions = verdictOptionsByVoteId[_voteId];
+        //         for(uint i=0; i<_optionChosen.length; i++)
+        //         {
+        //             uint sum = SafeMath.add(sum,(SafeMath.sub(previousVerdictOptions,i)));
+        //         }
 
-    //         for(i=0; i<_optionChosen.length; i++)
-    //         {
-    //             uint optionValue = SafeMath.div(SafeMath.mul(SafeMath.sub(previousVerdictOptions,i),100),sum);
-    //             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[i]],optionValue+_finalVoteValue);
-    //         }
-    //     }
-    //     else
-    //     {
-    //         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[0]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[0]],_finalVoteValue);
-    //     }
-       
+        //         for(i=0; i<_optionChosen.length; i++)
+        //         {
+        //             uint optionValue = SafeMath.div(SafeMath.mul(SafeMath.sub(previousVerdictOptions,i),100),sum);
+        //             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[i]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[i]],optionValue+_finalVoteValue);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[0]] = SafeMath.sub(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[MR.getMemberRoleIdByAddress(msg.sender)][_optionChosen[0]],_finalVoteValue);
+        //     }
+
     }
 
-    function submitAndUpdateNewMemberVote(uint _proposalId,uint _currentVotingId,uint[] _optionChosen,uint _verdictOptions) internal
-    {
-    //     uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
-    //     uint voteId = getVoteId_againstMember(msg.sender,_proposalId);
-    //     uint _finalVoteValue = allVotes[voteId].voteValue;
-    //     if(_currentVotingId == 0)
-    //     {
-    //         for(uint i=0; i<_optionChosen.length; i++)
-    //         {
-    //             uint sum = SafeMath.add(sum,(SafeMath.sub(_verdictOptions ,i)));
-    //         }
+    function submitAndUpdateNewMemberVote(uint _proposalId, uint _currentVotingId, uint[] _optionChosen, uint _verdictOptions) internal {
+        //     uint roleId = MR.getMemberRoleIdByAddress(msg.sender);
+        //     uint voteId = getVoteId_againstMember(msg.sender,_proposalId);
+        //     uint _finalVoteValue = allVotes[voteId].voteValue;
+        //     if(_currentVotingId == 0)
+        //     {
+        //         for(uint i=0; i<_optionChosen.length; i++)
+        //         {
+        //             uint sum = SafeMath.add(sum,(SafeMath.sub(_verdictOptions ,i)));
+        //         }
 
-    //         for(i=0; i<_optionChosen.length; i++)
-    //         {
-    //             uint optionValue = SafeMath.div(SafeMath.mul(SafeMath.sub(_verdictOptions,i),100),sum);
-    //             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[i]],optionValue+_finalVoteValue);
-    //         }
-    //     } 
-    //     else
-    //     {   
-    //         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[0]],_finalVoteValue);
-    //     }
-    }  
-
-    function closeProposalVote(uint _proposalId)
-    {
-    //     SVT=StandardVotingType(SVTAddress);
-    //     SVT.closeProposalVoteSVT(_proposalId);
+        //         for(i=0; i<_optionChosen.length; i++)
+        //         {
+        //             uint optionValue = SafeMath.div(SafeMath.mul(SafeMath.sub(_verdictOptions,i),100),sum);
+        //             allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[i]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[i]],optionValue+_finalVoteValue);
+        //         }
+        //     } 
+        //     else
+        //     {   
+        //         allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[0]] = SafeMath.add(allProposalVoteAndTokenCount[_proposalId].totalVoteCount[roleId][_optionChosen[0]],_finalVoteValue);
+        //     }
     }
 
-    function giveReward_afterFinalDecision(uint _proposalId,address _memberAddress) public
-    {
-    //     GD=GovernanceData(GDAddress);
-    //     uint voteValueFavour; uint voterStake; uint wrongOptionStake; uint returnTokens;
-    //     uint totalVoteValue; uint totalTokenToDistribute;
-    //     uint8 finalVerdict; 
-    //     (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
+    function closeProposalVote(uint _proposalId) {
+        //     SVT=StandardVotingType(SVTAddress);
+        //     SVT.closeProposalVoteSVT(_proposalId);
+    }
 
+    function giveReward_afterFinalDecision(uint _proposalId, address _memberAddress) public {
+        //     GD=GovernanceData(GDAddress);
+        //     uint voteValueFavour; uint voterStake; uint wrongOptionStake; uint returnTokens;
+        //     uint totalVoteValue; uint totalTokenToDistribute;
+        //     uint8 finalVerdict; 
+        //     (,,,,finalVerdict,) = GD.getProposalDetailsById2(_proposalId);
 
-    //     for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++)
-    //     {
-    //         uint voteid = GD.getVoteIdById(_proposalId,i);
+        //     for(uint i=0; i<GD.getVoteLengthById(_proposalId); i++)
+        //     {
+        //         uint voteid = GD.getVoteIdById(_proposalId,i);
 
-    //         if(getOptionById(voteid,0) == finalVerdict)
-    //         {
-    //             voteValueFavour = SafeMath.add(voteValueFavour,allVotes[voteid].voteValue);
-    //         }
-    //         else
-    //         {
-    //             voterStake = SafeMath.add(voterStake,(SafeMath.div(allVotes[voteid].voteStakeGBT,GD.globalRiskFactor())));
-    //             returnTokens = SafeMath.sub(allVotes[voteid].voteStakeGBT,SafeMath.div(allVotes[voteid].voteStakeGBT,GD.globalRiskFactor()));
-    //             G1.transferBackGBTtoken(allVotes[voteid].voter,returnTokens);
-    //         }
+        //         if(getOptionById(voteid,0) == finalVerdict)
+        //         {
+        //             voteValueFavour = SafeMath.add(voteValueFavour,allVotes[voteid].voteValue);
+        //         }
+        //         else
+        //         {
+        //             voterStake = SafeMath.add(voterStake,(SafeMath.div(allVotes[voteid].voteStakeGBT,GD.globalRiskFactor())));
+        //             returnTokens = SafeMath.sub(allVotes[voteid].voteStakeGBT,SafeMath.div(allVotes[voteid].voteStakeGBT,GD.globalRiskFactor()));
+        //             G1.transferBackGBTtoken(allVotes[voteid].voter,returnTokens);
+        //         }
 
-    //         // uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
-    //         // for(uint j=0; j<allVotes[voteid].verdictChosen.length; j++)
-    //         // {
-    //         //     if(allVotes[voteid].verdictChosen[j] == finalVerdict)
-    //         //     {
-    //                 // voteValueFavour = SafeMath.add(voteValueFavour,getOptionValue(voteid,_proposalId,j)+allVotes[voteid].voteValue);
-    //         //     }
-    //         //     else
-    //         //     {
-    //         //         voterStake = SafeMath.add(voterStake,SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))) + getOptionValue(voteid,_proposalId,j);
-    //         //         returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
-    //         //         G1.transferBackGBTtoken(allVotes[voteid].voter,returnTokens);
-    //         //     }
-    //         // }
+        //         // uint voteid = GD.getVoteIdByProposalId(_proposalId,i);
+        //         // for(uint j=0; j<allVotes[voteid].verdictChosen.length; j++)
+        //         // {
+        //         //     if(allVotes[voteid].verdictChosen[j] == finalVerdict)
+        //         //     {
+        //                 // voteValueFavour = SafeMath.add(voteValueFavour,getOptionValue(voteid,_proposalId,j)+allVotes[voteid].voteValue);
+        //         //     }
+        //         //     else
+        //         //     {
+        //         //         voterStake = SafeMath.add(voterStake,SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))) + getOptionValue(voteid,_proposalId,j);
+        //         //         returnTokens = SafeMath.mul(allVotes[voteid].voteStakeGBT,(SafeMath.sub(1,(SafeMath.div(SafeMath.mul(1,100),GD.globalRiskFactor())))));
+        //         //         G1.transferBackGBTtoken(allVotes[voteid].voter,returnTokens);
+        //         //     }
+        //         // }
         // }
 
-    //     for(i=0; i<GD.getOptionAddedAddressLength(_proposalId); i++)
-    //     {
-    //         if(i!= finalVerdict)         
-    //             wrongOptionStake = SafeMath.add(wrongOptionStake,GD.getOptionStakeByProposalId(_proposalId,i));
-    //     }
+        //     for(i=0; i<GD.getOptionAddedAddressLength(_proposalId); i++)
+        //     {
+        //         if(i!= finalVerdict)         
+        //             wrongOptionStake = SafeMath.add(wrongOptionStake,GD.getOptionStakeByProposalId(_proposalId,i));
+        //     }
 
-    //     totalVoteValue = SafeMath.add(GD.getOptionValueByProposalId(_proposalId,finalVerdict),voteValueFavour);
-    //     totalTokenToDistribute = SafeMath.add(wrongOptionStake,voterStake);
+        //     totalVoteValue = SafeMath.add(GD.getOptionValueByProposalId(_proposalId,finalVerdict),voteValueFavour);
+        //     totalTokenToDistribute = SafeMath.add(wrongOptionStake,voterStake);
 
-    //     if(finalVerdict>0)
-    //         totalVoteValue = SafeMath.add(totalVoteValue,GD.getProposalValue(_proposalId));
-    //     else
-    //         totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,GD.getProposalStake(_proposalId));
+        //     if(finalVerdict>0)
+        //         totalVoteValue = SafeMath.add(totalVoteValue,GD.getProposalValue(_proposalId));
+        //     else
+        //         totalTokenToDistribute = SafeMath.add(totalTokenToDistribute,GD.getProposalStake(_proposalId));
 
-    //     distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue);
+        //     distributeReward(_proposalId,totalTokenToDistribute,totalVoteValue);
     }
 
     // function distributeReward(uint _proposalId,uint _totalTokenToDistribute,uint _totalVoteValue) internal
@@ -381,7 +364,7 @@ contract RankBasedVoting is VotingType
     //             {
     //                 G1.updateMemberReputation1(allVotes[voteid].voter,SafeMath.sub(GD.getMemberReputation(allVotes[voteid].voter),subMemberPoints));
     //             }
-                    
+
     //         // }        
     //     }
     //     G1.updateMemberReputation(_proposalId,finalVerdict);
