@@ -202,13 +202,10 @@ contract simpleVoting is VotingType {
         (_roleId, , ) = PC.getCategoryData3(category, currVotingId);
         GD.setVoteId_againstMember(_memberAddress, _proposalId, voteId);
         GD.setVoteId_againstProposalRole(_proposalId, _roleId, voteId);
-        GOV.checkRoleVoteClosing(_proposalId, _roleId);
         GD.setVoteValue(voteId, finalVoteValue);
-
         GD.setSolutionChosen(voteId, _solutionChosen[0]);
-
         GD.callVoteEvent(_memberAddress, _proposalId, now, _voteStake, voteId);
-
+        GOV.checkRoleVoteClosing(_proposalId, _roleId);
     }
 
     /// @dev Gives rewards to respective members after final decision
@@ -217,7 +214,7 @@ contract simpleVoting is VotingType {
         uint totalVoteValue;
         uint totalReward;
         uint finalVerdict = GD.getProposalFinalVerdict(_proposalId);
-        if (GD.getProposalFinalVerdict(_proposalId) < 0)
+        if (GD.getProposalFinalVerdict(_proposalId) == 0)
             totalReward = SafeMath.add(totalReward, GD.getDepositedTokens(GD.getProposalOwner(_proposalId), _proposalId, 'P'));
 
         for (i = 0; i < GD.getTotalSolutions(_proposalId); i++) {

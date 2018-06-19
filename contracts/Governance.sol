@@ -295,7 +295,7 @@ contract Governance {
     /// @param _proposalId Proposal id
     /// @param _roleId Role id
     function checkRoleVoteClosing(uint _proposalId, uint32 _roleId) onlyInternal {
-        if (checkForClosing(_proposalId, _roleId) == 1) {} {
+        if (checkForClosing(_proposalId, _roleId) == 1){
             P1.closeProposalOraclise(_proposalId, 0);
             GD.callOraclizeCallEvent(_proposalId, GD.getProposalDateUpd(_proposalId), 0);
         }
