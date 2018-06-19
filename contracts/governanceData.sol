@@ -719,6 +719,13 @@ contract governanceData {
         return allProposalData[_proposalId].commonIncentive;
     }
 
+    /// @dev Gets sum of all proposal incentive
+    function getTotalProposalIncentive() constant returns(uint allIncentive) {
+        for (uint i = 0; i < allProposal.length; i++) {
+            allIncentive = allIncentive + allProposalData[i].commonIncentive;
+        }
+    }
+
     /// @dev Gets proposal current voting id
     function getProposalCurrentVotingId(uint _proposalId) constant returns(uint8 _currVotingStatus) {
         return (allProposalData[_proposalId].currVotingStatus);
