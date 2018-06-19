@@ -118,7 +118,7 @@ contract StandardVotingType {
         uint8 category = GD.getProposalCategory(_proposalId);
         uint8 currentVotingId = GD.getProposalCurrentVotingId(_proposalId);
         uint32 _mrSequenceId = PC.getRoleSequencAtIndex(category, currentVotingId);
-        require(GOV.checkProposalVoteClosing(_proposalId, _mrSequenceId) == 1);
+        require(GOV.checkForClosing(_proposalId, _mrSequenceId) == 1);
 
         uint[] memory finalVoteValue = new uint[](GD.getTotalSolutions(_proposalId));
         for (uint8 i = 0; i < GD.getAllVoteIdsLength_byProposalRole(_proposalId, _mrSequenceId); i++) {
