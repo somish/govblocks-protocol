@@ -127,22 +127,28 @@ contract ProposalCategory {
         allSubCategory.push(subCategory("Uncategorized", "", 0));
 
         allSubId_byCategory[1].push(1);
-        allSubCategory.push(subCategory("Add new member role", "QmZUeoP9g1hNzKQ8WHGkkwmMLq3fTeSFJPwSPKXJ49wG6G", 1));
+        allSubCategory.push(subCategory("Add new member role", "QmXdWEpuVnUsaFAvcKrp4Mx91f8EpbiUADWiexmGpgEMgX", 1));
 
         allSubId_byCategory[1].push(2);
-        allSubCategory.push(subCategory("Update member role", "QmYGFMsRq2MyW9eDutHij6Wa8CARygxhCASLyYm5GpeksQ", 1));
+        allSubCategory.push(subCategory("Update member role", "QmbTxDwVe15Z7UwtrpjjTV6kAzpmkyEtULBhmYdKuewdND", 1));
 
         allSubId_byCategory[2].push(3);
-        allSubCategory.push(subCategory("Add new category", "QmZ59ZaioUCw2pM3hERiZaFE8LNMZSC4d6xVN28D95R6qs", 2));
+        allSubCategory.push(subCategory("Add new category", "QmdH5uAWVZ9qBFeqQzVWtcMn2UPLoGbE3MsLoswTGzeSZE", 2));
 
         allSubId_byCategory[2].push(4);
-        allSubCategory.push(subCategory("Edit category", "QmfQvZmENE3SLa6AKSFgWCBrMy6akBiXfGfCMVc5q1mBW9", 2));
+        allSubCategory.push(subCategory("Edit category", "QmSKqe96T1VvVfDxGk1GmxjPu5i7H24bgrX1RqtGZfyWMf", 2));
 
         allSubId_byCategory[3].push(5);
-        allSubCategory.push(subCategory("Configure parameters", "QmRuxEtR7jNyh9urbraFSsCVurxSTkyx7DgTTZkERqa3BW", 3));
+        allSubCategory.push(subCategory("Configure parameters", "QmPebQJU8GvnS9Doc4vCCqgEEaEXC2XDbefr8segL5f9ri", 3));
 
         allSubId_byCategory[4].push(6);
         allSubCategory.push(subCategory("Others, not specified", "", 4));
+
+        allSubId_byCategory[2].push(7);
+        allSubCategory.push(subCategory("Add new sub category", "QmTMQ1h2knpUePKAsRJxT8Lzi1fLJjGVFEnvxFbEmbEBKM", 2));
+
+        allSubId_byCategory[2].push(8);
+        allSubCategory.push(subCategory("Edit sub category", "QmaRvZsyHPvm3S6vhFkVNJ79Wt82rXwBCEs4H1Umok5WKg", 2));
 
         constructorCheck = true;
     }
