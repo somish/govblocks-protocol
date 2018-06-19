@@ -18,7 +18,7 @@ pragma solidity ^ 0.4.8;
 import "./Master.sol";
 import "./SafeMath.sol";
 import "./GBTStandardToken.sol";
-import "github.com/oraclize/ethereum-api/oraclizeAPI_0.4.sol";
+import "./usingOraclize.sol";
 // import "./oraclizeAPI_0.4.sol";
 
 contract Pool is usingOraclize {
@@ -79,8 +79,9 @@ contract Pool is usingOraclize {
         GBTS = GBTStandardToken(_GBTSAddress);
     }
 
-    function buyPoolGBT() payable {
-        GBTS.buyToken.value(msg.value)();
+    function buyPoolGBT(uint _gbt) {
+        uint _wei = SafeMath.mul(_gbt, GBTS.tokenPrice());
+        GBTS.buyToken.value(_wei)();
     }
 
     /// @dev Closes proposal using oraclize

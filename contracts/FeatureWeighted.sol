@@ -22,8 +22,7 @@ import "./Governance.sol";
 import "./GBTController.sol";
 
 contract FeatureWeighted is VotingType {
-    using SafeMath
-    for uint;
+    using SafeMath for uint;
     address GDAddress;
     address MRAddress;
     address PCAddress;
