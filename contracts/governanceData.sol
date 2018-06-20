@@ -276,7 +276,6 @@ contract governanceData is Upgradeable{
     function GovernanceDataInitiate() {
         require(constructorCheck == false);
         setGlobalParameters();
-        addStatus();
         addMemberReputationPoints();
         setVotingTypeDetails("Simple Voting", null_address);
         setVotingTypeDetails("Rank Based Voting", null_address);
@@ -311,18 +310,6 @@ contract governanceData is Upgradeable{
         subProposalOwnerPoints = _subProposalOwnerPoints;
         subSolutionOwnerPoints = _subSolutionOwnerPoints;
         subMemberPoints = _subMemberPoints;
-    }
-
-    /// @dev Adds status 
-    function addStatus() internal {
-        status.push("Draft for discussion"); // 0
-        status.push("Draft Ready for submission"); // 1
-        status.push("Voting started"); // 2
-        status.push("Proposal Decision - Accepted by Majority Voting"); // 3
-        status.push("Proposal Decision - Rejected by Majority voting"); // 4
-        status.push("Proposal Accepted - Majority Voting not reached But Accepted by previous Voting"); // 5
-        status.push("Proposal Denied, Threshold not reached"); // 6
-        status.push("Proposal Accepted - Threshold not reached But Accepted by Previous Voting"); // 7
     }
 
     /// @dev Sets global parameters that will help in distributing reward
@@ -405,8 +392,8 @@ contract governanceData is Upgradeable{
     function claimReward() public {
         uint rewardToClaim = GOV.calculateMemberReward(msg.sender);
         if (rewardToClaim != 0) {
-            GBTS.transfer_message(address(this), rewardToClaim, "GBT Stake - Received");
-            GBTS.transfer_message(msg.sender, rewardToClaim, "GBT Stake claimed - Returned");
+            GBTS.transfer_message(address(this), rewardToClaim, "GBT Stake Received");
+            GBTS.transfer_message(msg.sender, rewardToClaim, "GBT Stake claimed");
         }
     }
 
@@ -685,8 +672,8 @@ contract governanceData is Upgradeable{
     }
 
     /// @dev Gets proposal details of given proposal id
-    function getProposalDetailsById3(uint _proposalId) constant returns(uint proposalIndex, string propStatus, uint8 propCategory, uint8 propStatusId, uint8 finalVerdict) {
-        return (_proposalId, status[allProposalData[_proposalId].propStatus], allProposalData[_proposalId].category, allProposalData[_proposalId].propStatus, allProposalData[_proposalId].finalVerdict);
+    function getProposalDetailsById3(uint _proposalId) constant returns(uint proposalIndex, uint propStatus, uint8 propCategory, uint8 propStatusId, uint8 finalVerdict) {
+        return (_proposalId, getProposalStatus(_proposalId), allProposalData[_proposalId].category, allProposalData[_proposalId].propStatus, allProposalData[_proposalId].finalVerdict);
     }
 
     /// @dev Gets proposal details of given proposal id
@@ -695,17 +682,13 @@ contract governanceData is Upgradeable{
     }
 
     /// @dev Gets proposal details of given proposal id
-    function getProposalDetailsById5(uint _proposalId) public constant returns(uint proposalStatus, uint finalVerdict) {
-        return (allProposalData[_proposalId].propStatus, allProposalData[_proposalId].finalVerdict);
-    }
-
-    /// @dev Gets proposal details of given proposal id
-    function getProposalDetailsById6(uint _proposalId) public constant returns(uint proposalId, uint status, uint totalVotes, uint totalSolutions, uint commonIncentive) {
+    function getProposalDetailsById6(uint _proposalId) public constant returns(uint proposalId, uint status, uint totalVotes, uint totalSolutions, uint commonIncentive, uint finalVerdict) {
         proposalId = _proposalId;
         status = getProposalStatus(_proposalId);
         totalVotes = getProposalTotalVoteValue(_proposalId);
         totalSolutions = getTotalSolutions(_proposalId);
         commonIncentive = getProposalIncentive(_proposalId);
+        finalVerdict = allProposalData[_proposalId].finalVerdict;
     }
 
     /// @dev Gets date when proposal is updated
@@ -878,14 +861,44 @@ contract governanceData is Upgradeable{
     /// @param _memberAddress Member address
     /// @return totalSolutionProposalCount Total solution proposal count
     function getAllSolutionIdsLength_byAddress(address _memberAddress) constant returns(uint totalSolutionProposalCount) {
-        uint length = getProposalLength();
-        for (uint i = 0; i < length; i++) {
+        for (uint i = 0; i < allProposal.length; i++) {
             for (uint j = 0; j < getTotalSolutions(i); j++) {
                 if (_memberAddress == getSolutionAddedByProposalId(i, j))
                     totalSolutionProposalCount++;
             }
         }
     }
+
+    /// @dev Get Total tokens deposited by member till date against all proposal.
+    function getAllDepositTokens_byAddress(address _memberAddress) constant returns(uint depositFor_creatingProposal, uint depositFor_proposingSolution, uint depositFor_castingVote) {
+        for (uint i = 0; i < allProposal.length; i++) {
+            depositFor_creatingProposal = depositFor_creatingProposal + getDepositedTokens(_memberAddress, i, "P");
+            depositFor_proposingSolution = depositFor_proposingSolution + getDepositedTokens(_memberAddress, i, "S");
+            depositFor_castingVote = depositFor_castingVote + getDepositedTokens(_memberAddress, i, "V");
+        }
+    }
+
+    /// @dev Gets proposal answer/solution by address
+    /// @param _memberAddress Member address
+    /// @return proposalIds Proposal ids
+    /// @return solutionIds Solution ids
+    /// @return totalSolution All soultions of a member
+    function getAllSolutionIds_byAddress(address _memberAddress) constant returns(uint[] proposalIds, uint[] solutionProposalIds, uint totalSolution) {
+        uint8 m;
+        uint solutionProposalLength = getAllSolutionIdsLength_byAddress(_memberAddress);
+        proposalIds = new uint[](solutionProposalLength);
+        solutionProposalIds = new uint[](solutionProposalLength);
+        for (uint i = 0; i < allProposal.length; i++) {
+            for (uint j = 0; j < allProposalSolutions[i].length; j++) {
+                if (_memberAddress == getSolutionAddedByProposalId(i, j)) {
+                    proposalIds[m] = i;
+                    solutionProposalIds[m] = j;
+                    m++;
+                }
+            }
+        }
+    }
+
 
     // UPDATED CONTRACTS :
 
