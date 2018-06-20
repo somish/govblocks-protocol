@@ -15,13 +15,14 @@
 
 pragma solidity ^ 0.4.8;
 import "./VotingType.sol";
+import "./Upgradeable.sol";
 import "./governanceData.sol";
 import "./StandardVotingType.sol";
 import "./Master.sol";
 import "./Governance.sol";
 import "./GBTController.sol";
 
-contract FeatureWeighted is VotingType {
+contract FeatureWeighted is VotingType, Upgradeable {
     using SafeMath for uint;
     address GDAddress;
     address MRAddress;
@@ -65,6 +66,12 @@ contract FeatureWeighted is VotingType {
             require(MS.isInternal(msg.sender) == true);
             masterAddress = _masterContractAddress;
         }
+    }
+
+    function changeGBTSAddress(address _GBTSAddress) public constant {
+    }
+
+    function updateDependencyAddresses() public constant {
     }
 
     function changeAllContractsAddress(address _SVTcontractAddress, address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress, address _G1ContractAddress) {

@@ -252,6 +252,8 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return tokenPrice;
     }
 
+
+
     // function changeGBTControllerAddress(address _GBTCAddress) onlyGBM
     // {
     //     GBTCAddress = _GBTCAddress;

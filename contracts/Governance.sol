@@ -17,6 +17,7 @@ pragma solidity ^ 0.4.8;
 import "./governanceData.sol";
 import "./ProposalCategory.sol";
 import "./memberRoles.sol";
+import "./Upgradeable.sol";
 import "./Master.sol";
 //import "./BasicToken.sol";
 import "./SafeMath.sol";
@@ -25,7 +26,7 @@ import "./Pool.sol";
 import "./GBTStandardToken.sol";
 import "./VotingType.sol";
 
-contract Governance {
+contract Governance is Upgradeable{
 
     using SafeMath for uint;
     address P1Address;
@@ -91,14 +92,15 @@ contract Governance {
             P1Address = contractAddress;
         }
     }*/
-
+    
     /// @dev updates all dependency addresses to latest ones from Master
-    function updateAddress(address[] _newAddresses) onlyInternal {
-        GD = governanceData(_newAddresses[1]);
-        MR = memberRoles(_newAddresses[2]);
-        PC = ProposalCategory(_newAddresses[3]);
-        P1 = Pool(_newAddresses[7]);
-        P1Address = _newAddresses[7];
+    function updateDependencyAddresses() onlyInternal {
+        MS = Master(masterAddress);
+        GD = governanceData(MS.getLatestAddress("GD"));
+        MR = memberRoles(MS.getLatestAddress("MR"));
+        PC = ProposalCategory(MS.getLatestAddress("PC"));
+        P1Address = MS.getLatestAddress("PL");
+        P1 = Pool(P1Address);
     }
 
     /// @dev Changes GBT standard token address

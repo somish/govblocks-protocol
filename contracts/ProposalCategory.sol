@@ -16,6 +16,7 @@ pragma solidity ^ 0.4.8;
 import "./Master.sol";
 import "./governanceData.sol";
 import "./memberRoles.sol";
+import "./Upgradeable.sol";
 
 contract ProposalCategory {
     bool public constructorCheck;
@@ -99,10 +100,18 @@ contract ProposalCategory {
             GD = governanceData(contractAddress);
         }
     }*/
+
     /// @dev updates all dependency addresses to latest ones from Master
-    function updateAddress(address[] _newAddresses) onlyInternal {
-        GD = governanceData(_newAddresses[1]);
-        MR = memberRoles(_newAddresses[2]);
+    function updateDependencyAddresses() onlyInternal {
+        if(!constructorCheck)
+            ProposalCategoryInitiate();
+        MS = Master(masterAddress);
+        GD = governanceData(MS.getLatestAddress("GD"));
+        MR = memberRoles(MS.getLatestAddress("MR"));
+    }
+
+    /// @dev just to adhere to the interface
+    function changeGBTSAddress(address _GBTAddress) {
     }
 
     /// @dev Initiates proposal category

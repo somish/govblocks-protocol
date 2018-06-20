@@ -21,13 +21,14 @@ import "./Master.sol";
 import "./governanceData.sol";
 import "./Governance.sol";
 import "./memberRoles.sol";
+import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
 import "./GovBlocksMaster.sol";
 import "./BasicToken.sol";
 import "./Pool.sol";
 
-contract simpleVoting is VotingType {
+contract simpleVoting is VotingType, Upgradeable {
     using SafeMath for uint;
     using Math
     for uint;
@@ -105,13 +106,15 @@ contract simpleVoting is VotingType {
         }
     }*/
 
-    function updateAddress(address[] _newAddresses) onlyInternal {
-        GD = governanceData(_newAddresses[1]);
-        MR = memberRoles(_newAddresses[2]);
-        PC = ProposalCategory(_newAddresses[3]);
-        GOV = Governance(_newAddresses[6]);
-        govAddress = _newAddresses[6];
-        P1 = Pool(_newAddresses[7]);
+    /// @dev updates dependancies
+    function updateDependencyAddresses() onlyInternal {
+        MS = Master(masterAddress);
+        GD = governanceData(MS.getLatestAddress("GD"));
+        MR = memberRoles(MS.getLatestAddress("MR"));
+        PC = ProposalCategory(MS.getLatestAddress("PC"));
+        govAddress = MS.getLatestAddress("GV");
+        GOV = Governance(govAddress);
+        P1 = Pool(MS.getLatestAddress("PL"));
     }
 
     /// @dev Changes GBT controller address

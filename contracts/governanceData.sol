@@ -16,10 +16,11 @@
 pragma solidity ^ 0.4.8;
 import "./SafeMath.sol";
 import "./Master.sol";
+import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./Governance.sol";
 
-contract governanceData {
+contract governanceData is Upgradeable{
 
     event Proposal(address indexed proposalOwner, uint256 indexed proposalId, uint256 dateAdd, string proposalTitle, string proposalSD, string proposalDescHash);
     event Solution(uint256 indexed proposalId, address indexed solutionOwner, uint256 indexed solutionId, string solutionDescHash, uint256 dateAdd, uint256 solutionStake);
@@ -261,11 +262,14 @@ contract governanceData {
           editVotingTypeDetails(2,contractAddress);
         }
     }*/
-
+    
     /// @dev updates all dependency addresses to latest ones from Master
-    function updateAddress(address[] _newAddresses) onlyInternal {
-        GOV = Governance(_newAddresses[6]);
-        editVotingTypeDetails(0, _newAddresses[4]);
+    function updateDependencyAddresses() onlyInternal {
+        if(!constructorCheck)
+            GovernanceDataInitiate();
+        MS = Master(masterAddress);
+        GOV = Governance(MS.getLatestAddress("GV"));
+        editVotingTypeDetails(0, MS.getLatestAddress("SV"));
     }
 
     /// @dev Initiates governance data

@@ -18,10 +18,11 @@ pragma solidity ^ 0.4.8;
 import "./Master.sol";
 import "./SafeMath.sol";
 import "./GBTStandardToken.sol";
+import "./Upgradeable.sol";
 import "./usingOraclize.sol";
 // import "./oraclizeAPI_0.4.sol";
 
-contract Pool is usingOraclize {
+contract Pool is usingOraclize, Upgradeable {
     event closeProposal(uint256 indexed proposalId, uint256 closingTime, string URL);
     event apiresult(address indexed sender, string msg, bytes32 myid);
     using SafeMath for uint;
@@ -77,6 +78,10 @@ contract Pool is usingOraclize {
     /// @param _GBTSAddress New GBT standard token address
     function changeGBTSAddress(address _GBTSAddress) onlyMaster {
         GBTS = GBTStandardToken(_GBTSAddress);
+    }
+
+    /// @dev just to adhere to the interface
+    function updateDependencyAddresses() {
     }
 
     function buyPoolGBT(uint _gbt) {

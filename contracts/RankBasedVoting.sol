@@ -20,6 +20,7 @@ import "./StandardVotingType.sol";
 import "./memberRoles.sol";
 import "./ProposalCategory.sol";
 import "./Governance.sol";
+import "./Upgradeable.sol";
 import "./Math.sol";
 import "./SafeMath.sol";
 import "./Master.sol";
@@ -27,7 +28,7 @@ import "./GBTController.sol";
 // import "./zeppelin-solidity/contracts/math/Math.sol";
 // import "./zeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract RankBasedVoting is VotingType {
+contract RankBasedVoting is VotingType, Upgradeable {
     using SafeMath for uint;
     address GDAddress;
     address MRAddress;
@@ -72,6 +73,13 @@ contract RankBasedVoting is VotingType {
             require(MS.isInternal(msg.sender) == true);
             masterAddress = _masterContractAddress;
         }
+    }
+
+    /// @dev just to adhere to the interface
+    function changeGBTSAddress(address _GBTAddress) {
+    }
+
+    function updateDependencyAddresses() public constant {
     }
 
     // /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender

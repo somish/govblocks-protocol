@@ -25,12 +25,13 @@ import "./VotingType.sol";
 import "./Pool.sol";
 import "./Master.sol";
 import "./Governance.sol";
+import "./Upgradeable.sol";
 import "./memberRoles.sol";
 import "./GBTStandardToken.sol";
 import "./BasicToken.sol";
 import "./GovBlocksMaster.sol";
 
-contract StandardVotingType {
+contract StandardVotingType is Upgradeable{
     address public masterAddress;
     GovBlocksMaster GBM;
     BasicToken BT;
@@ -85,12 +86,15 @@ contract StandardVotingType {
         }
     }
     */
-    function updateAddress(address[] _newAddresses) onlyInternal {
-        GD = governanceData(_newAddresses[1]);
-        MR = memberRoles(_newAddresses[2]);
-        PC = ProposalCategory(_newAddresses[3]);
-        GOV = Governance(_newAddresses[6]);
-        P1 = Pool(_newAddresses[7]);
+
+    /// @dev updates dependancies
+    function updateDependencyAddresses() onlyInternal {
+        MS = Master(masterAddress);
+        GD = governanceData(MS.getLatestAddress("GD"));
+        MR = memberRoles(MS.getLatestAddress("MR"));
+        PC = ProposalCategory(MS.getLatestAddress("PC"));
+        GOV = Governance(MS.getLatestAddress("GV"));
+        P1 = Pool(MS.getLatestAddress("PL"));
     }
 
     /// @dev Changes GBT standard token address

@@ -17,8 +17,9 @@ pragma solidity ^ 0.4.8;
 import "./Master.sol";
 import "./BasicToken.sol";
 import "./SafeMath.sol";
+import "./Upgradeable.sol";
 
-contract memberRoles {
+contract memberRoles is Upgradeable{
     event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription);
     using SafeMath for uint;
     bytes32[] memberRole;
@@ -86,6 +87,15 @@ contract memberRoles {
             require(MS.isInternal(msg.sender) == true);
             masterAddress = _masterContractAddress;
         }
+    }
+
+    /// @dev just to adhere to the interface
+    function changeGBTSAddress(address _GBTAddress) {
+    }
+
+    function updateDependencyAddresses() {
+        if(!constructorCheck)
+            MemberRolesInitiate();
     }
 
     function setOwnerRole() internal {
