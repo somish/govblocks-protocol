@@ -92,7 +92,7 @@ contract Governance is Upgradeable{
             P1Address = contractAddress;
         }
     }*/
-    
+
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() onlyInternal {
         MS = Master(masterAddress);

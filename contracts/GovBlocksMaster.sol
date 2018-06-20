@@ -300,20 +300,20 @@ contract GovBlocksMaster {
     /// @dev Adds new category in GovBlocks
     /// @param _gbUserName GovBlocks username
     /// @param _descHash GovBlocks description hash
-    function addNewCategoryGB(bytes32 _gbUserName, string _descHash, uint8[] _memberRoleSequence, uint[] _memberRoleMajorityVote, uint[] _closingTime, uint8 _minStake, uint8 _maxStake, uint8 _defaultIncentive) {
+    function addNewCategoryGB(bytes32 _gbUserName, string _descHash, uint8[] _memberRoleSequence, uint8[] _memberRoleMajorityVote, uint32[] _closingTime, uint64[] _stakeAndIncentive, uint8[] _rewardPercentage) {
         address PCAddress = getContractInstance_byDapp(_gbUserName, "PC");
         PC = ProposalCategory(PCAddress);
-        PC.addNewCategory(_descHash, _memberRoleSequence, _memberRoleMajorityVote, _closingTime, _minStake, _maxStake, _defaultIncentive);
+        PC.addNewCategory(_descHash, _memberRoleSequence, _memberRoleMajorityVote, _closingTime, _stakeAndIncentive, _rewardPercentage);
     }
 
     /// @dev Updates category in GovBlocks
     /// @param _gbUserName GovBlocks username
     /// @param _categoryId Category id 
     /// @param _categoryData Category data
-    function updateCategoryGB(bytes32 _gbUserName, uint _categoryId, string _categoryData, uint8[] _roleName, uint[] _majorityVote, uint[] _closingTime, uint8 _minStake, uint8 _maxStake, uint _defaultIncentive) {
+    function updateCategoryGB(bytes32 _gbUserName, uint _categoryId, string _categoryData, uint8[] _roleName, uint8[] _majorityVote, uint32[] _closingTime, uint64[] _stakeAndIncentive, uint8[] _rewardPercentage) {
         address PCAddress = getContractInstance_byDapp(_gbUserName, "PC");
         PC = ProposalCategory(PCAddress);
-        PC.updateCategory(_categoryId, _categoryData, _roleName, _majorityVote, _closingTime, _minStake, _maxStake, _defaultIncentive);
+        PC.updateCategory(_categoryId, _categoryData, _roleName, _majorityVote, _closingTime, _stakeAndIncentive, _rewardPercentage);
     }
 
     /// @dev Adds new category in GovBlocks

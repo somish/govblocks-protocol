@@ -79,7 +79,7 @@ contract RankBasedVoting is VotingType, Upgradeable {
     function changeGBTSAddress(address _GBTAddress) {
     }
 
-    function updateDependencyAddresses() public constant {
+    function updateDependencyAddresses() public {
     }
 
     // /// @dev Some amount to be paid while using GovBlocks contract service - Approve the contract to spend money on behalf of msg.sender

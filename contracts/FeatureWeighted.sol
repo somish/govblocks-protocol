@@ -68,10 +68,10 @@ contract FeatureWeighted is VotingType, Upgradeable {
         }
     }
 
-    function changeGBTSAddress(address _GBTSAddress) public constant {
+    function changeGBTSAddress(address _GBTSAddress) public {
     }
 
-    function updateDependencyAddresses() public constant {
+    function updateDependencyAddresses() public {
     }
 
     function changeAllContractsAddress(address _SVTcontractAddress, address _GDcontractAddress, address _MRcontractAddress, address _PCcontractAddress, address _G1ContractAddress) {
