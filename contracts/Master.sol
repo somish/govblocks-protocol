@@ -108,7 +108,7 @@ contract Master is Ownable, Upgradeable {
         allContractNames.push("MR");
         allContractNames.push("PC");
         allContractNames.push("SV");
-        allContractNames.push("VT");
+    //    allContractNames.push("VT");
         allContractNames.push("GV");
         allContractNames.push("PL");
         allContractNames.push("GS");
@@ -116,16 +116,16 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Creates a new version of contract addresses
     /// @param _contractAddresses Array of nine contract addresses which will be generated
-    function addNewVersion(address[7] _contractAddresses) onlyAuthorizedGB {
+    function addNewVersion(address[6] _contractAddresses) onlyAuthorizedGB {
         GBM = GovBlocksMaster(GBMAddress);
         addContractDetails(versionLength, "MS", address(this));
         addContractDetails(versionLength, "GD", _contractAddresses[0]);
         addContractDetails(versionLength, "MR", _contractAddresses[1]);
         addContractDetails(versionLength, "PC", _contractAddresses[2]);
         addContractDetails(versionLength, "SV", _contractAddresses[3]);
-        addContractDetails(versionLength, "VT", _contractAddresses[4]);
-        addContractDetails(versionLength, "GV", _contractAddresses[5]);
-        addContractDetails(versionLength, "PL", _contractAddresses[6]);
+        //addContractDetails(versionLength, "VT", _contractAddresses[4]);
+        addContractDetails(versionLength, "GV", _contractAddresses[4]);
+        addContractDetails(versionLength, "PL", _contractAddresses[5]);
         addContractDetails(versionLength, "GS", GBM.getGBTAddress());
         setVersionLength(versionLength + 1);
     }
@@ -177,8 +177,8 @@ contract Master is Ownable, Upgradeable {
             up = Upgradeable(allContractVersions[versionLength - 1][allContractNames[i]]);
             up.changeMasterAddress(_MasterAddress);
         }
-        GBM=GovBlocksMaster(GBMAddress);
-        GBM.changeDappMasterAddress(DappName,_MasterAddress);
+        //GBM=GovBlocksMaster(GBMAddress);
+        //GBM.changeDappMasterAddress(DappName,_MasterAddress);  Requires Auth Address
     }
 
     /// @dev Deactivates address of a contract from last version
