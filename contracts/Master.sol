@@ -199,7 +199,7 @@ contract Master is Ownable, Upgradeable {
         require(isValidateOwner());
         for (uint8 i = 1; i < allContractNames.length - 1; i++) {
             up = Upgradeable(allContractVersions[versionLength - 1][allContractNames[i]]);
-            up.changeMasterAddress(_tokenAddress);
+            up.changeGBTSAddress(_tokenAddress);
         }
     }
 
