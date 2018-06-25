@@ -249,6 +249,19 @@ contract ProposalCategory {
         totalTime = (pClosingTime + GD.tokenHoldingTime() + GD.getProposalDateUpd(_proposalId)) - now;
         return totalTime;
     }
+    
+    /// @dev Gets remaining closing time
+    /// @param _categoryId Category id
+    /// @return totalTime Total time remaining before closing
+    function getMaxCategoryTokenHoldTime(uint _categoryId) constant returns(uint totalTime) {
+        uint pClosingTime;
+        for (uint i = 0; i < getCloseTimeLength(_categoryId); i++) {
+            pClosingTime = pClosingTime + getClosingTimeAtIndex(_categoryId, i);
+        }
+
+        totalTime = pClosingTime + GD.tokenHoldingTime();
+        return totalTime;
+    }
 
     /// @dev Gets reward percentage proposal by category id
     function getRewardPercProposal(uint _categoryId) constant returns(uint) {

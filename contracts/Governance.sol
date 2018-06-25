@@ -111,9 +111,10 @@ contract Governance is Upgradeable{
         uint8 category = PC.getCategoryId_bySubId(_categoryId);
         uint _proposalId = GD.getProposalLength();
         GD.callProposalEvent(msg.sender, _proposalId, now, _proposalTitle, _proposalSD, _proposalDescHash);
-        if (category > 0) {
-            GD.addNewProposal(_proposalId, msg.sender, category, votingAddress, _dateAdd);
-            GD.setProposalIncentive(_proposalId, PC.getCatIncentive(category));
+        if (_categoryId > 0) {
+            GD.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, _dateAdd);
+            uint incentive=PC.getCatIncentive(category);
+            GD.setProposalIncentive(_proposalId,incentive );
         } else
             GD.createProposal1(_proposalId, msg.sender, votingAddress, now);
     }
@@ -123,10 +124,10 @@ contract Governance is Upgradeable{
     /// @param _votingTypeId Voting type id
     /// @param _categoryId Category id
     /// @param _solutionHash Solution hash
-    function createProposalwithSolution_inEther(string _proposalTitle, string _proposalSD, string _proposalDescHash, uint _votingTypeId, uint8 _categoryId, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) payable {
-        uint tokenAmount = GBTS.buyToken.value(msg.value)();
-        createProposalwithSolution(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _categoryId, tokenAmount, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-    }
+    // function createProposalwithSolution_inEther(string _proposalTitle, string _proposalSD, string _proposalDescHash, uint _votingTypeId, uint8 _categoryId, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) payable {
+    //     uint tokenAmount = GBTS.buyToken.value(msg.value)();
+    //     createProposalwithSolution(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _categoryId, tokenAmount, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+    // }
 
     /// @dev Creates a new proposal
     /// @param _proposalDescHash Proposal description hash
@@ -145,10 +146,10 @@ contract Governance is Upgradeable{
     /// @dev Submit proposal with solution (Stake in ether)
     /// @param _proposalId Proposal id
     /// @param _solutionHash Solution hash
-    function submitProposalWithSolution_inEther(uint _proposalId, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) payable {
-        uint tokenAmount = GBTS.buyToken.value(msg.value)();
-        submitProposalWithSolution(_proposalId, tokenAmount, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-    }
+    // function submitProposalWithSolution_inEther(uint _proposalId, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) payable {
+    //     uint tokenAmount = GBTS.buyToken.value(msg.value)();
+    //     submitProposalWithSolution(_proposalId, tokenAmount, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+    // }
 
     /// @dev Submit proposal with solution
     /// @param _proposalId Proposal id
@@ -175,31 +176,33 @@ contract Governance is Upgradeable{
     /// @dev Submit proposal for voting while giving stake in Ether.
     /// @param  _proposalId Proposal id
     /// @param  _categoryId Proposal category id
-    function openProposalForVoting_inEther(uint _proposalId, uint8 _categoryId, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) payable {
-        uint tokenAmount = GBTS.buyToken.value(msg.value)();
-        openProposalForVoting(_proposalId, _categoryId, tokenAmount, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-    }
+    // function openProposalForVoting_inEther(uint _proposalId, uint8 _categoryId, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) payable {
+    //     uint tokenAmount = GBTS.buyToken.value(msg.value)();
+    //     openProposalForVoting(_proposalId, _categoryId, tokenAmount, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+    // }
 
     /// @dev Proposal's complexity level and reward are added
     /// @param  _proposalId Proposal id
     /// @param  _categoryId Proposal category id
     /// @param  _proposalStake Token amount
     function openProposalForVoting(uint _proposalId, uint8 _categoryId, uint _proposalStake, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) public validateStake(_categoryId, _proposalStake) onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) {
-        uint category = PC.getCategoryId_bySubId(_categoryId);
+        uint8 category = PC.getCategoryId_bySubId(_categoryId);
         require(category != 0);
-        openProposalForVoting2(_proposalId, _categoryId, _proposalStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+        openProposalForVoting2(_proposalId, category, _proposalStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
 
     }
 
     function openProposalForVoting2(uint _proposalId, uint8 _categoryId, uint _proposalStake, uint validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) internal {
         uint depositPerc = GD.depositPercProposal();
         uint _currVotingStatus = GD.getProposalCurrentVotingId(_proposalId);
-        uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake, GD.depositPercProposal()), 100);
+        uint proposalDepositPerc=GD.depositPercProposal();
+        uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake,proposalDepositPerc), 100);
 
         if (_proposalStake != 0) {
             require(validityUpto > PC.getRemainingClosingTime(_proposalId, _categoryId, _currVotingStatus));
             if (depositPerc != 0 && depositPerc != 100) {
-                GBTS.lockToken(msg.sender, SafeMath.sub(_proposalStake, depositAmount), validityUpto, _v, _r, _s, _lockTokenTxHash);
+                uint stake= SafeMath.sub(_proposalStake, depositAmount);
+                GBTS.lockToken(msg.sender,stake, validityUpto, _v, _r, _s, _lockTokenTxHash);
                 GD.setDepositTokens(msg.sender, _proposalId, 'P', depositAmount);
             } else if (depositPerc == 100)
                 GD.setDepositTokens(msg.sender, _proposalId, 'P', _proposalStake);
@@ -224,12 +227,12 @@ contract Governance is Upgradeable{
     /// @dev Edits a proposal and only owner of a proposal can edit it
     /// @param _proposalId Proposal id
     /// @param _proposalDescHash Proposal description hash
-    function editProposal(uint _proposalId, string _proposalTitle, string _proposalSD, string _proposalDescHash) public onlyProposalOwner(_proposalId) {
-        updateProposalDetails1(_proposalId, _proposalTitle, _proposalSD, _proposalDescHash);
-        uint _categoryId = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
-        if (_categoryId > 0)
-            GD.setProposalCategory(_proposalId, 0);
-    }
+    // function editProposal(uint _proposalId, string _proposalTitle, string _proposalSD, string _proposalDescHash) public onlyProposalOwner(_proposalId) {
+    //     updateProposalDetails1(_proposalId, _proposalTitle, _proposalSD, _proposalDescHash);
+    //     uint _categoryId = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
+    //     if (_categoryId > 0)
+    //         GD.setProposalCategory(_proposalId, 0);
+    // }
 
     /// @dev Edits the details of an existing proposal and creates new version
     /// @param _proposalId Proposal id
@@ -251,7 +254,7 @@ contract Governance is Upgradeable{
     /// @dev Checks proposal for vote closing
     /// @param _proposalId Proposal id
     /// @param _roleId Role id
-    function checkForClosing(uint _proposalId, uint32 _roleId) onlyInternal constant returns(uint8 closeValue) {
+    function checkForClosing(uint _proposalId, uint32 _roleId)  constant returns(uint8 closeValue) {
         uint dateUpdate;
         uint pStatus;
         uint _closingTime;
@@ -504,18 +507,18 @@ contract Governance is Upgradeable{
     /// @dev Gets all proposal ids created by a member
     /// @param _memberAddress Member address 
     /// @return totalProposalCreated Arrays of total proposals created by a member
-    function getAllProposalIds_byAddress(address _memberAddress) constant returns(uint[] totalProposalCreated) {
-        uint length = GD.getProposalLength();
-        uint8 j;
-        uint proposalLength = getAllProposalIdsLength_byAddress(_memberAddress);
-        totalProposalCreated = new uint[](proposalLength);
-        for (uint i = 0; i < length; i++) {
-            if (_memberAddress == GD.getProposalOwner(i)) {
-                totalProposalCreated[j] = i;
-                j++;
-            }
-        }
-    }
+    // function getAllProposalIds_byAddress(address _memberAddress) constant returns(uint[] totalProposalCreated) {
+    //     uint length = GD.getProposalLength();
+    //     uint8 j;
+    //     uint proposalLength = getAllProposalIdsLength_byAddress(_memberAddress);
+    //     totalProposalCreated = new uint[](proposalLength);
+    //     for (uint i = 0; i < length; i++) {
+    //         if (_memberAddress == GD.getProposalOwner(i)) {
+    //             totalProposalCreated[j] = i;
+    //             j++;
+    //         }
+    //     }
+    // }
 
     /// @dev Gets length of all created proposals by member
     /// @param _memberAddress Member address
