@@ -217,11 +217,14 @@ contract Governance is Upgradeable{
 
     /// @dev Call oraclize for closing proposal
     /// @param _proposalId Proposal id
-    function callOraclize(uint _proposalId) internal {
-        uint _categoryId = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
-        uint closingTime = SafeMath.add(PC.getClosingTimeAtIndex(_categoryId, 0), GD.getProposalDateUpd(_proposalId));
+    function callOraclize(uint _proposalId)  {
+        uint8 subCategory=GD.getProposalCategory(_proposalId);
+        uint8 _categoryId = PC.getCategoryId_bySubId(subCategory);
+        uint closingTime = PC.getClosingTimeAtIndex(_categoryId, 0);
+        uint proposalDateUpd=GD.getProposalDateUpd(_proposalId);
+        closingTime = SafeMath.add(closingTime,proposalDateUpd);
         P1.closeProposalOraclise(_proposalId, closingTime);
-        GD.callOraclizeCallEvent(_proposalId, GD.getProposalDateUpd(_proposalId), closingTime);
+        GD.callOraclizeCallEvent(_proposalId, proposalDateUpd, closingTime);
     }
 
     /// @dev Edits a proposal and only owner of a proposal can edit it
