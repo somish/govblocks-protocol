@@ -84,16 +84,17 @@ contract Pool is usingOraclize, Upgradeable {
     function updateDependencyAddresses() {
     }
 
+    /// @def Convert Pool ETH into GBT
     function buyPoolGBT(uint _gbt) {
         uint _wei = SafeMath.mul(_gbt, GBTS.tokenPrice());
         GBTS.buyToken.value(_wei)();
     }
 
-    /// @dev Closes proposal using oraclize
+    /// @dev Closes Proposal voting using oraclize once the time is over.
     /// @param _proposalId Proposal id
-    /// @param _closingTime Closing time of proposal
+    /// @param _closingTime Remaining Closing time of proposal
     function closeProposalOraclise(uint _proposalId, uint _closingTime) {
-        uint index = getApilCall_length();
+        uint index = getApiCall_length();
         bytes32 myid2;
         MS = Master(masterAddress);
 
@@ -108,20 +109,20 @@ contract Pool is usingOraclize, Upgradeable {
         addInAllApiCall(myid2);
     }
 
-    function getApilCall_length() constant returns(uint len) {
+    /// @def Get total length of oraclize call being triggered using this function  "closeProposalOraclise"
+    function getApiCall_length() constant returns(uint len) {
         return allAPIcall.length;
     }
 
     /// @dev Saves api details
     /// @param myid Proposal id
-    /// @param _typeof Type of proposal
-    /// @param id Api id
+    /// @param _typeof Type of is different in case we have different stages of process. i.e. here default type of is "PRO"
+    /// @param id This is index of the oraclize call.
     function saveApiDetails(bytes32 myid, bytes8 _typeof, uint id) internal {
         allAPIid[myid] = apiId(_typeof, id, uint64(now), uint64(now));
     }
 
-    /// @dev Adds id in all api call
-    /// @param myid Proposal id
+    /// @dev Adds api response hash returned in all api call
     function addInAllApiCall(bytes32 myid) internal {
         allAPIcall.push(myid);
     }
@@ -133,14 +134,8 @@ contract Pool is usingOraclize, Upgradeable {
         myid = allAPIcall[index];
     }
 
-    /// @dev Gets api calls' length
-    /// @return len Length of api calls
-    function getApiCall_length() constant returns(uint len) {
-        return allAPIcall.length;
-    }
-
     /// @dev Gets api call details of given id
-    /// @param myid Id of api
+    /// @param myid Id of api response
     /// @return _typeof Type of proposal
     /// @return id Id of api
     /// @return dateAdd Date proposal was added 
@@ -203,7 +198,7 @@ contract Pool is usingOraclize, Upgradeable {
     /// @param _proposalId Proposal id
     /// @return myIndexId Proposal index of corresponding proposal id
     function getMyIndexByProposalId(uint _proposalId) constant returns(uint myIndexId) {
-        uint length = getApilCall_length();
+        uint length = getApiCall_length();
         for (uint i = 0; i < length; i++) {
             bytes32 myid = getApiCall_Index(i);
             uint propId = getProposalIdOfApiId(myid);
