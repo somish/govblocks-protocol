@@ -38,7 +38,7 @@ contract memberRoles is Upgradeable{
     mapping(uint => address) authorizedAddress_againstRole;
     mapping(uint32 => memberRoleDetails) memberRoleData;
 
-    /// @dev Initiates member roles
+    /// @dev Initiates Default settings for Member Roles contract
     function MemberRolesInitiate() {
         require(constructorCheck == false);
         addNewMemberRole("", "", 0x00);
@@ -61,23 +61,25 @@ contract memberRoles is Upgradeable{
         _;
     }
 
+    modifier checkRoleAuthority(uint _memberRoleId) {
+        require(isGBM() == true || msg.sender == authorizedAddress_againstRole[_memberRoleId]);
+        _;
+    }
+
+    /// @def Returns true if the caller address is Master's contract address
     function isMaster() constant returns(bool) {
         if (msg.sender == masterAddress)
             return true;
     }
 
+    /// @def Returns true if the caller address is GovBlocksMaster contract address.
     function isGBM() constant returns(bool) {
         MS = Master(masterAddress);
         if (MS.isGBM(msg.sender) == true)
             return true;
     }
 
-    modifier checkRoleAuthority(uint _memberRoleId) {
-        require(isGBM() == true || msg.sender == authorizedAddress_againstRole[_memberRoleId]);
-        _;
-    }
-
-    /// @dev Changes master's contract address
+    /// @dev Changes Master's contract address 
     /// @param _masterContractAddress New master address
     function changeMasterAddress(address _masterContractAddress) {
         if (masterAddress == 0x000)
@@ -93,11 +95,13 @@ contract memberRoles is Upgradeable{
     function changeGBTSAddress(address _GBTAddress) {
     }
 
+    /// @def To Initiale default settings whenever the contract is regenerated!
     function updateDependencyAddresses() {
         if(!constructorCheck)
             MemberRolesInitiate();
     }
 
+    /// @def Add dApp Owner in Advisory Board Members.
     function setOwnerRole() internal {
         MS = Master(masterAddress);
         address ownAddress = MS.owner();
@@ -106,6 +110,7 @@ contract memberRoles is Upgradeable{
         memberRoleData[1].memberAddress.push(ownAddress);
     }
 
+    /// @def Get Total number of role ids that has been assigned to a member so far.
     function getRoleIdLengthByAddress(address _memberAddress) internal constant returns(uint8 count) {
         uint length = getTotalMemberRoles();
         for (uint8 i = 0; i < length; i++) {
@@ -115,6 +120,7 @@ contract memberRoles is Upgradeable{
         return count;
     }
 
+    /// @def Get All role ids array that has been assigned to a member so far.
     function getRoleIdByAddress(address _memberAddress) constant returns(uint32[] assignedRoles) {
         uint8 length = getRoleIdLengthByAddress(_memberAddress);
         uint8 j = 0;
@@ -128,39 +134,42 @@ contract memberRoles is Upgradeable{
         return assignedRoles;
     }
 
+    /// @def Returns true if the given role id is assigned to a member.
+    /// @param _memberAddress Address of member
+    /// @param _roleId Checks member's authenticity with the roleId. i.e. Returns true if this roleId is assigned to member
     function checkRoleId_byAddress(address _memberAddress, uint32 _roleId) constant returns(bool) {
-        if (memberRoleData[_roleId].memberActive[_memberAddress] == true)
+        if(memberRoleData[_roleId].memberActive[_memberAddress] == true)
             return true;
         else
             return false;
     }
 
-    /// @dev Updates member role
-    /// @param _memberAddress Member address
-    /// @param _memberRoleId Member role id
-    /// @param _typeOf Type of role id of the member
-    function updateMemberRole(address _memberAddress, uint32 _memberRoleId, bool _typeOf) checkRoleAuthority(_memberRoleId) {
+    /// @dev Assign or Delete a member from specific role.
+    /// @param _memberAddress Address of Member
+    /// @param _roleId RoleId to update 
+    /// @param _typeOf typeOf is set to be True if we want to assign this role to member, False otherwise!
+    function updateMemberRole(address _memberAddress, uint32 _roleId, bool _typeOf) checkRoleAuthority(_roleId) {
         if (_typeOf == true) {
-            require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == false);
-            memberRoleData[_memberRoleId].memberCounter = SafeMath.add32(memberRoleData[_memberRoleId].memberCounter, 1);
-            memberRoleData[_memberRoleId].memberActive[_memberAddress] = true;
-            memberRoleData[_memberRoleId].memberAddress.push(_memberAddress);
+            require(memberRoleData[_roleId].memberActive[_memberAddress] == false);
+            memberRoleData[_roleId].memberCounter = SafeMath.add32(memberRoleData[_roleId].memberCounter, 1);
+            memberRoleData[_roleId].memberActive[_memberAddress] = true;
+            memberRoleData[_roleId].memberAddress.push(_memberAddress);
         } else {
-            require(memberRoleData[_memberRoleId].memberActive[_memberAddress] == true);
-            memberRoleData[_memberRoleId].memberCounter = SafeMath.sub32(memberRoleData[_memberRoleId].memberCounter, 1);
-            memberRoleData[_memberRoleId].memberActive[_memberAddress] = false;
+            require(memberRoleData[_roleId].memberActive[_memberAddress] == true);
+            memberRoleData[_roleId].memberCounter = SafeMath.sub32(memberRoleData[_roleId].memberCounter, 1);
+            memberRoleData[_roleId].memberActive[_memberAddress] = false;
         }
     }
 
-    /// @dev Changes member role id's changable member 
-    /// @param _memberRoleId Member role id
-    /// @param _newCanAddMember New authorized address against role id. (Responsible to assign/remove any address from Role)
-    function changeCanAddMember(uint32 _memberRoleId, address _newCanAddMember) {
-        if (authorizedAddress_againstRole[_memberRoleId] == 0x00)
-            authorizedAddress_againstRole[_memberRoleId] = _newCanAddMember;
+    /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
+    /// @param _roleId roleId to update its Authorized Address
+    /// @param _newCanAddMember New authorized address against role id
+    function changeCanAddMember(uint32 _roleId, address _newCanAddMember) {
+        if (authorizedAddress_againstRole[_roleId] == 0x00)
+            authorizedAddress_againstRole[_roleId] = _newCanAddMember;
         else {
-            require(msg.sender == authorizedAddress_againstRole[_memberRoleId]);
-            authorizedAddress_againstRole[_memberRoleId] = _newCanAddMember;
+            require(msg.sender == authorizedAddress_againstRole[_roleId]);
+            authorizedAddress_againstRole[_roleId] = _newCanAddMember;
         }
     }
 
@@ -207,26 +216,28 @@ contract memberRoles is Upgradeable{
         return memberRoleData[_memberRoleId].memberCounter;
     }
 
+    /// @def Return Member address at specific index against Role id.
     function getAllMemberAddressById(uint32 _memberRoleId, uint _index) constant returns(address) {
         return memberRoleData[_memberRoleId].memberAddress[_index];
     }
 
+    /// @def Return member address who holds the right to add/remove any member from specific role.
     function getAuthrizedMember_againstRole(uint32 _memberRoleId) constant returns(address) {
         return authorizedAddress_againstRole[_memberRoleId];
     }
 
     /// @dev Gets the role name when given role id
-    /// @param _memberRoleId Member role id
-    /// @return  roleId Role id
-    /// @return memberRoleName Member role name
+    /// @param _memberRoleId Role id to get the Role name details
+    /// @return  roleId Same role id
+    /// @return memberRoleName Role name against that role id.
     function getMemberRoleNameById(uint32 _memberRoleId) public constant returns(uint32 roleId, bytes32 memberRoleName) {
         memberRoleName = memberRole[_memberRoleId];
         roleId = _memberRoleId;
     }
 
-    /// @dev Gets roles and members
-    /// @return roleName Role name
-    /// @return totalMembers Total members
+    /// @dev Return total number of members assigned against each role id.
+    /// @return roleName Role name array is returned
+    /// @return totalMembers Total members in particular role id
     function getRolesAndMember() constant returns(bytes32[] roleName, uint[] totalMembers) {
         roleName = new bytes32[](memberRole.length);
         totalMembers = new uint[](memberRole.length);
@@ -239,13 +250,11 @@ contract memberRoles is Upgradeable{
     }
 
     /// @dev Gets the role id which is authorized to categorize a proposal
-    /// @return roleId Role id of the authorized member
     function getAuthorizedMemberId() public constant returns(uint8 roleId) {
         roleId = authorizedAddress_toCategorize;
     }
 
     /// @dev Gets total number of member roles available
-    /// @return length Total member roles' length
     function getTotalMemberRoles() public constant returns(uint) {
         return memberRole.length;
     }
