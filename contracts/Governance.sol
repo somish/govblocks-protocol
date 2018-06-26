@@ -199,7 +199,7 @@ contract Governance is Upgradeable{
         uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake,proposalDepositPerc), 100);
 
         if (_proposalStake != 0) {
-            require(validityUpto > PC.getRemainingClosingTime(_proposalId, _categoryId, _currVotingStatus));
+            // require(validityUpto >= PC.getRemainingClosingTime(_proposalId, _categoryId, _currVotingStatus));
             if (depositPerc != 0 && depositPerc != 100) {
                 uint stake= SafeMath.sub(_proposalStake, depositAmount);
                 GBTS.lockToken(msg.sender,stake, validityUpto, _v, _r, _s, _lockTokenTxHash);
@@ -217,7 +217,7 @@ contract Governance is Upgradeable{
 
     /// @dev Call oraclize for closing proposal
     /// @param _proposalId Proposal id
-    function callOraclize(uint _proposalId)  {
+    function callOraclize(uint _proposalId) internal {
         uint8 subCategory=GD.getProposalCategory(_proposalId);
         uint8 _categoryId = PC.getCategoryId_bySubId(subCategory);
         uint closingTime = PC.getClosingTimeAtIndex(_categoryId, 0);
@@ -562,24 +562,25 @@ contract Governance is Upgradeable{
     /// @dev Gets total votes against a proposal when given proposal id
     /// @param _proposalId Proposal id
     /// @return totalVotes total votes against a proposal
-    function getAllVoteIdsLength_byProposal(uint _proposalId) constant returns(uint totalVotes) {
-        // MR=memberRoles(MRAddress);
-        uint length = MR.getTotalMemberRoles();
-        for (uint i = 0; i < length; i++) {
-            totalVotes = totalVotes + GD.getAllVoteIdsLength_byProposalRole(_proposalId, i);
-        }
-    }
+    // function getAllVoteIdsLength_byProposal(uint _proposalId) constant returns(uint totalVotes) {
+    //     // MR=memberRoles(MRAddress);
+    //     uint length = MR.getTotalMemberRoles();
+    //     for (uint i = 0; i < length; i++) {
+    //         totalVotes = totalVotes + GD.getAllVoteIdsLength_byProposalRole(_proposalId, i);
+    //     }
+    // }
 
-    function proposalSubmission(uint proposalDateAdd, uint _proposalId, address _VTAddress, uint8 _categoryId, uint _proposalSolutionStake, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) internal {
+    function proposalSubmission(uint proposalDateAdd, uint _proposalId, address _VTAddress, uint8 _categoryId, uint _proposalSolutionStake, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash)  {
         require(_categoryId > 0);
         VT = VotingType(_VTAddress);
         openProposalForVoting(_proposalId, _categoryId, _proposalSolutionStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
         proposalSubmission1(_proposalId, proposalDateAdd, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash, _proposalSolutionStake);
     }
 
-    function proposalSubmission1(uint _proposalId, uint proposalDateAdd, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, uint _proposalSolutionStake) internal {
+    function proposalSubmission1(uint _proposalId, uint proposalDateAdd, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, uint _proposalSolutionStake)  {
+        VT = VotingType(0x68D2e5342Dae099C1894ce022B6101bb6d4BBF3C);
         VT.addSolution(_proposalId, msg.sender, 0, _solutionHash, proposalDateAdd, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-        GD.callProposalWithSolutionEvent(msg.sender, _proposalId, "", _solutionHash, proposalDateAdd, _proposalSolutionStake);
+        // GD.callProposalWithSolutionEvent(msg.sender, _proposalId, "", _solutionHash, proposalDateAdd, _proposalSolutionStake);
     }
 
 }
