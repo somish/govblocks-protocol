@@ -214,26 +214,37 @@ contract simpleVoting is VotingType, Upgradeable {
 
     /// @dev Gives rewards to respective members after final decision
     /// @param _proposalId Proposal id
-    function giveReward_afterFinalDecision(uint _proposalId) onlyInternal {
+    function giveReward_afterFinalDecision(uint _proposalId)  {
         uint totalVoteValue;
         uint totalReward;
+        address ownerAddress;
+        uint depositedTokens;
         uint finalVerdict = GD.getProposalFinalVerdict(_proposalId);
-        if (GD.getProposalFinalVerdict(_proposalId) == 0)
-            totalReward = SafeMath.add(totalReward, GD.getDepositedTokens(GD.getProposalOwner(_proposalId), _proposalId, 'P'));
+        if (finalVerdict == 0){
+            ownerAddress=GD.getProposalOwner(_proposalId);
+            depositedTokens = GD.getDepositedTokens(ownerAddress, _proposalId, 'P');
+            totalReward = SafeMath.add(totalReward, depositedTokens);
+        }    
 
         for (i = 0; i < GD.getTotalSolutions(_proposalId); i++) {
-            if (i != finalVerdict)
-                totalReward = SafeMath.add(totalReward, GD.getDepositedTokens(GD.getSolutionAddedByProposalId(_proposalId, i), _proposalId, 'S'));
+            if (i != finalVerdict){
+                ownerAddress=GD.getSolutionAddedByProposalId(_proposalId, i);
+                depositedTokens= GD.getDepositedTokens(ownerAddress, _proposalId, 'S');
+                totalReward = SafeMath.add(totalReward,depositedTokens);
+            }    
         }
 
         uint mrLength = MR.getTotalMemberRoles();
         for (uint i = 0; i < mrLength; i++) {
             uint mrVoteLength = GD.getAllVoteIdsLength_byProposalRole(_proposalId, i);
-            for (uint j = 0; j < mrVoteLength; j++) {
+            for (uint j = 1; j < mrVoteLength; j++) {
                 uint voteId = GD.getVoteId_againstProposalRole(_proposalId, j, 0);
                 if (GD.getSolutionByVoteIdAndIndex(voteId, 0) != finalVerdict) {
-                    totalReward = SafeMath.add(totalReward, GD.getDepositedTokens(GD.getVoterAddress(voteId), _proposalId, 'V'));
-                    totalVoteValue = SafeMath.add(totalVoteValue, GD.getVoteValue(voteId));
+                    ownerAddress=GD.getVoterAddress(voteId);
+                    depositedTokens=GD.getDepositedTokens(ownerAddress, _proposalId, 'V');
+                    totalReward = SafeMath.add(totalReward, depositedTokens );
+                    uint voteValue=GD.getVoteValue(voteId);
+                    totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
                 }
             }
         }
@@ -318,20 +329,18 @@ contract simpleVoting is VotingType, Upgradeable {
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
     /// @param _proposalId Proposal id
     function closeProposalVote(uint _proposalId) onlyInternal {
-        uint totalVoteValue = 0;
-        uint8 category = GD.getProposalCategory(_proposalId);
+        uint256 totalVoteValue = 0;
+        uint8 category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
         uint8 currentVotingId = GD.getProposalCurrentVotingId(_proposalId);
         uint32 _mrSequenceId = PC.getRoleSequencAtIndex(category, currentVotingId);
         require(GOV.checkForClosing(_proposalId, _mrSequenceId) == 1);
-
-        uint[] memory finalVoteValue = new uint[](GD.getTotalSolutions(_proposalId));
+        uint[] memory finalVoteValue = new uint[](GD.getTotalSolutions(_proposalId)+1);
         for (uint8 i = 0; i < GD.getAllVoteIdsLength_byProposalRole(_proposalId, _mrSequenceId); i++) {
             uint voteId = GD.getVoteId_againstProposalRole(_proposalId, _mrSequenceId, i);
             uint solutionChosen = GD.getSolutionByVoteIdAndIndex(voteId, 0);
             uint voteValue = GD.getVoteValue(voteId);
             totalVoteValue = totalVoteValue + voteValue;
             finalVoteValue[solutionChosen] = finalVoteValue[solutionChosen] + voteValue;
-
         }
 
         uint8 max = 0;
@@ -347,7 +356,7 @@ contract simpleVoting is VotingType, Upgradeable {
             uint8 interVerdict = GD.getProposalIntermediateVerdict(_proposalId);
 
             GOV.updateProposalDetails(_proposalId, currentVotingId, max, interVerdict);
-            if (GD.getProposalCurrentVotingId(_proposalId) + 1 < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId)))
+            if (GD.getProposalCurrentVotingId(_proposalId) + 1 < PC.getRoleSequencLength(category))
                 GD.changeProposalStatus(_proposalId, 7);
             else
                 GD.changeProposalStatus(_proposalId, 6);
@@ -355,7 +364,7 @@ contract simpleVoting is VotingType, Upgradeable {
         }
     }
 
-    function closeProposalVote1(uint maxVoteValue, uint totalVoteValue, uint8 category, uint _proposalId, uint8 max) internal {
+    function closeProposalVote1(uint maxVoteValue, uint totalVoteValue, uint8 category, uint _proposalId, uint8 max) internal{
         uint _closingTime;
         uint _majorityVote;
         uint8 currentVotingId = GD.getProposalCurrentVotingId(_proposalId);
@@ -363,7 +372,7 @@ contract simpleVoting is VotingType, Upgradeable {
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
                 currentVotingId = currentVotingId + 1;
-                if (currentVotingId < PC.getRoleSequencLength(GD.getProposalCategory(_proposalId))) {
+                if (currentVotingId < PC.getRoleSequencLength(category)) {
                     GOV.updateProposalDetails(_proposalId, currentVotingId, max, 0);
                     P1.closeProposalOraclise(_proposalId, _closingTime);
                     GD.callOraclizeCallEvent(_proposalId, GD.getProposalDateUpd(_proposalId), PC.getClosingTimeAtIndex(category, currentVotingId));
@@ -386,7 +395,7 @@ contract simpleVoting is VotingType, Upgradeable {
 
     }
 
-    function checkForThreshold(uint _proposalId, uint32 _mrSequenceId) internal constant returns(bool) {
+    function checkForThreshold(uint _proposalId, uint32 _mrSequenceId)  constant returns(bool) {
         uint thresHoldValue;
         if (_mrSequenceId == 2) {
             address dAppTokenAddress = GBM.getDappTokenAddress(MS.DappName());
