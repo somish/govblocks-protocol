@@ -259,7 +259,7 @@ contract simpleVoting is VotingType, Upgradeable {
     function receiveStake(bytes2 _type, uint _proposalId, uint _Stake, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) internal {
         uint8 currVotingId = GD.getProposalCurrentVotingId(_proposalId);
         uint depositedTokens;
-        uint depositPerc = GD.depositPercSolution();
+        uint depositPerc = GD.depositPercVote();
         if (_type == 'S')
             depositedTokens = GD.getDepositedTokens(msg.sender, _proposalId, 'S');
         else
@@ -269,7 +269,7 @@ contract simpleVoting is VotingType, Upgradeable {
         uint category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
 
         if (_Stake != 0) {
-            require(_validityUpto > PC.getRemainingClosingTime(_proposalId, category, currVotingId));
+            require(_validityUpto >= PC.getRemainingClosingTime(_proposalId, category, currVotingId));
             if (depositPerc != 0 && depositPerc != 100) {
                 GBTS.lockToken(msg.sender, SafeMath.sub(_Stake, depositAmount), _validityUpto, _v, _r, _s, _lockTokenTxHash);
                 if (_type == 'S')
