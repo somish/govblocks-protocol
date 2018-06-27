@@ -397,7 +397,10 @@ contract governanceData is Upgradeable{
         }
     }
 
-    // VERSION 2.0 : VOTE DETAILS 
+    
+    function addVote(address _memberAddress, uint[] _solutionChosen,uint _voteValue) onlyInternal {
+        allVotes.push(proposalVote(_memberAddress, _solutionChosen, _voteValue));
+    }
 
     /// @dev Sets vote id against member
     /// @param _memberAddress Member address
@@ -415,10 +418,10 @@ contract governanceData is Upgradeable{
         ProposalRoleVote[_proposalId][_roleId].push(_voteId);
     }
 
-    //// @dev Sets vote value for vote id=_voteId
-    function setVoteValue(uint _voteId, uint _voteValue) onlyInternal {
-        allVotes[_voteId].voteValue = _voteValue;
-    }
+
+    // function setVoteValue(uint _voteId, uint _voteValue) onlyInternal {
+    //     allVotes[_voteId].voteValue = _voteValue;
+    // }
 
     /// @dev Sets all the voting type names and their addresses
     function setVotingTypeDetails(bytes32 _votingTypeName, address _votingTypeAddress) internal {
@@ -510,12 +513,10 @@ contract governanceData is Upgradeable{
 
     // VERSION 2.0 : SOLUTION DETAILS
 
-    /// @dev Sets Solution chosen by vote id
-    /// @param _voteId Vote id
-    /// @param _value Solution chosen
-    function setSolutionChosen(uint _voteId, uint _value) onlyInternal {
-        allVotes[_voteId].solutionChosen.push(_value);
-    }
+
+    // function setSolutionChosen(uint _voteId, uint _value) onlyInternal {
+    //     allVotes[_voteId].solutionChosen.push(_value);
+    // }
 
     function setSolutionAdded(uint _proposalId, address _memberAddress) onlyInternal {
         allProposalSolutions[_proposalId].push(_memberAddress);

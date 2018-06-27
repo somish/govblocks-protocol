@@ -264,7 +264,7 @@ contract Governance is Upgradeable{
         uint _majorityVote;
         (, , dateUpdate, , pStatus) = GD.getProposalDetailsById1(_proposalId);
         uint _categoryId = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
-        (, _closingTime, _majorityVote) = PC.getCategoryData3(_categoryId, GD.getProposalCurrentVotingId(_proposalId));
+        (, _majorityVote,_closingTime) = PC.getCategoryData3(_categoryId, GD.getProposalCurrentVotingId(_proposalId));
 
         if (pStatus == 2 && _roleId != 2) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now || GD.getAllVoteIdsLength_byProposalRole(_proposalId, _roleId) == MR.getAllMemberLength(_roleId))
