@@ -413,7 +413,7 @@ contract governanceData is Upgradeable{
 
     // VERSION 2.0 : VOTE DETAILS 
 
-    
+    /// @def Add vote details such as Solution id to which he has voted and vote value
     function addVote(address _memberAddress, uint[] _solutionChosen,uint _voteValue) onlyInternal {
         allVotes.push(proposalVote(_memberAddress, _solutionChosen, _voteValue));
     }
