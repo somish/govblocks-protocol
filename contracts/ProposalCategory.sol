@@ -203,11 +203,11 @@ contract ProposalCategory {
 
     /// @dev Add new sub category against category.
     /// @param _categoryName Name of the main category
-    /// @param actionHash Automated Action hash has Contract Address and function name i.e. Functionality that needs to be performed after proposal acceptance.
+    /// @param _actionHash Automated Action hash has Contract Address and function name i.e. Functionality that needs to be performed after proposal acceptance.
     /// @param _mainCategoryId Id of main category
-    function addNewSubCategory(string _categoryName, string actionHash, uint8 _mainCategoryId) onlyGBMSubCategory {
+    function addNewSubCategory(string _categoryName, string _actionHash, uint8 _mainCategoryId) onlyGBMSubCategory {
         allSubId_byCategory[_mainCategoryId].push(allSubCategory.length);
-        allSubCategory.push(subCategory(_categoryName, actionHash, _mainCategoryId));
+        allSubCategory.push(subCategory(_categoryName, _actionHash, _mainCategoryId));
     }
 
     /// @dev Update Sub category of a specific category.
