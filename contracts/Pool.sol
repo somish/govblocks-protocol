@@ -116,7 +116,7 @@ contract Pool is usingOraclize, Upgradeable {
 
     /// @dev Saves api details
     /// @param myid Proposal id
-    /// @param _typeof Type of is different in case we have different stages of process. i.e. here default type of is "PRO"
+    /// @param _typeof typeOf differ in case we have different stages of process. i.e. here default typeOf is "PRO"
     /// @param id This is index of the oraclize call.
     function saveApiDetails(bytes32 myid, bytes8 _typeof, uint id) internal {
         allAPIid[myid] = apiId(_typeof, id, uint64(now), uint64(now));
@@ -167,7 +167,7 @@ contract Pool is usingOraclize, Upgradeable {
         allAPIid[myid].dateUpd = uint64(now);
     }
 
-    /// @dev Transfers back ether
+    /// @dev Transfer Ether back to Pool    
     /// @param amount Amount to be transferred back
     function transferBackEther(uint256 amount) onlyOwner {
         address _add = msg.sender;
@@ -195,8 +195,7 @@ contract Pool is usingOraclize, Upgradeable {
     }
 
     /// @dev Gets proposal index by proposal id
-    /// @param _proposalId Proposal id
-    /// @return myIndexId Proposal index of corresponding proposal id
+    /// @return myIndexId Api index of corresponding proposal id
     function getMyIndexByProposalId(uint _proposalId) constant returns(uint myIndexId) {
         uint length = getApiCall_length();
         for (uint i = 0; i < length; i++) {
