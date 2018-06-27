@@ -41,7 +41,7 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Constructor function for master
     /// @param _GovBlocksMasterAddress GovBlocks master address
-    /// @param _gbUserName GovBlocks username
+    /// @param _gbUserName dApp Name which is integrating GovBlocks.
     function Master(address _GovBlocksMasterAddress, bytes32 _gbUserName) {
         contracts_active[address(this)] = true;
         versionLength = 0;
@@ -66,30 +66,30 @@ contract Master is Ownable, Upgradeable {
         _;
     }
 
+    /// @def Returns true if the caller address is GovBlocksMaster Address.
     function isGBM(address _GBMaddress) constant returns(bool check) {
         require(_GBMaddress == GBMAddress);
     }
 
-    /// @dev Checks for authorized Member for Dapp
+    /// @dev Checks for authorized Member for Dapp and returns true if the address is authorized in dApp.
     /// @param _memberaddress Address to be checked
-    /// @return check Check flag value (authorized GovBlocks owner = 1)
     function isAuthGB(address _memberaddress) constant returns(bool check) {
         GBM = GovBlocksMaster(GBMAddress);
         require(GBM.isAuthorizedGBOwner(DappName, _memberaddress) == true);
         check = true;
     }
 
-    /// @dev Checks for internal 
-    /// @param _address Contract address to be checked for internal
-    /// @return check Check flag (boolean value)
+    /// @dev Checks if the caller address is either one of its active contract address or owner.
+    /// @param _address  address to be checked for internal
+    /// @return check returns true if the condition meets
     function isInternal(address _address) constant returns(bool check) {
         if (contracts_active[_address] == true || owner == _address)
             check = true;
     }
 
-    /// @dev Checks for owner 
-    /// @param _ownerAddress Contract address to be checked for owner
-    /// @return check Check flag (boolean value)
+    /// @dev Checks if the caller address is owner
+    /// @param _ownerAddress member address to be checked for owner
+    /// @return check returns true if the address is owner address
     function isOwner(address _ownerAddress) constant returns(bool check) {
         if (owner == _ownerAddress)
             check = true;
@@ -102,6 +102,7 @@ contract Master is Ownable, Upgradeable {
         owner = _memberaddress;
     }
 
+    /// @def Save the initials of all the contracts
     function addContractNames() internal {
         allContractNames.push("MS");
         allContractNames.push("GD");
@@ -169,6 +170,7 @@ contract Master is Ownable, Upgradeable {
     function changeGBTSAddress(address _GBTSAddress) public onlyInternal {
     }
 
+    /// @dev Changes Master contract address
     function changeMasterAddress(address _MasterAddress) public onlyInternal {
         Master MS = Master(_MasterAddress);
         require(MS.versionLength() > 0);
@@ -193,7 +195,7 @@ contract Master is Ownable, Upgradeable {
     }
 
 
-    /// @dev Changes GBT token address in GD, SV, SVT and governance contracts
+    /// @dev Changes GBT standard token address in GD, SV, SVT and governance contracts
     /// @param _tokenAddress Address of the GBT token
     function changeGBTAddress(address _tokenAddress) {
         require(isValidateOwner());
@@ -203,6 +205,7 @@ contract Master is Ownable, Upgradeable {
         }
     }
 
+    /// @def Checks the authenticity of changing address or switching to recent version 
     function isValidateOwner() constant returns(bool) {
         GBM = GovBlocksMaster(GBMAddress);
         uint16 version = versionLength - 1;
@@ -225,15 +228,15 @@ contract Master is Ownable, Upgradeable {
     }
 
     /// @dev Gets current version amd its master address
-    /// @return versionNo Current version number
-    /// @return MSAddress Master address
+    /// @return versionNo Current version number that is active
+    /// @return MSAddress Master contract address
     function getCurrentVersion() constant returns(uint16 versionNo, address MSAddress) {
         versionNo = versionLength - 1;
         MSAddress = allContractVersions[versionNo]['MS'];
     }
 
     /// @dev Gets latest version name and address
-    /// @param _versionNo Version number
+    /// @param _versionNo Version number that data we want to fetch
     /// @return versionNo Version number
     /// @return contractsName Latest version's contract names
     /// @return contractsAddress Latest version's contract addresses
@@ -250,7 +253,6 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Gets latest contract address
     /// @param _contractName Contract name to fetch
-    /// @return versionNo Version number
     function getLatestAddress(bytes2 _contractName) public constant returns(address contractAddress){
         contractAddress = allContractVersions[versionLength - 1][_contractName];
     }
