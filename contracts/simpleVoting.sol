@@ -117,24 +117,22 @@ contract simpleVoting is VotingType, Upgradeable {
         P1 = Pool(MS.getLatestAddress("PL"));
     }
 
-    /// @dev Changes GBT controller address
-    /// @param _GBTSAddress New GBT controller address
+    /// @dev Changes GBT Standard Token address
+    /// @param _GBTSAddress New GBT standard token address
     function changeGBTSAddress(address _GBTSAddress) onlyMaster {
         GBTS = GBTStandardToken(_GBTSAddress);
     }
 
     /// @dev Initiates add solution (Stake in ether)
-    /// @param _proposalId Proposal id
-    /// @param _solutionHash Solution hash
+    /// @param _solutionHash It contains parameters, values and description needed according to proposal
     function addSolution_inEther(uint _proposalId, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) payable {
         uint tokenAmount = GBTS.buyToken.value(msg.value)();
         initiateAddSolution(_proposalId, tokenAmount, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash);
     }
 
     /// @dev Initiates add solution 
-    /// @param _proposalId Proposal id
-    /// @param _memberAddress Member address
-    /// @param _solutionStake Solution stake
+    /// @param _memberAddress Address of member who is adding the solution
+    /// @param _solutionStake Stake in GBT against adding solution
     /// @param _solutionHash Solution hash
     /// @param _dateAdd Date when the solution was added
     function addSolution(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) public validateStake(_proposalId, _solutionStake) {
