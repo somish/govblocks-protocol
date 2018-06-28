@@ -214,7 +214,7 @@ contract simpleVoting is VotingType, Upgradeable {
 
     /// @dev Gives rewards to respective members after final decision
     /// @param _proposalId Proposal id
-    function giveReward_afterFinalDecision(uint _proposalId)  {
+    function giveReward_afterFinalDecision(uint _proposalId)   {
         uint totalVoteValue;
         uint totalReward;
         address ownerAddress;
@@ -226,22 +226,29 @@ contract simpleVoting is VotingType, Upgradeable {
             totalReward = SafeMath.add(totalReward, depositedTokens);
         }    
 
-        for (i = 0; i < GD.getTotalSolutions(_proposalId); i++) {
+        for (uint i = 0; i < GD.getTotalSolutions(_proposalId); i++) {
             if (i != finalVerdict){
                 ownerAddress=GD.getSolutionAddedByProposalId(_proposalId, i);
                 depositedTokens= GD.getDepositedTokens(ownerAddress, _proposalId, 'S');
                 totalReward = SafeMath.add(totalReward,depositedTokens);
             }    
         }
-
-        uint mrLength = MR.getTotalMemberRoles();
+        
+        giveReward_afterFinalDecision1(finalVerdict,_proposalId,ownerAddress,depositedTokens,totalReward,totalVoteValue);
+    }
+    
+    function giveReward_afterFinalDecision1(uint finalVerdict,uint _proposalId,address _ownerAddress,uint depositedTokens,uint totalReward,uint totalVoteValue) internal
+    {
+        uint category = GD.getProposalCategory(_proposalId);
+        uint mrLength = PC.getRoleSequencLength(category);
         for (uint i = 0; i < mrLength; i++) {
-            uint mrVoteLength = GD.getAllVoteIdsLength_byProposalRole(_proposalId, i);
-            for (uint j = 1; j < mrVoteLength; j++) {
-                uint voteId = GD.getVoteId_againstProposalRole(_proposalId, j, 0);
+            uint roleId = PC.getRoleSequencAtIndex(category,i);
+            uint mrVoteLength = GD.getAllVoteIdsLength_byProposalRole(_proposalId, roleId);
+            for (uint j = 0; j < mrVoteLength; j++) {
+                uint voteId = GD.getVoteId_againstProposalRole(_proposalId, roleId , j);
                 if (GD.getSolutionByVoteIdAndIndex(voteId, 0) != finalVerdict) {
-                    ownerAddress=GD.getVoterAddress(voteId);
-                    depositedTokens=GD.getDepositedTokens(ownerAddress, _proposalId, 'V');
+                    _ownerAddress=GD.getVoterAddress(voteId);
+                    depositedTokens=GD.getDepositedTokens(_ownerAddress, _proposalId, 'V');
                     totalReward = SafeMath.add(totalReward, depositedTokens );
                     uint voteValue=GD.getVoteValue(voteId);
                     totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
