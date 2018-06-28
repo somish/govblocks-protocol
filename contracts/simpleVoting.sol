@@ -299,9 +299,9 @@ contract simpleVoting is VotingType, Upgradeable {
 
     function validateMember(uint _proposalId, uint[] _solutionChosen) constant returns(bool) {
         uint8 _mrSequence;
+        uint8 category;
         uint currentVotingId;
         uint intermediateVerdict;
-        uint8 category;
         (, category, currentVotingId, intermediateVerdict, , , ) = GD.getProposalDetailsById2(_proposalId);
         uint _categoryId=PC.getCategoryId_bySubId(category);
         (_mrSequence, , ) = PC.getCategoryData3(_categoryId, currentVotingId);
@@ -332,10 +332,12 @@ contract simpleVoting is VotingType, Upgradeable {
         uint256 totalVoteValue = 0;
         uint8 category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
         uint8 currentVotingId = GD.getProposalCurrentVotingId(_proposalId);
+        uint8 i;
+        uint8 max = 0;
         uint32 _mrSequenceId = PC.getRoleSequencAtIndex(category, currentVotingId);
         require(GOV.checkForClosing(_proposalId, _mrSequenceId) == 1);
         uint[] memory finalVoteValue = new uint[](GD.getTotalSolutions(_proposalId)+1);
-        for (uint8 i = 0; i < GD.getAllVoteIdsLength_byProposalRole(_proposalId, _mrSequenceId); i++) {
+        for (i = 0; i < GD.getAllVoteIdsLength_byProposalRole(_proposalId, _mrSequenceId); i++) {
             uint voteId = GD.getVoteId_againstProposalRole(_proposalId, _mrSequenceId, i);
             uint solutionChosen = GD.getSolutionByVoteIdAndIndex(voteId, 0);
             uint voteValue = GD.getVoteValue(voteId);
@@ -343,7 +345,7 @@ contract simpleVoting is VotingType, Upgradeable {
             finalVoteValue[solutionChosen] = finalVoteValue[solutionChosen] + voteValue;
         }
 
-        uint8 max = 0;
+        
         for (i = 0; i < finalVoteValue.length; i++) {
             if (finalVoteValue[max] < finalVoteValue[i]) {
                 max = i;
