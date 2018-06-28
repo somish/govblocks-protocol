@@ -152,6 +152,10 @@ contract simpleVoting is VotingType, Upgradeable {
         require(GD.getProposalCategory(_proposalId) > 0);
         if (msg.sender == _memberAddress)
             receiveStake('S', _proposalId, _solutionStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+        addSolution2(_proposalId, _memberAddress, _action, _solutionHash, _dateAdd, _solutionStake);
+    }
+    
+    function addSolution2(uint _proposalId, address _memberAddress, bytes _action, string _solutionHash, uint _dateAdd, uint _solutionStake) internal {
         GD.setSolutionAdded(_proposalId, _memberAddress, _action);
         uint solutionId = GD.getTotalSolutions(_proposalId);
         GD.callSolutionEvent(_proposalId, msg.sender, solutionId, _solutionHash, _dateAdd, _solutionStake);
@@ -256,7 +260,7 @@ contract simpleVoting is VotingType, Upgradeable {
         }
     }
 
-    /// @def Returns true if the member passes all the checks to vote. i.e. If he is authorize to vote
+    /// @dev Returns true if the member passes all the checks to vote. i.e. If he is authorize to vote
     function validateMember(uint _proposalId, uint[] _solutionChosen) constant returns(bool) {
         uint8 _mrSequence;
         uint8 category;
