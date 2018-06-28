@@ -237,7 +237,7 @@ contract Governance is Upgradeable{
 
     }
 
-    /// @def Proposal is submitted for voting i.e. Voting is started from this step
+    /// @dev Proposal is submitted for voting i.e. Voting is started from this step
     function openProposalForVoting2(
         uint _proposalId, 
         uint8 _categoryId, 
@@ -393,7 +393,7 @@ contract Governance is Upgradeable{
         GD.setProposalTotalVoteValue(_proposalId, _totalVoteValue);
     }
 
-    /// @def Calculate reward for proposal creation against member
+    /// @dev Calculate reward for proposal creation against member
     /// @param _memberAddress Address of member who claimed the reward
     /// @param _lastRewardProposalId Last id proposal till which the reward being distributed
     function calculateProposalReward(address _memberAddress, uint _lastRewardProposalId) internal constant returns(uint tempfinalRewardToDistribute) {
@@ -424,14 +424,14 @@ contract Governance is Upgradeable{
         GD.setLastRewardId_ofCreatedProposals(_memberAddress, lastIndex);
     }
 
-    /// @def Saving reward and member reputation details 
+    /// @dev Saving reward and member reputation details 
     function calculateProposalReward1(address _memberAddress, uint i, uint calcReward, uint32 addProposalOwnerPoints) internal {
         GD.callRewardEvent(_memberAddress, i, "GBT Reward for being Proposal owner - Accepted ", calcReward);
         GD.setMemberReputation("Reputation credit for proposal owner - Accepted", i, _memberAddress, SafeMath.add32(GD.getMemberReputation(_memberAddress), addProposalOwnerPoints), addProposalOwnerPoints, "C");
         GD.setReturnedTokensFlag(_memberAddress, i, 'P', 1);
     }
 
-    /// @def Calculate reward for proposing solution against different proposals
+    /// @dev Calculate reward for proposing solution against different proposals
     /// @param _memberAddress Address of member who claimed the reward
     /// @param _lastRewardSolutionProposalId Last id proposal(To which solutions being proposed) till which the reward being distributed
     function calculateSolutionReward(address _memberAddress, uint _lastRewardSolutionProposalId) internal constant returns(uint tempfinalRewardToDistribute) {
@@ -463,7 +463,7 @@ contract Governance is Upgradeable{
         GD.setLastRewardId_ofSolutionProposals(_memberAddress, lastIndex);
     }
 
-    /// @def Saving solution reward and member reputation details
+    /// @dev Saving solution reward and member reputation details
     function calculateSolutionReward1(
         address _memberAddress, 
         uint i, 
@@ -487,7 +487,7 @@ contract Governance is Upgradeable{
         }
     }
     
-    /// @def Calculate reward for casting vote against member
+    /// @dev Calculate reward for casting vote against member
     /// @param _memberAddress Address of member who claimed the reward
     /// @param _lastRewardVoteId Last vote id till which the reward being distributed
     function calculateVoteReward(address _memberAddress, uint _lastRewardVoteId) internal constant returns(uint tempfinalRewardToDistribute) {
@@ -645,7 +645,7 @@ contract Governance is Upgradeable{
         }
     }
 
-    /// @def When creating or submitting proposal with solution, This function open the proposal for voting
+    /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
     function proposalSubmission(
         uint proposalDateAdd, 
         uint _proposalId, 
@@ -667,7 +667,7 @@ contract Governance is Upgradeable{
         proposalSubmission1(_proposalId, proposalDateAdd, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash, _proposalSolutionStake);
     }
 
-    /// @def When creating proposal with solution, it adds solution details against proposal
+    /// @dev When creating proposal with solution, it adds solution details against proposal
     function proposalSubmission1(
         uint _proposalId, 
         uint proposalDateAdd, 

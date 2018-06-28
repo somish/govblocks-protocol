@@ -66,13 +66,13 @@ contract memberRoles is Upgradeable{
         _;
     }
 
-    /// @def Returns true if the caller address is Master's contract address
+    /// @dev Returns true if the caller address is Master's contract address
     function isMaster() constant returns(bool) {
         if (msg.sender == masterAddress)
             return true;
     }
 
-    /// @def Returns true if the caller address is GovBlocksMaster contract address.
+    /// @dev Returns true if the caller address is GovBlocksMaster contract address.
     function isGBM() constant returns(bool) {
         MS = Master(masterAddress);
         if (MS.isGBM(msg.sender) == true)
@@ -95,13 +95,13 @@ contract memberRoles is Upgradeable{
     function changeGBTSAddress(address _GBTAddress) {
     }
 
-    /// @def To Initiale default settings whenever the contract is regenerated!
+    /// @dev To Initiale default settings whenever the contract is regenerated!
     function updateDependencyAddresses() {
         if(!constructorCheck)
             MemberRolesInitiate();
     }
 
-    /// @def Add dApp Owner in Advisory Board Members.
+    /// @dev Add dApp Owner in Advisory Board Members.
     function setOwnerRole() internal {
         MS = Master(masterAddress);
         address ownAddress = MS.owner();
@@ -110,7 +110,7 @@ contract memberRoles is Upgradeable{
         memberRoleData[1].memberAddress.push(ownAddress);
     }
 
-    /// @def Get Total number of role ids that has been assigned to a member so far.
+    /// @dev Get Total number of role ids that has been assigned to a member so far.
     function getRoleIdLengthByAddress(address _memberAddress) internal constant returns(uint8 count) {
         uint length = getTotalMemberRoles();
         for (uint8 i = 0; i < length; i++) {
@@ -120,7 +120,7 @@ contract memberRoles is Upgradeable{
         return count;
     }
 
-    /// @def Get All role ids array that has been assigned to a member so far.
+    /// @dev Get All role ids array that has been assigned to a member so far.
     function getRoleIdByAddress(address _memberAddress) constant returns(uint32[] assignedRoles) {
         uint8 length = getRoleIdLengthByAddress(_memberAddress);
         uint8 j = 0;
@@ -134,7 +134,7 @@ contract memberRoles is Upgradeable{
         return assignedRoles;
     }
 
-    /// @def Returns true if the given role id is assigned to a member.
+    /// @dev Returns true if the given role id is assigned to a member.
     /// @param _memberAddress Address of member
     /// @param _roleId Checks member's authenticity with the roleId. i.e. Returns true if this roleId is assigned to member
     function checkRoleId_byAddress(address _memberAddress, uint32 _roleId) constant returns(bool) {
@@ -216,12 +216,12 @@ contract memberRoles is Upgradeable{
         return memberRoleData[_memberRoleId].memberCounter;
     }
 
-    /// @def Return Member address at specific index against Role id.
+    /// @dev Return Member address at specific index against Role id.
     function getAllMemberAddressById(uint32 _memberRoleId, uint _index) constant returns(address) {
         return memberRoleData[_memberRoleId].memberAddress[_index];
     }
 
-    /// @def Return member address who holds the right to add/remove any member from specific role.
+    /// @dev Return member address who holds the right to add/remove any member from specific role.
     function getAuthrizedMember_againstRole(uint32 _memberRoleId) constant returns(address) {
         return authorizedAddress_againstRole[_memberRoleId];
     }

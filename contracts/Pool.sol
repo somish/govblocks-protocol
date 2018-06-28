@@ -84,7 +84,7 @@ contract Pool is usingOraclize, Upgradeable {
     function updateDependencyAddresses() {
     }
 
-    /// @def Convert Pool ETH into GBT
+    /// @dev Convert Pool ETH into GBT
     function buyPoolGBT(uint _gbt) {
         uint _wei = SafeMath.mul(_gbt, GBTS.tokenPrice());
         GBTS.buyToken.value(_wei)();
@@ -109,7 +109,7 @@ contract Pool is usingOraclize, Upgradeable {
         addInAllApiCall(myid2);
     }
 
-    /// @def Get total length of oraclize call being triggered using this function  "closeProposalOraclise"
+    /// @dev Get total length of oraclize call being triggered using this function  "closeProposalOraclise"
     function getApiCall_length() constant returns(uint len) {
         return allAPIcall.length;
     }

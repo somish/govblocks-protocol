@@ -66,7 +66,7 @@ contract Master is Ownable, Upgradeable {
         _;
     }
 
-    /// @def Returns true if the caller address is GovBlocksMaster Address.
+    /// @dev Returns true if the caller address is GovBlocksMaster Address.
     function isGBM(address _GBMaddress) constant returns(bool check) {
         require(_GBMaddress == GBMAddress);
     }
@@ -102,7 +102,7 @@ contract Master is Ownable, Upgradeable {
         owner = _memberaddress;
     }
 
-    /// @def Save the initials of all the contracts
+    /// @dev Save the initials of all the contracts
     function addContractNames() internal {
         allContractNames.push("MS");
         allContractNames.push("GD");
@@ -205,7 +205,7 @@ contract Master is Ownable, Upgradeable {
         }
     }
 
-    /// @def Checks the authenticity of changing address or switching to recent version 
+    /// @dev Checks the authenticity of changing address or switching to recent version 
     function isValidateOwner() constant returns(bool) {
         GBM = GovBlocksMaster(GBMAddress);
         uint16 version = versionLength - 1;

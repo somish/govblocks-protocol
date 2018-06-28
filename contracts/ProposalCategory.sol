@@ -217,12 +217,12 @@ contract ProposalCategory {
         allSubCategory[_subCategoryId].actionHash = _actionHash;
     }
 
-    /// @def Get Sub category details such as Category name, Automated action hash and Main category id
+    /// @dev Get Sub category details such as Category name, Automated action hash and Main category id
     function getSubCategoryDetails(uint _subCategoryId) constant returns(string, string, uint) {
         return (allSubCategory[_subCategoryId].categoryName, allSubCategory[_subCategoryId].actionHash, allSubCategory[_subCategoryId].categoryId);
     }
 
-    /// @def Get Sub category name 
+    /// @dev Get Sub category name 
     function getSubCategoryName(uint _subCategoryId) constant returns(uint, string) {
         return (_subCategoryId, allSubCategory[_subCategoryId].categoryName);
     }
@@ -234,17 +234,17 @@ contract ProposalCategory {
         return allSubId_byCategory[_categoryId][_index];
     }
 
-    /// @def Get Sub categories array against main category
+    /// @dev Get Sub categories array against main category
     function getAllSubIds_byCategory(uint8 _categoryId) constant returns(uint[]) {
         return allSubId_byCategory[_categoryId];
     }
 
-    /// @def Get Total number of sub categories against main category
+    /// @dev Get Total number of sub categories against main category
     function getAllSubIdsLength_byCategory(uint8 _categoryId) constant returns(uint) {
         return allSubId_byCategory[_categoryId].length;
     }
 
-    /// @def Gets Main category when giving sub category id. 
+    /// @dev Gets Main category when giving sub category id. 
     function getCategoryId_bySubId(uint8 _subCategoryId) constant returns(uint8) {
         return allSubCategory[_subCategoryId].categoryId;
     }
