@@ -212,54 +212,6 @@ contract simpleVoting is VotingType, Upgradeable {
         GOV.checkRoleVoteClosing(_proposalId, _roleId);
     }
 
-    /// @dev Gives rewards to respective members after final decision
-    /// @param _proposalId Proposal id
-    function giveReward_afterFinalDecision(uint _proposalId)   {
-        uint totalVoteValue;
-        uint totalReward;
-        address ownerAddress;
-        uint depositedTokens;
-        uint finalVerdict = GD.getProposalFinalVerdict(_proposalId);
-        if (finalVerdict == 0){
-            ownerAddress=GD.getProposalOwner(_proposalId);
-            depositedTokens = GD.getDepositedTokens(ownerAddress, _proposalId, 'P');
-            totalReward = SafeMath.add(totalReward, depositedTokens);
-        }    
-
-        for (uint i = 0; i < GD.getTotalSolutions(_proposalId); i++) {
-            if (i != finalVerdict){
-                ownerAddress=GD.getSolutionAddedByProposalId(_proposalId, i);
-                depositedTokens= GD.getDepositedTokens(ownerAddress, _proposalId, 'S');
-                totalReward = SafeMath.add(totalReward,depositedTokens);
-            }    
-        }
-        
-        giveReward_afterFinalDecision1(finalVerdict,_proposalId,ownerAddress,depositedTokens,totalReward,totalVoteValue);
-    }
-    
-    function giveReward_afterFinalDecision1(uint finalVerdict,uint _proposalId,address _ownerAddress,uint depositedTokens,uint totalReward,uint totalVoteValue) internal
-    {
-        uint category = GD.getProposalCategory(_proposalId);
-        uint mrLength = PC.getRoleSequencLength(category);
-        for (uint i = 0; i < mrLength; i++) {
-            uint roleId = PC.getRoleSequencAtIndex(category,i);
-            uint mrVoteLength = GD.getAllVoteIdsLength_byProposalRole(_proposalId, roleId);
-            for (uint j = 0; j < mrVoteLength; j++) {
-                uint voteId = GD.getVoteId_againstProposalRole(_proposalId, roleId , j);
-                if (GD.getSolutionByVoteIdAndIndex(voteId, 0) != finalVerdict) {
-                    _ownerAddress=GD.getVoterAddress(voteId);
-                    depositedTokens=GD.getDepositedTokens(_ownerAddress, _proposalId, 'V');
-                    totalReward = SafeMath.add(totalReward, depositedTokens );
-                    uint voteValue=GD.getVoteValue(voteId);
-                    totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
-                }
-            }
-        }
-
-        totalReward = totalReward + GD.getProposalIncentive(_proposalId);
-        GOV.setProposalDetails(_proposalId, totalReward, totalVoteValue);
-    }
-
     // Other Functions
 
     /// @dev Adds solution against proposal.
@@ -335,7 +287,7 @@ contract simpleVoting is VotingType, Upgradeable {
 
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
     /// @param _proposalId Proposal id
-    function closeProposalVote(uint _proposalId) onlyInternal {
+    function closeProposalVote(uint _proposalId)  {
         uint256 totalVoteValue = 0;
         uint8 category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
         uint8 currentVotingId = GD.getProposalCurrentVotingId(_proposalId);
@@ -357,9 +309,12 @@ contract simpleVoting is VotingType, Upgradeable {
             }
         }
 
-        if (checkForThreshold(_proposalId, _mrSequenceId)) {
+        if (checkForThreshold(_proposalId, _mrSequenceId)) 
+        {
             closeProposalVote1(finalVoteValue[max], totalVoteValue, category, _proposalId, max);
-        } else {
+        } 
+        else 
+        {
             uint8 interVerdict = GD.getProposalIntermediateVerdict(_proposalId);
 
             GOV.updateProposalDetails(_proposalId, currentVotingId, max, interVerdict);
@@ -371,7 +326,7 @@ contract simpleVoting is VotingType, Upgradeable {
         }
     }
 
-    function closeProposalVote1(uint maxVoteValue, uint totalVoteValue, uint8 category, uint _proposalId, uint8 max) internal{
+    function closeProposalVote1(uint maxVoteValue, uint totalVoteValue, uint8 category, uint _proposalId, uint8 max) internal {
         uint _closingTime;
         uint _majorityVote;
         uint8 currentVotingId = GD.getProposalCurrentVotingId(_proposalId);
@@ -379,7 +334,8 @@ contract simpleVoting is VotingType, Upgradeable {
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
                 currentVotingId = currentVotingId + 1;
-                if (currentVotingId < PC.getRoleSequencLength(category)) {
+                if (currentVotingId < PC.getRoleSequencLength(category)) 
+                {
                     GOV.updateProposalDetails(_proposalId, currentVotingId, max, 0);
                     P1.closeProposalOraclise(_proposalId, _closingTime);
                     GD.callOraclizeCallEvent(_proposalId, GD.getProposalDateUpd(_proposalId), PC.getClosingTimeAtIndex(category, currentVotingId));
@@ -402,7 +358,7 @@ contract simpleVoting is VotingType, Upgradeable {
 
     }
 
-    function checkForThreshold(uint _proposalId, uint32 _mrSequenceId)  constant returns(bool) {
+    function checkForThreshold(uint _proposalId, uint32 _mrSequenceId) internal constant returns(bool) {
         uint thresHoldValue;
         if (_mrSequenceId == 2) {
             address dAppTokenAddress = GBM.getDappTokenAddress(MS.DappName());
@@ -424,6 +380,56 @@ contract simpleVoting is VotingType, Upgradeable {
                 return true;
         }
     }
+
+    /// @dev Gives rewards to respective members after final decision
+    /// @param _proposalId Proposal id
+    function giveReward_afterFinalDecision(uint _proposalId) public  {
+
+        uint   totalReward;
+        address  ownerAddress;
+        uint  depositedTokens;
+        uint finalVerdict = GD.getProposalFinalVerdict(_proposalId);
+        if (finalVerdict == 0){
+            ownerAddress=GD.getProposalOwner(_proposalId);
+            depositedTokens = GD.getDepositedTokens(ownerAddress, _proposalId, 'P');
+            totalReward = SafeMath.add(totalReward, depositedTokens);
+        }    
+
+        for (uint i = 0; i < GD.getTotalSolutions(_proposalId); i++) {
+            if (i != finalVerdict){
+                ownerAddress=GD.getSolutionAddedByProposalId(_proposalId, i);
+                depositedTokens= GD.getDepositedTokens(ownerAddress, _proposalId, 'S');
+                totalReward = SafeMath.add(totalReward,depositedTokens);
+            }    
+        }
+        
+        giveReward_afterFinalDecision1(finalVerdict,_proposalId,ownerAddress,depositedTokens,totalReward);
+    }
+    
+    function giveReward_afterFinalDecision1(uint finalVerdict,uint _proposalId,address _ownerAddress,uint depositedTokens,uint totalReward) internal
+    {
+        uint8 subCategory = GD.getProposalCategory(_proposalId); uint totalVoteValue;
+        uint category = PC.getCategoryId_bySubId(subCategory);
+        // uint mrLength = PC.getRoleSequencLength(category);
+        for (uint i = 0; i <  PC.getRoleSequencLength(category); i++) {
+            uint roleId = PC.getRoleSequencAtIndex(category,i);
+            uint mrVoteLength = GD.getAllVoteIdsLength_byProposalRole(_proposalId, roleId);
+            for (uint j = 0; j < mrVoteLength; j++) {
+                uint voteId = GD.getVoteId_againstProposalRole(_proposalId, roleId , j);
+                if (GD.getSolutionByVoteIdAndIndex(voteId, 0) != finalVerdict) {
+                    _ownerAddress=GD.getVoterAddress(voteId);
+                    depositedTokens=GD.getDepositedTokens(_ownerAddress, _proposalId, 'V');
+                    totalReward = SafeMath.add(totalReward, depositedTokens );
+                    uint voteValue=GD.getVoteValue(voteId);
+                    totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
+                }
+            }
+        }
+
+        totalReward = totalReward + GD.getProposalIncentive(_proposalId);
+        GOV.setProposalDetails(_proposalId, totalReward, totalVoteValue);
+    }
+
 
     // function changeMemberVote(uint _proposalId,uint[] _solutionChosen,address _memberAddress,uint _GBTPayableTokenAmount) internal
     // {
