@@ -81,7 +81,7 @@ contract memberRoles is Upgradeable{
 
     /// @dev Changes Master's contract address 
     /// @param _masterContractAddress New master address
-    function changeMasterAddress(address _masterContractAddress) {
+    function changeMasterAddress(address _masterContractAddress) public {
         if (masterAddress == 0x000)
             masterAddress = _masterContractAddress;
         else {
@@ -92,11 +92,11 @@ contract memberRoles is Upgradeable{
     }
 
     /// @dev just to adhere to the interface
-    function changeGBTSAddress(address _GBTAddress) {
+    function changeGBTSAddress(address _GBTAddress) public {
     }
 
-    /// @dev To Initiale default settings whenever the contract is regenerated!
-    function updateDependencyAddresses() {
+    /// @dev To Initiate default settings whenever the contract is regenerated!
+    function updateDependencyAddresses() public {
         if(!constructorCheck)
             MemberRolesInitiate();
     }
@@ -164,7 +164,7 @@ contract memberRoles is Upgradeable{
     /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
     /// @param _roleId roleId to update its Authorized Address
     /// @param _newCanAddMember New authorized address against role id
-    function changeCanAddMember(uint32 _roleId, address _newCanAddMember) {
+    function changeCanAddMember(uint32 _roleId, address _newCanAddMember) public {
         if (authorizedAddress_againstRole[_roleId] == 0x00)
             authorizedAddress_againstRole[_roleId] = _newCanAddMember;
         else {

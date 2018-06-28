@@ -47,6 +47,7 @@ contract Master is Ownable, Upgradeable {
         versionLength = 0;
         GBMAddress = _GovBlocksMasterAddress;
         DappName = _gbUserName;
+        owner = msg.sender;
         addContractNames();
     }
 
@@ -97,8 +98,7 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Sets owner 
     /// @param _memberaddress Contract address to be set as owner
-    function setOwner(address _memberaddress) {
-        require(msg.sender == GBMAddress || msg.sender == owner);
+    function setOwner(address _memberaddress) onlyOwner {
         owner = _memberaddress;
     }
 
@@ -140,7 +140,7 @@ contract Master is Ownable, Upgradeable {
     }
 
     /// @dev Switches to the recent version of contracts
-    function switchToRecentVersion() {
+    function switchToRecentVersion() public {
         require(isValidateOwner());
         addInContractChangeDate();
         changeAllAddress();
@@ -197,7 +197,7 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Changes GBT standard token address in GD, SV, SVT and governance contracts
     /// @param _tokenAddress Address of the GBT token
-    function changeGBTAddress(address _tokenAddress) {
+    function changeGBTAddress(address _tokenAddress) public {
         require(isValidateOwner());
         for (uint8 i = 1; i < allContractNames.length - 1; i++) {
             up = Upgradeable(allContractVersions[versionLength - 1][allContractNames[i]]);
@@ -215,7 +215,7 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Changes GovBlocks Master address
     /// @param _GBMnewAddress New GovBlocks master address
-    function changeGBMAddress(address _GBMnewAddress) {
+    function changeGBMAddress(address _GBMnewAddress) public {
         require(msg.sender == GBMAddress);
         GBMAddress == _GBMnewAddress;
     }
