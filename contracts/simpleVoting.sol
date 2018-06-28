@@ -135,7 +135,7 @@ contract simpleVoting is VotingType, Upgradeable {
     /// @dev Initiates add solution 
     /// @param _memberAddress Address of member who is adding the solution
     /// @param _solutionStake Stake in GBT against adding solution
-    /// @param _solutionHash Solution hash
+    /// @param _solutionHash Solution hash having required data against adding solution
     /// @param _dateAdd Date when the solution was added
     function addSolution(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) public validateStake(_proposalId, _solutionStake) {
         MS = Master(masterAddress);
@@ -147,6 +147,7 @@ contract simpleVoting is VotingType, Upgradeable {
 
     }
 
+    /// @dev Adding member address against solution index and event call to save details of solution
     function addSolution1(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) internal {
         require(GD.getProposalCategory(_proposalId) > 0);
         if (msg.sender == _memberAddress)
@@ -166,7 +167,7 @@ contract simpleVoting is VotingType, Upgradeable {
 
     /// @dev Creates proposal for voting (Stake in ether)
     /// @param _proposalId Proposal id
-    /// @param _solutionChosen solution chosen while voting
+    /// @param _solutionChosen solution id chosen while voting as a proposal might have different solution
     function proposalVoting_inEther(uint _proposalId, uint[] _solutionChosen, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) payable {
         uint tokenAmount = GBTS.buyToken.value(msg.value)();
         proposalVoting(_proposalId, _solutionChosen, tokenAmount, _validityUpto, _v, _r, _s, _lockTokenTxHash);
@@ -190,9 +191,9 @@ contract simpleVoting is VotingType, Upgradeable {
 
     /// @dev Castes vote
     /// @param _proposalId Proposal id
-    /// @param _solutionChosen solution chosen
-    /// @param _memberAddress Member address
-    /// @param _voteStake Vote stake
+    /// @param _solutionChosen solution chosen while casting vote against proposal.
+    /// @param _memberAddress Voter address who is casting a vote.
+    /// @param _voteStake Vote stake in GBT while casting a vote
 
     function castVote(uint _proposalId, uint[] _solutionChosen, address _memberAddress, uint _voteStake) internal {
         uint voteId = GD.allVotesTotal();
@@ -214,7 +215,7 @@ contract simpleVoting is VotingType, Upgradeable {
 
     // Other Functions
 
-    /// @dev Adds solution against proposal.
+    /// @dev Checks if the solution is already added by a member against specific proposal
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
     function alreadyAdded(uint _proposalId, address _memberAddress) constant returns(bool) {
@@ -224,8 +225,7 @@ contract simpleVoting is VotingType, Upgradeable {
         }
     }
 
-    /// @dev Receives solution stake against solution in simple voting
-    /// @param _proposalId Proposal id
+    /// @dev Receives solution stake against solution in simple voting i.e. Deposit and lock the tokens
     function receiveStake(bytes2 _type, uint _proposalId, uint _Stake, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) internal {
         uint8 currVotingId = GD.getProposalCurrentVotingId(_proposalId);
         uint depositedTokens;
@@ -256,6 +256,7 @@ contract simpleVoting is VotingType, Upgradeable {
         }
     }
 
+    /// @def Returns true if the member passes all the checks to vote. i.e. If he is authorize to vote
     function validateMember(uint _proposalId, uint[] _solutionChosen) constant returns(bool) {
         uint8 _mrSequence;
         uint8 category;
@@ -275,10 +276,6 @@ contract simpleVoting is VotingType, Upgradeable {
     }
 
     /// @dev Sets vote value given by member
-    /// @param _memberAddress Member address
-    /// @param _proposalId Proposal id
-    /// @param _memberStake Member stake
-    /// @return finalVoteValue Final vote value
     function getVoteValue_givenByMember(address _memberAddress, uint _proposalId, uint _memberStake)  constant returns(uint finalVoteValue) {
         uint tokensHeld = SafeMath.div((SafeMath.mul(SafeMath.mul(GBTS.balanceOf(_memberAddress), 100), 100)), GBTS.totalSupply());
         uint value = SafeMath.mul(Math.max256(_memberStake, GD.scalingWeight()), Math.max256(tokensHeld, GD.membershipScalingFactor()));
@@ -286,7 +283,6 @@ contract simpleVoting is VotingType, Upgradeable {
     }
 
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
-    /// @param _proposalId Proposal id
     function closeProposalVote(uint _proposalId)  {
         uint256 totalVoteValue = 0;
         uint8 category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
@@ -328,6 +324,7 @@ contract simpleVoting is VotingType, Upgradeable {
         }
     }
 
+    /// @dev This does the remaining functionality of closing proposal vote
     function closeProposalVote1(uint maxVoteValue, uint totalVoteValue, uint8 category, uint _proposalId, uint8 max) internal {
         uint _closingTime;
         uint _majorityVote;
@@ -362,6 +359,7 @@ contract simpleVoting is VotingType, Upgradeable {
 
     }
 
+    /// @dev Checks if the vote count against any solution passes the threshold value or not.
     function checkForThreshold(uint _proposalId, uint32 _mrSequenceId) internal constant returns(bool) {
         uint thresHoldValue;
         if (_mrSequenceId == 2) {
@@ -386,7 +384,6 @@ contract simpleVoting is VotingType, Upgradeable {
     }
 
     /// @dev Gives rewards to respective members after final decision
-    /// @param _proposalId Proposal id
     function giveReward_afterFinalDecision(uint _proposalId) public  {
 
         uint   totalReward;
@@ -410,6 +407,7 @@ contract simpleVoting is VotingType, Upgradeable {
         giveReward_afterFinalDecision1(finalVerdict,_proposalId,ownerAddress,depositedTokens,totalReward);
     }
     
+    /// @dev Distributing reward after final decision
     function giveReward_afterFinalDecision1(uint finalVerdict,uint _proposalId,address _ownerAddress,uint depositedTokens,uint totalReward) internal
     {
         uint8 subCategory = GD.getProposalCategory(_proposalId); uint totalVoteValue;
