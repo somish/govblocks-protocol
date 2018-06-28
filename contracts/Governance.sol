@@ -341,7 +341,7 @@ contract Governance is Upgradeable {
     /// @dev Calculates member reward to be claimed
     /// @param _memberAddress Member address
     /// @return rewardToClaim Rewards to be claimed
-    function calculateMemberReward(address _memberAddress) public constant returns(uint tempFinalRewardToDistribute) {
+    function calculateMemberReward(address _memberAddress) public returns(uint tempFinalRewardToDistribute) {
         uint lastRewardProposalId;
         uint lastRewardSolutionProposalId;
         uint lastRewardVoteId;
@@ -542,8 +542,7 @@ contract Governance is Upgradeable {
         address _memberAddress, 
         uint _lastRewardProposalId
     ) 
-        internal 
-        constant 
+        internal  
         returns(uint tempfinalRewardToDistribute)
     {
         uint allProposalLength = governanceDat.getProposalLength();
@@ -620,8 +619,7 @@ contract Governance is Upgradeable {
         address _memberAddress, 
         uint _lastRewardSolutionProposalId
     ) 
-        internal 
-        constant 
+        internal  
         returns(uint tempfinalRewardToDistribute) 
     {
         uint allProposalLength = governanceDat.getProposalLength();
@@ -672,8 +670,7 @@ contract Governance is Upgradeable {
         uint category, 
         uint proposalId
     ) 
-        internal 
-        constant 
+        internal  
         returns(uint tempfinalRewardToDistribute) 
     {
         if (governanceDat.getReturnedTokensFlag(_memberAddress, proposalId, "S") == 0) {
@@ -709,8 +706,7 @@ contract Governance is Upgradeable {
         address _memberAddress, 
         uint _lastRewardVoteId
     ) 
-        internal 
-        constant 
+        internal  
         returns(uint tempfinalRewardToDistribute) 
     {
         uint allProposalLength = governanceDat.getProposalLength();
