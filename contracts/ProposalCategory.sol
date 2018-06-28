@@ -15,7 +15,7 @@
 pragma solidity ^ 0.4.8;
 import "./Master.sol";
 import "./governanceData.sol";
-import "./memberRoles.sol";
+import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 
 contract ProposalCategory {
@@ -46,7 +46,7 @@ contract ProposalCategory {
     mapping(uint8 => uint[]) allSubId_byCategory;
 
     Master MS;
-    memberRoles MR;
+    MemberRoles MR;
     governanceData GD;
     address masterAddress;
 
@@ -114,7 +114,7 @@ contract ProposalCategory {
             ProposalCategoryInitiate();
         MS = Master(masterAddress);
         GD = governanceData(MS.getLatestAddress("GD"));
-        MR = memberRoles(MS.getLatestAddress("MR"));
+        MR = MemberRoles(MS.getLatestAddress("MR"));
     }
 
     /// @dev just to adhere to the interface

@@ -20,7 +20,7 @@ import "./Master.sol";
 //import "./StandardVotingType.sol";
 import "./governanceData.sol";
 import "./Governance.sol";
-import "./memberRoles.sol";
+import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
@@ -36,7 +36,7 @@ contract simpleVoting is VotingType, Upgradeable {
     using SafeMath for uint;
     GBTStandardToken GBTS;
     governanceData GD;
-    memberRoles MR;
+    MemberRoles MR;
     Governance GOV;
     ProposalCategory PC;
     Master MS;
@@ -112,7 +112,7 @@ contract simpleVoting is VotingType, Upgradeable {
     function updateDependencyAddresses() onlyInternal {
         MS = Master(masterAddress);
         GD = governanceData(MS.getLatestAddress("GD"));
-        MR = memberRoles(MS.getLatestAddress("MR"));
+        MR = MemberRoles(MS.getLatestAddress("MR"));
         PC = ProposalCategory(MS.getLatestAddress("PC"));
         govAddress = MS.getLatestAddress("GV");
         GOV = Governance(govAddress);

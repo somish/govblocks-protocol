@@ -16,7 +16,7 @@
 pragma solidity ^ 0.4.8;
 import "./governanceData.sol";
 import "./ProposalCategory.sol";
-import "./memberRoles.sol";
+import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 import "./Master.sol";
 import "./SafeMath.sol";
@@ -33,7 +33,7 @@ contract Governance is Upgradeable {
     address private masterAddress;
     GBTStandardToken private govBlocksToken;
     Master private master;
-    memberRoles private memberRole;
+    MemberRoles private memberRole;
     ProposalCategory private proposalCategory;
     governanceData private governanceDat;
     Pool private pool;
@@ -77,7 +77,7 @@ contract Governance is Upgradeable {
     function updateDependencyAddresses() public onlyInternal {
         master = Master(masterAddress);
         governanceDat = governanceData(master.getLatestAddress("GD"));
-        memberRole = memberRoles(master.getLatestAddress("MR"));
+        memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
         poolAddress = master.getLatestAddress("PL");
         pool = Pool(poolAddress);
