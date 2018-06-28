@@ -106,7 +106,16 @@ contract Governance is Upgradeable{
     /// @param _votingTypeId Voting type id
     /// @param _categoryId Category id
     /// @param _dateAdd Date the proposal was added
-    function createProposal(string _proposalTitle, string _proposalSD, string _proposalDescHash, uint _votingTypeId, uint8 _categoryId, uint _dateAdd) public {
+    function createProposal(
+        string _proposalTitle, 
+        string _proposalSD, 
+        string _proposalDescHash, 
+        uint _votingTypeId, 
+        uint8 _categoryId, 
+        uint _dateAdd
+    ) 
+        public 
+    {
         address votingAddress = GD.getVotingTypeAddress(_votingTypeId);
         uint8 category = PC.getCategoryId_bySubId(_categoryId);
         uint _proposalId = GD.getProposalLength();
@@ -134,8 +143,28 @@ contract Governance is Upgradeable{
     /// @param _votingTypeId Voting type id
     /// @param _categoryId Category id
     /// @param _proposalSolutionStake Proposal solution stake
+<<<<<<< HEAD
     /// @param _solutionHash Solution hash
     function createProposalwithSolution(string _proposalTitle, string _proposalSD, string _proposalDescHash, uint _votingTypeId, uint8 _categoryId, uint _proposalSolutionStake, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) public {
+=======
+    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
+    function createProposalwithSolution(
+        string _proposalTitle, 
+        string _proposalSD, 
+        string _proposalDescHash, 
+        uint _votingTypeId, 
+        uint8 _categoryId, 
+        uint _proposalSolutionStake, 
+        string _solutionHash, 
+        uint _validityUpto, 
+        uint8 _v, 
+        bytes32 _r, 
+        bytes32 _s, 
+        bytes32 _lockTokenTxHash
+    ) 
+        public
+    {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         uint proposalDateAdd = now;
         uint _proposalId = GD.getProposalLength();
         address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
@@ -153,9 +182,27 @@ contract Governance is Upgradeable{
 
     /// @dev Submit proposal with solution
     /// @param _proposalId Proposal id
+<<<<<<< HEAD
     /// @param _proposalSolutionStake Proposal solution stake
     /// @param _solutionHash Solution hash
     function submitProposalWithSolution(uint _proposalId, uint _proposalSolutionStake, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) public onlyProposalOwner(_proposalId) {
+=======
+    /// @param _proposalSolutionStake Stake in GBT at the time of proposal creation with solution
+    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
+    function submitProposalWithSolution(
+        uint _proposalId, 
+        uint _proposalSolutionStake, 
+        string _solutionHash, 
+        uint _validityUpto,
+        uint8 _v, 
+        bytes32 _r, 
+        bytes32 _s,
+        bytes32 _lockTokenTxHash
+    ) 
+        public 
+        onlyProposalOwner(_proposalId) 
+    {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         uint proposalDateAdd = GD.getProposalDateUpd(_proposalId);
         address VTAddress = GD.getProposalVotingType(_proposalId);
         proposalSubmission(proposalDateAdd, _proposalId, VTAddress, 0, _proposalSolutionStake, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash);
@@ -181,18 +228,54 @@ contract Governance is Upgradeable{
     //     openProposalForVoting(_proposalId, _categoryId, tokenAmount, _validityUpto, _v, _r, _s, _lockTokenTxHash);
     // }
 
+<<<<<<< HEAD
     /// @dev Proposal's complexity level and reward are added
     /// @param  _proposalId Proposal id
     /// @param  _categoryId Proposal category id
     /// @param  _proposalStake Token amount
     function openProposalForVoting(uint _proposalId, uint8 _categoryId, uint _proposalStake, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) public validateStake(_categoryId, _proposalStake) onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) {
+=======
+    /// @dev Proposal is open for voting.
+    /// @param  _proposalStake Stake in GBT to open it for voting 
+    function openProposalForVoting(
+        uint _proposalId, 
+        uint8 _categoryId,
+        uint _proposalStake, 
+        uint _validityUpto, 
+        uint8 _v, 
+        bytes32 _r, 
+        bytes32 _s, 
+        bytes32 _lockTokenTxHash
+    ) 
+        public 
+        validateStake(_categoryId, _proposalStake) 
+        onlyProposalOwner(_proposalId) 
+        checkProposalValidity(_proposalId) 
+    {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         uint8 category = PC.getCategoryId_bySubId(_categoryId);
         require(category != 0);
         openProposalForVoting2(_proposalId, category, _proposalStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
 
     }
 
+<<<<<<< HEAD
     function openProposalForVoting2(uint _proposalId, uint8 _categoryId, uint _proposalStake, uint validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) internal {
+=======
+    /// @dev Proposal is submitted for voting i.e. Voting is started from this step
+    function openProposalForVoting2(
+        uint _proposalId, 
+        uint8 _categoryId, 
+        uint _proposalStake, 
+        uint validityUpto, 
+        uint8 _v, 
+        bytes32 _r, 
+        bytes32 _s,
+        bytes32 _lockTokenTxHash
+    ) 
+        internal 
+    {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         uint depositPerc = GD.depositPercProposal();
         uint _currVotingStatus = GD.getProposalCurrentVotingId(_proposalId);
         uint proposalDepositPerc=GD.depositPercProposal();
@@ -238,9 +321,22 @@ contract Governance is Upgradeable{
     // }
 
     /// @dev Edits the details of an existing proposal and creates new version
+<<<<<<< HEAD
     /// @param _proposalId Proposal id
     /// @param _proposalDescHash Proposal description hash
     function updateProposalDetails1(uint _proposalId, string _proposalTitle, string _proposalSD, string _proposalDescHash) internal {
+=======
+    /// @param _proposalId Proposal id that details needs to be updated
+    /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
+    function updateProposalDetails1(
+        uint _proposalId, 
+        string _proposalTitle, 
+        string _proposalSD, 
+        string _proposalDescHash
+    ) 
+        internal 
+    {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         GD.storeProposalVersion(_proposalId, _proposalDescHash);
         GD.setProposalDateUpd(_proposalId);
         GD.changeProposalStatus(_proposalId, 1);
@@ -254,10 +350,17 @@ contract Governance is Upgradeable{
         closeValue = checkForClosing(_proposalId, _roleId);
     }*/
 
+<<<<<<< HEAD
     /// @dev Checks proposal for vote closing
     /// @param _proposalId Proposal id
     /// @param _roleId Role id
     function checkForClosing(uint _proposalId, uint32 _roleId)  constant returns(uint8 closeValue) {
+=======
+    /// @dev Checks If the proposal voting time is up and it's ready to close i.e. Closevalue is 1 in case of closing, 0 otherwise!
+    /// @param _proposalId Proposal id to which closing value is being checked
+    /// @param _roleId Voting will gets close for the role id provided here.
+    function checkForClosing(uint _proposalId, uint32 _roleId) public constant returns(uint8 closeValue) {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         uint dateUpdate;
         uint pStatus;
         uint _closingTime;
@@ -305,10 +408,24 @@ contract Governance is Upgradeable{
 
     /// @dev Updates proposal's major details (Called from close proposal vote)
     /// @param _proposalId Proposal id
+<<<<<<< HEAD
     /// @param _currVotingStatus Current voting status
     /// @param _intermediateVerdict Intermediate verdict
     /// @param _finalVerdict Final verdict
     function updateProposalDetails(uint _proposalId, uint8 _currVotingStatus, uint8 _intermediateVerdict, uint8 _finalVerdict) onlyInternal {
+=======
+    /// @param _currVotingStatus It is the index to fetch the role id from voting sequence array. i.e. Tells which role id members is going to vote
+    /// @param _intermediateVerdict Intermediate verdict is set after every voting layer is passed.
+    /// @param _finalVerdict Final verdict is set after final layer of voting
+    function updateProposalDetails(
+        uint _proposalId, 
+        uint8 _currVotingStatus, 
+        uint8 _intermediateVerdict, 
+        uint8 _finalVerdict
+    ) 
+    onlyInternal 
+    {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         GD.setProposalCurrentVotingId(_proposalId, _currVotingStatus);
         GD.setProposalIntermediateVerdict(_proposalId, _intermediateVerdict);
         GD.setProposalFinalVerdict(_proposalId, _finalVerdict);
@@ -324,6 +441,12 @@ contract Governance is Upgradeable{
         GD.setProposalTotalVoteValue(_proposalId, _totalVoteValue);
     }
 
+<<<<<<< HEAD
+=======
+    /// @dev Calculate reward for proposal creation against member
+    /// @param _memberAddress Address of member who claimed the reward
+    /// @param _lastRewardProposalId Last id proposal till which the reward being distributed
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
     function calculateProposalReward(address _memberAddress, uint _lastRewardProposalId) internal constant returns(uint tempfinalRewardToDistribute) {
         uint allProposalLength = GD.getProposalLength();
         uint lastIndex = 0;
@@ -352,12 +475,22 @@ contract Governance is Upgradeable{
         GD.setLastRewardId_ofCreatedProposals(_memberAddress, lastIndex);
     }
 
+<<<<<<< HEAD
+=======
+    /// @dev Saving reward and member reputation details 
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
     function calculateProposalReward1(address _memberAddress, uint i, uint calcReward, uint32 addProposalOwnerPoints) internal {
         GD.callRewardEvent(_memberAddress, i, "GBT Reward for being Proposal owner - Accepted ", calcReward);
         GD.setMemberReputation("Reputation credit for proposal owner - Accepted", i, _memberAddress, SafeMath.add32(GD.getMemberReputation(_memberAddress), addProposalOwnerPoints), addProposalOwnerPoints, "C");
         GD.setReturnedTokensFlag(_memberAddress, i, 'P', 1);
     }
 
+<<<<<<< HEAD
+=======
+    /// @dev Calculate reward for proposing solution against different proposals
+    /// @param _memberAddress Address of member who claimed the reward
+    /// @param _lastRewardSolutionProposalId Last id proposal(To which solutions being proposed) till which the reward being distributed
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
     function calculateSolutionReward(address _memberAddress, uint _lastRewardSolutionProposalId) internal constant returns(uint tempfinalRewardToDistribute) {
         uint allProposalLength = GD.getProposalLength();
         uint calcReward;
@@ -387,7 +520,23 @@ contract Governance is Upgradeable{
         GD.setLastRewardId_ofSolutionProposals(_memberAddress, lastIndex);
     }
 
+<<<<<<< HEAD
     function calculateSolutionReward1(address _memberAddress, uint i, uint calcReward, uint totalReward, uint category, uint proposalId) internal constant returns(uint tempfinalRewardToDistribute) {
+=======
+    /// @dev Saving solution reward and member reputation details
+    function calculateSolutionReward1(
+        address _memberAddress, 
+        uint i, 
+        uint calcReward, 
+        uint totalReward, 
+        uint category, 
+        uint proposalId
+    ) 
+        internal 
+        constant 
+        returns(uint tempfinalRewardToDistribute) 
+    {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         if (GD.getReturnedTokensFlag(_memberAddress, proposalId, 'S') == 0) {
             uint32 addSolutionOwnerPoints;
             (addSolutionOwnerPoints, , , , , ) = GD.getMemberReputationPoints();
@@ -399,6 +548,12 @@ contract Governance is Upgradeable{
         }
     }
     
+<<<<<<< HEAD
+=======
+    /// @dev Calculate reward for casting vote against member
+    /// @param _memberAddress Address of member who claimed the reward
+    /// @param _lastRewardVoteId Last vote id till which the reward being distributed
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
     function calculateVoteReward(address _memberAddress, uint _lastRewardVoteId) internal constant returns(uint tempfinalRewardToDistribute) {
         uint allProposalLength = GD.getProposalLength();
         uint calcReward;
@@ -456,7 +611,7 @@ contract Governance is Upgradeable{
     /// @dev Calculates member reward to be claimed
     /// @param _memberAddress Member address
     /// @return rewardToClaim Rewards to be claimed
-    function calculateMemberReward(address _memberAddress) constant returns(uint tempFinalRewardToDistribute) {
+    function calculateMemberReward(address _memberAddress) public constant returns(uint tempFinalRewardToDistribute) {
         uint lastRewardProposalId;
         uint lastRewardSolutionProposalId;
         uint lastRewardVoteId;
@@ -467,11 +622,19 @@ contract Governance is Upgradeable{
 
     /// @dev Gets member details
     /// @param _memberAddress Member address
+<<<<<<< HEAD
     /// @return memberReputation Member reputation
     /// @return totalProposal Total number of proposals
     /// @return totalSolution Total solution
     /// @return totalVotes Total number of votes
     function getMemberDetails(address _memberAddress) constant returns(uint memberReputation, uint totalProposal, uint totalSolution, uint totalVotes) {
+=======
+    /// @return memberReputation Member reputation that has been updated till now
+    /// @return totalProposal Total number of proposals created by member so far
+    /// @return totalSolution Total solution proposed by member for different proposal till now.
+    /// @return totalVotes Total number of votes casted by member
+    function getMemberDetails(address _memberAddress) public constant returns(uint memberReputation, uint totalProposal, uint totalSolution, uint totalVotes) {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         memberReputation = GD.getMemberReputation(_memberAddress);
         totalProposal = getAllProposalIdsLength_byAddress(_memberAddress);
         totalSolution = GD.getAllSolutionIdsLength_byAddress(_memberAddress);
@@ -480,8 +643,13 @@ contract Governance is Upgradeable{
 
     /// @dev Gets total number of vote casted of a member
     /// @param _memberAddress Member address
+<<<<<<< HEAD
     /// @return totalVoteCasted Total number of vote casted
     function getAllVoteids_byAddress(address _memberAddress) constant returns(uint[] totalVoteCasted) {
+=======
+    /// @return totalVoteCasted All vote ids given by member
+    function getAllVoteids_byAddress(address _memberAddress) public constant returns(uint[] totalVoteCasted) {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         uint length = GD.getProposalLength();
         uint j = 0;
         uint totalVoteCount = getAllVoteIdsLength_byAddress(_memberAddress);
@@ -498,7 +666,7 @@ contract Governance is Upgradeable{
     /// @dev Gets all vote ids length casted by member
     /// @param _memberAddress Member address
     /// @return totalVoteCount Total vote count
-    function getAllVoteIdsLength_byAddress(address _memberAddress) constant returns(uint totalVoteCount) {
+    function getAllVoteIdsLength_byAddress(address _memberAddress) public constant returns(uint totalVoteCount) {
         uint length = GD.getProposalLength();
         for (uint i = 0; i < length; i++) {
             uint voteId = GD.getVoteId_againstMember(_memberAddress, i);
@@ -526,7 +694,7 @@ contract Governance is Upgradeable{
     /// @dev Gets length of all created proposals by member
     /// @param _memberAddress Member address
     /// @return totalProposalCount Total proposal count
-    function getAllProposalIdsLength_byAddress(address _memberAddress) constant returns(uint totalProposalCount) {
+    function getAllProposalIdsLength_byAddress(address _memberAddress) public constant returns(uint totalProposalCount) {
         uint length = GD.getProposalLength();
         for (uint i = 0; i < length; i++) {
             if (_memberAddress == GD.getProposalOwner(i))
@@ -534,6 +702,7 @@ contract Governance is Upgradeable{
         }
     }
 
+<<<<<<< HEAD
     /// @dev Gets solutionId id against proposal of a member
     /// @param _memberAddress Member address
     /// @param _proposalId Proposal id
@@ -544,6 +713,10 @@ contract Governance is Upgradeable{
     /// @return totalReward Total reward 
     /// @return category Category
     function getSolutionId_againstAddressProposal(address _memberAddress, uint _proposalId) constant returns(uint proposalId, uint solutionId, uint proposalStatus, uint finalVerdict, uint totalReward, uint category) {
+=======
+    /// @dev It fetchs the Index of solution provided by member against a proposal
+    function getSolutionId_againstAddressProposal(address _memberAddress, uint _proposalId) public constant returns(uint proposalId, uint solutionId, uint proposalStatus, uint finalVerdict, uint totalReward, uint category) {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         uint length = GD.getTotalSolutions(_proposalId);
         for (uint i = 0; i < length; i++) {
             if (_memberAddress == GD.getSolutionAddedByProposalId(_proposalId, i)) {
@@ -562,7 +735,7 @@ contract Governance is Upgradeable{
     /// @dev Gets total votes against a proposal when given proposal id
     /// @param _proposalId Proposal id
     /// @return totalVotes total votes against a proposal
-    function getAllVoteIdsLength_byProposal(uint _proposalId) constant returns(uint totalVotes) {
+    function getAllVoteIdsLength_byProposal(uint _proposalId) public constant returns(uint totalVotes) {
         // MR=memberRoles(MRAddress);
         uint length = MR.getTotalMemberRoles();
         for (uint i = 0; i < length; i++) {
@@ -570,14 +743,50 @@ contract Governance is Upgradeable{
         }
     }
 
+<<<<<<< HEAD
     function proposalSubmission(uint proposalDateAdd, uint _proposalId, address _VTAddress, uint8 _categoryId, uint _proposalSolutionStake, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) internal {
+=======
+    /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
+    function proposalSubmission(
+        uint proposalDateAdd, 
+        uint _proposalId, 
+        address _VTAddress, 
+        uint8 _categoryId, 
+        uint _proposalSolutionStake, 
+        string _solutionHash, 
+        uint _validityUpto, 
+        uint8 _v, 
+        bytes32 _r, 
+        bytes32 _s, 
+        bytes32 _lockTokenTxHash
+    ) 
+        internal 
+    {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         require(_categoryId > 0);
         VT = VotingType(_VTAddress);
         openProposalForVoting(_proposalId, _categoryId, _proposalSolutionStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
         proposalSubmission1(_proposalId, proposalDateAdd, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash, _proposalSolutionStake);
     }
 
+<<<<<<< HEAD
     function proposalSubmission1(uint _proposalId, uint proposalDateAdd, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, uint _proposalSolutionStake) internal  {
+=======
+    /// @dev When creating proposal with solution, it adds solution details against proposal
+    function proposalSubmission1(
+        uint _proposalId, 
+        uint proposalDateAdd, 
+        string _solutionHash, 
+        uint _validityUpto, 
+        uint8 _v, 
+        bytes32 _r, 
+        bytes32 _s, 
+        bytes32 _lockTokenTxHash, 
+        uint _proposalSolutionStake
+    ) 
+        internal  
+    {
+>>>>>>> 01c874958ab80042f595b56cdcc4c6d949468eac
         // VT = VotingType(0x68D2e5342Dae099C1894ce022B6101bb6d4BBF3C);
         VT.addSolution(_proposalId, msg.sender, 0, _solutionHash, proposalDateAdd, _validityUpto, _v, _r, _s, _lockTokenTxHash);
         GD.callProposalWithSolutionEvent(msg.sender, _proposalId, "", _solutionHash, proposalDateAdd, _proposalSolutionStake);

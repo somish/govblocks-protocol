@@ -81,10 +81,11 @@ contract Pool is usingOraclize, Upgradeable {
     }
 
     /// @dev just to adhere to the interface
-    function updateDependencyAddresses() {
+    function updateDependencyAddresses() public {
     }
 
-    /// @def Convert Pool ETH into GBT
+    /// @dev converts pool ETH to GBT
+    /// @param _gbt number of GBT to buy
     function buyPoolGBT(uint _gbt) {
         uint _wei = SafeMath.mul(_gbt, GBTS.tokenPrice());
         GBTS.buyToken.value(_wei)();
@@ -109,7 +110,7 @@ contract Pool is usingOraclize, Upgradeable {
         addInAllApiCall(myid2);
     }
 
-    /// @def Get total length of oraclize call being triggered using this function  "closeProposalOraclise"
+    /// @dev Get total length of oraclize call being triggered using this function  "closeProposalOraclise"
     function getApiCall_length() constant returns(uint len) {
         return allAPIcall.length;
     }
@@ -161,7 +162,7 @@ contract Pool is usingOraclize, Upgradeable {
     /// @dev Callback function of Oraclize
     /// @param myid Api id
     /// @param res Result string
-    function __callback(bytes32 myid, string res) {
+    function __callback(bytes32 myid, string res) public {
         MS = Master(masterAddress);
         if (msg.sender != oraclize_cbAddress() && MS.isOwner(msg.sender) != true) throw;
         allAPIid[myid].dateUpd = uint64(now);
@@ -170,8 +171,7 @@ contract Pool is usingOraclize, Upgradeable {
     /// @dev Transfer Ether back to Pool    
     /// @param amount Amount to be transferred back
     function transferBackEther(uint256 amount) onlyOwner {
-        address _add = msg.sender;
-        bool succ = _add.send(amount);
+        msg.sender.transfer(amount);
     }
 
     /// @dev Byte32 to string

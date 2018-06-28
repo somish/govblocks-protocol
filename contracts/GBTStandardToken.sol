@@ -71,7 +71,17 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return balances[_owner];
     }
 
-    function lockToken(address _memberAddress, uint _amount, uint _validUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) {
+    function lockToken(
+        address _memberAddress, 
+        uint _amount, 
+        uint _validUpto, 
+        uint8 _v, 
+        bytes32 _r, 
+        bytes32 _s, 
+        bytes32 _lockTokenTxHash
+    ) 
+        public 
+    {
         require(verifyTxHash[_lockTokenTxHash] == false);
         require(verifySign(_memberAddress, msg.sender, _amount, _validUpto, _lockTokenTxHash, _v, _r, _s));
 
@@ -79,16 +89,39 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         verifyTxHash[_lockTokenTxHash] = true;
     }
 
-    function verifySign(address _memberAddress, address _spender, uint _amount, uint _validUpto, bytes32 _lockTokenTxHash, uint8 _v, bytes32 _r, bytes32 _s) constant returns(bool) {
+    function verifySign(
+        address _memberAddress, 
+        address _spender, 
+        uint _amount, 
+        uint _validUpto, 
+        bytes32 _lockTokenTxHash, 
+        uint8 _v, 
+        bytes32 _r, 
+        bytes32 _s
+    ) 
+        public
+        constant 
+        returns(bool) 
+    {
         bytes32 hash = getOrderHash(_memberAddress, _spender, _amount, _validUpto, _lockTokenTxHash);
         return isValidSignature(hash, _memberAddress, _v, _r, _s);
     }
 
-    function getOrderHash(address _memberAddress, address _spender, uint _amount, uint _validUpto, bytes32 _lockTokenTxHash) constant returns(bytes32) {
+    function getOrderHash(
+        address _memberAddress, 
+        address _spender, 
+        uint _amount, 
+        uint _validUpto, 
+        bytes32 _lockTokenTxHash
+    ) 
+        public
+        constant 
+        returns(bytes32) 
+    {
         return keccak256(_memberAddress, _spender, _amount, _validUpto, _lockTokenTxHash);
     }
 
-    function isValidSignature(bytes32 hash, address _memberaddress, uint8 v, bytes32 r, bytes32 s) constant returns(bool) {
+    function isValidSignature(bytes32 hash, address _memberaddress, uint8 v, bytes32 r, bytes32 s) public constant returns(bool) {
         // bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         // bytes32 prefixedHash = keccak256(prefix, hash);
         // address a= ecrecover(prefixedHash, v, r, s);    
@@ -96,7 +129,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return (a == _memberaddress);
     }
 
-    function getLockToken(address _memberAddress) constant returns(uint locked_tokens) {
+    function getLockToken(address _memberAddress) public constant returns(uint locked_tokens) {
         uint time = now;
         locked_tokens = 0;
         for (uint i = 0; i < user_lockToken[_memberAddress].length; i++) {
@@ -192,7 +225,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         balances[address(this)] = 0;
         totalSupply = 0;
         name = "GBT";
-        symbol = "";
+        symbol = "GBT";
         decimals = 18;
         tokenPrice = 1 * 10 ** 15;
     }
@@ -243,14 +276,14 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         mint(msg.sender, actual_amount);
     }
 
-    function changeTokenPrice(uint _price) {
+    function changeTokenPrice(uint _price) onlyOwner {
         uint _tokenPrice = _price;
         tokenPrice = _tokenPrice;
     }
 
-    function getTokenPrice() constant returns(uint) {
+    /*function getTokenPrice() public constant returns(uint) {
         return tokenPrice;
-    }
+    }*/
 
 
 

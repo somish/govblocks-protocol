@@ -413,7 +413,7 @@ contract governanceData is Upgradeable{
 
     // VERSION 2.0 : VOTE DETAILS 
 
-    /// @def Add vote details such as Solution id to which he has voted and vote value
+    /// @dev Add vote details such as Solution id to which he has voted and vote value
     function addVote(address _memberAddress, uint[] _solutionChosen,uint _voteValue) onlyInternal {
         allVotes.push(proposalVote(_memberAddress, _solutionChosen, _voteValue));
     }
@@ -456,7 +456,7 @@ contract governanceData is Upgradeable{
         voteId = AddressProposalVote[_memberAddress][_proposalId];
     }
 
-    /// @def Check if the member has voted against a proposal. Returns true if vote id exists
+    /// @dev Check if the member has voted against a proposal. Returns true if vote id exists
     function checkVoteId_againstMember(address _memberAddress, uint _proposalId) constant returns(bool) {
         uint voteId = AddressProposalVote[_memberAddress][_proposalId];
         if (voteId == 0)
@@ -488,7 +488,7 @@ contract governanceData is Upgradeable{
         return (ProposalRoleVote[_proposalId][_roleId][_index]);
     }
 
-    /// @def Gets vote value against Vote id
+    /// @dev Gets vote value against Vote id
     function getVoteValue(uint _voteId) constant returns(uint) {
         return (allVotes[_voteId].voteValue);
     }
@@ -725,7 +725,7 @@ contract governanceData is Upgradeable{
         return (allProposalData[_proposalId].currVotingStatus);
     }
 
-    /// @def Get Total Amount that has been collected at the end of voting to distribute further i.e. Total token to distribute
+    /// @dev Get Total Amount that has been collected at the end of voting to distribute further i.e. Total token to distribute
     function getProposalTotalReward(uint _proposalId) constant returns(uint) {
         return allProposalData[_proposalId].totalreward;
     }
@@ -809,7 +809,7 @@ contract governanceData is Upgradeable{
         return allProposalData[_proposalId].currentVerdict;
     }
 
-    /// @def Change token holding time i.e. When user submits stake, Few tokens gets deposited and rest is locked for a period of time.
+    /// @dev Change token holding time i.e. When user submits stake, Few tokens gets deposited and rest is locked for a period of time.
     function changeTokenHoldingTime(uint _time) onlyOwner {
         tokenHoldingTime = _time;
     }
