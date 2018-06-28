@@ -177,8 +177,13 @@ contract governanceData is Upgradeable{
         uint8 returned;
     }
 
+    struct solution {
+        address owner;
+        bytes action;
+    }
+
     mapping(uint => proposalData) allProposalData;
-    mapping(uint => address[]) allProposalSolutions;
+    mapping(uint => solution[]) allProposalSolutions;
     mapping(address => uint32) allMemberReputationByAddress;
     mapping(address => mapping(uint => uint)) AddressProposalVote;
     mapping(uint => mapping(uint => uint[])) ProposalRoleVote;
@@ -517,8 +522,8 @@ contract governanceData is Upgradeable{
 
 
     /// @dev Sets the address of member as solution owner whosoever provided the solution
-    function setSolutionAdded(uint _proposalId, address _memberAddress) onlyInternal {
-        allProposalSolutions[_proposalId].push(_memberAddress);
+    function setSolutionAdded(uint _proposalId, address _memberAddress, bytes _action) onlyInternal {
+        allProposalSolutions[_proposalId].push(solution(_memberAddress,_action));
     }
 
     /// @dev Returns the solution index that was being voted
@@ -534,7 +539,12 @@ contract governanceData is Upgradeable{
 
     /// @dev Gets The Address of Solution owner By solution sequence index As a proposal might have n number of solutions.
     function getSolutionAddedByProposalId(uint _proposalId, uint _Index) constant returns(address memberAddress) {
-        return allProposalSolutions[_proposalId][_Index];
+        return allProposalSolutions[_proposalId][_Index].owner;
+    }
+
+    /// @dev Gets The Solution Action By solution sequence index As a proposal might have n number of solutions.
+    function getSolutionActionByProposalId(uint _proposalId, uint _Index) constant returns(bytes action) {
+        return allProposalSolutions[_proposalId][_Index].action;
     }
 
     // VERSION 2.0 : Configurable parameters.

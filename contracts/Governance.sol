@@ -119,7 +119,7 @@ contract Governance is Upgradeable{
         address votingAddress = GD.getVotingTypeAddress(_votingTypeId);
         uint8 category = PC.getCategoryId_bySubId(_categoryId);
         uint _proposalId = GD.getProposalLength();
-        GD.setSolutionAdded(_proposalId,0x00);
+        GD.setSolutionAdded(_proposalId,0x00,"0x00");
         GD.callProposalEvent(msg.sender, _proposalId, now, _proposalTitle, _proposalSD, _proposalDescHash);
         if (_categoryId > 0) {
             GD.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, _dateAdd);
@@ -157,15 +157,15 @@ contract Governance is Upgradeable{
         uint8 _v, 
         bytes32 _r, 
         bytes32 _s, 
-        bytes32 _lockTokenTxHash
+        bytes32 _lockTokenTxHash,
+        bytes _action
     ) 
         public
     {
-        uint proposalDateAdd = now;
         uint _proposalId = GD.getProposalLength();
         address VTAddress = GD.getVotingTypeAddress(_votingTypeId);
-        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _categoryId, proposalDateAdd);
-        proposalSubmission(proposalDateAdd, _proposalId, VTAddress, _categoryId, _proposalSolutionStake, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _categoryId, now);
+        proposalSubmission(_proposalId, _categoryId, _proposalSolutionStake, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash, _action);
     }
 
     /// @dev Submit proposal with solution (Stake in ether)
@@ -187,14 +187,14 @@ contract Governance is Upgradeable{
         uint8 _v, 
         bytes32 _r, 
         bytes32 _s,
-        bytes32 _lockTokenTxHash
+        bytes32 _lockTokenTxHash,
+        bytes _action
     ) 
         public 
         onlyProposalOwner(_proposalId) 
     {
         uint proposalDateAdd = GD.getProposalDateUpd(_proposalId);
-        address VTAddress = GD.getProposalVotingType(_proposalId);
-        proposalSubmission(proposalDateAdd, _proposalId, VTAddress, 0, _proposalSolutionStake, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+        proposalSubmission(_proposalId, 0, _proposalSolutionStake, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash, _action);
     }
 
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
@@ -647,10 +647,8 @@ contract Governance is Upgradeable{
     }
 
     /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
-    function proposalSubmission(
-        uint proposalDateAdd, 
-        uint _proposalId, 
-        address _VTAddress, 
+    function proposalSubmission( 
+        uint _proposalId,  
         uint8 _categoryId, 
         uint _proposalSolutionStake, 
         string _solutionHash, 
@@ -658,33 +656,33 @@ contract Governance is Upgradeable{
         uint8 _v, 
         bytes32 _r, 
         bytes32 _s, 
-        bytes32 _lockTokenTxHash
+        bytes32 _lockTokenTxHash,
+        bytes _action
     ) 
         internal 
     {
         require(_categoryId > 0);
-        VT = VotingType(_VTAddress);
         openProposalForVoting(_proposalId, _categoryId, _proposalSolutionStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-        proposalSubmission1(_proposalId, proposalDateAdd, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash, _proposalSolutionStake);
+        proposalSubmission1(_proposalId, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash, _proposalSolutionStake, _action);
     }
 
     /// @dev When creating proposal with solution, it adds solution details against proposal
     function proposalSubmission1(
         uint _proposalId, 
-        uint proposalDateAdd, 
         string _solutionHash, 
         uint _validityUpto, 
         uint8 _v, 
         bytes32 _r, 
         bytes32 _s, 
         bytes32 _lockTokenTxHash, 
-        uint _proposalSolutionStake
+        uint _proposalSolutionStake,
+        bytes _action
     ) 
         internal  
     {
         // VT = VotingType(0x68D2e5342Dae099C1894ce022B6101bb6d4BBF3C);
-        VT.addSolution(_proposalId, msg.sender, 0, _solutionHash, proposalDateAdd, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-        GD.callProposalWithSolutionEvent(msg.sender, _proposalId, "", _solutionHash, proposalDateAdd, _proposalSolutionStake);
+        VT.addSolution(_proposalId, msg.sender, 0, _solutionHash, now, _validityUpto, _v, _r, _s, _lockTokenTxHash, _action);
+        GD.callProposalWithSolutionEvent(msg.sender, _proposalId, "", _solutionHash, now, _proposalSolutionStake);
     }
 
 }

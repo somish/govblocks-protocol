@@ -28,10 +28,12 @@ import "./GovBlocksMaster.sol";
 import "./BasicToken.sol";
 import "./Pool.sol";
 
+contract Action{
+
+}
+
 contract simpleVoting is VotingType, Upgradeable {
     using SafeMath for uint;
-    using Math
-    for uint;
     GBTStandardToken GBTS;
     governanceData GD;
     memberRoles MR;
@@ -125,9 +127,9 @@ contract simpleVoting is VotingType, Upgradeable {
 
     /// @dev Initiates add solution (Stake in ether)
     /// @param _solutionHash It contains parameters, values and description needed according to proposal
-    function addSolution_inEther(uint _proposalId, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) payable {
+    function addSolution_inEther(uint _proposalId, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) payable {
         uint tokenAmount = GBTS.buyToken.value(msg.value)();
-        initiateAddSolution(_proposalId, tokenAmount, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+        initiateAddSolution(_proposalId, tokenAmount, _solutionHash, _validityUpto, _v, _r, _s, _lockTokenTxHash, _action);
     }
 
     /// @dev Initiates add solution 
@@ -135,21 +137,21 @@ contract simpleVoting is VotingType, Upgradeable {
     /// @param _solutionStake Stake in GBT against adding solution
     /// @param _solutionHash Solution hash
     /// @param _dateAdd Date when the solution was added
-    function addSolution(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) public validateStake(_proposalId, _solutionStake) {
+    function addSolution(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) public validateStake(_proposalId, _solutionStake) {
         MS = Master(masterAddress);
         require(MS.isInternal(msg.sender) == true || msg.sender == _memberAddress);
         require(alreadyAdded(_proposalId, _memberAddress) == false);
         // if(msg.sender == _memberAddress) 
         //     receiveStake('S',_proposalId,_solutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
-        addSolution1(_proposalId, _memberAddress, _solutionStake, _solutionHash, _dateAdd, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+        addSolution1(_proposalId, _memberAddress, _solutionStake, _solutionHash, _dateAdd, _validityUpto, _v, _r, _s, _lockTokenTxHash, _action);
 
     }
 
-    function addSolution1(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) internal {
+    function addSolution1(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) internal {
         require(GD.getProposalCategory(_proposalId) > 0);
         if (msg.sender == _memberAddress)
             receiveStake('S', _proposalId, _solutionStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-        GD.setSolutionAdded(_proposalId, _memberAddress);
+        GD.setSolutionAdded(_proposalId, _memberAddress, _action);
         uint solutionId = GD.getTotalSolutions(_proposalId);
         GD.callSolutionEvent(_proposalId, msg.sender, solutionId, _solutionHash, _dateAdd, _solutionStake);
     }
@@ -158,8 +160,8 @@ contract simpleVoting is VotingType, Upgradeable {
     /// @param _proposalId Proposal id
     /// @param _solutionStake Stake put by the member when providing a solution
     /// @param _solutionHash Solution hash
-    function initiateAddSolution(uint _proposalId, uint _solutionStake, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) public {
-        addSolution(_proposalId, msg.sender, _solutionStake, _solutionHash, now, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+    function initiateAddSolution(uint _proposalId, uint _solutionStake, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) public {
+        addSolution(_proposalId, msg.sender, _solutionStake, _solutionHash, now, _validityUpto, _v, _r, _s, _lockTokenTxHash, _action);
     }
 
     /// @dev Creates proposal for voting (Stake in ether)
@@ -342,6 +344,8 @@ contract simpleVoting is VotingType, Upgradeable {
                 } else {
                     GOV.updateProposalDetails(_proposalId, currentVotingId, max, max);
                     GD.changeProposalStatus(_proposalId, 3);
+                    Action x = Action(PC.getContractAddress(GD.getProposalCategory(_proposalId)));
+                    x.call(GD.getSolutionActionByProposalId(_proposalId, max));
                     giveReward_afterFinalDecision(_proposalId);
                 }
             } else {

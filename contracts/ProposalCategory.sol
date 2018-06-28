@@ -37,6 +37,7 @@ contract ProposalCategory {
         string categoryName;
         string actionHash;
         uint8 categoryId;
+        address contractAddress;
     }
 
     subCategory[] public allSubCategory;
@@ -117,6 +118,7 @@ contract ProposalCategory {
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
     function ProposalCategoryInitiate() {
         require(constructorCheck == false);
+        MS = Master(masterAddress);
         uint8[] memory roleSeq = new uint8[](1);
         uint8[] memory majVote = new uint8[](1);
         uint32[] memory closeTime = new uint32[](1);
@@ -134,31 +136,31 @@ contract ProposalCategory {
         allCategory.push(category("Others not specified", roleSeq, majVote, closeTime, 0, 10, 0, 20, 20, 20));
 
         allSubId_byCategory[0].push(0);
-        allSubCategory.push(subCategory("Uncategorized", "", 0));
+        allSubCategory.push(subCategory("Uncategorized", "", 0, 0x00));
 
         allSubId_byCategory[1].push(1);
-        allSubCategory.push(subCategory("Add new member role", "QmbUTUHF6S7Mz1wDatYt39Tf8R9tjc54UzDZddX1zXYpvm", 1));
+        allSubCategory.push(subCategory("Add new member role", "QmbUTUHF6S7Mz1wDatYt39Tf8R9tjc54UzDZddX1zXYpvm", 1, MS.getLatestAddress("MR")));
 
         allSubId_byCategory[1].push(2);
-        allSubCategory.push(subCategory("Update member role", "QmXQdhxFohAvkWKPLF9Zddt8EM2jjex5RqVSuTQ3hqSpAE", 1));
+        allSubCategory.push(subCategory("Update member role", "QmXQdhxFohAvkWKPLF9Zddt8EM2jjex5RqVSuTQ3hqSpAE", 1, MS.getLatestAddress("MR")));
 
         allSubId_byCategory[2].push(3);
-        allSubCategory.push(subCategory("Add new category", "QmchfnafX5dZXcpivStWQepfDrpeTskNxftkNHAZuWhDFK", 2));
+        allSubCategory.push(subCategory("Add new category", "QmchfnafX5dZXcpivStWQepfDrpeTskNxftkNHAZuWhDFK", 2, MS.getLatestAddress("PC")));
 
         allSubId_byCategory[2].push(4);
-        allSubCategory.push(subCategory("Edit category", "QmSdBuXa3UQiWqqdyponEGnwX2AGShqHEMEBXdZv4gmPAN", 2));
+        allSubCategory.push(subCategory("Edit category", "QmSdBuXa3UQiWqqdyponEGnwX2AGShqHEMEBXdZv4gmPAN", 2, MS.getLatestAddress("PC")));
 
         allSubId_byCategory[2].push(5);
-        allSubCategory.push(subCategory("Add new sub category", "QmYFBALQHBSyKQVnUxSRSHwbv6Ct8yeC1vLRRuvUkMSC2L", 2));
+        allSubCategory.push(subCategory("Add new sub category", "QmYFBALQHBSyKQVnUxSRSHwbv6Ct8yeC1vLRRuvUkMSC2L", 2, MS.getLatestAddress("PC")));
 
         allSubId_byCategory[2].push(6);
-        allSubCategory.push(subCategory("Edit sub category", "QmesRxLedQDxZmnXr8667VhHaoJ5DEGUW8ryUGUy69SQeq", 2));
+        allSubCategory.push(subCategory("Edit sub category", "QmesRxLedQDxZmnXr8667VhHaoJ5DEGUW8ryUGUy69SQeq", 2, MS.getLatestAddress("PC")));
 
         allSubId_byCategory[3].push(7);
-        allSubCategory.push(subCategory("Configure parameters", "QmYzP1MKehbfaAYBkfuTckXd4DN5WSEwnzKqpTBeWB253M", 3));
+        allSubCategory.push(subCategory("Configure parameters", "QmYzP1MKehbfaAYBkfuTckXd4DN5WSEwnzKqpTBeWB253M", 3, masterAddress));
 
         allSubId_byCategory[4].push(8);
-        allSubCategory.push(subCategory("Others, not specified", "", 4));
+        allSubCategory.push(subCategory("Others, not specified", "", 4, 0x00));
 
         constructorCheck = true;
     }
@@ -205,9 +207,9 @@ contract ProposalCategory {
     /// @param _categoryName Name of the main category
     /// @param _actionHash Automated Action hash has Contract Address and function name i.e. Functionality that needs to be performed after proposal acceptance.
     /// @param _mainCategoryId Id of main category
-    function addNewSubCategory(string _categoryName, string _actionHash, uint8 _mainCategoryId) onlyGBMSubCategory {
+    function addNewSubCategory(string _categoryName, string _actionHash, uint8 _mainCategoryId, address _contractAddress) onlyGBMSubCategory {
         allSubId_byCategory[_mainCategoryId].push(allSubCategory.length);
-        allSubCategory.push(subCategory(_categoryName, _actionHash, _mainCategoryId));
+        allSubCategory.push(subCategory(_categoryName, _actionHash, _mainCategoryId, _contractAddress));
     }
 
     /// @dev Update Sub category of a specific category.
@@ -218,13 +220,18 @@ contract ProposalCategory {
     }
 
     /// @dev Get Sub category details such as Category name, Automated action hash and Main category id
-    function getSubCategoryDetails(uint _subCategoryId) constant returns(string, string, uint) {
-        return (allSubCategory[_subCategoryId].categoryName, allSubCategory[_subCategoryId].actionHash, allSubCategory[_subCategoryId].categoryId);
+    function getSubCategoryDetails(uint _subCategoryId) constant returns(string, string, uint, address) {
+        return (allSubCategory[_subCategoryId].categoryName, allSubCategory[_subCategoryId].actionHash, allSubCategory[_subCategoryId].categoryId, allSubCategory[_subCategoryId].contractAddress);
     }
 
     /// @dev Get Sub category name 
     function getSubCategoryName(uint _subCategoryId) constant returns(uint, string) {
         return (_subCategoryId, allSubCategory[_subCategoryId].categoryName);
+    }
+
+    /// @dev Get contractAddress 
+    function getContractAddress(uint _subCategoryId) constant returns(address _contractAddress) {
+        _contractAddress = allSubCategory[_subCategoryId].contractAddress;
     }
 
     /// @dev Get Sub category id at specific index when giving main category id 
