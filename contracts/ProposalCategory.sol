@@ -80,6 +80,12 @@ contract ProposalCategory {
         _;
     }
 
+    modifier onlySV {
+        MS = Master(masterAddress);
+        require(MS.getLatestAddress("SV") == msg.sender);
+        _;
+    }
+
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) {
@@ -207,7 +213,7 @@ contract ProposalCategory {
     /// @param _categoryName Name of the main category
     /// @param _actionHash Automated Action hash has Contract Address and function name i.e. Functionality that needs to be performed after proposal acceptance.
     /// @param _mainCategoryId Id of main category
-    function addNewSubCategory(string _categoryName, string _actionHash, uint8 _mainCategoryId, address _contractAddress) onlyGBMSubCategory {
+    function addNewSubCategory(string _categoryName, string _actionHash, uint8 _mainCategoryId, address _contractAddress) onlySV {
         allSubId_byCategory[_mainCategoryId].push(allSubCategory.length);
         allSubCategory.push(subCategory(_categoryName, _actionHash, _mainCategoryId, _contractAddress));
     }
@@ -215,7 +221,7 @@ contract ProposalCategory {
     /// @dev Update Sub category of a specific category.
     /// @param _subCategoryId Id of subcategory that needs to be updated
     /// @param _actionHash Updated Automated Action hash i.e. Either contract address or function name is changed.
-    function updateSubCategory(uint _subCategoryId, string _actionHash) onlyGBMSubCategory {
+    function updateSubCategory(uint _subCategoryId, string _actionHash) onlySV {
         allSubCategory[_subCategoryId].actionHash = _actionHash;
     }
 

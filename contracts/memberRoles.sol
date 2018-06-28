@@ -66,6 +66,12 @@ contract memberRoles is Upgradeable{
         _;
     }
 
+    modifier onlySV {
+        MS = Master(masterAddress);
+        require(MS.getLatestAddress("SV") == msg.sender);
+        _;
+    }
+
     /// @dev Returns true if the caller address is Master's contract address
     function isMaster() constant returns(bool) {
         if (msg.sender == masterAddress)
@@ -183,8 +189,7 @@ contract memberRoles is Upgradeable{
     /// @param _newRoleName New role name
     /// @param _roleDescription New description hash
     /// @param _canAddMembers Authorized member against every role id
-    function addNewMemberRole(bytes32 _newRoleName, string _roleDescription, address _canAddMembers) {
-        require(isMaster() == true || isGBM() == true);
+    function addNewMemberRole(bytes32 _newRoleName, string _roleDescription, address _canAddMembers) onlySV {
         uint rolelength = getTotalMemberRoles();
         memberRole.push(_newRoleName);
         authorizedAddress_againstRole[rolelength] = _canAddMembers;
