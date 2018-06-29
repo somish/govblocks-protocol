@@ -232,31 +232,28 @@ contract simpleVoting is VotingType, Upgradeable {
     /// @dev Receives solution stake against solution in simple voting i.e. Deposit and lock the tokens
     function receiveStake(bytes2 _type, uint _proposalId, uint _Stake, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) internal {
         uint8 currVotingId = GD.getProposalCurrentVotingId(_proposalId);
-        uint depositedTokens;
         uint depositPerc = GD.depositPercVote();
-        if (_type == 'S')
-            depositedTokens = GD.getDepositedTokens(msg.sender, _proposalId, 'S');
-        else
-            depositedTokens = GD.getDepositedTokens(msg.sender, _proposalId, 'V');
-
-        uint depositAmount = SafeMath.div(SafeMath.mul(_Stake, depositPerc), 100) + depositedTokens;
-        uint category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
+        uint deposit = SafeMath.div(SafeMath.mul(_Stake, depositPerc), 100);
+        uint category = PC.getCatIdByPropId(_proposalId);
 
         if (_Stake != 0) {
             require(_validityUpto >= PC.getRemainingClosingTime(_proposalId, category, currVotingId));
-            if (depositPerc != 0 && depositPerc != 100) {
-                GBTS.lockToken(msg.sender, SafeMath.sub(_Stake, depositAmount), _validityUpto, _v, _r, _s, _lockTokenTxHash);
-                if (_type == 'S')
-                    GD.setDepositTokens(msg.sender, _proposalId, 'S', depositAmount);
-                else
-                    GD.setDepositTokens(msg.sender, _proposalId, 'V', depositAmount);
-            } else if (depositPerc == 100) {
-                if (_type == 'S')
-                    GD.setDepositTokens(msg.sender, _proposalId, 'S', _Stake);
-                else
-                    GD.setDepositTokens(msg.sender, _proposalId, 'V', _Stake);
-            } else
+            if (depositPerc == 0) {
                 GBTS.lockToken(msg.sender, _Stake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+            } else {
+                GBTS.depositAndLockToken(msg.sender, _Stake, deposit, _validityUpto, _v, _r, _s, _lockTokenTxHash, address(GD));
+                uint depositedTokens;
+                uint depositAmount;
+                if (_type == 'S'){
+                    depositedTokens = GD.getDepositedTokens(msg.sender, _proposalId, 'S');
+                    depositAmount = deposit + depositedTokens;
+                    GD.setDepositTokens(msg.sender, _proposalId, 'S', depositAmount);
+                }else {
+                    depositedTokens = GD.getDepositedTokens(msg.sender, _proposalId, 'V');
+                    depositAmount = deposit + depositedTokens;
+                    GD.setDepositTokens(msg.sender, _proposalId, 'V', depositAmount);
+                } 
+            }
         }
     }
 

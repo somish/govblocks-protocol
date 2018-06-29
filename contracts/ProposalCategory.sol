@@ -420,6 +420,11 @@ contract ProposalCategory {
         subCategoryName = allSubCategory[GD.getProposalCategory(_proposalId)].categoryName;
     }
 
+    /// @dev Gets Category ID from Proposal ID.
+    function getCatIdByPropId(uint _proposalId) constant returns(uint8 catId) {
+        catId = getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
+    }
+
     // /// @dev Sets closing time for the category
     // /// @param _categoryId Category id
     // /// @param _time Closing time

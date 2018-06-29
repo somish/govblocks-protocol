@@ -15,70 +15,76 @@
 
 pragma solidity ^ 0.4.8;
 import "./Master.sol";
-import "./BasicToken.sol";
 import "./SafeMath.sol";
 import "./Upgradeable.sol";
 
 
-contract MemberRoles is Upgradeable{
+contract MemberRoles is Upgradeable {
     event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription);
     using SafeMath for uint;
-    bytes32[] memberRole;
-    uint8 authorizedAddress_toCategorize;
+    bytes32[] private memberRole;
+    uint8 private authorizedAddressToCategorize;
     bool public constructorCheck;
     address public masterAddress;
-    Master MS;
-    BasicToken BT;
+    Master private master;
 
-    struct memberRoleDetails {
+    struct MemberRoleDetails {
         uint32 memberCounter;
         mapping(address => bool) memberActive;
         address[] memberAddress;
     }
 
-    mapping(uint => address) authorizedAddress_againstRole;
-    mapping(uint32 => memberRoleDetails) memberRoleData;
+    mapping(uint => address) authorizedAddressAgainstRole;
+    mapping(uint32 => MemberRoleDetails) memberRoleData;
 
     /// @dev Initiates Default settings for Member Roles contract
     function MemberRolesInitiate() {
         require(constructorCheck == false);
         uint rolelength = getTotalMemberRoles();
         memberRole.push("");
-        authorizedAddress_againstRole[rolelength] = 0x00;
+        authorizedAddressAgainstRole[rolelength] = 0x00;
         MemberRole(rolelength, "", "");
         rolelength++;
         memberRole.push("Advisory Board");
-        authorizedAddress_againstRole[rolelength] = MS.owner();
-        MemberRole(rolelength, "Advisory Board", "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.");
+        authorizedAddressAgainstRole[rolelength] = master.owner();
+        MemberRole(
+            rolelength, 
+            "Advisory Board", 
+            "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp."
+        );
         rolelength++;
         memberRole.push("Token Holder");
-        authorizedAddress_againstRole[rolelength] = 0x00;
-        MemberRole(rolelength, "Token Holder", "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.");
+        authorizedAddressAgainstRole[rolelength] = 0x00;
+        MemberRole(
+            rolelength, 
+            "Token Holder", 
+            "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default."
+        );
         setOwnerRole();
-        authorizedAddress_toCategorize = 1;
+        authorizedAddressToCategorize = 1;
         constructorCheck = true;
     }
 
     modifier onlyInternal {
-        MS = Master(masterAddress);
-        require(MS.isInternal(msg.sender) == true);
+        master = Master(masterAddress);
+        require(master.isInternal(msg.sender) == true);
         _;
     }
 
     modifier onlyOwner {
-        MS = Master(masterAddress);
-        require(MS.isOwner(msg.sender) == true);
+        master = Master(masterAddress);
+        require(master.isOwner(msg.sender) == true);
         _;
     }
 
     modifier checkRoleAuthority(uint _memberRoleId) {
-        require(isGBM() == true || msg.sender == authorizedAddress_againstRole[_memberRoleId]);
+        require(isGBM() == true || msg.sender == authorizedAddressAgainstRole[_memberRoleId]);
         _;
     }
 
     modifier onlySV {
-        MS = Master(masterAddress);
-        require(MS.getLatestAddress("SV") == msg.sender);
+        master = Master(masterAddress);
+        require(master.getLatestAddress("SV") == msg.sender);
         _;
     }
 
@@ -90,8 +96,8 @@ contract MemberRoles is Upgradeable{
 
     /// @dev Returns true if the caller address is GovBlocksMaster contract address.
     function isGBM() constant returns(bool) {
-        MS = Master(masterAddress);
-        if (MS.isGBM(msg.sender) == true)
+        master = Master(masterAddress);
+        if (master.isGBM(msg.sender) == true)
             return true;
     }
 
@@ -101,8 +107,8 @@ contract MemberRoles is Upgradeable{
         if (masterAddress == 0x000)
             masterAddress = _masterContractAddress;
         else {
-            MS = Master(masterAddress);
-            require(MS.isInternal(msg.sender) == true);
+            master = Master(masterAddress);
+            require(master.isInternal(msg.sender) == true);
             masterAddress = _masterContractAddress;
         }
     }
@@ -119,8 +125,8 @@ contract MemberRoles is Upgradeable{
 
     /// @dev Add dApp Owner in Advisory Board Members.
     function setOwnerRole() internal {
-        MS = Master(masterAddress);
-        address ownAddress = MS.owner();
+        master = Master(masterAddress);
+        address ownAddress = master.owner();
         memberRoleData[1].memberCounter = SafeMath.add32(memberRoleData[1].memberCounter, 1);
         memberRoleData[1].memberActive[ownAddress] = true;
         memberRoleData[1].memberAddress.push(ownAddress);
@@ -181,18 +187,18 @@ contract MemberRoles is Upgradeable{
     /// @param _roleId roleId to update its Authorized Address
     /// @param _newCanAddMember New authorized address against role id
     function changeCanAddMember(uint32 _roleId, address _newCanAddMember) public {
-        if (authorizedAddress_againstRole[_roleId] == 0x00)
-            authorizedAddress_againstRole[_roleId] = _newCanAddMember;
+        if (authorizedAddressAgainstRole[_roleId] == 0x00)
+            authorizedAddressAgainstRole[_roleId] = _newCanAddMember;
         else {
-            require(msg.sender == authorizedAddress_againstRole[_roleId]);
-            authorizedAddress_againstRole[_roleId] = _newCanAddMember;
+            require(msg.sender == authorizedAddressAgainstRole[_roleId]);
+            authorizedAddressAgainstRole[_roleId] = _newCanAddMember;
         }
     }
 
     /// @dev Changes the role id of the member who is authorized to categorize the proposal
     /// @param _roleId Role id of that member
     function changeAuthorizedMemberId(uint8 _roleId) onlyOwner public {
-        authorizedAddress_toCategorize = _roleId;
+        authorizedAddressToCategorize = _roleId;
     }
 
     /// @dev Adds new member role
@@ -202,7 +208,7 @@ contract MemberRoles is Upgradeable{
     function addNewMemberRole(bytes32 _newRoleName, string _roleDescription, address _canAddMembers) onlySV {
         uint rolelength = getTotalMemberRoles();
         memberRole.push(_newRoleName);
-        authorizedAddress_againstRole[rolelength] = _canAddMembers;
+        authorizedAddressAgainstRole[rolelength] = _canAddMembers;
         MemberRole(rolelength, _newRoleName, _roleDescription);
     }
 
@@ -238,7 +244,7 @@ contract MemberRoles is Upgradeable{
 
     /// @dev Return member address who holds the right to add/remove any member from specific role.
     function getAuthrizedMember_againstRole(uint32 _memberRoleId) constant returns(address) {
-        return authorizedAddress_againstRole[_memberRoleId];
+        return authorizedAddressAgainstRole[_memberRoleId];
     }
 
     /// @dev Gets the role name when given role id
@@ -266,7 +272,7 @@ contract MemberRoles is Upgradeable{
 
     /// @dev Gets the role id which is authorized to categorize a proposal
     function getAuthorizedMemberId() public constant returns(uint8 roleId) {
-        roleId = authorizedAddress_toCategorize;
+        roleId = authorizedAddressToCategorize;
     }
 
     /// @dev Gets total number of member roles available
