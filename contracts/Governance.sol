@@ -596,12 +596,12 @@ contract Governance is Upgradeable {
         governanceDat.callRewardEvent(
             _memberAddress, 
             i, 
-            "GBT Reward for being Proposal owner - Accepted ", 
+            "GBT Reward for Proposal owner", 
             calcReward
         );
 
         governanceDat.setMemberReputation(
-            "Reputation credit for proposal owner - Accepted", 
+            "Reputation credit for proposal owner", 
             i, 
             _memberAddress, 
             SafeMath.add32(governanceDat.getMemberReputation(_memberAddress), addProposalOwnerPoints), 
