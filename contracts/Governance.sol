@@ -218,7 +218,7 @@ contract Governance is Upgradeable {
         public 
         checkProposalValidity(_proposalId) 
     {
-        require(memberRole.checkRoleId_byAddress(msg.sender, memberRole.getAuthorizedMemberId()));
+        require(memberRole.checkRoleIdByAddress(msg.sender, memberRole.getAuthorizedMemberId()));
         require(_dappIncentive <= govBlocksToken.balanceOf(poolAddress));
 
         governanceDat.setProposalIncentive(_proposalId, _dappIncentive);

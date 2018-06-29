@@ -268,7 +268,7 @@ contract simpleVoting is VotingType, Upgradeable {
         uint _categoryId=PC.getCategoryId_bySubId(category);
         (_mrSequence, , ) = PC.getCategoryData3(_categoryId, currentVotingId);
 
-        require(MR.checkRoleId_byAddress(msg.sender, _mrSequence) == true && _solutionChosen.length == 1 && GD.checkVoteId_againstMember(msg.sender, _proposalId) == false);
+        require(MR.checkRoleIdByAddress(msg.sender, _mrSequence) == true && _solutionChosen.length == 1 && GD.checkVoteId_againstMember(msg.sender, _proposalId) == false);
         if (currentVotingId == 0)
             require(_solutionChosen[0] <= GD.getTotalSolutions(_proposalId));
         else
