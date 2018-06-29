@@ -838,7 +838,7 @@ contract Governance is Upgradeable {
         votingType.addSolution(
             _proposalId, 
             msg.sender, 
-            0, 
+            _proposalSolutionStake, 
             _solutionHash, 
             now, 
             _validityUpto, 
