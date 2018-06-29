@@ -42,9 +42,18 @@ contract MemberRoles is Upgradeable{
     /// @dev Initiates Default settings for Member Roles contract
     function MemberRolesInitiate() {
         require(constructorCheck == false);
-        addNewMemberRole("", "", 0x00);
-        addNewMemberRole("Advisory Board", "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.", MS.owner());
-        addNewMemberRole("Token Holder", "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.", 0x00);
+        uint rolelength = getTotalMemberRoles();
+        memberRole.push("");
+        authorizedAddress_againstRole[rolelength] = 0x00;
+        MemberRole(rolelength, "", "");
+        rolelength++;
+        memberRole.push("Advisory Board");
+        authorizedAddress_againstRole[rolelength] = MS.owner();
+        MemberRole(rolelength, "Advisory Board", "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.");
+        rolelength++;
+        memberRole.push("Token Holder");
+        authorizedAddress_againstRole[rolelength] = 0x00;
+        MemberRole(rolelength, "Token Holder", "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.");
         setOwnerRole();
         authorizedAddress_toCategorize = 1;
         constructorCheck = true;
