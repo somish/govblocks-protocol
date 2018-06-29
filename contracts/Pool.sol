@@ -82,6 +82,8 @@ contract Pool is usingOraclize, Upgradeable {
 
     /// @dev just to adhere to the interface
     function updateDependencyAddresses() public {
+        MS = Master(masterAddress);
+        GBTS = GBTStandardToken(MS.getLatestAddress("GS"));
     }
 
     /// @dev converts pool ETH to GBT

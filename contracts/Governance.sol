@@ -81,6 +81,7 @@ contract Governance is Upgradeable {
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
         poolAddress = master.getLatestAddress("PL");
         pool = Pool(poolAddress);
+        govBlocksToken = GBTStandardToken(master.getLatestAddress("GS"));
     }
 
     /// @dev Changes GBT standard token address

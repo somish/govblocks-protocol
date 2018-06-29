@@ -288,6 +288,7 @@ contract governanceData is Upgradeable{
             GovernanceDataInitiate();
         MS = Master(masterAddress);
         GOV = Governance(MS.getLatestAddress("GV"));
+        GBTSAddress = MS.getLatestAddress("GS");
         editVotingTypeDetails(0, MS.getLatestAddress("SV"));
     }
 

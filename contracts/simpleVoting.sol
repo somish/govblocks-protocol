@@ -117,6 +117,7 @@ contract simpleVoting is VotingType, Upgradeable {
         govAddress = MS.getLatestAddress("GV");
         GOV = Governance(govAddress);
         P1 = Pool(MS.getLatestAddress("PL"));
+        GBTS = GBTStandardToken(MS.getLatestAddress("GS"));
     }
 
     /// @dev Changes GBT Standard Token address

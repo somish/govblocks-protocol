@@ -168,6 +168,11 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev just for the interface
     function changeGBTSAddress(address _GBTSAddress) public onlyInternal {
+        require(isValidateOwner());
+        for (uint8 i = 1; i < allContractNames.length - 1; i++) {
+            up = Upgradeable(allContractVersions[versionLength - 1][allContractNames[i]]);
+            up.changeGBTSAddress(_GBTSAddress);
+        }
     }
 
     /// @dev Changes Master contract address
@@ -192,17 +197,6 @@ contract Master is Ownable, Upgradeable {
             version_old = _version - 1;
         contracts_active[allContractVersions[version_old][_contractName]] = false;
         contracts_active[allContractVersions[_version][_contractName]] = true;
-    }
-
-
-    /// @dev Changes GBT standard token address in GD, SV, SVT and governance contracts
-    /// @param _tokenAddress Address of the GBT token
-    function changeGBTAddress(address _tokenAddress) public {
-        require(isValidateOwner());
-        for (uint8 i = 1; i < allContractNames.length - 1; i++) {
-            up = Upgradeable(allContractVersions[versionLength - 1][allContractNames[i]]);
-            up.changeGBTSAddress(_tokenAddress);
-        }
     }
 
     /// @dev Checks the authenticity of changing address or switching to recent version 
