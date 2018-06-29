@@ -74,7 +74,7 @@ contract Pool is usingOraclize, Upgradeable {
     }
 
     /// @dev Changes GBT standard token address
-    /// @param _GBTSAddress New GBT standard token address
+    /// @param _gbtAddress New GBT standard token address
     function changeGBTSAddress(address _gbtAddress) public onlyMaster {
         gbt = GBTStandardToken(_gbtAddress);
     }
@@ -96,7 +96,7 @@ contract Pool is usingOraclize, Upgradeable {
     /// @param _proposalId Proposal id
     /// @param _closingTime Remaining Closing time of proposal
     function closeProposalOraclise(uint _proposalId, uint _closingTime) public {
-        uint index = getApiCalllength();
+        uint index = getApiCallLength();
         bytes32 myid2;
         master = Master(masterAddress);
 
@@ -106,7 +106,7 @@ contract Pool is usingOraclize, Upgradeable {
                     "URL", 
                     strConcat(
                         "http://a1.govblocks.io/closeProposalVoting.js/42/", 
-                        bytes32ToString(master.DappName()), 
+                        bytes32ToString(master.dAppName()), 
                         "/", 
                         uint2str(index)
                     )
@@ -118,7 +118,7 @@ contract Pool is usingOraclize, Upgradeable {
                     "URL", 
                     strConcat(
                         "http://a1.govblocks.io/closeProposalVoting.js/42/", 
-                        bytes32ToString(master.DappName()), 
+                        bytes32ToString(master.dAppName()), 
                         "/", 
                         uint2str(index)
                     )
@@ -130,7 +130,7 @@ contract Pool is usingOraclize, Upgradeable {
             closeTime, 
             strConcat(
                 "http://a1.govblocks.io/closeProposalVoting.js/42/", 
-                bytes32ToString(master.DappName()), 
+                bytes32ToString(master.dAppName()), 
                 "/", 
                 uint2str(index)
             )

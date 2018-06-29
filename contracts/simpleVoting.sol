@@ -365,7 +365,7 @@ contract simpleVoting is VotingType, Upgradeable {
     function checkForThreshold(uint _proposalId, uint32 _mrSequenceId) internal constant returns(bool) {
         uint thresHoldValue;
         if (_mrSequenceId == 2) {
-            address dAppTokenAddress = GBM.getDappTokenAddress(MS.DappName());
+            address dAppTokenAddress = GBM.getDappTokenAddress(MS.dAppName());
             BT = BasicToken(dAppTokenAddress);
             uint totalTokens;
 
