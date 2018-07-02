@@ -18,7 +18,7 @@ import "./Master.sol";
 
 
 contract GovBlocksMaster {
-    Master master;
+    Master private master;
     address public owner;
     address public gbtAddress;
 
@@ -29,23 +29,22 @@ contract GovBlocksMaster {
         string dappDescHash;
     }
 
-    mapping(address => bytes32) govBlocksDappByAddress;
-    mapping(bytes32 => GBDapps) govBlocksDapps;
-    mapping(address => string) govBlocksUser;
+    mapping(address => bytes32) private govBlocksDappByAddress;
+    mapping(bytes32 => GBDapps) private govBlocksDapps;
+    mapping(address => string) private govBlocksUser;
 
-    bytes32[] allGovBlocksUsers;
-    string byteCodeHash;
-    string contractsAbiHash;
+    bytes32[] private allGovBlocksUsers;
+    string private byteCodeHash;
+    string private contractsAbiHash;
 
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
     }
 
-
     /// @dev Initializes GovBlocks master
-    /// @param _GBTAddress GBT standard token address
-    function GovBlocksMasterInit(address _gbtAddress) {
+    /// @param _gbtAddress GBT standard token address
+    function govBlocksMasterInit(address _gbtAddress) public {
         require(owner == 0x00);
         owner = msg.sender;
         gbtAddress = _gbtAddress;
@@ -70,13 +69,13 @@ contract GovBlocksMaster {
 
     /// @dev Transfers ownership to new owner (of GBT contract address)
     /// @param _newOwner Address of new owner
-    function transferOwnership(address _newOwner) onlyOwner {
+    function transferOwnership(address _newOwner) public onlyOwner {
         owner = _newOwner;
     }
 
     /// @dev Updates GBt standard token address
-    /// @param _GBTContractAddress New GBT standard token contract address
-    function updateGBTAddress(address _gbtContractAddress) onlyOwner {
+    /// @param _gbtContractAddress New GBT standard token contract address
+    function updateGBTAddress(address _gbtContractAddress) public onlyOwner {
         gbtAddress = _gbtContractAddress;
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
@@ -88,7 +87,7 @@ contract GovBlocksMaster {
 
     /// @dev Updates GovBlocks master address
     /// @param _newGBMAddress New GovBlocks master address
-    function updateGBMAddress(address _newGBMAddress) internal {
+    function updateGBMAddress(address _newGBMAddress) public onlyOwner {
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             master = Master(masterAddress);
@@ -160,7 +159,7 @@ contract GovBlocksMaster {
 
     /// @dev Gets dApp details
     /// @param _gbUserName dApp name
-    /// @return GbUserName dApp name
+    /// @return gbUserName dApp name
     /// @return masterContractAddress Master contract address of dApp
     /// @return allContractsbyteCodeHash All contracts byte code hash
     /// @return allCcontractsAbiHash All contracts abi hash
@@ -169,18 +168,17 @@ contract GovBlocksMaster {
         public 
         constant 
         returns(
-            bytes32 GbUserName, 
+            bytes32 gbUserName, 
             address masterContractAddress, 
             string allContractsbyteCodeHash, 
             string allCcontractsAbiHash, 
             uint versionNo
         ) 
     {
-        address master = govBlocksDapps[_gbUserName].masterAddress;
-        if (master == 0x00)
-            return (GbUserName, 0x00, "", "", 0);
-        else
-            master = Master(master);
+        address masterAddress = govBlocksDapps[_gbUserName].masterAddress;
+        if (masterAddress == 0x00)
+            return (_gbUserName, 0x00, "", "", 0);
+        master = Master(masterAddress);
         versionNo = master.versionLength();
         return (_gbUserName, govBlocksDapps[_gbUserName].masterAddress, byteCodeHash, contractsAbiHash, versionNo);
     }
@@ -189,7 +187,7 @@ contract GovBlocksMaster {
     function getGovBlocksUserDetailsByIndex(uint _index) 
         public 
         constant 
-        returns(uint index, bytes32 GbUserName, address MasterContractAddress) 
+        returns(uint index, bytes32 gbUserName, address masterContractAddress) 
     {
         return (_index, allGovBlocksUsers[_index], govBlocksDapps[allGovBlocksUsers[_index]].masterAddress);
     }
@@ -206,7 +204,7 @@ contract GovBlocksMaster {
         public 
         constant 
         returns(
-            bytes32 GbUserName, 
+            bytes32 gbUserName, 
             address masterContractAddress, 
             address dappTokenAddress, 
             string allContractsbyteCodeHash, 
@@ -215,10 +213,10 @@ contract GovBlocksMaster {
         ) 
     {
         address master = govBlocksDapps[_gbUserName].masterAddress;
-        if (master == 0x00)
-            return (GbUserName, 0x00, 0x00, "", "", 0);
-        else
-            master = Master(master);
+        if (masterAddress == 0x00)
+            return (_gbUserName, 0x00, 0x00, "", "", 0);
+            
+        master = Master(masterAddress);
         versionNo = master.versionLength();
         return (
             _gbUserName, 
@@ -231,16 +229,16 @@ contract GovBlocksMaster {
     }
 
     /// @dev Gets dApp details by passing either of contract address i.e. Token or Master contract address
-    /// @param _Address Contract address is passed
+    /// @param _address Contract address is passed
     /// @return dappName dApp name
     /// @return masterContractAddress Master contract address of dApp
     /// @return dappTokenAddress dApp's token address
-    function getGovBlocksUserDetails2(address _Address) 
+    function getGovBlocksUserDetails2(address _address) 
         public 
         constant 
         returns(bytes32 dappName, address masterContractAddress, address dappTokenAddress) 
     {
-        dappName = govBlocksDappByAddress[_Address];
+        dappName = govBlocksDappByAddress[_address];
         return (dappName, govBlocksDapps[dappName].masterAddress, govBlocksDapps[dappName].tokenAddress);
     }
 
@@ -287,7 +285,7 @@ contract GovBlocksMaster {
 
     /// @dev Gets GBT standard token address 
     function getGBTAddress() public constant returns(address) {
-        return GBTAddress;
+        return gbtAddress;
     }
 
     /*
