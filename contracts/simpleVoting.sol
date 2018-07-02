@@ -62,7 +62,7 @@ contract simpleVoting is VotingType, Upgradeable {
 
     modifier validateStake(uint _proposalId, uint _stake) {    
         uint stake = _stake / (10 ** GBTS.decimals());
-        uint _category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
+        uint _category = PC.getCategoryIdBySubId(GD.getProposalCategory(_proposalId));
 
         // uint _category = GD.getProposalCategory(_proposalId);
         require(stake <= PC.getMaxStake(_category) && stake >= PC.getMinStake(_category));
@@ -204,7 +204,7 @@ contract simpleVoting is VotingType, Upgradeable {
         uint voteId = GD.allVotesTotal();
         uint finalVoteValue = getVoteValue_givenByMember(_memberAddress, _proposalId, _voteStake);
         uint32 _roleId;
-        uint category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
+        uint category = PC.getCategoryIdBySubId(GD.getProposalCategory(_proposalId));
 
         // uint category=GD.getProposalCategory(_proposalId);
         uint currVotingId = GD.getProposalCurrentVotingId(_proposalId);
@@ -265,7 +265,7 @@ contract simpleVoting is VotingType, Upgradeable {
         uint currentVotingId;
         uint intermediateVerdict;
         (, category, currentVotingId, intermediateVerdict, , , ) = GD.getProposalDetailsById2(_proposalId);
-        uint _categoryId=PC.getCategoryId_bySubId(category);
+        uint _categoryId=PC.getCategoryIdBySubId(category);
         (_mrSequence, , ) = PC.getCategoryData3(_categoryId, currentVotingId);
 
         require(MR.checkRoleIdByAddress(msg.sender, _mrSequence) == true && _solutionChosen.length == 1 && GD.checkVoteId_againstMember(msg.sender, _proposalId) == false);
@@ -287,7 +287,7 @@ contract simpleVoting is VotingType, Upgradeable {
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
     function closeProposalVote(uint _proposalId)  {
         uint256 totalVoteValue = 0;
-        uint8 category = PC.getCategoryId_bySubId(GD.getProposalCategory(_proposalId));
+        uint8 category = PC.getCategoryIdBySubId(GD.getProposalCategory(_proposalId));
         uint8 currentVotingId = GD.getProposalCurrentVotingId(_proposalId);
         uint8 i;
         uint8 max = 0;
@@ -413,7 +413,7 @@ contract simpleVoting is VotingType, Upgradeable {
     function giveReward_afterFinalDecision1(uint finalVerdict,uint _proposalId,address _ownerAddress,uint depositedTokens,uint totalReward) internal
     {
         uint8 subCategory = GD.getProposalCategory(_proposalId); uint totalVoteValue;
-        uint category = PC.getCategoryId_bySubId(subCategory);
+        uint category = PC.getCategoryIdBySubId(subCategory);
         // uint mrLength = PC.getRoleSequencLength(category);
         for (uint i = 0; i <  PC.getRoleSequencLength(category); i++) {
             uint roleId = PC.getRoleSequencAtIndex(category,i);

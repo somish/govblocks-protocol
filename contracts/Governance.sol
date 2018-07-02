@@ -68,7 +68,7 @@ contract Governance is Upgradeable {
 
     modifier validateStake(uint8 _categoryId, uint _proposalStake) {
         uint stake = _proposalStake / (10 ** govBlocksToken.decimals());
-        uint category = proposalCategory.getCategoryId_bySubId(_categoryId);
+        uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
         require(stake <= proposalCategory.getMaxStake(category) && stake >= proposalCategory.getMinStake(category));
         _;
     }
@@ -118,7 +118,7 @@ contract Governance is Upgradeable {
         public 
     {
         address votingAddress = governanceDat.getVotingTypeAddress(_votingTypeId);
-        uint8 category = proposalCategory.getCategoryId_bySubId(_categoryId);
+        uint8 category = proposalCategory.getCategoryIdBySubId(_categoryId);
         uint _proposalId = governanceDat.getProposalLength();
         governanceDat.setSolutionAdded(_proposalId, 0x00, "0x00");
         governanceDat.callProposalEvent(
@@ -242,7 +242,7 @@ contract Governance is Upgradeable {
         onlyProposalOwner(_proposalId) 
         checkProposalValidity(_proposalId) 
     {
-        uint8 category = proposalCategory.getCategoryId_bySubId(_categoryId);
+        uint8 category = proposalCategory.getCategoryIdBySubId(_categoryId);
         require(category != 0);
         openProposalForVoting2(_proposalId, category, _proposalStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
 
@@ -258,7 +258,7 @@ contract Governance is Upgradeable {
         uint _closingTime;
         uint _majorityVote;
         (, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById1(_proposalId);
-        uint _categoryId = proposalCategory.getCategoryId_bySubId(governanceDat.getProposalCategory(_proposalId));
+        uint _categoryId = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
         (, _majorityVote, _closingTime) = proposalCategory.getCategoryData3(
             _categoryId, 
             governanceDat.getProposalCurrentVotingId(_proposalId)
@@ -445,7 +445,7 @@ contract Governance is Upgradeable {
                 proposalStatus = governanceDat.getProposalStatus(_proposalId);
                 finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
                 totalReward = governanceDat.getProposalTotalReward(_proposalId);
-                category = proposalCategory.getCategoryId_bySubId(governanceDat.getProposalCategory(_proposalId));
+                category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
                 break;
             }
         }
@@ -504,7 +504,7 @@ contract Governance is Upgradeable {
     /// @param _proposalId Proposal id which voting needs to be closed
     function callOraclize(uint _proposalId) internal {
         uint8 subCategory=governanceDat.getProposalCategory(_proposalId);
-        uint8 _categoryId = proposalCategory.getCategoryId_bySubId(subCategory);
+        uint8 _categoryId = proposalCategory.getCategoryIdBySubId(subCategory);
         uint closingTime = proposalCategory.getClosingTimeAtIndex(_categoryId, 0);
         uint proposalDateUpd=governanceDat.getProposalDateUpd(_proposalId);
         closingTime = SafeMath.add(closingTime, proposalDateUpd);
@@ -776,7 +776,7 @@ contract Governance is Upgradeable {
         finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
         voteValue = governanceDat.getVoteValue(voteId);
         totalReward = governanceDat.getProposalTotalReward(_proposalId);
-        category = proposalCategory.getCategoryId_bySubId(governanceDat.getProposalCategory(_proposalId));
+        category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
         totalVoteValueProposal = governanceDat.getProposalTotalVoteValue(_proposalId);
     }
 
