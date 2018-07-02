@@ -250,7 +250,7 @@ contract ProposalCategory {
     /// @dev Update Sub category of a specific category.
     /// @param _subCategoryId Id of subcategory that needs to be updated
     /// @param _actionHash Updated Automated Action hash i.e. Either contract address or function name is changed.
-    function updateSubCategory(uint _subCategoryId, string _categoryName, string _actionHash, address _contractAddress) public onlySV {
+    function updateSubCategory(string _categoryName, string _actionHash, uint _subCategoryId, address _contractAddress) public onlySV {
         allSubCategory[_subCategoryId].categoryName = _categoryName;
         allSubCategory[_subCategoryId].actionHash = _actionHash;
         allSubCategory[_subCategoryId].contractAddress = _contractAddress;
