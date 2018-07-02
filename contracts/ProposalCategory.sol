@@ -173,8 +173,9 @@ contract ProposalCategory {
         uint8[] _rewardPercentage
     ) 
         public
-        onlyGBM(_memberRoleSequence, _memberRoleMajorityVote, _closingTime) 
+        onlySV 
     {
+        require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleMajorityVote.length == _closingTime.length);
         allCategory.push(Category(
                 _categoryData, 
                 _memberRoleSequence, 
@@ -207,12 +208,9 @@ contract ProposalCategory {
         uint8[] _rewardPercentage
     )
         public 
-        onlyGBM(
-            _roleName, 
-            _majorityVote, 
-            _closingTime
-        ) 
+        onlySV
     {
+        require(_roleName.length == _majorityVote.length && _majorityVote.length == _closingTime.length);
         allCategory[_categoryId].name = _descHash;
         allCategory[_categoryId].minStake = _stakeAndIncentive[0];
         allCategory[_categoryId].maxStake = _stakeAndIncentive[1];
