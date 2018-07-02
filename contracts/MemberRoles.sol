@@ -67,13 +67,13 @@ contract MemberRoles is Upgradeable {
 
     modifier onlyInternal {
         master = Master(masterAddress);
-        require(master.isInternal(msg.sender) == true);
+        require(master.isInternal(msg.sender));
         _;
     }
 
     modifier onlyOwner {
         master = Master(masterAddress);
-        require(master.isOwner(msg.sender) == true);
+        require(master.isOwner(msg.sender));
         _;
     }
 
@@ -84,7 +84,7 @@ contract MemberRoles is Upgradeable {
 
     modifier onlySV {
         master = Master(masterAddress);
-        require(master.getLatestAddress("SV") == msg.sender);
+        require(master.getLatestAddress("SV") == msg.sender || master.isInternal(msg.sender) || master.isOwner(msg.sender));
         _;
     }
 

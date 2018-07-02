@@ -84,7 +84,7 @@ contract ProposalCategory {
 
     modifier onlySV {
         master = Master(masterAddress);
-        require(master.getLatestAddress("SV") == msg.sender);
+        require(master.getLatestAddress("SV") == msg.sender || master.isInternal(msg.sender) || master.isOwner(msg.sender));
         _;
     }
 
