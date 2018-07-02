@@ -297,10 +297,10 @@ contract GovernanceData is Upgradeable{
         require(constructorCheck == false);
         setGlobalParameters();
         addMemberReputationPoints();
-        setVotingTypeDetails("Simple Voting", null_address);
+        setVotingTypeDetails("Simple Voting", 0x00);
         //setVotingTypeDetails("Rank Based Voting", null_address);
         //setVotingTypeDetails("Feature Weighted Voting", null_address);
-        allVotes.push(proposalVote(0X00, new uint[](0), 0));
+        allVotes.push(proposalVote(0x00, new uint[](0), 0));
         uint _totalVotes = SafeMath.add(allVotesTotal, 1);
         allVotesTotal = _totalVotes;
         constructorCheck = true;
