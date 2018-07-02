@@ -14,7 +14,7 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity ^ 0.4.8;
 import "./Master.sol";
-import "./governanceData.sol";
+import "./GovernanceData.sol";
 import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 
@@ -49,7 +49,7 @@ contract ProposalCategory {
 
     Master private master;
     MemberRoles private memberRole;
-    governanceData private governanceDat;
+    GovernanceData private governanceDat;
     address private masterAddress;
 
     modifier onlyInternal {
@@ -105,7 +105,7 @@ contract ProposalCategory {
         if (!constructorCheck)
             proposalCategoryInitiate();
         master = Master(masterAddress);
-        governanceDat = governanceData(master.getLatestAddress("GD"));
+        governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
     }
 

@@ -17,13 +17,13 @@ pragma solidity ^ 0.4.8;
 import "./Master.sol";
 import "./MemberRoles.sol";
 import "./ProposalCategory.sol";
-import "./governanceData.sol";
+import "./GovernanceData.sol";
 
 contract GovBlocksMaster {
     Master MS;
     MemberRoles MR;
     ProposalCategory PC;
-    governanceData GD;
+    GovernanceData GD;
     address public owner;
     address GBTAddress;
 

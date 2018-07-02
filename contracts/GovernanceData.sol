@@ -20,7 +20,7 @@ import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./Governance.sol";
 
-contract governanceData is Upgradeable{
+contract GovernanceData is Upgradeable{
 
     event Proposal(address indexed proposalOwner, uint256 indexed proposalId, uint256 dateAdd, string proposalTitle, string proposalSD, string proposalDescHash);
     event Solution(uint256 indexed proposalId, address indexed solutionOwner, uint256 indexed solutionId, string solutionDescHash, uint256 dateAdd, uint256 solutionStake);

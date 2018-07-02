@@ -14,7 +14,7 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity ^ 0.4.8;
-import "./governanceData.sol";
+import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Upgradeable.sol";
@@ -35,7 +35,7 @@ contract Governance is Upgradeable {
     Master private master;
     MemberRoles private memberRole;
     ProposalCategory private proposalCategory;
-    governanceData private governanceDat;
+    GovernanceData private governanceDat;
     Pool private pool;
     VotingType private votingType;
 
@@ -76,7 +76,7 @@ contract Governance is Upgradeable {
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public onlyInternal {
         master = Master(masterAddress);
-        governanceDat = governanceData(master.getLatestAddress("GD"));
+        governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
         poolAddress = master.getLatestAddress("PL");

@@ -18,7 +18,7 @@ pragma solidity ^ 0.4.8;
 
 import "./Master.sol";
 //import "./StandardVotingType.sol";
-import "./governanceData.sol";
+import "./GovernanceData.sol";
 import "./Governance.sol";
 import "./MemberRoles.sol";
 import "./Upgradeable.sol";
@@ -32,7 +32,7 @@ import "./Pool.sol";
 contract SimpleVoting is VotingType, Upgradeable {
     using SafeMath for uint;
     GBTStandardToken private gbt;
-    governanceData private governanceDat;
+    GovernanceData private governanceDat;
     MemberRoles private memberRole;
     Governance private governance;
     ProposalCategory private proposalCategory;
@@ -87,7 +87,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     function changeAddress(bytes4 contractName, address contractAddress) onlyInternal
     {
         if(contractName == 'GD'){
-            GD = governanceData(contractAddress);
+            GD = GovernanceData(contractAddress);
         } else if(contractName == 'MR'){
             MR = memberRoles(contractAddress);
         } else if(contractName == 'PC'){
@@ -105,7 +105,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         if (!constructorCheck)
             simpleVotingInitiate();
         master = Master(masterAddress);
-        governanceDat = governanceData(master.getLatestAddress("GD"));
+        governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
         govAddress = master.getLatestAddress("GV");
@@ -611,7 +611,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     // {
     //     MR=memberRoles(MRAddress);
     //     GOV=Governance(G1Address);
-    //     GD=governanceData(GDAddress);
+    //     GD=GovernanceData(GDAddress);
     //     SVT=StandardVotingType(SVTAddress);
 
     //     uint roleId = MR.getMemberRoleIdByAddress(_memberAddress);
