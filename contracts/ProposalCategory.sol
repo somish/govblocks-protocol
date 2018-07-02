@@ -138,7 +138,7 @@ contract ProposalCategory {
         allSubIdByCategory[1].push(1);
         allSubCategory.push(SubCategory(
                 "Add new member role",
-                "QmbUTUHF6S7Mz1wDatYt39Tf8R9tjc54UzDZddX1zXYpvm",
+                "QmT3sMfqAvTgCkcsdVgiHvMycEWoeoQiD86e4H744pqfhF",
                 1,
                 master.getLatestAddress("MR")
             )
@@ -146,7 +146,7 @@ contract ProposalCategory {
         allSubIdByCategory[1].push(2);
         allSubCategory.push(SubCategory(
                 "Update member role",
-                "QmXQdhxFohAvkWKPLF9Zddt8EM2jjex5RqVSuTQ3hqSpAE",
+                "QmV55gWxnEBF8reTrVKrhbg5QrwqA65kFhMEFWDnnpphrJ",
                 1,
                 master.getLatestAddress("MR")
             )
@@ -504,7 +504,7 @@ contract ProposalCategory {
         allSubIdByCategory[2].push(3);
         allSubCategory.push(SubCategory(
                 "Add new category",
-                "QmchfnafX5dZXcpivStWQepfDrpeTskNxftkNHAZuWhDFK",
+                "QmXhCbDgsiTb3CPK2Jk8UqpGfhJs5gYFxCm81STvwMieGc",
                 2,
                 master.getLatestAddress("PC")
             )
@@ -512,7 +512,7 @@ contract ProposalCategory {
         allSubIdByCategory[2].push(4);
         allSubCategory.push(SubCategory(
                 "Edit category",
-                "QmSdBuXa3UQiWqqdyponEGnwX2AGShqHEMEBXdZv4gmPAN",
+                "QmR3kC6FPf7H8RkEBz4Rf1JuKYbX2TP3ZqdgfRCQPFidvn",
                 2,
                 master.getLatestAddress("PC")
             )
@@ -520,7 +520,7 @@ contract ProposalCategory {
         allSubIdByCategory[2].push(5);
         allSubCategory.push(SubCategory(
                 "Add new sub category",
-                "QmYFBALQHBSyKQVnUxSRSHwbv6Ct8yeC1vLRRuvUkMSC2L",
+                "QmdVXg2t6SPDrpFk4FXh6LApU6tSgojsnCXhZvm14Jo5S8",
                 2,
                 master.getLatestAddress("PC")
             )
@@ -528,7 +528,7 @@ contract ProposalCategory {
         allSubIdByCategory[2].push(6);
         allSubCategory.push(SubCategory(
                 "Edit sub category",
-                "QmesRxLedQDxZmnXr8667VhHaoJ5DEGUW8ryUGUy69SQeq",
+                "QmYTMXdortXjDg73tHopPrxzPNow5sCUkuiG9M9ifSHZic",
                 2,
                 master.getLatestAddress("PC")
             )
@@ -536,7 +536,7 @@ contract ProposalCategory {
         allSubIdByCategory[3].push(7);
         allSubCategory.push(SubCategory(
                 "Configure parameters",
-                "QmYzP1MKehbfaAYBkfuTckXd4DN5WSEwnzKqpTBeWB253M",
+                "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
                 3,
                 masterAddress
             )

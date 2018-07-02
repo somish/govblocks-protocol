@@ -15,17 +15,12 @@
 
 pragma solidity ^ 0.4.8;
 import "./Master.sol";
-import "./MemberRoles.sol";
-import "./ProposalCategory.sol";
-import "./GovernanceData.sol";
+
 
 contract GovBlocksMaster {
-    Master MS;
-    MemberRoles MR;
-    ProposalCategory PC;
-    GovernanceData GD;
+    Master master;
     address public owner;
-    address GBTAddress;
+    address public gbtAddress;
 
     struct GBDapps {
         address masterAddress;
@@ -50,10 +45,10 @@ contract GovBlocksMaster {
 
     /// @dev Initializes GovBlocks master
     /// @param _GBTAddress GBT standard token address
-    function GovBlocksMasterInit(address _GBTAddress) {
+    function GovBlocksMasterInit(address _gbtAddress) {
         require(owner == 0x00);
         owner = msg.sender;
-        GBTAddress = _GBTAddress;
+        gbtAddress = _gbtAddress;
         //   updateGBMAddress(address(this));  
     }
 
@@ -81,13 +76,13 @@ contract GovBlocksMaster {
 
     /// @dev Updates GBt standard token address
     /// @param _GBTContractAddress New GBT standard token contract address
-    function updateGBTAddress(address _GBTContractAddress) onlyOwner {
-        GBTAddress = _GBTContractAddress;
+    function updateGBTAddress(address _gbtContractAddress) onlyOwner {
+        gbtAddress = _gbtContractAddress;
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
-            MS = Master(masterAddress);
-            if (MS.versionLength() > 0)
-                MS.changeGBTSAddress(_GBTContractAddress);
+            master = Master(masterAddress);
+            if (master.versionLength() > 0)
+                master.changeGBTSAddress(_gbtContractAddress);
         }
     }
 
@@ -96,9 +91,9 @@ contract GovBlocksMaster {
     function updateGBMAddress(address _newGBMAddress) internal {
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
-            MS = Master(masterAddress);
-            if (MS.versionLength() > 0)
-                MS.changeGBMAddress(_newGBMAddress);
+            master = Master(masterAddress);
+            if (master.versionLength() > 0)
+                master.changeGBMAddress(_newGBMAddress);
         }
     }
 
@@ -116,8 +111,8 @@ contract GovBlocksMaster {
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
         govBlocksDapps[_gbUserName].authGBAddress = owner;
-        MS = Master(_newMasterAddress);
-        MS.setOwner(msg.sender);
+        master = Master(_newMasterAddress);
+        master.setOwner(msg.sender);
     }
 
     /// @dev Changes dApp master address
@@ -141,7 +136,7 @@ contract GovBlocksMaster {
     /// @dev Sets byte code and abi hash that will help in generating new set of contracts for every dApp
     /// @param _byteCodeHash Byte code hash of all contracts    
     /// @param _abiHash Abi hash of all contracts
-    function setByteCodeAndAbi(string _byteCodeHash, string _abiHash) onlyOwner {
+    function setByteCodeAndAbi(string _byteCodeHash, string _abiHash) public onlyOwner {
         byteCodeHash = _byteCodeHash;
         contractsAbiHash = _abiHash;
     }
@@ -170,18 +165,32 @@ contract GovBlocksMaster {
     /// @return allContractsbyteCodeHash All contracts byte code hash
     /// @return allCcontractsAbiHash All contracts abi hash
     /// @return versionNo Current Verson number of dApp
-    function getGovBlocksUserDetails(bytes32 _gbUserName) public constant returns(bytes32 GbUserName, address masterContractAddress, string allContractsbyteCodeHash, string allCcontractsAbiHash, uint versionNo) {
+    function getGovBlocksUserDetails(bytes32 _gbUserName) 
+        public 
+        constant 
+        returns(
+            bytes32 GbUserName, 
+            address masterContractAddress, 
+            string allContractsbyteCodeHash, 
+            string allCcontractsAbiHash, 
+            uint versionNo
+        ) 
+    {
         address master = govBlocksDapps[_gbUserName].masterAddress;
         if (master == 0x00)
             return (GbUserName, 0x00, "", "", 0);
         else
-            MS = Master(master);
-        versionNo = MS.versionLength();
+            master = Master(master);
+        versionNo = master.versionLength();
         return (_gbUserName, govBlocksDapps[_gbUserName].masterAddress, byteCodeHash, contractsAbiHash, versionNo);
     }
 
     /// @dev Gets dApp details such as master contract address and dApp name
-    function getGovBlocksUserDetailsByIndex(uint _index) public constant returns(uint index, bytes32 GbUserName, address MasterContractAddress) {
+    function getGovBlocksUserDetailsByIndex(uint _index) 
+        public 
+        constant 
+        returns(uint index, bytes32 GbUserName, address MasterContractAddress) 
+    {
         return (_index, allGovBlocksUsers[_index], govBlocksDapps[allGovBlocksUsers[_index]].masterAddress);
     }
 
@@ -193,14 +202,32 @@ contract GovBlocksMaster {
     /// @return allContractsbyteCodeHash All contracts byte code hash
     /// @return allCcontractsAbiHash All contract abi hash
     /// @return versionNo Version number
-    function getGovBlocksUserDetails1(bytes32 _gbUserName) public constant returns(bytes32 GbUserName, address masterContractAddress, address dappTokenAddress, string allContractsbyteCodeHash, string allCcontractsAbiHash, uint versionNo) {
+    function getGovBlocksUserDetails1(bytes32 _gbUserName) 
+        public 
+        constant 
+        returns(
+            bytes32 GbUserName, 
+            address masterContractAddress, 
+            address dappTokenAddress, 
+            string allContractsbyteCodeHash, 
+            string allCcontractsAbiHash, 
+            uint versionNo
+        ) 
+    {
         address master = govBlocksDapps[_gbUserName].masterAddress;
         if (master == 0x00)
             return (GbUserName, 0x00, 0x00, "", "", 0);
         else
-            MS = Master(master);
-        versionNo = MS.versionLength();
-        return (_gbUserName, govBlocksDapps[_gbUserName].masterAddress, govBlocksDapps[_gbUserName].tokenAddress, byteCodeHash, contractsAbiHash, versionNo);
+            master = Master(master);
+        versionNo = master.versionLength();
+        return (
+            _gbUserName, 
+            govBlocksDapps[_gbUserName].masterAddress, 
+            govBlocksDapps[_gbUserName].tokenAddress, 
+            byteCodeHash, 
+            contractsAbiHash, 
+            versionNo
+        );
     }
 
     /// @dev Gets dApp details by passing either of contract address i.e. Token or Master contract address
@@ -208,7 +235,11 @@ contract GovBlocksMaster {
     /// @return dappName dApp name
     /// @return masterContractAddress Master contract address of dApp
     /// @return dappTokenAddress dApp's token address
-    function getGovBlocksUserDetails2(address _Address) public constant returns(bytes32 dappName, address masterContractAddress, address dappTokenAddress) {
+    function getGovBlocksUserDetails2(address _Address) 
+        public 
+        constant 
+        returns(bytes32 dappName, address masterContractAddress, address dappTokenAddress) 
+    {
         dappName = govBlocksDappByAddress[_Address];
         return (dappName, govBlocksDapps[dappName].masterAddress, govBlocksDapps[dappName].tokenAddress);
     }
@@ -259,16 +290,20 @@ contract GovBlocksMaster {
         return GBTAddress;
     }
 
-
+    /*
     /// @dev Gets contract address of specific contracts
     /// @param _gbUserName dApp name
     /// @param _typeOf Contract name initials which address is to be fetched
-    function getContractInstance_byDapp(bytes32 _gbUserName, bytes2 _typeOf) internal constant returns(address contractAddress) {
+    function getContractInstanceByDapp(bytes32 _gbUserName, bytes2 _typeOf) 
+        internal 
+        constant 
+        returns(address contractAddress) 
+    {
         require(isAuthorizedGBOwner(_gbUserName, msg.sender) == true);
         address master = govBlocksDapps[_gbUserName].masterAddress;
-        MS = Master(master);
-        uint16 versionNo = MS.versionLength() - 1;
-        contractAddress = MS.allContractVersions(versionNo, _typeOf);
+        master = Master(master);
+        uint16 versionNo = master.versionLength() - 1;
+        contractAddress = master.allContractVersions(versionNo, _typeOf);
         return contractAddress;
-    }
+    }*/
 }
