@@ -218,7 +218,6 @@ contract ProposalCategory {
         allCategory[_categoryId].rewardPercProposal = _rewardPercentage[0];
         allCategory[_categoryId].rewardPercSolution = _rewardPercentage[1];
         allCategory[_categoryId].rewardPercVote = _rewardPercentage[2];
-
         allCategory[_categoryId].memberRoleSequence = new uint8[](_roleName.length);
         allCategory[_categoryId].memberRoleMajorityVote = new uint8[](_majorityVote.length);
         allCategory[_categoryId].closingTime = new uint32[](_closingTime.length);
@@ -251,8 +250,10 @@ contract ProposalCategory {
     /// @dev Update Sub category of a specific category.
     /// @param _subCategoryId Id of subcategory that needs to be updated
     /// @param _actionHash Updated Automated Action hash i.e. Either contract address or function name is changed.
-    function updateSubCategory(uint _subCategoryId, string _actionHash) public onlySV {
+    function updateSubCategory(uint _subCategoryId, string _categoryName, string _actionHash, address _contractAddress) public onlySV {
+        allSubCategory[_subCategoryId].categoryName = _categoryName;
         allSubCategory[_subCategoryId].actionHash = _actionHash;
+        allSubCategory[_subCategoryId].contractAddress = _contractAddress;
     }
 
     /// @dev Get Sub category details such as Category name, Automated action hash and Main category id
