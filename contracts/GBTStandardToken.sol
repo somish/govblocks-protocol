@@ -17,6 +17,7 @@ pragma solidity ^ 0.4.8;
 import "./StandardToken.sol";
 import "./SafeMath.sol";
 
+
 contract GBTStandardToken is ERC20Basic, ERC20 {
     event TransferGBT(address indexed from, address indexed to, uint256 value, bytes32 description);
 
@@ -25,19 +26,27 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     string public name;
     string public symbol;
     uint public decimals;
-    address owner;
-    address GBTCAddress;
+    address private owner;
+    //address private GBTCAddress;
 
-    uint initialTokens;
-
-    struct lock {
+    struct Lock {
         uint amount;
         uint validUpto;
     }
 
-    mapping(address => lock[]) user_lockToken;
-    mapping(address => uint256) balances;
+    mapping(address => Lock[]) private userLockToken;
+    mapping(address => uint256) private balances;
     mapping(bytes32 => bool) public verifyTxHash;
+
+    function GBTStandardToken() {
+        owner = msg.sender;
+        balances[address(this)] = 0;
+        totalSupply = 0;
+        name = "GBT";
+        symbol = "GBT";
+        decimals = 18;
+        tokenPrice = 1 * 10 ** 15;
+    }
 
     /**
      * @dev transfer token for a specified address
@@ -55,7 +64,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return true;
     }
 
-    function transfer_message(address _to, uint256 _value, bytes32 _message) public returns(bool) {
+    function transferMessage(address _to, uint256 _value, bytes32 _message) public returns(bool) {
         bool trf = transfer(_to, _value);
         if (_message != "" && trf == true)
             TransferGBT(msg.sender, _to, _value, _message);
@@ -85,7 +94,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         require(verifyTxHash[_lockTokenTxHash] == false);
         require(verifySign(_memberAddress, msg.sender, _amount, _validUpto, _lockTokenTxHash, _v, _r, _s));
 
-        user_lockToken[_memberAddress].push(lock(_amount, _validUpto));
+        userLockToken[_memberAddress].push(Lock(_amount, _validUpto));
         verifyTxHash[_lockTokenTxHash] = true;
     }
 
@@ -106,10 +115,15 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         uint lockAmount = SafeMath.sub(_stake, _depositAmount);
         require(verifySign(_memberAddress, msg.sender, lockAmount, _validUpto, _lockTokenTxHash, _v, _r, _s));
         
-        user_lockToken[_memberAddress].push(lock(lockAmount, _validUpto));
+        userLockToken[_memberAddress].push(Lock(lockAmount, _validUpto));
         allowed[_memberAddress][msg.sender] = allowed[_memberAddress][msg.sender].add(_depositAmount);
         Approval(_memberAddress, msg.sender, allowed[_memberAddress][msg.sender]);
-        verifyTxHash[_lockTokenTxHash] = transferFrom_mssage(_memberAddress, governanceData, _depositAmount, "Deposited Stake");
+        verifyTxHash[_lockTokenTxHash] = transferFromMessage(
+                _memberAddress, 
+                governanceData, 
+                _depositAmount, 
+                "Deposited Stake"
+            );
     }
 
     function verifySign(
@@ -144,7 +158,11 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return keccak256(_memberAddress, _spender, _amount, _validUpto, _lockTokenTxHash);
     }
 
-    function isValidSignature(bytes32 hash, address _memberaddress, uint8 v, bytes32 r, bytes32 s) public constant returns(bool) {
+    function isValidSignature(bytes32 hash, address _memberaddress, uint8 v, bytes32 r, bytes32 s) 
+        public 
+        constant 
+        returns(bool) 
+    {
         // bytes memory prefix = "\x19Ethereum Signed Message:\n32";
         // bytes32 prefixedHash = keccak256(prefix, hash);
         // address a= ecrecover(prefixedHash, v, r, s);    
@@ -152,12 +170,12 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return (a == _memberaddress);
     }
 
-    function getLockToken(address _memberAddress) public constant returns(uint locked_tokens) {
+    function getLockToken(address _memberAddress) public constant returns(uint lockedTokens) {
         uint time = now;
-        locked_tokens = 0;
-        for (uint i = 0; i < user_lockToken[_memberAddress].length; i++) {
-            if (user_lockToken[_memberAddress][i].validUpto > time)
-                locked_tokens - locked_tokens + user_lockToken[_memberAddress][i].amount;
+        lockedTokens = 0;
+        for (uint i = 0; i < userLockToken[_memberAddress].length; i++) {
+            if (userLockToken[_memberAddress][i].validUpto > time)
+                lockedTokens - lockedTokens + userLockToken[_memberAddress][i].amount;
 
         }
 
@@ -172,33 +190,34 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
      * @param _value uint256 the amount of tokens to be transferred
      */
     function transferFrom(address _from, address _to, uint256 _value) public returns(bool) {
-        bool trf = transferFrom_mssage(_from, _to, _value, "");
+        bool trf = transferFromMessage(_from, _to, _value, "");
         return trf;
     }
 
-    function transferFrom_mssage(address _from, address _to, uint256 _value, bytes32 _message) public returns(bool) {
-            require(_to != address(0));
-            require(_value <= (balances[_from] - getLockToken(msg.sender)));
-            require(_value <= allowed[_from][msg.sender]);
+    function transferFromMessage(address _from, address _to, uint256 _value, bytes32 _message) public returns(bool) {
+        require(_to != address(0));
+        require(_value <= (balances[_from] - getLockToken(msg.sender)));
+        require(_value <= allowed[_from][msg.sender]);
 
-            balances[_from] = balances[_from].sub(_value);
-            balances[_to] = balances[_to].add(_value);
-            allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-            Transfer(_from, _to, _value);
-            if (_message != "")
-                TransferGBT(_from, _to, _value, _message);
-            return true;
-        }
-        /**
-         * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
-         *
-         * Beware that changing an allowance with this method brings the risk that someone may use both the old
-         * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
-         * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
-         * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-         * @param _spender The address which will spend the funds.
-         * @param _value The amount of tokens to be spent.
-         */
+        balances[_from] = balances[_from].sub(_value);
+        balances[_to] = balances[_to].add(_value);
+        allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
+        Transfer(_from, _to, _value);
+        if (_message != "")
+            TransferGBT(_from, _to, _value, _message);
+        return true;
+    }
+
+    /**
+     * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
+     *
+     * Beware that changing an allowance with this method brings the risk that someone may use both the old
+     * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
+     * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
+     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     * @param _spender The address which will spend the funds.
+     * @param _value The amount of tokens to be spent.
+     */
     function approve(address _spender, uint256 _value) public returns(bool) {
         allowed[msg.sender][_spender] = _value;
         Approval(msg.sender, _spender, _value);
@@ -237,21 +256,10 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
-
-    modifier onlyGBTController {
+    /*modifier onlyGBTController {
         require(msg.sender == GBTCAddress);
         _;
-    }
-
-    function GBTStandardToken() {
-        owner = msg.sender;
-        balances[address(this)] = 0;
-        totalSupply = 0;
-        name = "GBT";
-        symbol = "GBT";
-        decimals = 18;
-        tokenPrice = 1 * 10 ** 15;
-    }
+    }*/
 
     event Mint(address indexed to, uint256 amount);
     event MintFinished();
@@ -269,39 +277,38 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     }
 
     /**
+     * @dev Function to stop minting new tokens.
+     * @return True if the operation was successful.
+     */
+    function finishMinting() public onlyOwner canMint returns(bool) {
+        mintingFinished = true;
+        MintFinished();
+        return true;
+    }
+
+    function buyToken() public payable returns(uint actualAmount) {
+        actualAmount = SafeMath.mul(SafeMath.div(msg.value, tokenPrice), 10 ** decimals);
+        mint(msg.sender, actualAmount);
+    }
+
+    function changeTokenPrice(uint _price) public onlyOwner {
+        uint _tokenPrice = _price;
+        tokenPrice = _tokenPrice;
+    }
+
+    /**
      * @dev Function to mint tokens
      * @param _to The address that will receive the minted tokens.
      * @param _amount The amount of tokens to mint.
      * @return A boolean that indicates if the operation was successful.
      */
-
-    function mint(address _to, uint256 _amount) canMint internal returns(bool) {
+    function mint(address _to, uint256 _amount) internal canMint returns(bool) {
         totalSupply = totalSupply.add(_amount);
         balances[_to] = balances[_to].add(_amount);
         Mint(_to, _amount);
         Transfer(address(0), _to, _amount);
         TransferGBT(address(0), _to, _amount, "Bought Tokens");
         return true;
-    }
-
-    /**
-     * @dev Function to stop minting new tokens.
-     * @return True if the operation was successful.
-     */
-    function finishMinting() onlyOwner canMint returns(bool) {
-        mintingFinished = true;
-        MintFinished();
-        return true;
-    }
-
-    function buyToken() payable public returns(uint actual_amount) {
-        actual_amount = SafeMath.mul(SafeMath.div(msg.value, tokenPrice), 10 ** decimals);
-        mint(msg.sender, actual_amount);
-    }
-
-    function changeTokenPrice(uint _price) onlyOwner {
-        uint _tokenPrice = _price;
-        tokenPrice = _tokenPrice;
     }
 
     /*function getTokenPrice() public constant returns(uint) {

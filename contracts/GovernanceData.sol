@@ -411,8 +411,8 @@ contract GovernanceData is Upgradeable{
     function claimReward() public {
         uint rewardToClaim = GOV.calculateMemberReward(msg.sender);
         if (rewardToClaim != 0) {
-            GBTS.transfer_message(address(this), rewardToClaim, "GBT Stake Received");
-            GBTS.transfer_message(msg.sender, rewardToClaim, "GBT Stake claimed");
+            GBTS.transferMessage(address(this), rewardToClaim, "GBT Stake Received");
+            GBTS.transferMessage(msg.sender, rewardToClaim, "GBT Stake claimed");
         }
     }
 
