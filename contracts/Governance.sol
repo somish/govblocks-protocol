@@ -484,14 +484,22 @@ contract Governance is Upgradeable {
             require(validityUpto >= 
                 proposalCategory.getRemainingClosingTime(_proposalId, _categoryId, _currVotingStatus)
             );
-            if (depositPerc != 0 && depositPerc != 100) {
-                uint stake= SafeMath.sub(_proposalStake, depositAmount);
-                govBlocksToken.lockToken(msg.sender, stake, validityUpto, _v, _r, _s, _lockTokenTxHash);
+            if (depositPerc == 0) {
+                uint _stake = SafeMath.sub(_proposalStake, depositAmount);
+                gbt.lockToken(msg.sender, _stake, validityUpto, _v, _r, _s, _lockTokenTxHash);
+            } else {
+                gbt.depositAndLockToken(
+                    msg.sender, 
+                    _stake, 
+                    depositAmount, 
+                    validityUpto, 
+                    _v, 
+                    _r, 
+                    _s, 
+                    _lockTokenTxHash, 
+                    address(governanceDat)
+                );
                 governanceDat.setDepositTokens(msg.sender, _proposalId, "P", depositAmount);
-            }else if (depositPerc == 100) {
-                governanceDat.setDepositTokens(msg.sender, _proposalId, "P", _proposalStake);
-            }else {
-                govBlocksToken.lockToken(msg.sender, _proposalStake, validityUpto, _v, _r, _s, _lockTokenTxHash);
             }
         }
 
