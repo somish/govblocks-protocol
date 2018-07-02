@@ -12,6 +12,7 @@
 
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
+//TODO fix activeVersion
 
 pragma solidity ^ 0.4.8;
 
@@ -175,7 +176,7 @@ contract Master is Ownable, Upgradeable {
     /// @return versionNo Current version number that is active
     /// @return MSAddress Master contract address
     function getCurrentVersion() public constant returns(uint16 versionNo, address msAddress) {
-        versionNo = versionLength - 1;
+        versionNo = contractChangeDate[contractChangeDate.length - 1].versionNo;
         msAddress = allContractVersions[versionNo]["MS"];
     }
 
@@ -202,7 +203,7 @@ contract Master is Ownable, Upgradeable {
     /// @dev Gets latest contract address
     /// @param _contractName Contract name to fetch
     function getLatestAddress(bytes2 _contractName) public constant returns(address contractAddress) {
-        contractAddress = allContractVersions[versionLength - 1][_contractName];
+        contractAddress = allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo][_contractName];
     }
 
     /// @dev Save the initials of all the contracts
@@ -262,8 +263,8 @@ contract Master is Ownable, Upgradeable {
     /// @param _typeOf Passing intials of the parameter name which value needs to be updated
     /// @param _value New value that needs to be updated    
     function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public {
-        require(msg.sender == allContractVersions[versionLength - 1]["SV"]);
-        GovernanceData governanceDat = GovernanceData(allContractVersions[versionLength - 1]["GD"]);
+        require(msg.sender == allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["SV"]);
+        GovernanceData governanceDat = GovernanceData(allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["GD"]);
         if (_typeOf == "APO") {
             governanceDat.changeProposalOwnerAdd(_value);
         } else if (_typeOf == "AOO") {
