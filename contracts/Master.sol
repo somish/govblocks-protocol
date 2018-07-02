@@ -19,6 +19,7 @@ import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./GovBlocksMaster.sol";
 import "./Ownable.sol";
+import "./GovernanceData.sol";
 
 
 contract Master is Ownable, Upgradeable {
@@ -255,5 +256,34 @@ contract Master is Ownable, Upgradeable {
             up.updateDependencyAddresses();
         }
         addRemoveAddress(versionLength - 1, allContractNames[allContractNames.length - 1]);
+    }
+
+    /// @dev Configures global parameters i.e. Voting or Reputation parameters
+    /// @param _typeOf Passing intials of the parameter name which value needs to be updated
+    /// @param _value New value that needs to be updated    
+    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public {
+        require(msg.sender == allContractVersions[versionLength - 1]["SV"]);
+        GovernanceData governanceDat = GovernanceData(allContractVersions[versionLength - 1]["GD"]);
+        if (_typeOf == "APO") {
+            governanceDat.changeProposalOwnerAdd(_value);
+        } else if (_typeOf == "AOO") {
+            governanceDat.changeSolutionOwnerAdd(_value);
+        } else if (_typeOf == "AVM") {
+            governanceDat.changeMemberAdd(_value);
+        } else if (_typeOf == "SPO") {
+            governanceDat.changeProposalOwnerSub(_value);
+        } else if (_typeOf == "SOO") {
+            governanceDat.changeSolutionOwnerSub(_value);
+        } else if (_typeOf == "SVM") {
+            governanceDat.changeMemberSub(_value);
+        } else if (_typeOf == "GBTS") {
+            governanceDat.changeGBTStakeValue(_value);
+        } else if (_typeOf == "MSF") {
+            governanceDat.changeMembershipScalingFator(_value);
+        } else if (_typeOf == "SW") {
+            governanceDat.changeScalingWeight(_value);
+        } else if (_typeOf == "QP") {
+            governanceDat.changeQuorumPercentage(_value);
+        }
     }
 }
