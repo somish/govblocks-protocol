@@ -355,7 +355,7 @@ contract ProposalCategory {
         constant 
         returns(uint, bytes32[] roleName, uint8[] majorityVote, uint32[] closingTime) 
     {
-        // MR=memberRoles(MRAddress);
+        // MR=MemberRoles(MRAddress);
         uint roleLength = getRoleSequencLength(_categoryId);
         roleName = new bytes32[](roleLength);
         for (uint8 i = 0; i < roleLength; i++) {

@@ -88,7 +88,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         if(contractName == 'GD'){
             GD = GovernanceData(contractAddress);
         } else if(contractName == 'MR'){
-            MR = memberRoles(contractAddress);
+            MR = MemberRoles(contractAddress);
         } else if(contractName == 'PC'){
             PC = ProposalCategory(contractAddress);
         } else if(contractName == 'VT'){
@@ -171,7 +171,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     {
         master = Master(masterAddress);
         require(master.isInternal(msg.sender) || msg.sender == _memberAddress);
-        require(alreadyAdded(_proposalId, _memberAddress) == false);
+        require(!alreadyAdded(_proposalId, _memberAddress));
         // if(msg.sender == _memberAddress) 
         //     receiveStake('S',_proposalId,_solutionStake,_validityUpto,_v,_r,_s,_lockTokenTxHash);
         addSolution1(
@@ -608,7 +608,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     //) 
         //internal
     // {
-    //     MR=memberRoles(MRAddress);
+    //     MR=MemberRoles(MRAddress);
     //     GOV=Governance(G1Address);
     //     GD=GovernanceData(GDAddress);
     //     SVT=StandardVotingType(SVTAddress);

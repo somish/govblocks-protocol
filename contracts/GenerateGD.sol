@@ -15,7 +15,7 @@
 
 pragma solidity ^ 0.4.8;
 
-import "./governanceData.sol";
+import "./GovernanceData.sol";
 
 contract GenerateGD {
     mapping(bytes32 => address) contractAddress;
@@ -30,7 +30,7 @@ contract GenerateGD {
     /// @dev Generates new governance data contract
     /// @param _gbUserName GovBlocks username
     function GenerateContract(bytes32 _gbUserName) {
-        contractAddress[_gbUserName] = new governanceData();
+        contractAddress[_gbUserName] = new GovernanceData();
     }
 
 }

@@ -15,7 +15,7 @@
 
 pragma solidity ^ 0.4.8;
 
-import "./simpleVoting.sol";
+import "./SimpleVoting.sol";
 
 contract GenerateSV {
     mapping(bytes32 => address) contractAddress;
@@ -30,6 +30,6 @@ contract GenerateSV {
     /// @dev Generates new simple voting contract
     /// @param _gbUserName GovBlocks username
     function GenerateContract(bytes32 _gbUserName) {
-        contractAddress[_gbUserName] = new simpleVoting();
+        contractAddress[_gbUserName] = new SimpleVoting();
     }
 }

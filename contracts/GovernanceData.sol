@@ -371,7 +371,7 @@ contract GovernanceData is Upgradeable {
 
     /// @dev Changes GovBlocks standard token address
     /// @param _gbtAddress New GovBlocks token address
-    function changegbtsAddress(address _gbtAddress) public onlyMaster {
+    function changeGBTSAddress(address _gbtAddress) public onlyMaster {
         gbtsAddress = _gbtAddress;
     }
     /*

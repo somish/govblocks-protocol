@@ -455,7 +455,7 @@ contract Governance is Upgradeable {
     /// @param _proposalId Proposal id
     /// @return totalVotes total votes against a proposal
     function getAllVoteIdsLengthByProposal(uint _proposalId) public constant returns(uint totalVotes) {
-        // memberRole=memberRoles(MRAddress);
+        // memberRole=MemberRoles(MRAddress);
         uint length = memberRole.getTotalMemberRoles();
         for (uint i = 0; i < length; i++) {
             totalVotes = totalVotes + governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, i);
