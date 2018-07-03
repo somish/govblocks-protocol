@@ -212,7 +212,7 @@ contract GovBlocksMaster {
             uint versionNo
         ) 
     {
-        address master = govBlocksDapps[_gbUserName].masterAddress;
+        address masterAddress = govBlocksDapps[_gbUserName].masterAddress;
         if (masterAddress == 0x00)
             return (_gbUserName, 0x00, 0x00, "", "", 0);
             

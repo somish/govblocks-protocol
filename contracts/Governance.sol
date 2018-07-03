@@ -134,7 +134,7 @@ contract Governance is Upgradeable {
             uint incentive=proposalCategory.getCatIncentive(category);
             governanceDat.setProposalIncentive(_proposalId, incentive);
         } else
-            governanceDat.createProposal1(_proposalId, msg.sender, votingAddress, _dateAdd);
+            governanceDat.createProposal1(msg.sender, votingAddress, _dateAdd);
     }
 
     /// @dev Creates a new proposal
@@ -266,7 +266,7 @@ contract Governance is Upgradeable {
 
         if (pStatus == 2 && _roleId != 2) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now || 
-                governanceDat.getAllVoteIdsLength_byProposalRole(_proposalId, _roleId) 
+                governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _roleId) 
                 == memberRole.getAllMemberLength(_roleId)
             )
                 closeValue = 1;
@@ -373,7 +373,7 @@ contract Governance is Upgradeable {
     {
         memberReputation = governanceDat.getMemberReputation(_memberAddress);
         totalProposal = getAllProposalIdsLengthByAddress(_memberAddress);
-        totalSolution = governanceDat.getAllSolutionIdsLength_byAddress(_memberAddress);
+        totalSolution = governanceDat.getAllSolutionIdsLengthByAddress(_memberAddress);
         totalVotes = getAllVoteIdsLengthByAddress(_memberAddress);
     }
 
@@ -386,7 +386,7 @@ contract Governance is Upgradeable {
         uint totalVoteCount = getAllVoteIdsLengthByAddress(_memberAddress);
         totalVoteCasted = new uint[](totalVoteCount);
         for (uint i = 0; i < length; i++) {
-            uint voteId = governanceDat.getVoteId_againstMember(_memberAddress, i);
+            uint voteId = governanceDat.getVoteIdAgainstMember(_memberAddress, i);
             if (voteId != 0) {
                 totalVoteCasted[j] = voteId;
                 j++;
@@ -400,7 +400,7 @@ contract Governance is Upgradeable {
     function getAllVoteIdsLengthByAddress(address _memberAddress) public constant returns(uint totalVoteCount) {
         uint length = governanceDat.getProposalLength();
         for (uint i = 0; i < length; i++) {
-            uint voteId = governanceDat.getVoteId_againstMember(_memberAddress, i);
+            uint voteId = governanceDat.getVoteIdAgainstMember(_memberAddress, i);
             if (voteId != 0)
                 totalVoteCount++;
         }
@@ -458,7 +458,7 @@ contract Governance is Upgradeable {
         // memberRole=memberRoles(MRAddress);
         uint length = memberRole.getTotalMemberRoles();
         for (uint i = 0; i < length; i++) {
-            totalVotes = totalVotes + governanceDat.getAllVoteIdsLength_byProposalRole(_proposalId, i);
+            totalVotes = totalVotes + governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, i);
         }
     }
 
@@ -486,9 +486,9 @@ contract Governance is Upgradeable {
             );
             if (depositPerc == 0) {
                 uint _stake = SafeMath.sub(_proposalStake, depositAmount);
-                gbt.lockToken(msg.sender, _stake, validityUpto, _v, _r, _s, _lockTokenTxHash);
+                govBlocksToken.lockToken(msg.sender, _stake, validityUpto, _v, _r, _s, _lockTokenTxHash);
             } else {
-                gbt.depositAndLockToken(
+                govBlocksToken.depositAndLockToken(
                     msg.sender, 
                     _stake, 
                     depositAmount, 
@@ -589,7 +589,7 @@ contract Governance is Upgradeable {
 
         if (lastIndex == 0)
             lastIndex = i;
-        governanceDat.setLastRewardId_ofCreatedProposals(_memberAddress, lastIndex);
+        governanceDat.setLastRewardIdOfCreatedProposals(_memberAddress, lastIndex);
     }
 
     /// @dev Saving reward and member reputation details 
@@ -667,7 +667,7 @@ contract Governance is Upgradeable {
 
         if (lastIndex == 0)
             lastIndex = i;
-        governanceDat.setLastRewardId_ofSolutionProposals(_memberAddress, lastIndex);
+        governanceDat.setLastRewardIdOfSolutionProposals(_memberAddress, lastIndex);
     }
 
     /// @dev Saving solution reward and member reputation details
@@ -758,7 +758,7 @@ contract Governance is Upgradeable {
         }
         if (lastIndex == 0)
             lastIndex = i;
-        governanceDat.setLastRewardId_ofVotes(_memberAddress, lastIndex);
+        governanceDat.setLastRewardIdOfVotes(_memberAddress, lastIndex);
     }
 
     /// @dev Gets vote id details when giving member address and proposal id
@@ -778,7 +778,7 @@ contract Governance is Upgradeable {
             uint totalVoteValueProposal
         ) 
     {
-        uint voteId = governanceDat.getVoteId_againstMember(_memberAddress, _proposalId);
+        uint voteId = governanceDat.getVoteIdAgainstMember(_memberAddress, _proposalId);
         solutionChosen = governanceDat.getSolutionByVoteIdAndIndex(voteId, 0);
         proposalStatus = governanceDat.getProposalStatus(_proposalId);
         finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);

@@ -12,7 +12,6 @@
 
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
-//TODO fix receiveStake (msg.sender)
 
 pragma solidity ^ 0.4.8;
 
@@ -292,7 +291,7 @@ contract SimpleVoting is VotingType, Upgradeable {
 
         require(memberRole.checkRoleIdByAddress(msg.sender, _mrSequence) 
                 && _solutionChosen.length == 1
-                && governanceDat.checkVoteId_againstMember(msg.sender, _proposalId) == false);
+                && governanceDat.checkVoteIdAgainstMember(msg.sender, _proposalId) == false);
         if (currentVotingId == 0)
             require(_solutionChosen[0] <= governanceDat.getTotalSolutions(_proposalId));
         else
@@ -333,8 +332,8 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint32 _mrSequenceId = proposalCategory.getRoleSequencAtIndex(category, currentVotingId);
         require(governance.checkForClosing(_proposalId, _mrSequenceId) == 1);
         uint[] memory finalVoteValue = new uint[](governanceDat.getTotalSolutions(_proposalId)+1);
-        for (i = 0; i < governanceDat.getAllVoteIdsLength_byProposalRole(_proposalId, _mrSequenceId); i++) {
-            uint voteId = governanceDat.getVoteId_againstProposalRole(_proposalId, _mrSequenceId, i);
+        for (i = 0; i < governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId); i++) {
+            uint voteId = governanceDat.getVoteIdAgainstProposalRole(_proposalId, _mrSequenceId, i);
             uint solutionChosen = governanceDat.getSolutionByVoteIdAndIndex(voteId, 0);
             uint voteValue = governanceDat.getVoteValue(voteId);
             totalVoteValue = totalVoteValue + voteValue;
@@ -442,8 +441,8 @@ contract SimpleVoting is VotingType, Upgradeable {
             basicToken = BasicToken(dAppTokenAddress);
             uint totalTokens;
 
-            for (uint8 i = 0; i < governanceDat.getAllVoteIdsLength_byProposalRole(_proposalId, _mrSequenceId); i++) {
-                uint voteId = governanceDat.getVoteId_againstProposalRole(_proposalId, _mrSequenceId, i);
+            for (uint8 i = 0; i < governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId); i++) {
+                uint voteId = governanceDat.getVoteIdAgainstProposalRole(_proposalId, _mrSequenceId, i);
                 address voterAddress = governanceDat.getVoterAddress(voteId);
                 totalTokens = totalTokens + basicToken.balanceOf(voterAddress);
             }
@@ -452,7 +451,7 @@ contract SimpleVoting is VotingType, Upgradeable {
             if (thresHoldValue > governanceDat.quorumPercentage())
                 return true;
         } else {
-            thresHoldValue = (governanceDat.getAllVoteIdsLength_byProposalRole(_proposalId, _mrSequenceId) * 100)
+            thresHoldValue = (governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId) * 100)
                 / memberRole.getAllMemberLength(_mrSequenceId);
             if (thresHoldValue > governanceDat.quorumPercentage())
                 return true;
@@ -475,9 +474,9 @@ contract SimpleVoting is VotingType, Upgradeable {
         // uint mrLength = PC.getRoleSequencLength(category);
         for (uint i = 0; i < proposalCategory.getRoleSequencLength(category); i++) {
             uint roleId = proposalCategory.getRoleSequencAtIndex(category, i);
-            uint mrVoteLength = governanceDat.getAllVoteIdsLength_byProposalRole(_proposalId, roleId);
+            uint mrVoteLength = governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, roleId);
             for (uint j = 0; j < mrVoteLength; j++) {
-                uint voteId = governanceDat.getVoteId_againstProposalRole(_proposalId, roleId, j);
+                uint voteId = governanceDat.getVoteIdAgainstProposalRole(_proposalId, roleId, j);
                 if (governanceDat.getSolutionByVoteIdAndIndex(voteId, 0) != finalVerdict) {
                     _ownerAddress = governanceDat.getVoterAddress(voteId);
                     depositedTokens = governanceDat.getDepositedTokens(_ownerAddress, _proposalId, "V");
@@ -544,8 +543,8 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
         (_roleId, , ) = proposalCategory.getCategoryData3(category, currVotingId);
         governanceDat.addVote(msg.sender, _solutionChosen, finalVoteValue);
-        governanceDat.setVoteId_againstMember(_memberAddress, _proposalId, voteId);
-        governanceDat.setVoteId_againstProposalRole(_proposalId, _roleId, voteId);
+        governanceDat.setVoteIdAgainstMember(_memberAddress, _proposalId, voteId);
+        governanceDat.setVoteIdAgainstProposalRole(_proposalId, _roleId, voteId);
         // GD.setVoteValue(voteId, finalVoteValue);
         // GD.setSolutionChosen(voteId, _solutionChosen[0]);
         governanceDat.callVoteEvent(_memberAddress, _proposalId, now, _voteStake, voteId);
@@ -615,7 +614,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     //     SVT=StandardVotingType(SVTAddress);
 
     //     uint roleId = MR.getMemberRoleIdByAddress(_memberAddress);
-    //     uint voteId = GD.getVoteId_againstMember(_memberAddress,_proposalId);
+    //     uint voteId = GD.getVoteIdAgainstMember(_memberAddress,_proposalId);
     //     uint voteVal = GD.getVoteValue(voteId);
 
     //     GD.editProposalVoteCount(_proposalId,roleId,GD.getOptionById(voteId,0),voteVal);
