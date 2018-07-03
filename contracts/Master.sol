@@ -238,7 +238,7 @@ contract Master is Ownable, Upgradeable {
     function addRemoveAddress(uint16 _version, bytes2 _contractName) internal {
         uint16 versionOld;
         if (_version > 0)
-            versionOld = _version - 1;
+            versionOld = contractChangeDate[contractChangeDate.length - 2].versionNo;
         contractsActive[allContractVersions[versionOld][_contractName]] = false;
         contractsActive[allContractVersions[_version][_contractName]] = true;
     }
@@ -263,8 +263,12 @@ contract Master is Ownable, Upgradeable {
     /// @param _typeOf Passing intials of the parameter name which value needs to be updated
     /// @param _value New value that needs to be updated    
     function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public {
-        require(msg.sender == allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["SV"]);
-        GovernanceData governanceDat = GovernanceData(allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["GD"]);
+        require(msg.sender == 
+            allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["SV"]
+        );
+        GovernanceData governanceDat = GovernanceData(
+                    allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["GD"]
+                );
         if (_typeOf == "APO") {
             governanceDat.changeProposalOwnerAdd(_value);
         } else if (_typeOf == "AOO") {
