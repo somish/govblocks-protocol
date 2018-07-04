@@ -341,7 +341,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         }
 
         
-        for (i = 0; i < finalVoteValue.length; i++) {
+        for (i = 0; i <= finalVoteValue.length; i++) {
             if (finalVoteValue[max] < finalVoteValue[i]) {
                 max = i;
             }

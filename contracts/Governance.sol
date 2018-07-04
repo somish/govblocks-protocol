@@ -478,7 +478,7 @@ contract Governance is Upgradeable {
     {
         uint depositPerc = governanceDat.depositPercProposal();
         uint _currVotingStatus = governanceDat.getProposalCurrentVotingId(_proposalId);
-        uint proposalDepositPerc=governanceDat.depositPercProposal();
+        uint proposalDepositPerc = governanceDat.depositPercProposal();
         uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake, proposalDepositPerc), 100);
 
         if (_proposalStake != 0) {
