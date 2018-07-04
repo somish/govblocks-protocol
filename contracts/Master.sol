@@ -136,6 +136,7 @@ contract Master is Ownable, Upgradeable {
     /// @dev just for the interface
     function changeGBTSAddress(address _gbtAddress) public onlyInternal {
         require(isValidateOwner());
+        addContractDetails(versionLength - 1, "GS", _gbtAddress);
         for (uint8 i = 1; i < allContractNames.length - 1; i++) {
             up = Upgradeable(allContractVersions[versionLength - 1][allContractNames[i]]);
             up.changeMasterAddress(address(this));

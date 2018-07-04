@@ -86,9 +86,10 @@ contract Pool is usingOraclize, Upgradeable {
     }
 
     /// @dev converts pool ETH to GBT
-    /// @param _gbt number of GBT to buy
+    /// @param _gbt number of GBT to buy multiplied 10^decimals
     function buyPoolGBT(uint _gbt) {
         uint _wei = SafeMath.mul(_gbt, gbt.tokenPrice());
+        _wei = SafeMath.div(_wei, 10 ** gbt.decimals());
         gbt.buyToken.value(_wei)();
     }
 
