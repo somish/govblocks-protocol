@@ -80,6 +80,7 @@ contract Governance is Upgradeable {
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
         poolAddress = master.getLatestAddress("PL");
+        votingType = VotingType(master.getLatestAddress("SV"));
         pool = Pool(poolAddress);
         govBlocksToken = GBTStandardToken(master.getLatestAddress("GS"));
     }
@@ -490,7 +491,7 @@ contract Governance is Upgradeable {
             } else {
                 govBlocksToken.depositAndLockToken(
                     msg.sender, 
-                    _stake, 
+                    _proposalStake, 
                     depositAmount, 
                     validityUpto, 
                     _v, 
@@ -692,11 +693,11 @@ contract Governance is Upgradeable {
             governanceDat.callRewardEvent(
                 _memberAddress, 
                 i, 
-                "GBT Reward earned for being Solution owner - Final Solution by majority voting", 
+                "GBT Reward earned for being Solution owner", 
                 calcReward);
 
             governanceDat.setMemberReputation(
-                "Reputation credit for solution owner - Final Solution selected by majority voting", 
+                "Reputation credit for solution owner", 
                 i, 
                 _memberAddress, 
                 SafeMath.add32(governanceDat.getMemberReputation(_memberAddress), addSolutionOwnerPoints), 

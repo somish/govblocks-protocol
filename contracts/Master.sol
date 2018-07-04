@@ -55,31 +55,32 @@ contract Master is Ownable, Upgradeable {
     }
 
     modifier onlyOwner {
-        require(isOwner(msg.sender) == true);
+        require(isOwner(msg.sender));
         _;
     }
 
     modifier onlyAuthorizedGB {
         gbm = GovBlocksMaster(gbmAddress);
-        require(gbm.isAuthorizedGBOwner(dAppName, msg.sender) == true);
+        require(gbm.isAuthorizedGBOwner(dAppName, msg.sender));
         _;
     }
 
     modifier onlyInternal {
-        require(contractsActive[msg.sender] == true || owner == msg.sender);
+        require(contractsActive[msg.sender] || owner == msg.sender);
         _;
     }
 
     /// @dev Returns true if the caller address is GovBlocksMaster Address.
     function isGBM(address _gbmAddress) public constant returns(bool check) {
         require(_gbmAddress == gbmAddress);
+        check = true;
     }
 
     /// @dev Checks for authorized Member for Dapp and returns true if the address is authorized in dApp.
     /// @param _memberaddress Address to be checked
     function isAuthGB(address _memberaddress) public constant returns(bool check) {
         gbm = GovBlocksMaster(gbmAddress);
-        require(gbm.isAuthorizedGBOwner(dAppName, _memberaddress) == true);
+        require(gbm.isAuthorizedGBOwner(dAppName, _memberaddress));
         check = true;
     }
 
@@ -87,7 +88,7 @@ contract Master is Ownable, Upgradeable {
     /// @param _address  address to be checked for internal
     /// @return check returns true if the condition meets
     function isInternal(address _address) public constant returns(bool check) {
-        if (contractsActive[_address] == true || owner == _address)
+        if (contractsActive[_address] || owner == _address)
             check = true;
     }
 

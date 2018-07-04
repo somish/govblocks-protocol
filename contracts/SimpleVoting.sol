@@ -291,7 +291,7 @@ contract SimpleVoting is VotingType, Upgradeable {
 
         require(memberRole.checkRoleIdByAddress(msg.sender, _mrSequence) 
                 && _solutionChosen.length == 1
-                && governanceDat.checkVoteIdAgainstMember(msg.sender, _proposalId) == false);
+                && !governanceDat.checkVoteIdAgainstMember(msg.sender, _proposalId));
         if (currentVotingId == 0)
             require(_solutionChosen[0] <= governanceDat.getTotalSolutions(_proposalId));
         else
@@ -547,6 +547,10 @@ contract SimpleVoting is VotingType, Upgradeable {
         governanceDat.setVoteIdAgainstProposalRole(_proposalId, _roleId, voteId);
         // GD.setVoteValue(voteId, finalVoteValue);
         // GD.setSolutionChosen(voteId, _solutionChosen[0]);
+        governanceDat.setProposalTotalVoteValue(
+            _proposalId, 
+            finalVoteValue + governanceDat.getProposalTotalVoteValue(_proposalId)
+        );
         governanceDat.callVoteEvent(_memberAddress, _proposalId, now, _voteStake, voteId);
         governance.checkRoleVoteClosing(_proposalId, _roleId);
     }
