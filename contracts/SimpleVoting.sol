@@ -30,18 +30,18 @@ import "./Pool.sol";
 
 contract SimpleVoting is VotingType, Upgradeable {
     using SafeMath for uint;
-    GBTStandardToken private gbt;
-    GovernanceData private governanceDat;
-    MemberRoles private memberRole;
-    Governance private governance;
-    ProposalCategory private proposalCategory;
-    Master private master;
-    address private govAddress;
+    GBTStandardToken internal gbt;
+    GovernanceData internal governanceDat;
+    MemberRoles internal memberRole;
+    Governance internal governance;
+    ProposalCategory internal proposalCategory;
+    Master internal master;
+    address internal govAddress;
     bool public constructorCheck;
     address public masterAddress;
-    GovBlocksMaster private govBlocksMaster;
-    BasicToken private basicToken;
-    Pool private pool;
+    GovBlocksMaster internal govBlocksMaster;
+    BasicToken internal basicToken;
+    Pool internal pool;
 
     modifier onlyInternal {
         master = Master(masterAddress);

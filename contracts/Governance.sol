@@ -29,15 +29,15 @@ import "./VotingType.sol";
 contract Governance is Upgradeable {
 
     using SafeMath for uint;
-    address private poolAddress;
-    address private masterAddress;
-    GBTStandardToken private govBlocksToken;
-    Master private master;
-    MemberRoles private memberRole;
-    ProposalCategory private proposalCategory;
-    GovernanceData private governanceDat;
-    Pool private pool;
-    VotingType private votingType;
+    address internal poolAddress;
+    address internal masterAddress;
+    GBTStandardToken internal govBlocksToken;
+    Master internal master;
+    MemberRoles internal memberRole;
+    ProposalCategory internal proposalCategory;
+    GovernanceData internal governanceDat;
+    Pool internal pool;
+    VotingType internal votingType;
 
     modifier onlyInternal {
         master = Master(masterAddress);

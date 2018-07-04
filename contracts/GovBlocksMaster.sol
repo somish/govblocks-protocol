@@ -18,7 +18,7 @@ import "./Master.sol";
 
 
 contract GovBlocksMaster {
-    Master private master;
+    Master internal master;
     address public owner;
     address public gbtAddress;
 
@@ -29,13 +29,13 @@ contract GovBlocksMaster {
         string dappDescHash;
     }
 
-    mapping(address => bytes32) private govBlocksDappByAddress;
-    mapping(bytes32 => GBDapps) private govBlocksDapps;
-    mapping(address => string) private govBlocksUser;
+    mapping(address => bytes32) internal govBlocksDappByAddress;
+    mapping(bytes32 => GBDapps) internal govBlocksDapps;
+    mapping(address => string) internal govBlocksUser;
 
-    bytes32[] private allGovBlocksUsers;
-    string private byteCodeHash;
-    string private contractsAbiHash;
+    bytes32[] internal allGovBlocksUsers;
+    string internal byteCodeHash;
+    string internal contractsAbiHash;
 
     modifier onlyOwner() {
         require(msg.sender == owner);

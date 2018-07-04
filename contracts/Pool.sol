@@ -38,8 +38,8 @@ contract Pool is usingOraclize, Upgradeable {
     mapping(bytes32 => ApiId) public allAPIid;
     bytes32[] public allAPIcall;
     address public masterAddress;
-    Master private master;
-    GBTStandardToken private gbt;
+    Master internal master;
+    GBTStandardToken internal gbt;
 
     function () public payable {}
 

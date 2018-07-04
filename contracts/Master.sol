@@ -32,13 +32,13 @@ contract Master is Ownable, Upgradeable {
 
     uint16 public versionLength;
     bytes32 public dAppName;
-    bytes2[] private allContractNames;
+    bytes2[] internal allContractNames;
     ChangeVersion[] public contractChangeDate;
     mapping(address => bool) public contractsActive;
     mapping(uint16 => mapping(bytes2 => address)) public allContractVersions;
 
-    GovBlocksMaster private gbm;
-    Upgradeable private up;
+    GovBlocksMaster internal gbm;
+    Upgradeable internal up;
     bool public constructorCheck;
     address public gbmAddress;
 

@@ -22,11 +22,11 @@ import "./Upgradeable.sol";
 contract MemberRoles is Upgradeable {
     event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription);
     using SafeMath for uint;
-    bytes32[] private memberRole;
-    uint8 private authorizedAddressToCategorize;
+    bytes32[] internal memberRole;
+    uint8 internal authorizedAddressToCategorize;
     bool public constructorCheck;
     address public masterAddress;
-    Master private master;
+    Master internal master;
 
     struct MemberRoleDetails {
         uint32 memberCounter;
@@ -34,8 +34,8 @@ contract MemberRoles is Upgradeable {
         address[] memberAddress;
     }
 
-    mapping(uint => address) private authorizedAddressAgainstRole;
-    mapping(uint32 => MemberRoleDetails) private memberRoleData;
+    mapping(uint => address) internal authorizedAddressAgainstRole;
+    mapping(uint32 => MemberRoleDetails) internal memberRoleData;
 
     /// @dev Initiates Default settings for Member Roles contract
     function memberRolesInitiate() public {

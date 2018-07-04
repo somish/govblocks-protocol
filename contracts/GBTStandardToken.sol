@@ -26,16 +26,16 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     string public name;
     string public symbol;
     uint public decimals;
-    address private owner;
-    //address private GBTCAddress;
+    address internal owner;
+    //address internal GBTCAddress;
 
     struct Lock {
         uint amount;
         uint validUpto;
     }
 
-    mapping(address => Lock[]) private userLockToken;
-    mapping(address => uint256) private balances;
+    mapping(address => Lock[]) internal userLockToken;
+    mapping(address => uint256) internal balances;
     mapping(bytes32 => bool) public verifyTxHash;
 
     function GBTStandardToken() {

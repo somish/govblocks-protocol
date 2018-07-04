@@ -45,12 +45,12 @@ contract ProposalCategory {
     SubCategory[] public allSubCategory;
     Category[] public allCategory;
     // mapping(uint8=>uint8) categoryIdBySubId; // Given SubcategoryidThen CategoryId
-    mapping(uint8 => uint[]) private allSubIdByCategory;
+    mapping(uint8 => uint[]) internal allSubIdByCategory;
 
-    Master private master;
-    MemberRoles private memberRole;
-    GovernanceData private governanceDat;
-    address private masterAddress;
+    Master internal master;
+    MemberRoles internal memberRole;
+    GovernanceData internal governanceDat;
+    address internal masterAddress;
 
     modifier onlyInternal {
         master = Master(masterAddress);

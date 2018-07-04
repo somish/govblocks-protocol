@@ -297,14 +297,14 @@ contract GovernanceData is Upgradeable {
         bytes action;
     }
 
-    mapping(uint => ProposalData) private allProposalData;
-    mapping(uint => SolutionStruct[]) private allProposalSolutions;
-    mapping(address => uint32) private allMemberReputationByAddress;
-    mapping(address => mapping(uint => uint)) private addressProposalVote;
-    mapping(uint => mapping(uint => uint[])) private proposalRoleVote;
-    mapping(address => uint[]) private allProposalByMember;
-    mapping(address => mapping(uint => mapping(bytes4 => Deposit))) private allMemberDepositTokens;
-    mapping(address => LastReward) private lastRewardDetails;
+    mapping(uint => ProposalData) internal allProposalData;
+    mapping(uint => SolutionStruct[]) internal allProposalSolutions;
+    mapping(address => uint32) internal allMemberReputationByAddress;
+    mapping(address => mapping(uint => uint)) internal addressProposalVote;
+    mapping(uint => mapping(uint => uint[])) internal proposalRoleVote;
+    mapping(address => uint[]) internal allProposalByMember;
+    mapping(address => mapping(uint => mapping(bytes4 => Deposit))) internal allMemberDepositTokens;
+    mapping(address => LastReward) internal lastRewardDetails;
 
     uint public quorumPercentage;
     uint public pendingProposalStart;
@@ -317,23 +317,23 @@ contract GovernanceData is Upgradeable {
     uint public depositPercSolution;
     uint public depositPercVote;
     uint public tokenHoldingTime;
-    uint32 private addProposalOwnerPoints;
-    uint32 private addSolutionOwnerPoints;
-    uint32 private addMemberPoints;
-    uint32 private subProposalOwnerPoints;
-    uint32 private subSolutionOwnerPoints;
-    uint32 private subMemberPoints;
+    uint32 internal addProposalOwnerPoints;
+    uint32 internal addSolutionOwnerPoints;
+    uint32 internal addMemberPoints;
+    uint32 internal subProposalOwnerPoints;
+    uint32 internal subSolutionOwnerPoints;
+    uint32 internal subMemberPoints;
 
-    string[] private status;
-    ProposalStruct[] private allProposal;
-    ProposalVote[] private allVotes;
-    VotingTypeDetails[] private allVotingTypeDetails;
+    string[] internal status;
+    ProposalStruct[] internal allProposal;
+    ProposalVote[] internal allVotes;
+    VotingTypeDetails[] internal allVotingTypeDetails;
 
-    Master private master;
-    GBTStandardToken private gbt;
-    Governance private gov;
-    address private masterAddress;
-    address private gbtsAddress;
+    Master internal master;
+    GBTStandardToken internal gbt;
+    Governance internal gov;
+    address internal masterAddress;
+    address internal gbtsAddress;
 
     modifier onlyInternal {
         master = Master(masterAddress);
