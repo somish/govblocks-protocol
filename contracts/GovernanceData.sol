@@ -628,7 +628,7 @@ contract GovernanceData is Upgradeable {
 
     /// @dev Gets total number of votes 
     function allVotesTotal() public constant returns(uint) {
-        return allVotes.length();
+        return allVotes.length;
     }
 
     /// @dev Gets Total number of voting types has been added till now.
