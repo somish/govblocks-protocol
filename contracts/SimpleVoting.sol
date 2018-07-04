@@ -331,7 +331,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint8 max = 0;
         uint32 _mrSequenceId = proposalCategory.getRoleSequencAtIndex(category, currentVotingId);
         require(governance.checkForClosing(_proposalId, _mrSequenceId) == 1);
-        uint[] memory finalVoteValue = new uint[](governanceDat.getTotalSolutions(_proposalId)+1);
+        uint[] memory finalVoteValue = new uint[](governanceDat.getTotalSolutions(_proposalId));
         for (i = 0; i < governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId); i++) {
             uint voteId = governanceDat.getVoteIdAgainstProposalRole(_proposalId, _mrSequenceId, i);
             uint solutionChosen = governanceDat.getSolutionByVoteIdAndIndex(voteId, 0);
@@ -341,7 +341,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         }
 
         
-        for (i = 0; i <= finalVoteValue.length; i++) {
+        for (i = 0; i < finalVoteValue.length; i++) {
             if (finalVoteValue[max] < finalVoteValue[i]) {
                 max = i;
             }
