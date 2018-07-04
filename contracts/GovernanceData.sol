@@ -311,7 +311,6 @@ contract GovernanceData is Upgradeable {
     uint public gbtStakeValue;
     uint public membershipScalingFactor;
     uint public scalingWeight;
-    uint public allVotesTotal;
     bool public constructorCheck;
     uint public depositPercProposal;
     uint public depositPercSolution;
@@ -413,8 +412,6 @@ contract GovernanceData is Upgradeable {
         //setVotingTypeDetails("Rank Based Voting", null_address);
         //setVotingTypeDetails("Feature Weighted Voting", null_address);
         allVotes.push(ProposalVote(0x00, new uint[](0), 0));
-        uint _totalVotes = SafeMath.add(allVotesTotal, 1);
-        allVotesTotal = _totalVotes;
         constructorCheck = true;
     }
 
@@ -627,6 +624,11 @@ contract GovernanceData is Upgradeable {
     /// @dev Gets vote value against Vote id
     function getVoteValue(uint _voteId) public constant returns(uint) {
         return (allVotes[_voteId].voteValue);
+    }
+
+    /// @dev Gets total number of votes 
+    function allVotesTotal() public constant returns(uint) {
+        return allVotes.length();
     }
 
     /// @dev Gets Total number of voting types has been added till now.
