@@ -279,6 +279,7 @@ contract GovernanceData is Upgradeable {
         address voter;
         uint[] solutionChosen;
         uint voteValue;
+        uint proposalId;
     }
 
     struct LastReward {
@@ -300,9 +301,10 @@ contract GovernanceData is Upgradeable {
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(address => uint32) internal allMemberReputationByAddress;
-    mapping(address => mapping(uint => uint)) internal addressProposalVote;
+    mapping(address => mapping(uint => bool)) internal addressProposalVote;
     mapping(uint => mapping(uint => uint[])) internal proposalRoleVote;
-    mapping(address => uint[]) internal allProposalByMember;
+    //mapping(address => uint[]) internal allProposalByMember;
+    mapping(address => uint[]) internal allVotesByMember;
     mapping(address => mapping(uint => mapping(bytes4 => Deposit))) internal allMemberDepositTokens;
     mapping(address => LastReward) internal lastRewardDetails;
 
@@ -411,7 +413,7 @@ contract GovernanceData is Upgradeable {
         setVotingTypeDetails("Simple Voting", 0x00);
         //setVotingTypeDetails("Rank Based Voting", null_address);
         //setVotingTypeDetails("Feature Weighted Voting", null_address);
-        allVotes.push(ProposalVote(0x00, new uint[](0), 0));
+        allVotes.push(ProposalVote(0x00, new uint[](0), 0, 0));
         constructorCheck = true;
     }
 
@@ -546,22 +548,22 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Add vote details such as Solution id to which he has voted and vote value
-    function addVote(address _memberAddress, uint[] _solutionChosen, uint _voteValue) public onlyInternal {
-        allVotes.push(ProposalVote(_memberAddress, _solutionChosen, _voteValue));
+    function addVote(address _memberAddress, uint[] _solutionChosen, uint _voteValue, uint _proposalId, uint _roleId) 
+        public 
+        onlyInternal
+    {
+        proposalRoleVote[_proposalId][_roleId].push(allVotes.length);
+        allVotesByMember[_memberAddress].push(allVotes.length);
+        allVotes.push(ProposalVote(_memberAddress, _solutionChosen, _voteValue, _proposalId));
+        addressProposalVote[_memberAddress][_proposalId] = true;
     }
 
-    /// @dev Sets vote id against member
-    /// @param _memberAddress Member address who casted a vote
-    /// @param _proposalId Proposal Id to against which the vote has been casted
-    /// @param _voteId Id of vote
-    function setVoteIdAgainstMember(address _memberAddress, uint _proposalId, uint _voteId) public onlyInternal {
-        addressProposalVote[_memberAddress][_proposalId] = _voteId;
+    function getAllVoteIdsByAddress(address _memberAddress) public constant returns(uint[]) {
+        return allVotesByMember[_memberAddress];
     }
 
-    /// @dev Sets Vote id against proposal with Role id
-    /// @param _roleId Role id of the member who has voted
-    function setVoteIdAgainstProposalRole(uint _proposalId, uint _roleId, uint _voteId) public onlyInternal {
-        proposalRoleVote[_proposalId][_roleId].push(_voteId);
+    function getTotalNumberOfVotesByAddress(address _memberAddress) public constant returns(uint) {
+        return allVotesByMember[_memberAddress].length;
     }
 
     // function setVoteValue(uint _voteId, uint _voteValue) onlyInternal {
@@ -574,28 +576,25 @@ contract GovernanceData is Upgradeable {
         returns(
             address voter, 
             uint[] solutionChosen, 
-            uint voteValue
+            uint voteValue,
+            uint proposalId
         ) 
     {
-        return (allVotes[_voteid].voter, allVotes[_voteid].solutionChosen, allVotes[_voteid].voteValue);
+        return (allVotes[_voteid].voter, allVotes[_voteid].solutionChosen, allVotes[_voteid].voteValue, allVotes[_voteid].proposalId);
     }
 
-    /// @dev Gets Vote id Against proposal when passing proposal id and member addresse
+    /*/// @dev Gets Vote id Against proposal when passing proposal id and member addresse
     function getVoteIdAgainstMember(address _memberAddress, uint _proposalId) 
         public 
         constant 
         returns(uint voteId) 
     {
         voteId = addressProposalVote[_memberAddress][_proposalId];
-    }
+    }*/
 
     /// @dev Check if the member has voted against a proposal. Returns true if vote id exists
     function checkVoteIdAgainstMember(address _memberAddress, uint _proposalId) public constant returns(bool) {
-        uint voteId = addressProposalVote[_memberAddress][_proposalId];
-        if (voteId == 0)
-            return false;
-        else
-            return true;
+        return addressProposalVote[_memberAddress][_proposalId];
     }
 
     /// @dev Gets voter address

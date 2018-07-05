@@ -375,10 +375,10 @@ contract Governance is Upgradeable {
         memberReputation = governanceDat.getMemberReputation(_memberAddress);
         totalProposal = getAllProposalIdsLengthByAddress(_memberAddress);
         totalSolution = governanceDat.getAllSolutionIdsLengthByAddress(_memberAddress);
-        totalVotes = getAllVoteIdsLengthByAddress(_memberAddress);
+        totalVotes = governanceDat.getTotalNumberOfVotesByAddress(_memberAddress);
     }
 
-    /// @dev Return array having all votes ids casted by a member
+    /*/// @dev Return array having all votes ids casted by a member
     /// @param _memberAddress Member address
     /// @return totalVoteCasted All vote ids given by member
     function getAllVoteIdsByAddress(address _memberAddress) public constant returns(uint[] totalVoteCasted) {
@@ -406,7 +406,7 @@ contract Governance is Upgradeable {
                 totalVoteCount++;
         }
     }
-
+    */
     /// @dev Gets length of all created proposals by member
     /// @param _memberAddress Member address
     /// @return totalProposalCount Total proposal count
@@ -719,7 +719,7 @@ contract Governance is Upgradeable {
         internal  
         returns(uint tempfinalRewardToDistribute) 
     {
-        uint allProposalLength = governanceDat.getProposalLength();
+
         uint calcReward;
         uint lastIndex = 0;
         uint i;
@@ -729,8 +729,9 @@ contract Governance is Upgradeable {
         uint voteValue;
         uint totalReward;
         uint category;
+        uint totalVotes = governanceDat.getTotalNumberOfVotesByAddress(_memberAddress);
 
-        for (i = _lastRewardVoteId; i < allProposalLength; i++) {
+        for (i = _lastRewardVoteId; i < totalVotes; i++) {
             (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, category, ) = 
                 getVoteDetailsToCalculateReward(_memberAddress, i);
             uint returnedTokensFlag = governanceDat.getReturnedTokensFlag(_memberAddress, i, "V");
@@ -765,7 +766,7 @@ contract Governance is Upgradeable {
     /// @dev Gets vote id details when giving member address and proposal id
     function getVoteDetailsToCalculateReward(
         address _memberAddress, 
-        uint _proposalId
+        uint _voteId
     ) 
         internal 
         constant 
@@ -779,14 +780,14 @@ contract Governance is Upgradeable {
             uint totalVoteValueProposal
         ) 
     {
-        uint voteId = governanceDat.getVoteIdAgainstMember(_memberAddress, _proposalId);
-        solutionChosen = governanceDat.getSolutionByVoteIdAndIndex(voteId, 0);
-        proposalStatus = governanceDat.getProposalStatus(_proposalId);
-        finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
-        voteValue = governanceDat.getVoteValue(voteId);
-        totalReward = governanceDat.getProposalTotalReward(_proposalId);
-        category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
-        totalVoteValueProposal = governanceDat.getProposalTotalVoteValue(_proposalId);
+        uint proposalId;
+        (, , voteValue, proposalId) = governanceDat.getVoteDetailById(_voteId);
+        solutionChosen = governanceDat.getSolutionByVoteIdAndIndex(_voteId, 0);
+        proposalStatus = governanceDat.getProposalStatus(proposalId);
+        finalVerdict = governanceDat.getProposalFinalVerdict(proposalId);
+        totalReward = governanceDat.getProposalTotalReward(proposalId);
+        category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(proposalId));
+        totalVoteValueProposal = governanceDat.getProposalTotalVoteValue(proposalId);
     }
 
     /// @dev When creating or submitting proposal with solution, This function open the proposal for voting

@@ -542,9 +542,9 @@ contract SimpleVoting is VotingType, Upgradeable {
         // uint category=GD.getProposalCategory(_proposalId);
         uint currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
         (_roleId, , ) = proposalCategory.getCategoryData3(category, currVotingId);
-        governanceDat.addVote(msg.sender, _solutionChosen, finalVoteValue);
-        governanceDat.setVoteIdAgainstMember(_memberAddress, _proposalId, voteId);
-        governanceDat.setVoteIdAgainstProposalRole(_proposalId, _roleId, voteId);
+        governanceDat.addVote(msg.sender, _solutionChosen, finalVoteValue, _proposalId, _roleId);
+        //governanceDat.setVoteIdAgainstMember(_memberAddress, _proposalId);
+        //governanceDat.setVoteIdAgainstProposalRole(_proposalId, _roleId, voteId);
         // GD.setVoteValue(voteId, finalVoteValue);
         // GD.setSolutionChosen(voteId, _solutionChosen[0]);
         governanceDat.setProposalTotalVoteValue(
