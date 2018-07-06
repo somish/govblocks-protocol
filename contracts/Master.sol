@@ -171,7 +171,7 @@ contract Master is Ownable, Upgradeable {
     /// @param _gbmNewAddress New GovBlocks master address
     function changeGBMAddress(address _gbmNewAddress) public {
         require(msg.sender == gbmAddress);
-        gbmAddress == _gbmNewAddress;
+        gbmAddress = _gbmNewAddress;
     }
 
     /// @dev Gets current version amd its master address
