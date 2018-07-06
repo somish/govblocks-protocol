@@ -477,13 +477,13 @@ contract SimpleVoting is VotingType, Upgradeable {
             uint mrVoteLength = governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, roleId);
             for (uint j = 0; j < mrVoteLength; j++) {
                 uint voteId = governanceDat.getVoteIdAgainstProposalRole(_proposalId, roleId, j);
-                if (governanceDat.getSolutionByVoteIdAndIndex(voteId, 0) != finalVerdict) {
+//                if (governanceDat.getSolutionByVoteIdAndIndex(voteId, 0) != finalVerdict) {
                     _ownerAddress = governanceDat.getVoterAddress(voteId);
                     depositedTokens = governanceDat.getDepositedTokens(_ownerAddress, _proposalId, "V");
                     totalReward = SafeMath.add(totalReward, depositedTokens);
                     uint voteValue=governanceDat.getVoteValue(voteId);
                     totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
-                }
+//                }
             }
         }
 

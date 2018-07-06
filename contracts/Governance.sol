@@ -571,7 +571,8 @@ contract Governance is Upgradeable {
                     lastIndex = i;
                 else if (proposalStatus > 2 && 
                     finalVredict > 0 && 
-                    governanceDat.getReturnedTokensFlag(_memberAddress, i, "P") == 0
+                    governanceDat.getReturnedTokensFlag(_memberAddress, i, "P") == 0 &&
+                    governanceDat.getProposalTotalReward(i) != 0
                 ) {
                     calcReward = 
                         (proposalCategory.getRewardPercProposal(category) 
@@ -755,10 +756,10 @@ contract Governance is Upgradeable {
 
         if (proposalStatus < 2)
                 lastIndex = _voteNo;
-        if (finalVredict > 0 && solutionChosen == finalVredict && returnedTokensFlag == 0) {
+        if (finalVredict > 0 && solutionChosen == finalVredict && returnedTokensFlag == 0 && totalReward != 0) {
             calcReward = 
-                (proposalCategory.getRewardPercVote(category) * totalReward * voteValue) 
-                / (100 * governanceDat.getProposalTotalReward(_proposalId));
+                (proposalCategory.getRewardPercVote(category) * voteValue) 
+                / (100 * totalReward);
 
             tempfinalRewardToDistribute = 
                 tempfinalRewardToDistribute 
