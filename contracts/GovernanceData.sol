@@ -301,7 +301,7 @@ contract GovernanceData is Upgradeable {
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(address => uint32) internal allMemberReputationByAddress;
-    mapping(address => mapping(uint => bool)) internal addressProposalVote;
+    mapping(address => mapping(uint => uint)) internal addressProposalVote;
     mapping(uint => mapping(uint => uint[])) internal proposalRoleVote;
     //mapping(address => uint[]) internal allProposalByMember;
     mapping(address => uint[]) internal allVotesByMember;
@@ -553,8 +553,8 @@ contract GovernanceData is Upgradeable {
     {
         proposalRoleVote[_proposalId][_roleId].push(allVotes.length);
         allVotesByMember[_memberAddress].push(allVotes.length);
+        addressProposalVote[_memberAddress][_proposalId] = allVotes.length;
         allVotes.push(ProposalVote(_memberAddress, _solutionChosen, _voteValue, _proposalId));
-        addressProposalVote[_memberAddress][_proposalId] = true;
     }
 
     function getAllVoteIdsByAddress(address _memberAddress) public constant returns(uint[]) {
@@ -586,18 +586,19 @@ contract GovernanceData is Upgradeable {
         return (allVotes[_voteid].voter, allVotes[_voteid].solutionChosen, allVotes[_voteid].voteValue, allVotes[_voteid].proposalId);
     }
 
-    /*/// @dev Gets Vote id Against proposal when passing proposal id and member addresse
+    /// @dev Gets Vote id Against proposal when passing proposal id and member addresse
     function getVoteIdAgainstMember(address _memberAddress, uint _proposalId) 
         public 
         constant 
         returns(uint voteId) 
     {
         voteId = addressProposalVote[_memberAddress][_proposalId];
-    }*/
+    }
 
     /// @dev Check if the member has voted against a proposal. Returns true if vote id exists
-    function checkVoteIdAgainstMember(address _memberAddress, uint _proposalId) public constant returns(bool) {
-        return addressProposalVote[_memberAddress][_proposalId];
+    function checkVoteIdAgainstMember(address _memberAddress, uint _proposalId) public constant returns(bool result) {
+        if (addressProposalVote[_memberAddress][_proposalId] != 0)
+            result = true;
     }
 
     /// @dev Gets voter address
