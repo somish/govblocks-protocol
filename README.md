@@ -35,11 +35,11 @@ truffle migrate --network kovan
 Your GBTStandardToken and GovBlockMaster contract is live now, you can use these contract to setup the GovBlocks platform and create register dApps using the GUI provided by GovBlocks platform.
 
 
-### Modularity
+## Modularity
 GovBlocks is built on the Ethereum blockchain and it uses a modular system for grouping of Ethereum smart contracts, allowing logical components of the system to be upgraded without affecting the other components. Following are the key modules of GovBlocks.
 
 
-#### Master
+### Master
 Master module of every contract is used to bind all the modules together. It contains addresses of all other contracts and updates them when a new version is added.
 Contract:
 * [Master.sol]
@@ -62,7 +62,7 @@ Some important functions :
 3) calculateMemberReward : It is used to calculate the reward to be deistributed once the proposal is closed.
 
 
-#### MemberRoles
+### MemberRoles
 MemberRoles module of manages all the member roles. Every member role can have different authorizations
 Contract:
 * [MemberRoles.sol]
@@ -72,7 +72,7 @@ Some important functions :
 2) getAllAddressByRoleId : It returns all member address that have a particular role
 
 
-#### Pool
+### Pool
 Pool of every dApp holds the Ethereum and GBT for distributing the default incentive upon acceptance of a proposal. It is also used to call oraclize to close proposal when the time is over.
 Contract:
 * [Pool.sol]
