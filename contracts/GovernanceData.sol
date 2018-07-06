@@ -334,7 +334,6 @@ contract GovernanceData is Upgradeable {
     GBTStandardToken internal gbt;
     Governance internal gov;
     address internal masterAddress;
-    address internal gbtsAddress;
 
     modifier onlyInternal {
         master = Master(masterAddress);
@@ -373,7 +372,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Changes GovBlocks standard token address
     /// @param _gbtAddress New GovBlocks token address
     function changeGBTSAddress(address _gbtAddress) public onlyMaster {
-        gbtsAddress = _gbtAddress;
+        gbt = GBTStandardToken(_gbtAddress);
     }
     /*
     /// @dev Changes Global objects of the contracts || Uses latest version
@@ -401,7 +400,7 @@ contract GovernanceData is Upgradeable {
             governanceDataInitiate();
         master = Master(masterAddress);
         gov = Governance(master.getLatestAddress("GV"));
-        gbtsAddress = master.getLatestAddress("GS");
+        gbt = GBTStandardToken(master.getLatestAddress("GS"));
         editVotingTypeDetails(0, master.getLatestAddress("SV"));
     }
 
@@ -560,6 +559,10 @@ contract GovernanceData is Upgradeable {
 
     function getAllVoteIdsByAddress(address _memberAddress) public constant returns(uint[]) {
         return allVotesByMember[_memberAddress];
+    }
+
+    function getVoteIdOfNthVoteOfMember(address _memberAddress, uint _vote) public constant returns(uint) {
+        return allVotesByMember[_memberAddress][_vote];
     }
 
     function getTotalNumberOfVotesByAddress(address _memberAddress) public constant returns(uint) {

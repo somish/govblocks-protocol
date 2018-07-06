@@ -720,53 +720,66 @@ contract Governance is Upgradeable {
         returns(uint tempfinalRewardToDistribute) 
     {
 
-        uint calcReward;
         uint lastIndex = 0;
         uint i;
-        uint solutionChosen;
-        uint proposalStatus;
-        uint finalVredict;
-        uint voteValue;
-        uint totalReward;
-        uint category;
         uint totalVotes = governanceDat.getTotalNumberOfVotesByAddress(_memberAddress);
-
+        uint tempfinalReward;
+        uint voteId;
+        uint proposalId;
         for (i = _lastRewardVoteId; i < totalVotes; i++) {
-            (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, category, ) = 
-                getVoteDetailsToCalculateReward(_memberAddress, i);
-            uint returnedTokensFlag = governanceDat.getReturnedTokensFlag(_memberAddress, i, "V");
-            if (proposalStatus < 2)
-                lastIndex = i;
-
-            if (finalVredict > 0 && solutionChosen == finalVredict && returnedTokensFlag == 0) {
-                calcReward = 
-                    (proposalCategory.getRewardPercVote(category) * totalReward * voteValue) 
-                    / (100 * governanceDat.getProposalTotalReward(i));
-
-                tempfinalRewardToDistribute = 
-                    tempfinalRewardToDistribute 
-                    + calcReward 
-                    + governanceDat.getDepositedTokens(_memberAddress, i, "V");
-
-                governanceDat.callRewardEvent(
-                    _memberAddress, 
-                    i, 
-                    "GBT Reward earned for voting in favour of final Solution", 
-                    calcReward
-                );
-
-                governanceDat.setReturnedTokensFlag(_memberAddress, i, "V", 1);
-            }
+            voteId = governanceDat.getVoteIdOfNthVoteOfMember(_memberAddress, i);
+            (, , , proposalId) = governanceDat.getVoteDetailById(voteId);
+            (tempfinalReward, lastIndex) = calculateVoteReward1(_memberAddress, i, proposalId);
+            tempfinalRewardToDistribute = tempfinalRewardToDistribute + tempfinalReward;
         }
         if (lastIndex == 0)
             lastIndex = i;
         governanceDat.setLastRewardIdOfVotes(_memberAddress, lastIndex);
     }
 
+    function calculateVoteReward1(address _memberAddress, uint _voteNo, uint _proposalId) 
+        internal
+        returns (uint tempfinalRewardToDistribute, uint lastIndex) 
+    {
+        uint solutionChosen;
+        uint proposalStatus;
+        uint finalVredict;
+        uint voteValue;
+        uint totalReward;
+        uint category;
+        uint calcReward;
+
+        uint returnedTokensFlag = governanceDat.getReturnedTokensFlag(_memberAddress, _proposalId, "V");
+        (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, category, ) = 
+            getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
+
+        if (proposalStatus < 2)
+                lastIndex = _voteNo;
+        if (finalVredict > 0 && solutionChosen == finalVredict && returnedTokensFlag == 0) {
+            calcReward = 
+                (proposalCategory.getRewardPercVote(category) * totalReward * voteValue) 
+                / (100 * governanceDat.getProposalTotalReward(_proposalId));
+
+            tempfinalRewardToDistribute = 
+                tempfinalRewardToDistribute 
+                + calcReward 
+                + governanceDat.getDepositedTokens(_memberAddress, _proposalId, "V");
+
+            governanceDat.callRewardEvent(
+                _memberAddress, 
+                _proposalId, 
+                "GBT Reward earned for voting in favour of final Solution", 
+                calcReward
+            );
+
+            governanceDat.setReturnedTokensFlag(_memberAddress, _proposalId, "V", 1);
+        }
+    }
+
     /// @dev Gets vote id details when giving member address and proposal id
     function getVoteDetailsToCalculateReward(
         address _memberAddress, 
-        uint _voteId
+        uint _voteNo
     ) 
         internal 
         constant 
@@ -781,6 +794,7 @@ contract Governance is Upgradeable {
         ) 
     {
         uint proposalId;
+        uint _voteId = governanceDat.getVoteIdOfNthVoteOfMember(_memberAddress, _voteNo);
         (, , voteValue, proposalId) = governanceDat.getVoteDetailById(_voteId);
         solutionChosen = governanceDat.getSolutionByVoteIdAndIndex(_voteId, 0);
         proposalStatus = governanceDat.getProposalStatus(proposalId);
