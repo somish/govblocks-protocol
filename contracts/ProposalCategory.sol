@@ -21,7 +21,7 @@ import "./Upgradeable.sol";
 
 contract ProposalCategory {
     bool public constructorCheck;
-    uint maxInt = uint256(0) - uint256(1);
+    uint constant maxInt = uint256(0) - uint256(1);
     
     struct Category {
         string name;
@@ -129,10 +129,10 @@ contract ProposalCategory {
         closeTime[0] = 1800;
         
         allCategory.push(Category("Uncategorized", roleSeq, majVote, closeTime, 0, 0, 0, 0, 0, 0));
-        allCategory.push(Category("Change to member role", roleSeq, majVote, closeTime, 0, maxInt, 10**19, 20, 20, 20));
-        allCategory.push(Category("Changes to categories", roleSeq, majVote, closeTime, 0, maxInt, 0, 20, 20, 20));
-        allCategory.push(Category("Changes in parameters", roleSeq, majVote, closeTime, 0, maxInt, 0, 20, 20, 20));
-        allCategory.push(Category("Others not specified", roleSeq, majVote, closeTime, 0, maxInt, 0, 20, 20, 20));
+        allCategory.push(Category("Change to member role", roleSeq, majVote, closeTime, 0, maxInt, 10**19, 40, 40, 20));
+        allCategory.push(Category("Changes to categories", roleSeq, majVote, closeTime, 0, maxInt, 0, 40, 40, 20));
+        allCategory.push(Category("Changes in parameters", roleSeq, majVote, closeTime, 0, maxInt, 0, 40, 40, 20));
+        allCategory.push(Category("Others not specified", roleSeq, majVote, closeTime, 0, maxInt, 0, 40, 40, 20));
         
         allSubIdByCategory[0].push(0);
         allSubCategory.push(SubCategory("Uncategorized", "", 0, 0x00));

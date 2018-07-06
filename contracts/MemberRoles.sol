@@ -27,10 +27,12 @@ contract MemberRoles is Upgradeable {
     bool public constructorCheck;
     address public masterAddress;
     Master internal master;
+    uint constant maxInt = uint256(0) - uint256(1);
 
     struct MemberRoleDetails {
         uint32 memberCounter;
         mapping(address => bool) memberActive;
+        mapping(address => uint) validity;
         address[] memberAddress;
     }
 
@@ -129,7 +131,10 @@ contract MemberRoles is Upgradeable {
         uint8 j = 0;
         assignedRoles = new uint32[](length);
         for (uint8 i = 0; i < getTotalMemberRoles(); i++) {
-            if (memberRoleData[i].memberActive[_memberAddress] == true) {
+            if (memberRoleData[i].memberActive[_memberAddress] 
+                && memberRoleData[i].validity[_memberAddress] > now
+            ) 
+            {
                 assignedRoles[j] = i;
                 j++;
             }
@@ -142,7 +147,7 @@ contract MemberRoles is Upgradeable {
     /// @param _roleId Checks member's authenticity with the roleId. 
     /// i.e. Returns true if this roleId is assigned to member
     function checkRoleIdByAddress(address _memberAddress, uint32 _roleId) public constant returns(bool) {
-        if (memberRoleData[_roleId].memberActive[_memberAddress] == true)
+        if (memberRoleData[_roleId].memberActive[_memberAddress] && memberRoleData[_roleId].validity[_memberAddress] > now)
             return true;
         else
             return false;
@@ -155,7 +160,8 @@ contract MemberRoles is Upgradeable {
     function updateMemberRole(
         address _memberAddress, 
         uint32 _roleId, 
-        bool _typeOf
+        bool _typeOf,
+        uint _validity
     ) 
         public 
         checkRoleAuthority(_roleId) 
@@ -165,10 +171,12 @@ contract MemberRoles is Upgradeable {
             memberRoleData[_roleId].memberCounter = SafeMath.add32(memberRoleData[_roleId].memberCounter, 1);
             memberRoleData[_roleId].memberActive[_memberAddress] = true;
             memberRoleData[_roleId].memberAddress.push(_memberAddress);
+            memberRoleData[_roleId].validity[_memberAddress] = _validity;
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress] == true);
             memberRoleData[_roleId].memberCounter = SafeMath.sub32(memberRoleData[_roleId].memberCounter, 1);
             memberRoleData[_roleId].memberActive[_memberAddress] = false;
+            memberRoleData[_roleId].validity[_memberAddress] = _validity;
         }
     }
 
@@ -211,7 +219,8 @@ contract MemberRoles is Upgradeable {
         allMemberAddress = new address[](length);
         for (uint8 i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
-            if (memberRoleData[_memberRoleId].memberActive[member] == true) {
+            if (memberRoleData[_memberRoleId].memberActive[member] &&  memberRoleData[_memberRoleId].validity[member] > now) 
+            {
                 allMemberAddress[j] = member;
                 j++;
             }
@@ -280,13 +289,14 @@ contract MemberRoles is Upgradeable {
         memberRoleData[1].memberCounter = SafeMath.add32(memberRoleData[1].memberCounter, 1);
         memberRoleData[1].memberActive[ownAddress] = true;
         memberRoleData[1].memberAddress.push(ownAddress);
+        memberRoleData[1].validity[ownAddress] = maxInt;
     }
 
     /// @dev Get Total number of role ids that has been assigned to a member so far.
     function getRoleIdLengthByAddress(address _memberAddress) internal constant returns(uint8 count) {
         uint length = getTotalMemberRoles();
         for (uint8 i = 0; i < length; i++) {
-            if (memberRoleData[i].memberActive[_memberAddress] == true)
+            if (memberRoleData[i].memberActive[_memberAddress] && memberRoleData[i].validity[_memberAddress] > now)
                 count++;
         }
         return count;
