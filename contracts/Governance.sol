@@ -574,9 +574,9 @@ contract Governance is Upgradeable {
                     governanceDat.getReturnedTokensFlag(_memberAddress, i, "P") == 0 &&
                     governanceDat.getProposalTotalReward(i) != 0
                 ) {
-                    calcReward = 
-                        (proposalCategory.getRewardPercProposal(category) 
-                        * governanceDat.getProposalTotalReward(i)) 
+                    category = proposalCategory.getCategoryIdBySubId(category);
+                    calcReward = proposalCategory.getRewardPercProposal(category) 
+                        * governanceDat.getProposalTotalReward(i)
                         / 100;
 
                     tempfinalRewardToDistribute = 
