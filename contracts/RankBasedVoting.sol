@@ -53,24 +53,24 @@ contract RankBasedVoting is VotingType, Upgradeable {
     // {
     //     require(constructorCheck == 0 );
     //     uint[] option;
-    //     allVotes.push(proposalVote(0x00,0,option,now,0,0,0,0));
+    //     allVotes.push(proposalVote(address(0),0,option,now,0,0,0,0));
     //     votingTypeName = "Ranking Based Voting";
     //     constructorCheck = 1;
     // }
 
     modifier onlyInternal {
         MS = Master(masterAddress);
-        require(MS.isInternal(msg.sender) == true);
+        require(MS.isInternal(msg.sender));
         _;
     }
 
     /// @dev Change master's contract address
     function changeMasterAddress(address _masterContractAddress) {
-        if (masterAddress == 0x000)
+        if (masterAddress == address(0))
             masterAddress = _masterContractAddress;
         else {
             MS = Master(masterAddress);
-            require(MS.isInternal(msg.sender) == true);
+            require(MS.isInternal(msg.sender));
             masterAddress = _masterContractAddress;
         }
     }

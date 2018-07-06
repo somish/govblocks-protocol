@@ -41,10 +41,10 @@ contract MemberRoles is Upgradeable {
 
     /// @dev Initiates Default settings for Member Roles contract
     function memberRolesInitiate() public {
-        require(constructorCheck == false);
+        require(!constructorCheck);
         uint rolelength = getTotalMemberRoles();
         memberRole.push("");
-        authorizedAddressAgainstRole[rolelength] = 0x00;
+        authorizedAddressAgainstRole[rolelength] = address(0);
         MemberRole(rolelength, "", "");
         rolelength++;
         memberRole.push("Advisory Board");
@@ -56,7 +56,7 @@ contract MemberRoles is Upgradeable {
         );
         rolelength++;
         memberRole.push("Token Holder");
-        authorizedAddressAgainstRole[rolelength] = 0x00;
+        authorizedAddressAgainstRole[rolelength] = address(0);
         MemberRole(
             rolelength, 
             "Token Holder", 
@@ -80,7 +80,7 @@ contract MemberRoles is Upgradeable {
     }
 
     modifier checkRoleAuthority(uint _memberRoleId) {
-        require(isGBM() == true || msg.sender == authorizedAddressAgainstRole[_memberRoleId]);
+        require(isGBM() || msg.sender == authorizedAddressAgainstRole[_memberRoleId]);
         _;
     }
 
@@ -99,18 +99,18 @@ contract MemberRoles is Upgradeable {
     /// @dev Returns true if the caller address is GovBlocksMaster contract address.
     function isGBM() public constant returns(bool) {
         master = Master(masterAddress);
-        if (master.isGBM(msg.sender) == true)
+        if (master.isGBM(msg.sender))
             return true;
     }
 
     /// @dev Changes Master's contract address 
     /// @param _masterContractAddress New master address
     function changeMasterAddress(address _masterContractAddress) public {
-        if (masterAddress == 0x000)
+        if (masterAddress == address(0))
             masterAddress = _masterContractAddress;
         else {
             master = Master(masterAddress);
-            require(master.isInternal(msg.sender) == true);
+            require(master.isInternal(msg.sender));
             masterAddress = _masterContractAddress;
         }
     }
@@ -166,14 +166,14 @@ contract MemberRoles is Upgradeable {
         public 
         checkRoleAuthority(_roleId) 
     {
-        if (_typeOf == true) {
-            require(memberRoleData[_roleId].memberActive[_memberAddress] == false);
+        if (_typeOf) {
+            require(!memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.add32(memberRoleData[_roleId].memberCounter, 1);
             memberRoleData[_roleId].memberActive[_memberAddress] = true;
             memberRoleData[_roleId].memberAddress.push(_memberAddress);
             memberRoleData[_roleId].validity[_memberAddress] = _validity;
         } else {
-            require(memberRoleData[_roleId].memberActive[_memberAddress] == true);
+            require(memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.sub32(memberRoleData[_roleId].memberCounter, 1);
             memberRoleData[_roleId].memberActive[_memberAddress] = false;
             memberRoleData[_roleId].validity[_memberAddress] = _validity;
@@ -184,7 +184,7 @@ contract MemberRoles is Upgradeable {
     /// @param _roleId roleId to update its Authorized Address
     /// @param _newCanAddMember New authorized address against role id
     function changeCanAddMember(uint32 _roleId, address _newCanAddMember) public {
-        if (authorizedAddressAgainstRole[_roleId] == 0x00)
+        if (authorizedAddressAgainstRole[_roleId] == address(0))
             authorizedAddressAgainstRole[_roleId] = _newCanAddMember;
         else {
             require(msg.sender == authorizedAddressAgainstRole[_roleId]);

@@ -45,7 +45,7 @@ contract GovBlocksMaster {
     /// @dev Initializes GovBlocks master
     /// @param _gbtAddress GBT standard token address
     function govBlocksMasterInit(address _gbtAddress) public {
-        require(owner == 0x00);
+        require(owner == address(0));
         owner = msg.sender;
         gbtAddress = _gbtAddress;
         //   updateGBMAddress(address(this));  
@@ -101,7 +101,7 @@ contract GovBlocksMaster {
     /// @param _dappTokenAddress dApp token address
     /// @param _dappDescriptionHash dApp description hash having dApp or token logo information
     function addGovBlocksUser(bytes32 _gbUserName, address _dappTokenAddress, string _dappDescriptionHash) public {
-        require(govBlocksDapps[_gbUserName].masterAddress == 0x00);
+        require(govBlocksDapps[_gbUserName].masterAddress == address(0));
         address _newMasterAddress = new Master(address(this), _gbUserName);
         allGovBlocksUsers.push(_gbUserName);
         govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
@@ -176,8 +176,8 @@ contract GovBlocksMaster {
         ) 
     {
         address masterAddress = govBlocksDapps[_gbUserName].masterAddress;
-        if (masterAddress == 0x00)
-            return (_gbUserName, 0x00, "", "", 0);
+        if (masterAddress == address(0))
+            return (_gbUserName, address(0), "", "", 0);
         master = Master(masterAddress);
         versionNo = master.versionLength();
         return (_gbUserName, govBlocksDapps[_gbUserName].masterAddress, byteCodeHash, contractsAbiHash, versionNo);
@@ -213,8 +213,8 @@ contract GovBlocksMaster {
         ) 
     {
         address masterAddress = govBlocksDapps[_gbUserName].masterAddress;
-        if (masterAddress == 0x00)
-            return (_gbUserName, 0x00, 0x00, "", "", 0);
+        if (masterAddress == address(0))
+            return (_gbUserName, address(0), address(0), "", "", 0);
             
         master = Master(masterAddress);
         versionNo = master.versionLength();
@@ -297,7 +297,7 @@ contract GovBlocksMaster {
         constant 
         returns(address contractAddress) 
     {
-        require(isAuthorizedGBOwner(_gbUserName, msg.sender) == true);
+        require(isAuthorizedGBOwner(_gbUserName, msg.sender));
         address master = govBlocksDapps[_gbUserName].masterAddress;
         master = Master(master);
         uint16 versionNo = master.versionLength() - 1;

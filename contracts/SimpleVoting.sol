@@ -71,7 +71,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     /// @dev Changes master address
     /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) public {
-        if (masterAddress == 0x000)
+        if (masterAddress == address(0))
             masterAddress = _masterContractAddress;
         else {
             master = Master(masterAddress);

@@ -46,7 +46,7 @@ contract Pool is usingOraclize, Upgradeable {
     /// @dev Changes master address
     /// @param _add New master address
     function changeMasterAddress(address _add) public {
-        if (masterAddress == 0x000)
+        if (masterAddress == address(0))
             masterAddress = _add;
         else {
             master = Master(masterAddress);
@@ -58,13 +58,13 @@ contract Pool is usingOraclize, Upgradeable {
 
     modifier onlyInternal {
         master = Master(masterAddress);
-        require(master.isInternal(msg.sender) == true);
+        require(master.isInternal(msg.sender));
         _;
     }
 
     modifier onlyOwner {
         master = Master(masterAddress);
-        require(master.isOwner(msg.sender) == true);
+        require(master.isOwner(msg.sender));
         _;
     }
 

@@ -337,13 +337,13 @@ contract GovernanceData is Upgradeable {
 
     modifier onlyInternal {
         master = Master(masterAddress);
-        require(master.isInternal(msg.sender) == true);
+        require(master.isInternal(msg.sender));
         _;
     }
 
     modifier onlyOwner {
         master = Master(masterAddress);
-        require(master.isOwner(msg.sender) == true);
+        require(master.isOwner(msg.sender));
         _;
     }
 
@@ -354,17 +354,17 @@ contract GovernanceData is Upgradeable {
 
     /*modifier onlyGBM {
         master = Master(masterAddress);
-        require(master.isGBM(msg.sender) == true);
+        require(master.isGBM(msg.sender));
         _;
     }*/
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) public {
-        if (masterAddress == 0x000)
+        if (masterAddress == address(0))
             masterAddress = _masterContractAddress;
         else {
             master = Master(masterAddress);
-            require(master.isInternal(msg.sender) == true);
+            require(master.isInternal(msg.sender));
             masterAddress = _masterContractAddress;
         }
     }
@@ -406,13 +406,13 @@ contract GovernanceData is Upgradeable {
 
     /// @dev Initiates governance data
     function governanceDataInitiate() public {
-        require(constructorCheck == false);
+        require(!constructorCheck);
         setGlobalParameters();
         addMemberReputationPoints();
-        setVotingTypeDetails("Simple Voting", 0x00);
+        setVotingTypeDetails("Simple Voting", address(0));
         //setVotingTypeDetails("Rank Based Voting", null_address);
         //setVotingTypeDetails("Feature Weighted Voting", null_address);
-        allVotes.push(ProposalVote(0x00, new uint[](0), 0, 0));
+        allVotes.push(ProposalVote(address(0), new uint[](0), 0, 0));
         constructorCheck = true;
     }
 

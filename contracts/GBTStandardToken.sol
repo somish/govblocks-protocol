@@ -66,7 +66,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
 
     function transferMessage(address _to, uint256 _value, bytes32 _message) public returns(bool) {
         bool trf = transfer(_to, _value);
-        if (_message != "" && trf == true)
+        if (_message != "" && trf)
             TransferGBT(msg.sender, _to, _value, _message);
         return true;
     }
@@ -91,7 +91,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     ) 
         public 
     {
-        require(verifyTxHash[_lockTokenTxHash] == false);
+        require(!verifyTxHash[_lockTokenTxHash]);
         require(verifySign(_memberAddress, msg.sender, _amount, _validUpto, _lockTokenTxHash, _v, _r, _s));
 
         userLockToken[_memberAddress].push(Lock(_amount, _validUpto));
@@ -111,7 +111,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     ) 
         public 
     {
-        require(verifyTxHash[_lockTokenTxHash] == false);
+        require(!verifyTxHash[_lockTokenTxHash]);
         uint lockAmount = SafeMath.sub(_stake, _depositAmount);
         require(verifySign(_memberAddress, msg.sender, lockAmount, _validUpto, _lockTokenTxHash, _v, _r, _s));
         

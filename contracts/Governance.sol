@@ -94,7 +94,7 @@ contract Governance is Upgradeable {
     /// @dev Changes master address
     /// @param _masterAddress New master address
     function changeMasterAddress(address _masterAddress) public {
-        if (masterAddress == 0x000)
+        if (masterAddress == address(0))
             masterAddress = _masterAddress;
         else {
             master = Master(masterAddress);
@@ -121,7 +121,7 @@ contract Governance is Upgradeable {
         address votingAddress = governanceDat.getVotingTypeAddress(_votingTypeId);
         uint8 category = proposalCategory.getCategoryIdBySubId(_categoryId);
         uint _proposalId = governanceDat.getProposalLength();
-        governanceDat.setSolutionAdded(_proposalId, 0x00, "0x00");
+        governanceDat.setSolutionAdded(_proposalId, address(0), "address(0)");
         governanceDat.callProposalEvent(
             msg.sender, 
             _proposalId, 

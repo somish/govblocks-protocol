@@ -92,7 +92,7 @@ contract ProposalCategory {
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) public {
-        if (masterAddress == 0x000)
+        if (masterAddress == address(0))
             masterAddress = _masterContractAddress;
         else {
             master = Master(masterAddress);
@@ -116,7 +116,7 @@ contract ProposalCategory {
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
     function proposalCategoryInitiate() public {
-        require(constructorCheck == false);
+        require(!constructorCheck);
         
         master = Master(masterAddress);
         
@@ -135,7 +135,7 @@ contract ProposalCategory {
         allCategory.push(Category("Others not specified", roleSeq, majVote, closeTime, 0, maxInt, 0, 40, 40, 20));
         
         allSubIdByCategory[0].push(0);
-        allSubCategory.push(SubCategory("Uncategorized", "", 0, 0x00));
+        allSubCategory.push(SubCategory("Uncategorized", "", 0, address(0)));
         allSubIdByCategory[1].push(1);
         allSubCategory.push(SubCategory(
                 "Add new member role",
@@ -543,7 +543,7 @@ contract ProposalCategory {
             )
         );
         allSubIdByCategory[4].push(8);
-        allSubCategory.push(SubCategory("Others, not specified", "", 4, 0x00));
+        allSubCategory.push(SubCategory("Others, not specified", "", 4, address(0)));
     }
 
     // /// @dev Sets closing time for the category

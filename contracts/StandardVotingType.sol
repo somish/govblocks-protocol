@@ -46,18 +46,18 @@ contract StandardVotingType is Upgradeable{
 
     modifier onlyInternal {
         MS = Master(masterAddress);
-        require(MS.isInternal(msg.sender) == true);
+        require(MS.isInternal(msg.sender));
         _;
     }
 
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) {
-        if (masterAddress == 0x000)
+        if (masterAddress == address(0))
             masterAddress = _masterContractAddress;
         else {
             MS = Master(masterAddress);
-            require(MS.isInternal(msg.sender) == true);
+            require(MS.isInternal(msg.sender));
             masterAddress = _masterContractAddress;
         }
     }
@@ -140,7 +140,7 @@ contract StandardVotingType is Upgradeable{
             }
         }
 
-        if (checkForThreshold(_proposalId, _mrSequenceId) == true) {
+        if (checkForThreshold(_proposalId, _mrSequenceId)) {
             closeProposalVoteSVT1(finalVoteValue[max], totalVoteValue, category, _proposalId, max);
         } else {
             uint8 interVerdict = GD.getProposalIntermediateVerdict(_proposalId);
