@@ -557,10 +557,10 @@ contract Governance is Upgradeable {
     {
         uint allProposalLength = governanceDat.getProposalLength();
         uint lastIndex = 0;
-        uint category;
         uint finalVredict;
         uint proposalStatus;
         uint calcReward;
+        uint8 category;
         uint32 addProposalOwnerPoints;
         (addProposalOwnerPoints, , , , , ) = governanceDat.getMemberReputationPoints();
 
