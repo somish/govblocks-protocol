@@ -21,7 +21,7 @@ import "./Upgradeable.sol";
 
 contract ProposalCategory {
     bool public constructorCheck;
-    uint maxInt = 0 - 1;
+    uint maxInt = uint256(0) - uint256(1);
     
     struct Category {
         string name;
