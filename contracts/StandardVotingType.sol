@@ -17,7 +17,7 @@
  * @title votingType interface for All Types of voting.
  */
 
-pragma solidity ^ 0.4.8;
+pragma solidity ^0.4.24;
 
 import "./ProposalCategory.sol";
 import "./GovernanceData.sol";
