@@ -583,7 +583,12 @@ contract GovernanceData is Upgradeable {
             uint proposalId
         ) 
     {
-        return (allVotes[_voteid].voter, allVotes[_voteid].solutionChosen, allVotes[_voteid].voteValue, allVotes[_voteid].proposalId);
+        return (
+            allVotes[_voteid].voter, 
+            allVotes[_voteid].solutionChosen, 
+            allVotes[_voteid].voteValue, 
+            allVotes[_voteid].proposalId
+        );
     }
 
     /// @dev Gets Vote id Against proposal when passing proposal id and member addresse
@@ -1093,14 +1098,15 @@ contract GovernanceData is Upgradeable {
 
         for (uint i = 0; i < _proposalLength; i++) {
             proposalStatus = getProposalStatus(i);
-            if (proposalStatus < 2)
+            if (proposalStatus < 2) {
                 _draftProposals++;
-            else if (proposalStatus == 2)
+            } else if (proposalStatus == 2) {
                 _pendingProposals++;
-            else if (proposalStatus == 3)
+            } else if (proposalStatus == 3) {
                 _acceptedProposals++;
-            else if (proposalStatus >= 4)
+            } else if (proposalStatus >= 4) {
                 _rejectedProposals++;
+            }
         }
     }
 
@@ -1127,14 +1133,15 @@ contract GovernanceData is Upgradeable {
 
         for (uint i = 0; i < _proposalsIds.length; i++) {
             proposalStatus = getProposalStatus(_proposalsIds[i]);
-            if (proposalStatus < 2)
+            if (proposalStatus < 2) {
                 draftProposals++;
-            else if (proposalStatus == 2)
+            } else if (proposalStatus == 2) {
                 pendingProposals++;
-            else if (proposalStatus == 3)
+            } else if (proposalStatus == 3) {
                 acceptedProposals++;
-            else if (proposalStatus >= 4)
+            } else if (proposalStatus >= 4) {
                 rejectedProposals++;
+            }
         }
     }
 

@@ -21,7 +21,7 @@ import "./Upgradeable.sol";
 
 contract ProposalCategory {
     bool public constructorCheck;
-    uint constant maxInt = uint256(0) - uint256(1);
+    uint constant INT_MAX = uint256(0) - uint256(1);
     
     struct Category {
         string name;
@@ -85,7 +85,10 @@ contract ProposalCategory {
 
     modifier onlySV {
         master = Master(masterAddress);
-        require(master.getLatestAddress("SV") == msg.sender || master.isInternal(msg.sender) || master.isOwner(msg.sender));
+        require(master.getLatestAddress("SV") == msg.sender 
+            || master.isInternal(msg.sender) 
+            || master.isOwner(msg.sender)
+        );
         _;
     }
 
@@ -120,19 +123,19 @@ contract ProposalCategory {
         
         master = Master(masterAddress);
         
-        uint8[] memory roleSeq = new uint8[](1);
-        uint8[] memory majVote = new uint8[](1);
-        uint32[] memory closeTime = new uint32[](1);
+        uint8[] memory rs = new uint8[](1);
+        uint8[] memory mv = new uint8[](1);
+        uint32[] memory ct = new uint32[](1);
         
-        roleSeq[0] = 1;
-        majVote[0] = 50;
-        closeTime[0] = 1800;
+        rs[0] = 1;
+        mv[0] = 50;
+        ct[0] = 1800;
         
-        allCategory.push(Category("Uncategorized", roleSeq, majVote, closeTime, 0, 0, 0, 0, 0, 0));
-        allCategory.push(Category("Change to member role", roleSeq, majVote, closeTime, 0, maxInt, 10**19, 40, 40, 20));
-        allCategory.push(Category("Changes to categories", roleSeq, majVote, closeTime, 0, maxInt, 0, 40, 40, 20));
-        allCategory.push(Category("Changes in parameters", roleSeq, majVote, closeTime, 0, maxInt, 0, 40, 40, 20));
-        allCategory.push(Category("Others not specified", roleSeq, majVote, closeTime, 0, maxInt, 0, 40, 40, 20));
+        allCategory.push(Category("Uncategorized", rs, mv, ct, 0, 0, 0, 0, 0, 0));
+        allCategory.push(Category("Change to member role", rs, mv, ct, 0, INT_MAX, 10**19, 40, 40, 20));
+        allCategory.push(Category("Changes to categories", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Changes in parameters", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Others not specified", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
         
         allSubIdByCategory[0].push(0);
         allSubCategory.push(SubCategory("Uncategorized", "", 0, address(0)));
@@ -176,7 +179,9 @@ contract ProposalCategory {
         public
         onlySV 
     {
-        require(_memberRoleSequence.length == _memberRoleMajorityVote.length && _memberRoleMajorityVote.length == _closingTime.length);
+        require(_memberRoleSequence.length == _memberRoleMajorityVote.length 
+            && _memberRoleMajorityVote.length == _closingTime.length
+        );
         allCategory.push(Category(
                 _categoryData, 
                 _memberRoleSequence, 
@@ -251,10 +256,13 @@ contract ProposalCategory {
     /// @dev Update Sub category of a specific category.
     /// @param _subCategoryId Id of subcategory that needs to be updated
     /// @param _actionHash Updated Automated Action hash i.e. Either contract address or function name is changed.
-    function updateSubCategory(string _categoryName, string _actionHash, uint _subCategoryId, address _contractAddress) public onlySV {
+    function updateSubCategory(string _categoryName, string _actionHash, uint _subCategoryId, address _address) 
+        public 
+        onlySV 
+    {
         allSubCategory[_subCategoryId].categoryName = _categoryName;
         allSubCategory[_subCategoryId].actionHash = _actionHash;
-        allSubCategory[_subCategoryId].contractAddress = _contractAddress;
+        allSubCategory[_subCategoryId].contractAddress = _address;
     }
 
     /// @dev Get Sub category details such as Category name, Automated action hash and Main category id
@@ -428,7 +436,7 @@ contract ProposalCategory {
     /// @dev Gets Closing time at particular index from Closing time array
     /// @param _categoryId Id of main category
     /// @param _index Current voting status againt proposal act as an index here
-    function getClosingTimeAtIndex(uint _categoryId, uint _index) public constant returns(uint closeTime) {
+    function getClosingTimeAtIndex(uint _categoryId, uint _index) public constant returns(uint ct) {
         return allCategory[_categoryId].closingTime[_index];
     }
 
@@ -474,7 +482,7 @@ contract ProposalCategory {
     function getCategoryData3(uint _categoryId, uint _currVotingIndex) 
         public
         constant 
-        returns(uint8 roleSequence, uint majorityVote, uint closingTime) 
+        returns(uint8  rsuence, uint majorityVote, uint closingTime) 
     {
         return (
             allCategory[_categoryId].memberRoleSequence[_currVotingIndex], 
@@ -554,10 +562,10 @@ contract ProposalCategory {
     //     allCategory[_categoryId].closingTime.push(_time);
     // }
 
-    // /// @dev Sets role sequence for categoryId=_categoryId and role sequence=_roleSequence
-    // function setRoleSequence(uint _categoryId,uint8 _roleSequence)
+    // /// @dev Sets role sequence for categoryId=_categoryId and role sequence=_ rsuence
+    // function setRoleSequence(uint _categoryId,uint8 _ rsuence)
     // {
-    //     allCategory[_categoryId].memberRoleSequence.push(_roleSequence);
+    //     allCategory[_categoryId].memberRoleSequence.push(_ rsuence);
     // }
 
     // /// @dev Sets majority vote for category id=_categoryId and majority value=_majorityVote

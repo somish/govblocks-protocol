@@ -755,7 +755,7 @@ contract Governance is Upgradeable {
             getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
 
         if (proposalStatus < 2)
-                lastIndex = _voteNo;
+            lastIndex = _voteNo;
         if (finalVredict > 0 && solutionChosen == finalVredict && returnedTokensFlag == 0 && totalReward != 0) {
             calcReward = (proposalCategory.getRewardPercVote(category) * voteValue) 
                 / (100 * totalReward * governanceDat.getProposalTotalVoteValue(_proposalId));

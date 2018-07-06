@@ -27,7 +27,7 @@ contract MemberRoles is Upgradeable {
     bool public constructorCheck;
     address public masterAddress;
     Master internal master;
-    uint constant maxInt = uint256(0) - uint256(1);
+    uint constant INT_MAX = uint256(0) - uint256(1);
 
     struct MemberRoleDetails {
         uint32 memberCounter;
@@ -86,7 +86,11 @@ contract MemberRoles is Upgradeable {
 
     modifier onlySV {
         master = Master(masterAddress);
-        require(master.getLatestAddress("SV") == msg.sender || master.isInternal(msg.sender) || master.isOwner(msg.sender));
+        require(
+            master.getLatestAddress("SV") == msg.sender 
+            || master.isInternal(msg.sender) 
+            || master.isOwner(msg.sender)
+        );
         _;
     }
 
@@ -133,8 +137,7 @@ contract MemberRoles is Upgradeable {
         for (uint8 i = 0; i < getTotalMemberRoles(); i++) {
             if (memberRoleData[i].memberActive[_memberAddress] 
                 && memberRoleData[i].validity[_memberAddress] > now
-            ) 
-            {
+            ) {
                 assignedRoles[j] = i;
                 j++;
             }
@@ -147,7 +150,8 @@ contract MemberRoles is Upgradeable {
     /// @param _roleId Checks member's authenticity with the roleId. 
     /// i.e. Returns true if this roleId is assigned to member
     function checkRoleIdByAddress(address _memberAddress, uint32 _roleId) public constant returns(bool) {
-        if (memberRoleData[_roleId].memberActive[_memberAddress] && memberRoleData[_roleId].validity[_memberAddress] > now)
+        if (memberRoleData[_roleId].memberActive[_memberAddress] 
+            && memberRoleData[_roleId].validity[_memberAddress] > now)
             return true;
         else
             return false;
@@ -219,8 +223,9 @@ contract MemberRoles is Upgradeable {
         allMemberAddress = new address[](length);
         for (uint8 i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
-            if (memberRoleData[_memberRoleId].memberActive[member] &&  memberRoleData[_memberRoleId].validity[member] > now) 
-            {
+            if (memberRoleData[_memberRoleId].memberActive[member]
+                && memberRoleData[_memberRoleId].validity[member] > now
+            ) {
                 allMemberAddress[j] = member;
                 j++;
             }
@@ -289,7 +294,7 @@ contract MemberRoles is Upgradeable {
         memberRoleData[1].memberCounter = SafeMath.add32(memberRoleData[1].memberCounter, 1);
         memberRoleData[1].memberActive[ownAddress] = true;
         memberRoleData[1].memberAddress.push(ownAddress);
-        memberRoleData[1].validity[ownAddress] = maxInt;
+        memberRoleData[1].validity[ownAddress] = INT_MAX;
     }
 
     /// @dev Get Total number of role ids that has been assigned to a member so far.

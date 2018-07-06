@@ -205,7 +205,41 @@ contract Master is Ownable, Upgradeable {
     /// @dev Gets latest contract address
     /// @param _contractName Contract name to fetch
     function getLatestAddress(bytes2 _contractName) public constant returns(address contractAddress) {
-        contractAddress = allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo][_contractName];
+        contractAddress =
+            allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo][_contractName];
+    }
+
+    /// @dev Configures global parameters i.e. Voting or Reputation parameters
+    /// @param _typeOf Passing intials of the parameter name which value needs to be updated
+    /// @param _value New value that needs to be updated    
+    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public {
+        require(msg.sender == 
+            allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["SV"]
+        );
+        GovernanceData governanceDat = GovernanceData(
+                    allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["GD"]
+                );
+        if (_typeOf == "APO") {
+            governanceDat.changeProposalOwnerAdd(_value);
+        } else if (_typeOf == "AOO") {
+            governanceDat.changeSolutionOwnerAdd(_value);
+        } else if (_typeOf == "AVM") {
+            governanceDat.changeMemberAdd(_value);
+        } else if (_typeOf == "SPO") {
+            governanceDat.changeProposalOwnerSub(_value);
+        } else if (_typeOf == "SOO") {
+            governanceDat.changeSolutionOwnerSub(_value);
+        } else if (_typeOf == "SVM") {
+            governanceDat.changeMemberSub(_value);
+        } else if (_typeOf == "GBTS") {
+            governanceDat.changeGBTStakeValue(_value);
+        } else if (_typeOf == "MSF") {
+            governanceDat.changeMembershipScalingFator(_value);
+        } else if (_typeOf == "SW") {
+            governanceDat.changeScalingWeight(_value);
+        } else if (_typeOf == "QP") {
+            governanceDat.changeQuorumPercentage(_value);
+        }
     }
 
     /// @dev Save the initials of all the contracts
@@ -259,38 +293,5 @@ contract Master is Ownable, Upgradeable {
             up.updateDependencyAddresses();
         }
         addRemoveAddress(versionLength - 1, allContractNames[allContractNames.length - 1]);
-    }
-
-    /// @dev Configures global parameters i.e. Voting or Reputation parameters
-    /// @param _typeOf Passing intials of the parameter name which value needs to be updated
-    /// @param _value New value that needs to be updated    
-    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public {
-        require(msg.sender == 
-            allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["SV"]
-        );
-        GovernanceData governanceDat = GovernanceData(
-                    allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["GD"]
-                );
-        if (_typeOf == "APO") {
-            governanceDat.changeProposalOwnerAdd(_value);
-        } else if (_typeOf == "AOO") {
-            governanceDat.changeSolutionOwnerAdd(_value);
-        } else if (_typeOf == "AVM") {
-            governanceDat.changeMemberAdd(_value);
-        } else if (_typeOf == "SPO") {
-            governanceDat.changeProposalOwnerSub(_value);
-        } else if (_typeOf == "SOO") {
-            governanceDat.changeSolutionOwnerSub(_value);
-        } else if (_typeOf == "SVM") {
-            governanceDat.changeMemberSub(_value);
-        } else if (_typeOf == "GBTS") {
-            governanceDat.changeGBTStakeValue(_value);
-        } else if (_typeOf == "MSF") {
-            governanceDat.changeMembershipScalingFator(_value);
-        } else if (_typeOf == "SW") {
-            governanceDat.changeScalingWeight(_value);
-        } else if (_typeOf == "QP") {
-            governanceDat.changeQuorumPercentage(_value);
-        }
     }
 }
