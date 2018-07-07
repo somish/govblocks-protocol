@@ -277,9 +277,9 @@ contract GovernanceData is Upgradeable {
 
     struct ProposalVote {
         address voter;
-        uint[] solutionChosen;
-        uint voteValue;
-        uint proposalId;
+        uint64[] solutionChosen;
+        uint64 voteValue;
+        uint64 proposalId;
     }
 
     struct LastReward {
@@ -412,7 +412,7 @@ contract GovernanceData is Upgradeable {
         setVotingTypeDetails("Simple Voting", address(0));
         //setVotingTypeDetails("Rank Based Voting", null_address);
         //setVotingTypeDetails("Feature Weighted Voting", null_address);
-        allVotes.push(ProposalVote(address(0), new uint[](0), 0, 0));
+        allVotes.push(ProposalVote(address(0), new uint64[](0), 0, 0));
         constructorCheck = true;
     }
 
@@ -547,14 +547,26 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Add vote details such as Solution id to which he has voted and vote value
-    function addVote(address _memberAddress, uint[] _solutionChosen, uint _voteValue, uint _proposalId, uint _roleId) 
+    function addVote(
+        address _memberAddress, 
+        uint64[] _solutionChosen, 
+        uint _voteStake, 
+        uint64 _voteValue, 
+        uint64 _proposalId, 
+        uint _roleId
+    ) 
         public 
         onlyInternal
     {
         proposalRoleVote[_proposalId][_roleId].push(allVotes.length);
         allVotesByMember[_memberAddress].push(allVotes.length);
         addressProposalVote[_memberAddress][_proposalId] = allVotes.length;
+        Vote(_memberAddress, _proposalId, now, _voteStake, allVotes.length);
         allVotes.push(ProposalVote(_memberAddress, _solutionChosen, _voteValue, _proposalId));
+        allProposalData[_proposalId].totalVoteValue = allProposalData[_proposalId].totalVoteValue 
+            + _voteValue;
+
+
     }
 
     function getAllVoteIdsByAddress(address _memberAddress) public constant returns(uint[]) {
@@ -578,9 +590,9 @@ contract GovernanceData is Upgradeable {
         constant 
         returns(
             address voter, 
-            uint[] solutionChosen, 
-            uint voteValue,
-            uint proposalId
+            uint64[] solutionChosen, 
+            uint64 voteValue,
+            uint64 proposalId
         ) 
     {
         return (
@@ -668,7 +680,7 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Returns the solution index that was being voted
-    function getSolutionByVoteId(uint _voteId) public constant returns(uint[] solutionChosen) {
+    function getSolutionByVoteId(uint _voteId) public constant returns(uint64[] solutionChosen) {
         return (allVotes[_voteId].solutionChosen);
     }
 

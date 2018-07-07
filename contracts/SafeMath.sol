@@ -38,9 +38,18 @@ library SafeMath {
     return c;
   }
   
-   function add32(uint32 a, uint32 b) internal constant returns (uint32) {
+  function add32(uint32 a, uint32 b) internal constant returns (uint32) {
     uint32 c = a + b;
     assert(c >= a);
+    return c;
+  }
+
+  function mul64(uint a, uint b) internal constant returns (uint64) {
+    if (a == 0) {
+      return 0;
+    }
+    uint64 c = uint64(a * b);
+    require(c / a == b);
     return c;
   }
 }

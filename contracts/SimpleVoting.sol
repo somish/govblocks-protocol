@@ -226,8 +226,8 @@ contract SimpleVoting is VotingType, Upgradeable {
     /// @param _proposalId Proposal id
     /// @param _solutionChosen solution id chosen while voting as a proposal might have different solution
     function proposalVotingInEther(
-        uint _proposalId, 
-        uint[] _solutionChosen, 
+        uint64 _proposalId, 
+        uint64[] _solutionChosen, 
         uint _validityUpto, 
         uint8 _v, 
         bytes32 _r, 
@@ -246,8 +246,8 @@ contract SimpleVoting is VotingType, Upgradeable {
     /// @param _solutionChosen solution chosen while voting
     /// @param _voteStake Amount payable in GBT tokens
     function proposalVoting(
-        uint _proposalId, 
-        uint[] _solutionChosen, 
+        uint64 _proposalId, 
+        uint64[] _solutionChosen, 
         uint _voteStake, 
         uint _validityUpto, 
         uint8 _v, 
@@ -280,7 +280,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     }
 
     /// @dev Returns true if the member passes all the checks to vote. i.e. If he is authorize to vote
-    function validateMember(uint _proposalId, uint[] _solutionChosen) public constant returns(bool) {
+    function validateMember(uint _proposalId, uint64[] _solutionChosen) public constant returns(bool) {
         uint8 _mrSequence;
         uint8 category;
         uint currentVotingId;
@@ -304,7 +304,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     function getVoteValueGivenByMember(address _memberAddress, uint _memberStake)  
         public
         constant 
-        returns(uint finalVoteValue) 
+        returns(uint64 finalVoteValue) 
     {
         uint tokensHeld = 
             SafeMath.div(
@@ -319,7 +319,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                 Math.max256(_memberStake, governanceDat.scalingWeight()), 
                 Math.max256(tokensHeld, governanceDat.membershipScalingFactor())
             );
-        finalVoteValue = SafeMath.mul(governanceDat.getMemberReputation(_memberAddress), value);
+        finalVoteValue = SafeMath.mul64(governanceDat.getMemberReputation(_memberAddress), value);
     }
 
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
@@ -531,25 +531,25 @@ contract SimpleVoting is VotingType, Upgradeable {
     /// @param _solutionChosen solution chosen while casting vote against proposal.
     /// @param _memberAddress Voter address who is casting a vote.
     /// @param _voteStake Vote stake in GBT while casting a vote
-    function castVote(uint _proposalId, uint[] _solutionChosen, address _memberAddress, uint _voteStake) internal {
-        uint voteId = governanceDat.allVotesTotal();
-        uint finalVoteValue = getVoteValueGivenByMember(_memberAddress, _voteStake);
+    function castVote(uint64 _proposalId, uint64[] _solutionChosen, address _memberAddress, uint _voteStake) internal {
+        //uint voteId = governanceDat.allVotesTotal();
+        uint64 finalVoteValue = getVoteValueGivenByMember(_memberAddress, _voteStake);
         uint32 _roleId;
         uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
 
         // uint category=GD.getProposalCategory(_proposalId);
         uint currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
         (_roleId, , ) = proposalCategory.getCategoryData3(category, currVotingId);
-        governanceDat.addVote(msg.sender, _solutionChosen, finalVoteValue, _proposalId, _roleId);
+        governanceDat.addVote(msg.sender, _solutionChosen, _voteStake, finalVoteValue, _proposalId, _roleId);
         //governanceDat.setVoteIdAgainstMember(_memberAddress, _proposalId);
         //governanceDat.setVoteIdAgainstProposalRole(_proposalId, _roleId, voteId);
         // GD.setVoteValue(voteId, finalVoteValue);
         // GD.setSolutionChosen(voteId, _solutionChosen[0]);
-        governanceDat.setProposalTotalVoteValue(
-            _proposalId, 
-            finalVoteValue + governanceDat.getProposalTotalVoteValue(_proposalId)
-        );
-        governanceDat.callVoteEvent(_memberAddress, _proposalId, now, _voteStake, voteId);
+        //governanceDat.setProposalTotalVoteValue(
+        //    _proposalId, 
+        //    finalVoteValue + governanceDat.getProposalTotalVoteValue(_proposalId)
+        //);
+        //governanceDat.callVoteEvent(_memberAddress, _proposalId, now, _voteStake, voteId);
         governance.checkRoleVoteClosing(_proposalId, _roleId);
     }
 
