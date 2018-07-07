@@ -26,6 +26,8 @@ import "./ProposalCategory.sol";
 import "./GovBlocksMaster.sol";
 import "./BasicToken.sol";
 import "./Pool.sol";
+import "./Math.sol";
+import "./VotingType.sol";
 
 
 contract SimpleVoting is VotingType, Upgradeable {

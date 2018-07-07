@@ -20,6 +20,7 @@ import "./SafeMath.sol";
 import "./GBTStandardToken.sol";
 import "./Upgradeable.sol";
 import "./usingOraclize.sol";
+import "./SimpleVoting.sol";
 // import "./oraclizeAPI_0.4.sol";
 
 
@@ -39,6 +40,7 @@ contract Pool is usingOraclize, Upgradeable {
     bytes32[] public allAPIcall;
     address public masterAddress;
     Master internal master;
+    SimpleVoting internal simpleVoting;
     GBTStandardToken internal gbt;
 
     function () public payable {}
@@ -83,6 +85,7 @@ contract Pool is usingOraclize, Upgradeable {
     function updateDependencyAddresses() public {
         master = Master(masterAddress);
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
+        simpleVoting = SimpleVoting(master.getLatestAddress("SV"));
     }
 
     /// @dev converts pool ETH to GBT
@@ -105,24 +108,14 @@ contract Pool is usingOraclize, Upgradeable {
             myid2 = 
                 oraclize_query(
                     "URL", 
-                    strConcat(
-                        "http://a1.govblocks.io/closeProposalVoting.js/42/", 
-                        bytes32ToString(master.dAppName()), 
-                        "/", 
-                        uint2str(index)
-                    )
+                    ""
                 );
         else
             myid2 = 
                 oraclize_query(
                     _closingTime, 
                     "URL", 
-                    strConcat(
-                        "http://a1.govblocks.io/closeProposalVoting.js/42/", 
-                        bytes32ToString(master.dAppName()), 
-                        "/", 
-                        uint2str(index)
-                    )
+                    ""
                 );
 
         uint closeTime = now + _closingTime;
@@ -185,7 +178,8 @@ contract Pool is usingOraclize, Upgradeable {
     /// @param res Result string
     function __callback(bytes32 myid, string res) public {
         master = Master(masterAddress);
-        require(msg.sender != oraclize_cbAddress() && master.isOwner(msg.sender));
+        require(msg.sender == oraclize_cbAddress() || master.isOwner(msg.sender));
+        simpleVoting.closeProposalVote(allAPIid[myid].proposalId);
         allAPIid[myid].dateUpd = uint64(now);
     }
 

@@ -1197,16 +1197,15 @@ contract GovernanceData is Upgradeable {
         constant 
         returns(uint[] proposalIds, uint[] solutionProposalIds, uint totalSolution) 
     {
-        uint8 m;
         uint solutionProposalLength = getAllSolutionIdsLengthByAddress(_memberAddress);
         proposalIds = new uint[](solutionProposalLength);
         solutionProposalIds = new uint[](solutionProposalLength);
         for (uint i = 0; i < allProposal.length; i++) {
             for (uint j = 0; j < allProposalSolutions[i].length; j++) {
                 if (_memberAddress == getSolutionAddedByProposalId(i, j)) {
-                    proposalIds[m] = i;
-                    solutionProposalIds[m] = j;
-                    m++;
+                    proposalIds[totalSolution] = i;
+                    solutionProposalIds[totalSolution] = j;
+                    totalSolution++;
                 }
             }
         }
