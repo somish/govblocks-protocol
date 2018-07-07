@@ -280,7 +280,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     }
 
     /// @dev Returns true if the member passes all the checks to vote. i.e. If he is authorize to vote
-    function validateMember(uint _proposalId, uint[] _solutionChosen) public constant returns(bool) {
+    function validateMember(uint _proposalId, uint64[] _solutionChosen) public constant returns(bool) {
         uint8 _mrSequence;
         uint8 category;
         uint currentVotingId;
@@ -538,7 +538,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
 
         // uint category=GD.getProposalCategory(_proposalId);
-        //uint currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
+        uint currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
         (_roleId, , ) = proposalCategory.getCategoryData3(category, currVotingId);
         governanceDat.addVote(msg.sender, _solutionChosen, _voteStake, finalVoteValue, _proposalId, _roleId);
         //governanceDat.setVoteIdAgainstMember(_memberAddress, _proposalId);
