@@ -41,6 +41,7 @@ contract ProposalCategory {
         string actionHash;
         uint8 categoryId;
         address contractAddress;
+        bytes2 contractName;
     }
 
     SubCategory[] public allSubCategory;
@@ -138,13 +139,14 @@ contract ProposalCategory {
         allCategory.push(Category("Others not specified", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
         
         allSubIdByCategory[0].push(0);
-        allSubCategory.push(SubCategory("Uncategorized", "", 0, address(0)));
+        allSubCategory.push(SubCategory("Uncategorized", "", 0, address(0), "EX"));
         allSubIdByCategory[1].push(1);
         allSubCategory.push(SubCategory(
                 "Add new member role",
                 "QmT3sMfqAvTgCkcsdVgiHvMycEWoeoQiD86e4H744pqfhF",
                 1,
-                master.getLatestAddress("MR")
+                master.getLatestAddress("MR"),
+                "MR"
             )
         );
         allSubIdByCategory[1].push(2);
@@ -152,7 +154,8 @@ contract ProposalCategory {
                 "Update member role",
                 "QmV55gWxnEBF8reTrVKrhbg5QrwqA65kFhMEFWDnnpphrJ",
                 1,
-                master.getLatestAddress("MR")
+                master.getLatestAddress("MR"),
+                "MR"
             )
         );
 
@@ -244,34 +247,52 @@ contract ProposalCategory {
         string _categoryName, 
         string _actionHash, 
         uint8 _mainCategoryId, 
-        address _contractAddress
+        address _contractAddress,
+        bytes2 _contractName
     ) 
         public
         onlySV 
     {
         allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
-        allSubCategory.push(SubCategory(_categoryName, _actionHash, _mainCategoryId, _contractAddress));
+        allSubCategory.push(SubCategory(_categoryName, _actionHash, _mainCategoryId, _contractAddress, _contractName));
     }
 
     /// @dev Update Sub category of a specific category.
     /// @param _subCategoryId Id of subcategory that needs to be updated
     /// @param _actionHash Updated Automated Action hash i.e. Either contract address or function name is changed.
-    function updateSubCategory(string _categoryName, string _actionHash, uint _subCategoryId, address _address) 
+    function updateSubCategory(
+        string _categoryName, 
+        string _actionHash, 
+        uint _subCategoryId, 
+        address _address, 
+        bytes2 _contractName
+    ) 
         public 
         onlySV 
     {
         allSubCategory[_subCategoryId].categoryName = _categoryName;
         allSubCategory[_subCategoryId].actionHash = _actionHash;
         allSubCategory[_subCategoryId].contractAddress = _address;
+        allSubCategory[_subCategoryId].contractName = _contractName;
     }
 
     /// @dev Get Sub category details such as Category name, Automated action hash and Main category id
-    function getSubCategoryDetails(uint _subCategoryId) public constant returns(string, string, uint, address) {
+    function getSubCategoryDetails(uint _subCategoryId) 
+        public 
+        constant 
+        returns(string, string, uint, address, bytes2) 
+    {
+        address contractAddress;
+        if(allSubCategory[_subCategoryId].contractName == "EX")
+            contractAddress = allSubCategory[_subCategoryId].contractAddress;
+        else
+            contractAddress = master.getLatestAddress(allSubCategory[_subCategoryId].contractName);
         return (
             allSubCategory[_subCategoryId].categoryName, 
             allSubCategory[_subCategoryId].actionHash, 
             allSubCategory[_subCategoryId].categoryId, 
-            allSubCategory[_subCategoryId].contractAddress
+            contractAddress,
+            allSubCategory[_subCategoryId].contractName
         );
     }
 
@@ -282,7 +303,10 @@ contract ProposalCategory {
 
     /// @dev Get contractAddress 
     function getContractAddress(uint _subCategoryId) public constant returns(address _contractAddress) {
-        _contractAddress = allSubCategory[_subCategoryId].contractAddress;
+        if(allSubCategory[_subCategoryId].contractName == "EX")
+            _contractAddress = allSubCategory[_subCategoryId].contractAddress;
+        else
+            _contractAddress = master.getLatestAddress(allSubCategory[_subCategoryId].contractName);
     }
 
     /// @dev Get Sub category id at specific index when giving main category id 
@@ -515,7 +539,8 @@ contract ProposalCategory {
                 "Add new category",
                 "QmRLpTuiyW4st2jiWSzkAi25R9dbg57y5gBYMyb5r5tXQ6",
                 2,
-                master.getLatestAddress("PC")
+                master.getLatestAddress("PC"),
+                "PC"
             )
         );
         allSubIdByCategory[2].push(4);
@@ -523,7 +548,8 @@ contract ProposalCategory {
                 "Edit category",
                 "QmdbU7dDAtjVq6xyFNmu4K4AAHPookbNM3eZ8fUyMuuxYg",
                 2,
-                master.getLatestAddress("PC")
+                master.getLatestAddress("PC"),
+                "PC"
             )
         );
         allSubIdByCategory[2].push(5);
@@ -531,7 +557,8 @@ contract ProposalCategory {
                 "Add new sub category",
                 "QmdVXg2t6SPDrpFk4FXh6LApU6tSgojsnCXhZvm14Jo5S8",
                 2,
-                master.getLatestAddress("PC")
+                master.getLatestAddress("PC"),
+                "PC"
             )
         );
         allSubIdByCategory[2].push(6);
@@ -539,7 +566,8 @@ contract ProposalCategory {
                 "Edit sub category",
                 "QmYTMXdortXjDg73tHopPrxzPNow5sCUkuiG9M9ifSHZic",
                 2,
-                master.getLatestAddress("PC")
+                master.getLatestAddress("PC"),
+                "PC"
             )
         );
         allSubIdByCategory[3].push(7);
@@ -547,11 +575,12 @@ contract ProposalCategory {
                 "Configure parameters",
                 "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
                 3,
-                masterAddress
+                masterAddress,
+                "MS"
             )
         );
         allSubIdByCategory[4].push(8);
-        allSubCategory.push(SubCategory("Others, not specified", "", 4, address(0)));
+        allSubCategory.push(SubCategory("Others, not specified", "", 4, address(0), "EX"));
     }
 
     // /// @dev Sets closing time for the category
