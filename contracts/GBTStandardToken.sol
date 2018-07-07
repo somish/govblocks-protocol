@@ -38,6 +38,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     mapping(address => uint256) internal balances;
     mapping(bytes32 => bool) public verifyTxHash;
 
+    /// @dev constructor
     function GBTStandardToken() {
         owner = msg.sender;
         balances[address(this)] = 0;
@@ -64,6 +65,12 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return true;
     }
 
+    /**
+     * @dev transfer token for a specified address and raise event with message
+     * @param _to The address to transfer to.
+     * @param _value The amount to be transferred.
+     * @param _message The message to put in the event
+     */
     function transferMessage(address _to, uint256 _value, bytes32 _message) public returns(bool) {
         bool trf = transfer(_to, _value);
         if (_message != "" && trf)
@@ -80,6 +87,13 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return balances[_owner];
     }
 
+    /**
+     * @dev locks token of a user.
+     * @param _memberAddress The address of the use whose token are to be locked
+     * @param _amount Amount to be locked
+     * @param _validUpto lock validity
+     * @param _lockTokenTxHash this, along with _v, _r, _s are used to authorization
+     */
     function lockToken(
         address _memberAddress, 
         uint _amount, 
@@ -98,6 +112,14 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         verifyTxHash[_lockTokenTxHash] = true;
     }
 
+    /**
+     * @dev locks and deposits tokens of a user.
+     * @param _memberAddress The address of the use whose token are to be locked
+     * @param _stake Stake placed by the user
+     * @param _depositAmount amount to be deposited
+     * @param _validUpto lock validity
+     * @param _lockTokenTxHash this, along with _v, _r, _s are used to authorization
+     */
     function depositAndLockToken(
         address _memberAddress, 
         uint _stake,
@@ -126,6 +148,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
             );
     }
 
+    /// @dev Verifies the signature to authorize transactions
     function verifySign(
         address _memberAddress, 
         address _spender, 
@@ -144,6 +167,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return isValidSignature(hash, _memberAddress, _v, _r, _s);
     }
 
+    /// @dev generates order hash for verification
     function getOrderHash(
         address _memberAddress, 
         address _spender, 
@@ -158,6 +182,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return keccak256(_memberAddress, _spender, _amount, _validUpto, _lockTokenTxHash);
     }
 
+    /// @dev validates signature
     function isValidSignature(bytes32 hash, address _memberaddress, uint8 v, bytes32 r, bytes32 s) 
         public 
         constant 
@@ -170,6 +195,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return (a == _memberaddress);
     }
 
+    /// @dev returns the amount of locked user tokens
     function getLockToken(address _memberAddress) public constant returns(uint lockedTokens) {
         uint time = now;
         lockedTokens = 0;
@@ -194,6 +220,13 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return trf;
     }
 
+    /**
+     * @dev Transfer tokens from one address to another with a message
+     * @param _from address The address which you want to send tokens from
+     * @param _to address The address which you want to transfer to
+     * @param _value uint256 the amount of tokens to be transferred
+     * @param _message message for transfer
+     */
     function transferFromMessage(address _from, address _to, uint256 _value, bytes32 _message) public returns(bool) {
         require(_to != address(0));
         require(_value <= (balances[_from] - getLockToken(msg.sender)));
@@ -246,6 +279,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return true;
     }
 
+    /// @dev Decreases Approval for transfer by someone else
     function decreaseApproval(address _spender, uint _subtractedValue) public returns(bool success) {
         uint oldValue = allowed[msg.sender][_spender];
         if (_subtractedValue > oldValue) {
@@ -286,11 +320,13 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return true;
     }
 
+    /// @dev payable function to buy tokens. send ETH to get GBT
     function buyToken() public payable returns(uint actualAmount) {
         actualAmount = SafeMath.mul(SafeMath.div(msg.value, tokenPrice), 10 ** decimals);
         mint(msg.sender, actualAmount);
     }
 
+    /// @dev function to change Token price
     function changeTokenPrice(uint _price) public onlyOwner {
         uint _tokenPrice = _price;
         tokenPrice = _tokenPrice;
