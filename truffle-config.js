@@ -6,22 +6,30 @@ module.exports = {
   networks: {
     development: {
       gasPrice : 1,
-      provider: new HDWalletProvider(mnemonic, "https://parity.motv.ml/"),
+      provider: function() {
+        return new HDWalletProvider(mnemonic, "https://parity.motv.ml/");
+      },
       network_id: "*"
     },
     ropsten: {
       gasPrice : 1,
-      provider: new HDWalletProvider(mnemonic, "https://ropsten.infura.io/"),
+      provider: function() {
+        return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/");
+      },      
       network_id: 3
     },
     rinkeby: {
       gasPrice : 1,
-      provider: new HDWalletProvider(mnemonic, "https://rinkeby.infura.io/"),
+      provider: function() {
+        return new HDWalletProvider(mnemonic, "https://rinkeby.infura.io/");
+      },      
       network_id: 4
     },
     kovan: {
       gasPrice : 1,
-      provider: new HDWalletProvider(mnemonic, "https://kovan.infura.io/"),
+      provider: function() {
+        return new HDWalletProvider(mnemonic, "https://kovan.infura.io/");
+      },      
       network_id: 42
     }
   },

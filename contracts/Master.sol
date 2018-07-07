@@ -160,8 +160,7 @@ contract Master is Ownable, Upgradeable {
     /// @dev Checks the authenticity of changing address or switching to recent version 
     function isValidateOwner() public constant returns(bool) {
         gbm = GovBlocksMaster(gbmAddress);
-        uint16 version = versionLength - 1;
-        if ((version == 0 && msg.sender == owner) 
+        if ((versionLength == 0 && msg.sender == owner) 
                 || msg.sender == gbmAddress 
                 || gbm.isAuthorizedGBOwner(dAppName, msg.sender)) 
             return true;
