@@ -136,8 +136,9 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         require(!verifyTxHash[_lockTokenTxHash]);
         uint lockAmount = SafeMath.sub(_stake, _depositAmount);
         require(verifySign(_memberAddress, msg.sender, lockAmount, _validUpto, _lockTokenTxHash, _v, _r, _s));
-        
-        userLockToken[_memberAddress].push(Lock(lockAmount, _validUpto));
+        if (lockAmount != 0) {
+            userLockToken[_memberAddress].push(Lock(lockAmount, _validUpto));
+        }
         allowed[_memberAddress][msg.sender] = allowed[_memberAddress][msg.sender].add(_depositAmount);
         Approval(_memberAddress, msg.sender, allowed[_memberAddress][msg.sender]);
         verifyTxHash[_lockTokenTxHash] = transferFromMessage(

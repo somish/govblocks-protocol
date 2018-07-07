@@ -20,18 +20,19 @@ import "./Upgradeable.sol";
 
 
 contract MemberRoles is Upgradeable {
-    event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription);
+    event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription, bool limitedValidity);
     using SafeMath for uint;
     bytes32[] internal memberRole;
     uint8 internal authorizedAddressToCategorize;
     bool public constructorCheck;
     address public masterAddress;
     Master internal master;
-    uint constant INT_MAX = uint256(0) - uint256(1);
+    uint constant UINT_MAX = uint256(0) - uint256(1);
 
     struct MemberRoleDetails {
         uint32 memberCounter;
         mapping(address => bool) memberActive;
+        bool limitedValidity;
         mapping(address => uint) validity;
         address[] memberAddress;
     }
@@ -45,14 +46,15 @@ contract MemberRoles is Upgradeable {
         uint rolelength = getTotalMemberRoles();
         memberRole.push("");
         authorizedAddressAgainstRole[rolelength] = address(0);
-        MemberRole(rolelength, "", "");
+        MemberRole(rolelength, "", "", false);
         rolelength++;
         memberRole.push("Advisory Board");
         authorizedAddressAgainstRole[rolelength] = master.owner();
         MemberRole(
             rolelength, 
             "Advisory Board", 
-            "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp."
+            "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.",
+            false
         );
         rolelength++;
         memberRole.push("Token Holder");
@@ -60,7 +62,8 @@ contract MemberRoles is Upgradeable {
         MemberRole(
             rolelength, 
             "Token Holder", 
-            "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default."
+            "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.",
+            false
         );
         setOwnerRole();
         authorizedAddressToCategorize = 1;
@@ -136,7 +139,7 @@ contract MemberRoles is Upgradeable {
         assignedRoles = new uint32[](length);
         for (uint8 i = 0; i < getTotalMemberRoles(); i++) {
             if (memberRoleData[i].memberActive[_memberAddress] 
-                && memberRoleData[i].validity[_memberAddress] > now
+                && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now)
             ) {
                 assignedRoles[j] = i;
                 j++;
@@ -151,7 +154,7 @@ contract MemberRoles is Upgradeable {
     /// i.e. Returns true if this roleId is assigned to member
     function checkRoleIdByAddress(address _memberAddress, uint32 _roleId) public constant returns(bool) {
         if (memberRoleData[_roleId].memberActive[_memberAddress] 
-            && memberRoleData[_roleId].validity[_memberAddress] > now)
+            && (!memberRoleData[_roleId].limitedValidity || memberRoleData[_roleId].validity[_memberAddress] > now))
             return true;
         else
             return false;
@@ -161,11 +164,13 @@ contract MemberRoles is Upgradeable {
     /// @param _memberAddress Address of Member
     /// @param _roleId RoleId to update 
     /// @param _typeOf typeOf is set to be True if we want to assign this role to member, False otherwise!
+    /// @param _limitedValidity 0 if not limited, 1 if limited by validity.
     function updateMemberRole(
         address _memberAddress, 
         uint32 _roleId, 
         bool _typeOf,
-        uint _validity
+        uint _validity,
+        bool _limitedValidity
     ) 
         public 
         checkRoleAuthority(_roleId) 
@@ -176,11 +181,13 @@ contract MemberRoles is Upgradeable {
             memberRoleData[_roleId].memberActive[_memberAddress] = true;
             memberRoleData[_roleId].memberAddress.push(_memberAddress);
             memberRoleData[_roleId].validity[_memberAddress] = _validity;
+            memberRoleData[_roleId].limitedValidity = _limitedValidity;
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.sub32(memberRoleData[_roleId].memberCounter, 1);
             memberRoleData[_roleId].memberActive[_memberAddress] = false;
             memberRoleData[_roleId].validity[_memberAddress] = _validity;
+            memberRoleData[_roleId].limitedValidity = _limitedValidity;
         }
     }
 
@@ -206,11 +213,14 @@ contract MemberRoles is Upgradeable {
     /// @param _newRoleName New role name
     /// @param _roleDescription New description hash
     /// @param _canAddMembers Authorized member against every role id
-    function addNewMemberRole(bytes32 _newRoleName, string _roleDescription, address _canAddMembers) public onlySV {
+    function addNewMemberRole(bytes32 _newRoleName, string _roleDescription, address _canAddMembers, bool _limitedValidity) 
+        public 
+        onlySV 
+    {
         uint rolelength = getTotalMemberRoles();
         memberRole.push(_newRoleName);
         authorizedAddressAgainstRole[rolelength] = _canAddMembers;
-        MemberRole(rolelength, _newRoleName, _roleDescription);
+        MemberRole(rolelength, _newRoleName, _roleDescription, _limitedValidity);
     }
 
     /// @dev Gets the member addresses assigned by a specific role
@@ -224,7 +234,7 @@ contract MemberRoles is Upgradeable {
         for (uint8 i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
             if (memberRoleData[_memberRoleId].memberActive[member]
-                && memberRoleData[_memberRoleId].validity[member] > now
+                && (!memberRoleData[_memberRoleId].limitedValidity || memberRoleData[_memberRoleId].validity[member] > now)
             ) {
                 allMemberAddress[j] = member;
                 j++;
@@ -294,14 +304,15 @@ contract MemberRoles is Upgradeable {
         memberRoleData[1].memberCounter = SafeMath.add32(memberRoleData[1].memberCounter, 1);
         memberRoleData[1].memberActive[ownAddress] = true;
         memberRoleData[1].memberAddress.push(ownAddress);
-        memberRoleData[1].validity[ownAddress] = INT_MAX;
+        memberRoleData[1].validity[ownAddress] = UINT_MAX;
     }
 
     /// @dev Get Total number of role ids that has been assigned to a member so far.
     function getRoleIdLengthByAddress(address _memberAddress) internal constant returns(uint8 count) {
         uint length = getTotalMemberRoles();
         for (uint8 i = 0; i < length; i++) {
-            if (memberRoleData[i].memberActive[_memberAddress] && memberRoleData[i].validity[_memberAddress] > now)
+            if (memberRoleData[i].memberActive[_memberAddress] 
+                && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now))
                 count++;
         }
         return count;
