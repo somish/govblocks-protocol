@@ -21,6 +21,7 @@ import "./GBTStandardToken.sol";
 import "./GovBlocksMaster.sol";
 import "./Ownable.sol";
 import "./GovernanceData.sol";
+import "./GovernChecker.sol";
 
 
 contract Master is Ownable, Upgradeable {
@@ -59,13 +60,7 @@ contract Master is Ownable, Upgradeable {
         _;
     }
 
-    modifier onlyAuthorizedGB {
-        gbm = GovBlocksMaster(gbmAddress);
-        require(gbm.isAuthorizedGBOwner(dAppName, msg.sender));
-        _;
-    }
-
-    modifier onlyInternal {
+    modifier onlyInternal { //Owner to be removed before launch
         require(contractsActive[msg.sender] || owner == msg.sender);
         _;
     }
@@ -76,11 +71,9 @@ contract Master is Ownable, Upgradeable {
         check = true;
     }
 
-    /// @dev Checks for authorized Member for Dapp and returns true if the address is authorized in dApp.
-    /// @param _memberaddress Address to be checked
-    function isAuthGB(address _memberaddress) public constant returns(bool check) {
-        gbm = GovBlocksMaster(gbmAddress);
-        require(gbm.isAuthorizedGBOwner(dAppName, _memberaddress));
+    /// @dev Checks if the address is authorized to make changes.
+    function isAuth() public constant returns(bool check) {
+        require(getLatestAddress("SV") == msg.sender);
         check = true;
     }
 
@@ -108,7 +101,14 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Creates a new version of contract addresses
     /// @param _contractAddresses Array of nine contract addresses which will be generated
-    function addNewVersion(address[6] _contractAddresses) public onlyAuthorizedGB {
+    function addNewVersion(address[6] _contractAddresses) public {
+        if(versionLength == 0) {
+            GovernChecker governChecker = GovernChecker(0x2e3413b48992f6fee938a3111a710803073d5d7a);
+            governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
+        } else {
+            require(isAuth());
+        }
+
         gbm = GovBlocksMaster(gbmAddress);
         addContractDetails(versionLength, "MS", address(this));
         addContractDetails(versionLength, "GD", _contractAddresses[0]);
@@ -119,6 +119,7 @@ contract Master is Ownable, Upgradeable {
         addContractDetails(versionLength, "GV", _contractAddresses[4]);
         addContractDetails(versionLength, "PL", _contractAddresses[5]);
         addContractDetails(versionLength, "GS", gbm.getGBTAddress());
+        
         setVersionLength(versionLength + 1);
     }
 
@@ -162,7 +163,8 @@ contract Master is Ownable, Upgradeable {
         gbm = GovBlocksMaster(gbmAddress);
         if ((versionLength == 0 && msg.sender == owner) 
                 || msg.sender == gbmAddress 
-                || gbm.isAuthorizedGBOwner(dAppName, msg.sender)) 
+                || isAuth()
+        ) 
             return true;
     }
 
@@ -212,12 +214,9 @@ contract Master is Ownable, Upgradeable {
     /// @param _typeOf Passing intials of the parameter name which value needs to be updated
     /// @param _value New value that needs to be updated    
     function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public {
-        require(msg.sender == 
-            allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["SV"]
-        );
-        GovernanceData governanceDat = GovernanceData(
-                    allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo]["GD"]
-                );
+        require(isAuth());
+        GovernanceData governanceDat = GovernanceData(getLatestAddress("GD"));
+                    
         if (_typeOf == "APO") {
             governanceDat.changeProposalOwnerAdd(_value);
         } else if (_typeOf == "AOO") {

@@ -75,6 +75,12 @@ contract Pool is usingOraclize, Upgradeable {
         gasLimit = _gasLimit;
     }*/
 
+    /// @dev sets oraclize gasLimit
+    /// @param _gasLimit gas limit for oraclize queries
+    function setOraclizeGasLimit(uint _gasLimit) onlyOwner {
+        gasLimit = _gasLimit;
+    }
+
     modifier onlyInternal {
         master = Master(masterAddress);
         require(master.isInternal(msg.sender));

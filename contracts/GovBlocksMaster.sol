@@ -15,17 +15,18 @@
 
 pragma solidity ^0.4.24;
 import "./Master.sol";
+import "./GovernChecker.sol";
 
 
 contract GovBlocksMaster {
     Master internal master;
     address public owner;
     address public gbtAddress;
+    GovernChecker internal governChecker;
 
     struct GBDapps {
         address masterAddress;
         address tokenAddress;
-        address authGBAddress;
         string dappDescHash;
     }
 
@@ -48,23 +49,8 @@ contract GovBlocksMaster {
         require(owner == address(0));
         owner = msg.sender;
         gbtAddress = _gbtAddress;
+        governChecker = GovernChecker(0x2e3413b48992f6fee938a3111a710803073d5d7a);
         //   updateGBMAddress(address(this));  
-    }
-
-    /// @dev Changes Member address authorized to dApp
-    /// @param dAppName dApp name
-    /// @param _memberAddress Address of the member that needs to be assigned the dApp authority
-    function changedAppAuthorizedGB(bytes32 dAppName, address _memberAddress) public {
-        require(msg.sender == govBlocksDapps[dAppName].authGBAddress);
-        govBlocksDapps[dAppName].authGBAddress = _memberAddress;
-    }
-
-    /// @dev Checks for authorized address for dApp
-    /// @param dAppName dApp Name
-    /// @param _memberAddress Member's address to be checked against dApp authorized address
-    function isAuthorizedGBOwner(bytes32 dAppName, address _memberAddress) public constant returns(bool) {
-        if (govBlocksDapps[dAppName].authGBAddress == _memberAddress)
-            return true;
     }
 
     /// @dev Transfers ownership to new owner (of GBT contract address)
@@ -94,6 +80,7 @@ contract GovBlocksMaster {
             if (master.versionLength() > 0)
                 master.changeGBMAddress(_newGBMAddress);
         }
+        governChecker.updateGBMAdress(_newGBMAddress);
     }
 
     /// @dev Adds GovBlocks user
@@ -109,7 +96,6 @@ contract GovBlocksMaster {
         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
-        govBlocksDapps[_gbUserName].authGBAddress = owner;
         master = Master(_newMasterAddress);
         master.setOwner(msg.sender);
     }
@@ -118,7 +104,7 @@ contract GovBlocksMaster {
     /// @param _gbUserName dApp name
     /// @param _newMasterAddress dApp new master address
     function changeDappMasterAddress(bytes32 _gbUserName, address _newMasterAddress) public {
-        require(msg.sender == govBlocksDapps[_gbUserName].authGBAddress);
+        require(msg.sender == governChecker.authorized(_gbUserName));
         govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
     }
@@ -127,7 +113,7 @@ contract GovBlocksMaster {
     /// @param _gbUserName  dApp name
     /// @param _dappTokenAddress dApp new token address
     function changeDappTokenAddress(bytes32 _gbUserName, address _dappTokenAddress) public {
-        require(msg.sender == govBlocksDapps[_gbUserName].authGBAddress);
+        require(msg.sender == governChecker.authorized(_gbUserName));
         govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
     }
@@ -154,7 +140,7 @@ contract GovBlocksMaster {
 
     /// @dev Get Address of member that is authorized for a dApp.
     function getDappAuthorizedAddress(bytes32 _gbUserName) public constant returns(address) {
-        return govBlocksDapps[_gbUserName].authGBAddress;
+        return governChecker.authorized(_gbUserName);
     }
 
     /// @dev Gets dApp details
