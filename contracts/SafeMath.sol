@@ -44,11 +44,11 @@ library SafeMath {
     return c;
   }
 
-  function mul64(uint a, uint b) internal constant returns (uint64) {
+  function mul128(uint128 a, uint128 b) internal constant returns (uint128) {
     if (a == 0) {
       return 0;
     }
-    uint64 c = uint64(a * b);
+    uint128 c = a * b;
     require(c / a == b);
     return c;
   }

@@ -278,8 +278,8 @@ contract GovernanceData is Upgradeable {
     struct ProposalVote {
         address voter;
         uint64[] solutionChosen;
-        uint64 voteValue;
-        uint64 proposalId;
+        uint128 voteValue;
+        uint128 proposalId;
     }
 
     struct LastReward {
@@ -542,8 +542,8 @@ contract GovernanceData is Upgradeable {
         address _memberAddress, 
         uint64[] _solutionChosen, 
         uint _voteStake, 
-        uint64 _voteValue, 
-        uint64 _proposalId, 
+        uint128 _voteValue, 
+        uint128 _proposalId, 
         uint _roleId
     ) 
         public 
@@ -582,8 +582,8 @@ contract GovernanceData is Upgradeable {
         returns(
             address voter, 
             uint64[] solutionChosen, 
-            uint64 voteValue,
-            uint64 proposalId
+            uint128 voteValue,
+            uint128 proposalId
         ) 
     {
         return (

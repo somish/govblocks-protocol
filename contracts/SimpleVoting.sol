@@ -306,7 +306,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     function getVoteValueGivenByMember(address _memberAddress, uint _memberStake)  
         public
         constant 
-        returns(uint64 finalVoteValue) 
+        returns(uint128 finalVoteValue) 
     {
         uint tokensHeld = 
             SafeMath.div(
@@ -321,7 +321,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                 Math.max256(_memberStake, governanceDat.scalingWeight()), 
                 Math.max256(tokensHeld, governanceDat.membershipScalingFactor())
             );
-        finalVoteValue = SafeMath.mul64(governanceDat.getMemberReputation(_memberAddress), value);
+        finalVoteValue = SafeMath.mul128(governanceDat.getMemberReputation(_memberAddress), uint128(value));
     }
 
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
@@ -540,7 +540,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     /// @param _voteStake Vote stake in GBT while casting a vote
     function castVote(uint64 _proposalId, uint64[] _solutionChosen, address _memberAddress, uint _voteStake) internal {
         //uint voteId = governanceDat.allVotesTotal();
-        uint64 finalVoteValue = getVoteValueGivenByMember(_memberAddress, _voteStake);
+        uint128 finalVoteValue = getVoteValueGivenByMember(_memberAddress, _voteStake);
         uint32 _roleId;
         uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
 
