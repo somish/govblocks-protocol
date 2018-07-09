@@ -50,7 +50,7 @@ contract Pool is usingOraclize, Upgradeable {
 
     /// @dev Constructor
     function Pool() {
-        setOraclizeGas(1, 700000);
+        gasLimit = 600000;
     }
 
     /// @dev Changes master address
@@ -65,14 +65,15 @@ contract Pool is usingOraclize, Upgradeable {
         }
 
     }
-
+    /*
     /// @dev sets oraclize gasPrice and gasLimit
     /// @param _gasPrice gasPrice is gwei
     /// @param _gasLimit gas limit for oraclize queries
     function setOraclizeGas(uint _gasPrice, uint _gasLimit) onlyInternal {
-        oraclize_setCustomGasPrice(_gasPrice * 10**9);
+        uint gasPrice = _gasPrice * 10**9;
+        oraclize_setCustomGasPrice(gasPrice);
         gasLimit = _gasLimit;
-    }
+    }*/
 
     modifier onlyInternal {
         master = Master(masterAddress);

@@ -400,14 +400,18 @@ contract SimpleVoting is VotingType, Upgradeable {
             if (max > 0) {
                 currentVotingId = currentVotingId + 1;
                 if (currentVotingId < proposalCategory.getRoleSequencLength(category)) {
-                    governance.updateProposalDetails(_proposalId, currentVotingId, max, 0);
+                    governance.updateProposalDetails(
+                        _proposalId, 
+                        proposalCategory.getRoleSequencAtIndex(category, currentVotingId), 
+                        max, 
+                        0
+                    );
                     pool.closeProposalOraclise(_proposalId, _closingTime);
                     governanceDat.callOraclizeCallEvent(
                         _proposalId, 
                         governanceDat.getProposalDateUpd(_proposalId), 
                         proposalCategory.getClosingTimeAtIndex(category, currentVotingId)
                     );
-                    closeProposalVote(_proposalId);
                 } else {
                     governance.updateProposalDetails(_proposalId, currentVotingId, max, max);
                     governanceDat.changeProposalStatus(_proposalId, 3);

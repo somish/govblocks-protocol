@@ -467,7 +467,7 @@ contract ProposalCategory {
     /// @dev Gets Voting layer role sequence at particular index from Role sequence array
     /// @param _categoryId Id of main category
     /// @param _index Current voting status againt proposal act as an index here
-    function getRoleSequencAtIndex(uint _categoryId, uint _index) public constant returns(uint32 roleId) {
+    function getRoleSequencAtIndex(uint _categoryId, uint _index) public constant returns(uint8 roleId) {
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
 
