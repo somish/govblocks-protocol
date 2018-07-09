@@ -373,7 +373,7 @@ contract Governance is Upgradeable {
         ) 
     {
         memberReputation = governanceDat.getMemberReputation(_memberAddress);
-        totalProposal = getAllProposalIdsLengthByAddress(_memberAddress);
+        totalProposal = governanceDat.getAllProposalIdsLengthByAddress(_memberAddress);
         totalSolution = governanceDat.getAllSolutionIdsLengthByAddress(_memberAddress);
         totalVotes = governanceDat.getTotalNumberOfVotesByAddress(_memberAddress);
     }
@@ -407,21 +407,6 @@ contract Governance is Upgradeable {
         }
     }
     */
-    /// @dev Gets length of all created proposals by member
-    /// @param _memberAddress Member address
-    /// @return totalProposalCount Total proposal count
-    function getAllProposalIdsLengthByAddress(address _memberAddress) 
-        public 
-        constant 
-        returns(uint totalProposalCount) 
-    {
-        uint length = governanceDat.getProposalLength();
-        for (uint i = 0; i < length; i++) {
-            if (_memberAddress == governanceDat.getProposalOwner(i))
-                totalProposalCount++;
-        }
-    }
-
     /// @dev It fetchs the Index of solution provided by member against a proposal
     function getSolutionIdAgainstAddressProposal(
         address _memberAddress, 

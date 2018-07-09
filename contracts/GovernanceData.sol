@@ -934,6 +934,21 @@ contract GovernanceData is Upgradeable {
         finalVerdict = allProposalData[_proposalId].finalVerdict;
     }
 
+    /// @dev Gets length of all created proposals by member
+    /// @param _memberAddress Member address
+    /// @return totalProposalCount Total proposal count
+    function getAllProposalIdsLengthByAddress(address _memberAddress) 
+        public 
+        constant 
+        returns(uint totalProposalCount) 
+    {
+        uint length = getProposalLength();
+        for (uint i = 0; i < length; i++) {
+            if (_memberAddress == getProposalOwner(i))
+                totalProposalCount++;
+        }
+    }
+
     /// @dev Gets date when proposal is last updated
     function getProposalDateUpd(uint _proposalId) public constant returns(uint) {
         return allProposal[_proposalId].dateUpd;
