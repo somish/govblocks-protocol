@@ -74,7 +74,11 @@ contract Master is Ownable, Upgradeable {
     /// @dev Checks if the address is authorized to make changes.
     ///     owner allowed for debugging only, will be removed before launch.
     function isAuth() public constant returns(bool check) {
-        require(getLatestAddress("SV") == msg.sender || owner == msg.sender);
+        if(versionLength < 2) {
+            require(owner == msg.sender);
+        } else {
+            require(getLatestAddress("SV") == msg.sender || owner == msg.sender);
+        }
         check = true;
     }
 
@@ -106,10 +110,10 @@ contract Master is Ownable, Upgradeable {
         if(versionLength == 0) {
             GovernChecker governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
             governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
-        } else {
-            require(isAuth());
         }
-
+        
+        require(isAuth());
+    
         gbm = GovBlocksMaster(gbmAddress);
         addContractDetails(versionLength, "MS", address(this));
         addContractDetails(versionLength, "GD", _contractAddresses[0]);
@@ -126,7 +130,7 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Switches to the recent version of contracts
     function switchToRecentVersion() public {
-        require(isValidateOwner());
+        require(isAuth());
         addInContractChangeDate();
         changeAllAddress();
     }
@@ -136,8 +140,8 @@ contract Master is Ownable, Upgradeable {
     }
 
     /// @dev just for the interface
-    function changeGBTSAddress(address _gbtAddress) public onlyInternal {
-        require(isValidateOwner());
+    function changeGBTSAddress(address _gbtAddress) public {
+        require(isAuth());
         addContractDetails(versionLength - 1, "GS", _gbtAddress);
         for (uint8 i = 1; i < allContractNames.length - 1; i++) {
             up = Upgradeable(allContractVersions[versionLength - 1][allContractNames[i]]);
@@ -147,7 +151,8 @@ contract Master is Ownable, Upgradeable {
     }
 
     /// @dev Changes Master contract address
-    function changeMasterAddress(address _masterAddress) public onlyInternal {
+    function changeMasterAddress(address _masterAddress) public {
+        require(isAuth());
         Master master = Master(_masterAddress);
         require(master.versionLength() > 0);
         addContractDetails(versionLength - 1, "MS", _masterAddress);
@@ -157,16 +162,6 @@ contract Master is Ownable, Upgradeable {
         }
         //GBM=GovBlocksMaster(GBMAddress);
         //GBM.changeDappMasterAddress(DappName,_MasterAddress);  Requires Auth Address
-    }
-
-    /// @dev Checks the authenticity of changing address or switching to recent version 
-    function isValidateOwner() public constant returns(bool) {
-        gbm = GovBlocksMaster(gbmAddress);
-        if ((versionLength == 0 && msg.sender == owner) 
-                || msg.sender == gbmAddress 
-                || isAuth()
-        ) 
-            return true;
     }
 
     /// @dev Changes GovBlocks Master address
