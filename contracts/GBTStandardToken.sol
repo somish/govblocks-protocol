@@ -129,7 +129,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         bytes32 _r, 
         bytes32 _s, 
         bytes32 _lockTokenTxHash,
-        address governanceData
+        address pool
     ) 
         public 
     {
@@ -143,7 +143,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         Approval(_memberAddress, msg.sender, allowed[_memberAddress][msg.sender]);
         verifyTxHash[_lockTokenTxHash] = transferFromMessage(
                 _memberAddress, 
-                governanceData, 
+                pool, 
                 _depositAmount, 
                 "Deposited Stake"
             );

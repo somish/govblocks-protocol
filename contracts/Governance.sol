@@ -498,7 +498,7 @@ contract Governance is Upgradeable {
                     _r, 
                     _s, 
                     _lockTokenTxHash, 
-                    address(governanceDat)
+                    address(pool)
                 );
                 governanceDat.setDepositTokens(msg.sender, _proposalId, "P", depositAmount);
             }

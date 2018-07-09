@@ -21,6 +21,7 @@ import "./GBTStandardToken.sol";
 import "./Upgradeable.sol";
 import "./usingOraclize.sol";
 import "./SimpleVoting.sol";
+import "./Governance.sol";
 // import "./oraclizeAPI_0.4.sol";
 
 
@@ -42,6 +43,7 @@ contract Pool is usingOraclize, Upgradeable {
     Master internal master;
     SimpleVoting internal simpleVoting;
     GBTStandardToken internal gbt;
+    Governance internal gov;
 
     function () public payable {}
 
@@ -86,6 +88,7 @@ contract Pool is usingOraclize, Upgradeable {
         master = Master(masterAddress);
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
         simpleVoting = SimpleVoting(master.getLatestAddress("SV"));
+        gov = Governance(master.getLatestAddress("GV"));
     }
 
     /// @dev converts pool ETH to GBT
@@ -94,6 +97,15 @@ contract Pool is usingOraclize, Upgradeable {
         uint _wei = SafeMath.mul(_gbt, gbt.tokenPrice());
         _wei = SafeMath.div(_wei, 10 ** gbt.decimals());
         gbt.buyToken.value(_wei)();
+    }
+
+    /// @dev user can calim the tokens rewarded them till noW
+    function claimReward() public {
+        uint rewardToClaim = gov.calculateMemberReward(msg.sender);
+        if (rewardToClaim != 0) {
+            //gbt.transferMessage(address(this), rewardToClaim, "GBT Stake Received");
+            gbt.transferMessage(msg.sender, rewardToClaim, "GBT Stake claimed");
+        }
     }
 
     /// @dev Closes Proposal voting using oraclize once the time is over.

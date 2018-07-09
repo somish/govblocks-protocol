@@ -587,7 +587,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                     _r, 
                     _s, 
                     _lockTokenTxHash, 
-                    address(governanceDat)
+                    address(pool)
                 );
                 uint depositedTokens;
                 uint depositAmount;

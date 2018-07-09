@@ -537,15 +537,6 @@ contract GovernanceData is Upgradeable {
         allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned = _returnedIndex;
     }
 
-    /// @dev user can calim the tokens rewarded them till noW
-    function claimReward() public {
-        uint rewardToClaim = gov.calculateMemberReward(msg.sender);
-        if (rewardToClaim != 0) {
-            //gbt.transferMessage(address(this), rewardToClaim, "GBT Stake Received");
-            gbt.transferMessage(msg.sender, rewardToClaim, "GBT Stake claimed");
-        }
-    }
-
     /// @dev Add vote details such as Solution id to which he has voted and vote value
     function addVote(
         address _memberAddress, 
