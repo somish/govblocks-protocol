@@ -407,6 +407,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                         governanceDat.getProposalDateUpd(_proposalId), 
                         proposalCategory.getClosingTimeAtIndex(category, currentVotingId)
                     );
+                    closeProposalVote(_proposalId);
                 } else {
                     governance.updateProposalDetails(_proposalId, currentVotingId, max, max);
                     governanceDat.changeProposalStatus(_proposalId, 3);

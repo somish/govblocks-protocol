@@ -44,8 +44,14 @@ contract Pool is usingOraclize, Upgradeable {
     SimpleVoting internal simpleVoting;
     GBTStandardToken internal gbt;
     Governance internal gov;
+    uint internal gasLimit;
 
     function () public payable {}
+
+    /// @dev Constructor
+    function Pool() {
+        setOraclizeGas(1, 700000);
+    }
 
     /// @dev Changes master address
     /// @param _add New master address
@@ -58,6 +64,14 @@ contract Pool is usingOraclize, Upgradeable {
             masterAddress = _add;
         }
 
+    }
+
+    /// @dev sets oraclize gasPrice and gasLimit
+    /// @param _gasPrice gasPrice is gwei
+    /// @param _gasLimit gas limit for oraclize queries
+    function setOraclizeGas(uint _gasPrice, uint _gasLimit) onlyInternal {
+        oraclize_setCustomGasPrice(_gasPrice * 10**9);
+        gasLimit = _gasLimit;
     }
 
     modifier onlyInternal {
@@ -120,14 +134,16 @@ contract Pool is usingOraclize, Upgradeable {
             myid2 = 
                 oraclize_query(
                     "URL", 
-                    ""
+                    "",
+                    gasLimit
                 );
         else
             myid2 = 
                 oraclize_query(
                     _closingTime, 
                     "URL", 
-                    ""
+                    "",
+                    gasLimit
                 );
 
         uint closeTime = now + _closingTime;
