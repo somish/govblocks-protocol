@@ -12,7 +12,7 @@ contract GovernChecker {
 
 	/// @dev Updates GBM address, can only be called by current GBM
 	function updateGBMAdress(address _govBlockMaster) public {
-		require(address(_govBlockMaster) == msg.sender || address(_govBlockMaster) == address(0));
+		require(address(govBlockMaster) == msg.sender || address(govBlockMaster) == address(0));
 		govBlockMaster = GBM(_govBlockMaster);
 	}
 

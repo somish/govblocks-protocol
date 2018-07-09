@@ -49,7 +49,7 @@ contract GovBlocksMaster {
         require(owner == address(0));
         owner = msg.sender;
         gbtAddress = _gbtAddress;
-        governChecker = GovernChecker(0x2e3413b48992f6fee938a3111a710803073d5d7a);
+        governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
         //   updateGBMAddress(address(this));  
     }
 
@@ -104,8 +104,8 @@ contract GovBlocksMaster {
     /// @param _gbUserName dApp name
     /// @param _newMasterAddress dApp new master address
     function changeDappMasterAddress(bytes32 _gbUserName, address _newMasterAddress) public {
-        require(msg.sender == governChecker.authorized(_gbUserName));
-        govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
+        require(msg.sender == governChecker.authorized(_gbUserName) || owner == msg.sender); // Owner for debugging only
+        govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;                       // will be removed before launch
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
     }
 
@@ -113,8 +113,8 @@ contract GovBlocksMaster {
     /// @param _gbUserName  dApp name
     /// @param _dappTokenAddress dApp new token address
     function changeDappTokenAddress(bytes32 _gbUserName, address _dappTokenAddress) public {
-        require(msg.sender == governChecker.authorized(_gbUserName));
-        govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
+        require(msg.sender == governChecker.authorized(_gbUserName) || owner == msg.sender); // Owner for debugging only
+        govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;                        // will be removed before launch
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
     }
 

@@ -72,8 +72,9 @@ contract Master is Ownable, Upgradeable {
     }
 
     /// @dev Checks if the address is authorized to make changes.
+    ///     owner allowed for debugging only, will be removed before launch.
     function isAuth() public constant returns(bool check) {
-        require(getLatestAddress("SV") == msg.sender);
+        require(getLatestAddress("SV") == msg.sender || owner == msg.sender);
         check = true;
     }
 
@@ -103,7 +104,7 @@ contract Master is Ownable, Upgradeable {
     /// @param _contractAddresses Array of nine contract addresses which will be generated
     function addNewVersion(address[6] _contractAddresses) public {
         if(versionLength == 0) {
-            GovernChecker governChecker = GovernChecker(0x2e3413b48992f6fee938a3111a710803073d5d7a);
+            GovernChecker governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
             governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
         } else {
             require(isAuth());
