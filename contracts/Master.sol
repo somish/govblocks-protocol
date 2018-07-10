@@ -66,15 +66,15 @@ contract Master is Ownable, Upgradeable {
     }
 
     /// @dev Returns true if the caller address is GovBlocksMaster Address.
-    function isGBM(address _gbmAddress) public constant returns(bool check) {
+    function isGBM(address _gbmAddress) public view returns(bool check) {
         require(_gbmAddress == gbmAddress);
         check = true;
     }
 
     /// @dev Checks if the address is authorized to make changes.
     ///     owner allowed for debugging only, will be removed before launch.
-    function isAuth() public constant returns(bool check) {
-        if(versionLength < 2) {
+    function isAuth() public view returns(bool check) {
+        if(contractChangeDate.length < 1) {
             require(owner == msg.sender);
         } else {
             require(getLatestAddress("SV") == msg.sender || owner == msg.sender);
@@ -85,7 +85,7 @@ contract Master is Ownable, Upgradeable {
     /// @dev Checks if the caller address is either one of its active contract address or owner.
     /// @param _address  address to be checked for internal
     /// @return check returns true if the condition meets
-    function isInternal(address _address) public constant returns(bool check) {
+    function isInternal(address _address) public view returns(bool check) {
         if (contractsActive[_address] || owner == _address)
             check = true;
     }
@@ -93,7 +93,7 @@ contract Master is Ownable, Upgradeable {
     /// @dev Checks if the caller address is owner
     /// @param _ownerAddress member address to be checked for owner
     /// @return check returns true if the address is owner address
-    function isOwner(address _ownerAddress) public constant returns(bool check) {
+    function isOwner(address _ownerAddress) public view returns(bool check) {
         if (owner == _ownerAddress)
             check = true;
     }
@@ -176,7 +176,7 @@ contract Master is Ownable, Upgradeable {
     /// @dev Gets current version amd its master address
     /// @return versionNo Current version number that is active
     /// @return MSAddress Master contract address
-    function getCurrentVersion() public constant returns(uint16 versionNo, address msAddress) {
+    function getCurrentVersion() public view returns(uint16 versionNo, address msAddress) {
         versionNo = contractChangeDate[contractChangeDate.length - 1].versionNo;
         msAddress = allContractVersions[versionNo]["MS"];
     }
@@ -188,7 +188,7 @@ contract Master is Ownable, Upgradeable {
     /// @return contractsAddress Latest version's contract addresses
     function getLatestVersionData(uint16 _versionNo) 
         public 
-        constant 
+        view 
         returns(uint16 versionNo, bytes2[] contractsName, address[] contractsAddress) 
     {
         versionNo = _versionNo;
@@ -203,7 +203,7 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Gets latest contract address
     /// @param _contractName Contract name to fetch
-    function getLatestAddress(bytes2 _contractName) public constant returns(address contractAddress) {
+    function getLatestAddress(bytes2 _contractName) public view returns(address contractAddress) {
         contractAddress =
             allContractVersions[contractChangeDate[contractChangeDate.length - 1].versionNo][_contractName];
     }

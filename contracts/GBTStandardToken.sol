@@ -83,7 +83,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
      * @param _owner The address to query the the balance of.
      * @return An uint256 representing the amount owned by the passed address.
      */
-    function balanceOf(address _owner) public constant returns(uint256 balance) {
+    function balanceOf(address _owner) public view returns(uint256 balance) {
         return balances[_owner];
     }
 
@@ -161,7 +161,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         bytes32 _s
     ) 
         public
-        constant 
+        view 
         returns(bool) 
     {
         bytes32 hash = getOrderHash(_memberAddress, _spender, _amount, _validUpto, _lockTokenTxHash);
@@ -177,7 +177,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         bytes32 _lockTokenTxHash
     ) 
         public
-        constant 
+        view 
         returns(bytes32) 
     {
         return keccak256(_memberAddress, _spender, _amount, _validUpto, _lockTokenTxHash);
@@ -186,7 +186,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     /// @dev validates signature
     function isValidSignature(bytes32 hash, address _memberaddress, uint8 v, bytes32 r, bytes32 s) 
         public 
-        constant 
+        view 
         returns(bool) 
     {
         // bytes memory prefix = "\x19Ethereum Signed Message:\n32";
@@ -197,7 +197,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     }
 
     /// @dev returns the amount of locked user tokens
-    function getLockToken(address _memberAddress) public constant returns(uint lockedTokens) {
+    function getLockToken(address _memberAddress) public view returns(uint lockedTokens) {
         uint time = now;
         lockedTokens = 0;
         for (uint i = 0; i < userLockToken[_memberAddress].length; i++) {
@@ -264,7 +264,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
      * @param _spender address The address which will spend the funds.
      * @return A uint256 specifying the amount of tokens still available for the spender.
      */
-    function allowance(address _owner, address _spender) public constant returns(uint256 remaining) {
+    function allowance(address _owner, address _spender) public view returns(uint256 remaining) {
         return allowed[_owner][_spender];
     }
 
@@ -348,7 +348,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         return true;
     }
 
-    /*function getTokenPrice() public constant returns(uint) {
+    /*function getTokenPrice() public view returns(uint) {
         return tokenPrice;
     }*/
 

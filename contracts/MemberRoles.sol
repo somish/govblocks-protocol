@@ -98,13 +98,13 @@ contract MemberRoles is Upgradeable {
     }
 
     /// @dev Returns true if the caller address is Master's contract address
-    function isMaster() public constant returns(bool) {
+    function isMaster() public view returns(bool) {
         if (msg.sender == masterAddress)
             return true;
     }
 
     /// @dev Returns true if the caller address is GovBlocksMaster contract address.
-    function isGBM() public constant returns(bool) {
+    function isGBM() public view returns(bool) {
         master = Master(masterAddress);
         if (master.isGBM(msg.sender))
             return true;
@@ -133,7 +133,7 @@ contract MemberRoles is Upgradeable {
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.
-    function getRoleIdByAddress(address _memberAddress) public constant returns(uint32[] assignedRoles) {
+    function getRoleIdByAddress(address _memberAddress) public view returns(uint32[] assignedRoles) {
         uint8 length = getRoleIdLengthByAddress(_memberAddress);
         uint8 j = 0;
         assignedRoles = new uint32[](length);
@@ -152,7 +152,7 @@ contract MemberRoles is Upgradeable {
     /// @param _memberAddress Address of member
     /// @param _roleId Checks member's authenticity with the roleId. 
     /// i.e. Returns true if this roleId is assigned to member
-    function checkRoleIdByAddress(address _memberAddress, uint32 _roleId) public constant returns(bool) {
+    function checkRoleIdByAddress(address _memberAddress, uint32 _roleId) public view returns(bool) {
         if (memberRoleData[_roleId].memberActive[_memberAddress] 
             && (!memberRoleData[_roleId].limitedValidity || memberRoleData[_roleId].validity[_memberAddress] > now))
             return true;
@@ -227,7 +227,7 @@ contract MemberRoles is Upgradeable {
     /// @param _memberRoleId Member role id
     /// @return roleId Role id
     /// @return allMemberAddress Member addresses of specified role id
-    function getAllAddressByRoleId(uint32 _memberRoleId) public constant returns(uint32, address[] allMemberAddress) {
+    function getAllAddressByRoleId(uint32 _memberRoleId) public view returns(uint32, address[] allMemberAddress) {
         uint length = getAllMemberLength(_memberRoleId);
         uint8 j = 0;
         allMemberAddress = new address[](length);
@@ -246,17 +246,17 @@ contract MemberRoles is Upgradeable {
     /// @dev Gets all members' length
     /// @param _memberRoleId Member role id
     /// @return memberRoleData[_memberRoleId].memberAddress.length Member length
-    function getAllMemberLength(uint32 _memberRoleId) public constant returns(uint) {
+    function getAllMemberLength(uint32 _memberRoleId) public view returns(uint) {
         return memberRoleData[_memberRoleId].memberCounter;
     }
 
     /// @dev Return Member address at specific index against Role id.
-    function getAllMemberAddressById(uint32 _memberRoleId, uint _index) public constant returns(address) {
+    function getAllMemberAddressById(uint32 _memberRoleId, uint _index) public view returns(address) {
         return memberRoleData[_memberRoleId].memberAddress[_index];
     }
 
     /// @dev Return member address who holds the right to add/remove any member from specific role.
-    function getAuthrizedMemberAgainstRole(uint32 _memberRoleId) public constant returns(address) {
+    function getAuthrizedMemberAgainstRole(uint32 _memberRoleId) public view returns(address) {
         return authorizedAddressAgainstRole[_memberRoleId];
     }
 
@@ -266,7 +266,7 @@ contract MemberRoles is Upgradeable {
     /// @return memberRoleName Role name against that role id.
     function getMemberRoleNameById(uint32 _memberRoleId) 
         public 
-        constant 
+        view 
         returns(uint32 roleId, bytes32 memberRoleName) 
     {
         memberRoleName = memberRole[_memberRoleId];
@@ -276,7 +276,7 @@ contract MemberRoles is Upgradeable {
     /// @dev Return total number of members assigned against each role id.
     /// @return roleName Role name array is returned
     /// @return totalMembers Total members in particular role id
-    function getRolesAndMember() public constant returns(bytes32[] roleName, uint[] totalMembers) {
+    function getRolesAndMember() public view returns(bytes32[] roleName, uint[] totalMembers) {
         roleName = new bytes32[](memberRole.length);
         totalMembers = new uint[](memberRole.length);
         for (uint32 i = 0; i < memberRole.length; i++) {
@@ -288,12 +288,12 @@ contract MemberRoles is Upgradeable {
     }
 
     /// @dev Gets the role id which is authorized to categorize a proposal
-    function getAuthorizedMemberId() public constant returns(uint8 roleId) {
+    function getAuthorizedMemberId() public view returns(uint8 roleId) {
         roleId = authorizedAddressToCategorize;
     }
 
     /// @dev Gets total number of member roles available
-    function getTotalMemberRoles() public constant returns(uint) {
+    function getTotalMemberRoles() public view returns(uint) {
         return memberRole.length;
     }
 
@@ -308,7 +308,7 @@ contract MemberRoles is Upgradeable {
     }
 
     /// @dev Get Total number of role ids that has been assigned to a member so far.
-    function getRoleIdLengthByAddress(address _memberAddress) internal constant returns(uint8 count) {
+    function getRoleIdLengthByAddress(address _memberAddress) internal view returns(uint8 count) {
         uint length = getTotalMemberRoles();
         for (uint8 i = 0; i < length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress] 

@@ -169,14 +169,14 @@ contract Pool is usingOraclize, Upgradeable {
     }
 
     /// @dev Get total length of oraclize call being triggered using this function  "closeProposalOraclise"
-    function getApiCallLength() public constant returns(uint len) {
+    function getApiCallLength() public view returns(uint len) {
         return allAPIcall.length;
     }
 
     /// @dev Gets api call of index
     /// @param index Index to call
     /// @return myid Id with respect to index
-    function getApiCallIndex(uint index) public constant returns(bytes32 myid) {
+    function getApiCallIndex(uint index) public view returns(bytes32 myid) {
         myid = allAPIcall[index];
     }
 
@@ -188,7 +188,7 @@ contract Pool is usingOraclize, Upgradeable {
     /// @return dateUpd Date proposal was updated
     function getApiCallDetails(bytes32 myid) 
         public 
-        constant 
+        view 
         returns(bytes8 _typeof, uint id, uint64 dateAdd, uint64 dateUpd) 
     {
         return (allAPIid[myid].typeOf, allAPIid[myid].proposalId, allAPIid[myid].dateAdd, allAPIid[myid].dateUpd);
@@ -197,14 +197,14 @@ contract Pool is usingOraclize, Upgradeable {
     /// @dev Gets type of proposal wrt api id
     /// @param myid Id of api
     /// @return _typeof Type of proposal
-    function getApiIdTypeOf(bytes32 myid) public constant returns(bytes16 _typeof) {
+    function getApiIdTypeOf(bytes32 myid) public view returns(bytes16 _typeof) {
         _typeof = allAPIid[myid].typeOf;
     }
 
     /// @dev Gets proposal id of api id
     /// @param myid Api id
     /// @return id1 Proposal id
-    function getProposalIdOfApiId(bytes32 myid) public constant returns(uint id1) {
+    function getProposalIdOfApiId(bytes32 myid) public view returns(uint id1) {
         id1 = allAPIid[myid].proposalId;
     }
 
@@ -227,7 +227,7 @@ contract Pool is usingOraclize, Upgradeable {
     /// @dev Byte32 to string
     /// @param x Byte32 to be converted to string
     /// @return bytesStringTrimmed Resultant string 
-    function bytes32ToString(bytes32 x) public constant returns(string) {
+    function bytes32ToString(bytes32 x) public view returns(string) {
         bytes memory bytesString = new bytes(32);
         uint charCount = 0;
         for (uint j = 0; j < 32; j++) {
@@ -246,7 +246,7 @@ contract Pool is usingOraclize, Upgradeable {
 
     /// @dev Gets proposal index by proposal id
     /// @return myIndexId Api index of corresponding proposal id
-    function getMyIndexByProposalId(uint _proposalId) public constant returns(uint myIndexId) {
+    function getMyIndexByProposalId(uint _proposalId) public view returns(uint myIndexId) {
         uint length = getApiCallLength();
         for (uint i = 0; i < length; i++) {
             bytes32 myid = getApiCallIndex(i);

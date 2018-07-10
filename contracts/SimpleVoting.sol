@@ -274,7 +274,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     /// @dev Checks if the solution is already added by a member against specific proposal
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
-    function alreadyAdded(uint _proposalId, address _memberAddress) public constant returns(bool) {
+    function alreadyAdded(uint _proposalId, address _memberAddress) public view returns(bool) {
         for (uint i = 0; i < governanceDat.getTotalSolutions(_proposalId); i++) {
             if (governanceDat.getSolutionAddedByProposalId(_proposalId, i) == _memberAddress)
                 return true;
@@ -282,7 +282,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     }
 
     /// @dev Returns true if the member passes all the checks to vote. i.e. If he is authorize to vote
-    function validateMember(uint _proposalId, uint64[] _solutionChosen) public constant returns(bool) {
+    function validateMember(uint _proposalId, uint64[] _solutionChosen) public view returns(bool) {
         uint8 _mrSequence;
         uint8 category;
         uint currentVotingId;
@@ -305,7 +305,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     /// @dev Sets vote value given by member
     function getVoteValueGivenByMember(address _memberAddress, uint _memberStake)  
         public
-        constant 
+        view 
         returns(uint128 finalVoteValue) 
     {
         uint tokensHeld = 
@@ -441,7 +441,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     }
 
     /// @dev Checks if the vote count against any solution passes the threshold value or not.
-    function checkForThreshold(uint _proposalId, uint32 _mrSequenceId) internal constant returns(bool) {
+    function checkForThreshold(uint _proposalId, uint32 _mrSequenceId) internal view returns(bool) {
         uint thresHoldValue;
         if (_mrSequenceId == 2) {
             address dAppTokenAddress = govBlocksMaster.getDappTokenAddress(master.dAppName());

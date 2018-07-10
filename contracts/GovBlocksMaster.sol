@@ -134,12 +134,12 @@ contract GovBlocksMaster {
     /// @dev Gets byte code and abi hash
     /// @param byteCode Byte code hash 
     /// @param abiHash Application binary interface hash
-    function getByteCodeAndAbi() public constant returns(string byteCode, string abiHash) {
+    function getByteCodeAndAbi() public view returns(string byteCode, string abiHash) {
         return (byteCodeHash, contractsAbiHash);
     }
 
     /// @dev Get Address of member that is authorized for a dApp.
-    function getDappAuthorizedAddress(bytes32 _gbUserName) public constant returns(address) {
+    function getDappAuthorizedAddress(bytes32 _gbUserName) public view returns(address) {
         return governChecker.authorized(_gbUserName);
     }
 
@@ -152,7 +152,7 @@ contract GovBlocksMaster {
     /// @return versionNo Current Verson number of dApp
     function getGovBlocksUserDetails(bytes32 _gbUserName) 
         public 
-        constant 
+        view 
         returns(
             bytes32 gbUserName, 
             address masterContractAddress, 
@@ -172,7 +172,7 @@ contract GovBlocksMaster {
     /// @dev Gets dApp details such as master contract address and dApp name
     function getGovBlocksUserDetailsByIndex(uint _index) 
         public 
-        constant 
+        view 
         returns(uint index, bytes32 gbUserName, address masterContractAddress) 
     {
         return (_index, allGovBlocksUsers[_index], govBlocksDapps[allGovBlocksUsers[_index]].masterAddress);
@@ -188,7 +188,7 @@ contract GovBlocksMaster {
     /// @return versionNo Version number
     function getGovBlocksUserDetails1(bytes32 _gbUserName) 
         public 
-        constant 
+        view 
         returns(
             bytes32 gbUserName, 
             address masterContractAddress, 
@@ -221,7 +221,7 @@ contract GovBlocksMaster {
     /// @return dappTokenAddress dApp's token address
     function getGovBlocksUserDetails2(address _address) 
         public 
-        constant 
+        view 
         returns(bytes32 dappName, address masterContractAddress, address dappTokenAddress) 
     {
         dappName = govBlocksDappByAddress[_address];
@@ -230,47 +230,47 @@ contract GovBlocksMaster {
 
     /// @dev Gets dApp description hash
     /// @param _gbUserName dApp name
-    function getDappDescHash(bytes32 _gbUserName) public constant returns(string) {
+    function getDappDescHash(bytes32 _gbUserName) public view returns(string) {
         return govBlocksDapps[_gbUserName].dappDescHash;
     }
 
     /// @dev Gets Total number of dApp that has been integrated with GovBlocks so far.
-    function getAllDappLength() public constant returns(uint) {
+    function getAllDappLength() public view returns(uint) {
         return (allGovBlocksUsers.length);
     }
 
     /// @dev Gets dApps users by index
-    function getAllDappById(uint _gbIndex) public constant returns(bytes32 _gbUserName) {
+    function getAllDappById(uint _gbIndex) public view returns(bytes32 _gbUserName) {
         return (allGovBlocksUsers[_gbIndex]);
     }
 
     /// @dev Gets all dApps users
-    function getAllDappArray() public constant returns(bytes32[]) {
+    function getAllDappArray() public view returns(bytes32[]) {
         return (allGovBlocksUsers);
     }
 
     /// @dev Gets dApp username
-    function getDappUser() public constant returns(string) {
+    function getDappUser() public view returns(string) {
         return (govBlocksUser[msg.sender]);
     }
 
     /// @dev Gets dApp master address of dApp (username=govBlocksUser)
-    function getDappMasterAddress(bytes32 _gbUserName) public constant returns(address masterAddress) {
+    function getDappMasterAddress(bytes32 _gbUserName) public view returns(address masterAddress) {
         return (govBlocksDapps[_gbUserName].masterAddress);
     }
 
     /// @dev Gets dApp token address of dApp (username=govBlocksUser)
-    function getDappTokenAddress(bytes32 _gbUserName) public constant returns(address tokenAddres) {
+    function getDappTokenAddress(bytes32 _gbUserName) public view returns(address tokenAddres) {
         return (govBlocksDapps[_gbUserName].tokenAddress);
     }
 
     /// @dev Gets dApp username by address
-    function getDappNameByAddress(address _contractAddress) public constant returns(bytes32) {
+    function getDappNameByAddress(address _contractAddress) public view returns(bytes32) {
         return govBlocksDappByAddress[_contractAddress];
     }
 
     /// @dev Gets GBT standard token address 
-    function getGBTAddress() public constant returns(address) {
+    function getGBTAddress() public view returns(address) {
         return gbtAddress;
     }
 
@@ -280,7 +280,7 @@ contract GovBlocksMaster {
     /// @param _typeOf Contract name initials which address is to be fetched
     function getContractInstanceByDapp(bytes32 _gbUserName, bytes2 _typeOf) 
         internal 
-        constant 
+        view 
         returns(address contractAddress) 
     {
         require(isAuthorizedGBOwner(_gbUserName, msg.sender));

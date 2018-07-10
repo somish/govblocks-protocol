@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 contract GovernChecker {
-    function authorized(bytes32 _dAppName) public constant returns(address);
+    function authorized(bytes32 _dAppName) public view returns(address);
 }
 
 contract Governed {
@@ -25,7 +25,7 @@ contract Governed {
             governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
     }
 
-    function getCodeSize(address _addr) constant internal returns(uint _size) {
+    function getCodeSize(address _addr) internal view returns(uint _size) {
         assembly {
             _size := extcodesize(_addr)
         }

@@ -279,7 +279,7 @@ contract ProposalCategory {
     /// @dev Get Sub category details such as Category name, Automated action hash and Main category id
     function getSubCategoryDetails(uint _subCategoryId) 
         public 
-        constant 
+        view 
         returns(string, string, uint, address, bytes2) 
     {
         address contractAddress;
@@ -297,12 +297,12 @@ contract ProposalCategory {
     }
 
     /// @dev Get Sub category name 
-    function getSubCategoryName(uint _subCategoryId) public constant returns(uint, string) {
+    function getSubCategoryName(uint _subCategoryId) public view returns(uint, string) {
         return (_subCategoryId, allSubCategory[_subCategoryId].categoryName);
     }
 
     /// @dev Get contractAddress 
-    function getContractAddress(uint _subCategoryId) public constant returns(address _contractAddress) {
+    function getContractAddress(uint _subCategoryId) public view returns(address _contractAddress) {
         if(allSubCategory[_subCategoryId].contractName == "EX")
             _contractAddress = allSubCategory[_subCategoryId].contractAddress;
         else
@@ -312,22 +312,22 @@ contract ProposalCategory {
     /// @dev Get Sub category id at specific index when giving main category id 
     /// @param _categoryId Id of main category
     /// @param _index Get subcategory id at particular index in all subcategory array
-    function getSubCategoryIdAtIndex(uint8 _categoryId, uint _index) public constant returns(uint _subCategoryId) {
+    function getSubCategoryIdAtIndex(uint8 _categoryId, uint _index) public view returns(uint _subCategoryId) {
         return allSubIdByCategory[_categoryId][_index];
     }
 
     /// @dev Get Sub categories array against main category
-    function getAllSubIdsByCategory(uint8 _categoryId) public constant returns(uint[]) {
+    function getAllSubIdsByCategory(uint8 _categoryId) public view returns(uint[]) {
         return allSubIdByCategory[_categoryId];
     }
 
     /// @dev Get Total number of sub categories against main category
-    function getAllSubIdsLengthByCategory(uint8 _categoryId) public constant returns(uint) {
+    function getAllSubIdsLengthByCategory(uint8 _categoryId) public view returns(uint) {
         return allSubIdByCategory[_categoryId].length;
     }
 
     /// @dev Gets Main category when giving sub category id. 
-    function getCategoryIdBySubId(uint8 _subCategoryId) public constant returns(uint8) {
+    function getCategoryIdBySubId(uint8 _subCategoryId) public view returns(uint8) {
         return allSubCategory[_subCategoryId].categoryId;
     }
 
@@ -339,7 +339,7 @@ contract ProposalCategory {
     /// @return totalTime Total time that left for proposal closing.
     function getRemainingClosingTime(uint _proposalId, uint _categoryId, uint _index) 
         public 
-        constant 
+        view 
         returns(uint totalTime) 
     {
         uint pClosingTime;
@@ -357,7 +357,7 @@ contract ProposalCategory {
     /// Calculated Closing time from first voting layer where current voting index is 0.
     /// @param _categoryId Main Category id
     /// @return totalTime Total time before the voting gets closed
-    function getMaxCategoryTokenHoldTime(uint _categoryId) public constant returns(uint totalTime) {
+    function getMaxCategoryTokenHoldTime(uint _categoryId) public view returns(uint totalTime) {
         uint pClosingTime;
         for (uint i = 0; i < getCloseTimeLength(_categoryId); i++) {
             pClosingTime = pClosingTime + getClosingTimeAtIndex(_categoryId, i);
@@ -368,24 +368,24 @@ contract ProposalCategory {
     }
 
     /// @dev Gets reward percentage for Proposal to distribute stake on proposal acceptance
-    function getRewardPercProposal(uint _categoryId) public constant returns(uint) {
+    function getRewardPercProposal(uint _categoryId) public view returns(uint) {
         return allCategory[_categoryId].rewardPercProposal;
     }
 
     /// @dev Gets reward percentage for Solution to distribute stake on proposing favourable solution
-    function getRewardPercSolution(uint _categoryId) public constant returns(uint) {
+    function getRewardPercSolution(uint _categoryId) public view returns(uint) {
         return allCategory[_categoryId].rewardPercSolution;
     }
 
     /// @dev Gets reward percentage for Voting to distribute stake on casting vote on winning solution  
-    function getRewardPercVote(uint _categoryId) public constant returns(uint) {
+    function getRewardPercVote(uint _categoryId) public view returns(uint) {
         return allCategory[_categoryId].rewardPercVote;
     }
 
     /// @dev Gets Category details - Voting layer sequence details with majority threshold and closing time 
     function getCategoryData2(uint _categoryId) 
         public
-        constant 
+        view 
         returns(uint, bytes32[] roleName, uint8[] majorityVote, uint32[] closingTime) 
     {
         // MR=MemberRoles(MRAddress);
@@ -405,7 +405,7 @@ contract ProposalCategory {
     /// @dev Gets Category details - Voting layer sequence details with Minimum and Maximum stake needed for category.
     function getCategoryDetails(uint _categoryId) 
         public 
-        constant 
+        view 
         returns(
             uint cateId, 
             uint8[] memberRoleSequence, 
@@ -426,76 +426,76 @@ contract ProposalCategory {
     }
 
     /// @dev Gets minimum stake for category id
-    function getMinStake(uint _categoryId) public constant returns(uint) {
+    function getMinStake(uint _categoryId) public view returns(uint) {
         return allCategory[_categoryId].minStake;
     }
 
     /// @dev Gets maximum stake for category id
-    function getMaxStake(uint _categoryId) public constant returns(uint) {
+    function getMaxStake(uint _categoryId) public view returns(uint) {
         return allCategory[_categoryId].maxStake;
     }
 
     /// @dev Gets Majority threshold array length when giving main category id
-    function getRoleMajorityVotelength(uint _categoryId) public constant returns(uint index, uint majorityVoteLength) {
+    function getRoleMajorityVotelength(uint _categoryId) public view returns(uint index, uint majorityVoteLength) {
         index = _categoryId;
         majorityVoteLength = allCategory[_categoryId].memberRoleMajorityVote.length;
     }
 
     /// @dev Gets Closing time array length when giving main category id
-    function getClosingTimeLength(uint _categoryId) public constant returns(uint index, uint closingTimeLength) {
+    function getClosingTimeLength(uint _categoryId) public view returns(uint index, uint closingTimeLength) {
         index = _categoryId;
         closingTimeLength = allCategory[_categoryId].closingTime.length;
     }
 
     /// @dev Gets role sequence length by category id
-    function getRoleSequencLength(uint _categoryId) public constant returns(uint roleLength) {
+    function getRoleSequencLength(uint _categoryId) public view returns(uint roleLength) {
         roleLength = allCategory[_categoryId].memberRoleSequence.length;
     }
 
     /// @dev Gets Closing time array length when giving main category id
-    function getCloseTimeLength(uint _categoryId) public constant returns(uint) {
+    function getCloseTimeLength(uint _categoryId) public view returns(uint) {
         return allCategory[_categoryId].closingTime.length;
     }
 
     /// @dev Gets Closing time at particular index from Closing time array
     /// @param _categoryId Id of main category
     /// @param _index Current voting status againt proposal act as an index here
-    function getClosingTimeAtIndex(uint _categoryId, uint _index) public constant returns(uint ct) {
+    function getClosingTimeAtIndex(uint _categoryId, uint _index) public view returns(uint ct) {
         return allCategory[_categoryId].closingTime[_index];
     }
 
     /// @dev Gets Voting layer role sequence at particular index from Role sequence array
     /// @param _categoryId Id of main category
     /// @param _index Current voting status againt proposal act as an index here
-    function getRoleSequencAtIndex(uint _categoryId, uint _index) public constant returns(uint8 roleId) {
+    function getRoleSequencAtIndex(uint _categoryId, uint _index) public view returns(uint8 roleId) {
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
 
     /// @dev Gets Majority threshold value at particular index from Majority Vote array
     /// @param _categoryId Id of main category
     /// @param _index Current voting status againt proposal act as an index here
-    function getRoleMajorityVoteAtIndex(uint _categoryId, uint _index) public constant returns(uint majorityVote) {
+    function getRoleMajorityVoteAtIndex(uint _categoryId, uint _index) public view returns(uint majorityVote) {
         return allCategory[_categoryId].memberRoleMajorityVote[_index];
     }
 
     /// @dev Gets Default incentive to be distributed against category.
-    function getCatIncentive(uint _categoryId) public constant returns(uint incentive) {
+    function getCatIncentive(uint _categoryId) public view returns(uint incentive) {
         incentive = allCategory[_categoryId].defaultIncentive;
     }
 
     /// @dev Gets Default incentive to be distributed against category.
-    function getCategoryIncentive(uint _categoryId) public constant returns(uint category, uint incentive) {
+    function getCategoryIncentive(uint _categoryId) public view returns(uint category, uint incentive) {
         category = _categoryId;
         incentive = allCategory[_categoryId].defaultIncentive;
     }
 
     /// @dev Gets Total number of categories added till now
-    function getCategoryLength() public constant returns(uint) {
+    function getCategoryLength() public view returns(uint) {
         return allCategory.length;
     }
 
     /// @dev Gets Cateory description hash when giving category id
-    function getCategoryName(uint _categoryId) public constant returns(uint, string) {
+    function getCategoryName(uint _categoryId) public view returns(uint, string) {
         return (_categoryId, allCategory[_categoryId].name);
     }
 
@@ -505,7 +505,7 @@ contract ProposalCategory {
     /// @return Next member role to vote with its closing time and majority vote.
     function getCategoryData3(uint _categoryId, uint _currVotingIndex) 
         public
-        constant 
+        view 
         returns(uint8  rsuence, uint majorityVote, uint closingTime) 
     {
         return (
@@ -518,7 +518,7 @@ contract ProposalCategory {
     /// @dev Gets Category and SubCategory name from Proposal ID.
     function getCatAndSubNameByPropId(uint _proposalId) 
         public 
-        constant 
+        view 
         returns(string categoryName, string subCategoryName) 
     {
         categoryName = allCategory[getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId))].name;
@@ -526,7 +526,7 @@ contract ProposalCategory {
     }
 
     /// @dev Gets Category ID from Proposal ID.
-    function getCatIdByPropId(uint _proposalId) public constant returns(uint8 catId) {
+    function getCatIdByPropId(uint _proposalId) public view returns(uint8 catId) {
         catId = getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
     }
 

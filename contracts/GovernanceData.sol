@@ -467,24 +467,24 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets last Proposal id till the reward has been distributed (Proposal creation and acceptance)
-    function getLastRewardIdOfCreatedProposals(address _memberAddress) public constant returns(uint) {
+    function getLastRewardIdOfCreatedProposals(address _memberAddress) public view returns(uint) {
         return lastRewardDetails[_memberAddress].lastRewardProposalId;
     }
 
     /// @dev Gets the last proposal id till the reward has been distributed for being Solution Owner
-    function getLastRewardIdOfSolutionProposals(address _memberAddress) public constant returns(uint) {
+    function getLastRewardIdOfSolutionProposals(address _memberAddress) public view returns(uint) {
         return lastRewardDetails[_memberAddress].lastRewardSolutionProposalId;
     }
 
     /// @dev Gets the last vote id till which the reward has been distributed against member
-    function getLastRewardIdOfVotes(address _memberAddress) public constant returns(uint) {
+    function getLastRewardIdOfVotes(address _memberAddress) public view returns(uint) {
         return lastRewardDetails[_memberAddress].lastRewardVoteId;
     }
 
     /// @dev Get all Last Id's till which the reward has been distributed against member
     function getAllidsOfLastReward(address _memberAddress) 
         public 
-        constant 
+        view 
         returns(
             uint lastRewardIdOfCreatedProposal, 
             uint lastRewardidOfSolution, 
@@ -513,7 +513,7 @@ contract GovernanceData is Upgradeable {
     /// @param _typeOf typeOf is P for Proposal, S for Solution and V for Voting stage of proposal
     function getDepositedTokens(address _memberAddress, uint _proposalId, bytes4 _typeOf) 
         public 
-        constant 
+        view 
         returns(uint) 
     {
         return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].amount;
@@ -523,7 +523,7 @@ contract GovernanceData is Upgradeable {
     ///     i.e. returned flag is 0 if reward is not yet distributed
     function getReturnedTokensFlag(address _memberAddress, uint _proposalId, bytes4 _typeOf) 
         public 
-        constant 
+        view 
         returns(uint8) 
     {
         return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned;
@@ -560,15 +560,15 @@ contract GovernanceData is Upgradeable {
 
     }
 
-    function getAllVoteIdsByAddress(address _memberAddress) public constant returns(uint[]) {
+    function getAllVoteIdsByAddress(address _memberAddress) public view returns(uint[]) {
         return allVotesByMember[_memberAddress];
     }
 
-    function getVoteIdOfNthVoteOfMember(address _memberAddress, uint _vote) public constant returns(uint) {
+    function getVoteIdOfNthVoteOfMember(address _memberAddress, uint _vote) public view returns(uint) {
         return allVotesByMember[_memberAddress][_vote];
     }
 
-    function getTotalNumberOfVotesByAddress(address _memberAddress) public constant returns(uint) {
+    function getTotalNumberOfVotesByAddress(address _memberAddress) public view returns(uint) {
         return allVotesByMember[_memberAddress].length;
     }
 
@@ -578,7 +578,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Gets vote details by id such as Vote value, Address of the voter and Solution id for which he has voted.
     function getVoteDetailById(uint _voteid) 
         public 
-        constant 
+        view 
         returns(
             address voter, 
             uint64[] solutionChosen, 
@@ -597,60 +597,60 @@ contract GovernanceData is Upgradeable {
     /// @dev Gets Vote id Against proposal when passing proposal id and member addresse
     function getVoteIdAgainstMember(address _memberAddress, uint _proposalId) 
         public 
-        constant 
+        view 
         returns(uint voteId) 
     {
         voteId = addressProposalVote[_memberAddress][_proposalId];
     }
 
     /// @dev Check if the member has voted against a proposal. Returns true if vote id exists
-    function checkVoteIdAgainstMember(address _memberAddress, uint _proposalId) public constant returns(bool result) {
+    function checkVoteIdAgainstMember(address _memberAddress, uint _proposalId) public view returns(bool result) {
         if (addressProposalVote[_memberAddress][_proposalId] != 0)
             result = true;
     }
 
     /// @dev Gets voter address
-    function getVoterAddress(uint _voteId) public constant returns(address _voterAddress) {
+    function getVoterAddress(uint _voteId) public view returns(address _voterAddress) {
         return (allVotes[_voteId].voter);
     }
 
     /// @dev Gets All the Role specific vote ids against proposal 
     /// @param _roleId Role id which number of votes to be fetched.
     /// @return totalVotes Total votes casted by this particular role id.
-    function getAllVoteIdsByProposalRole(uint _proposalId, uint _roleId) public constant returns(uint[] totalVotes) {
+    function getAllVoteIdsByProposalRole(uint _proposalId, uint _roleId) public view returns(uint[] totalVotes) {
         return proposalRoleVote[_proposalId][_roleId];
     }
 
     /// @dev Gets Total number of votes of specific role against proposal
-    function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) public constant returns(uint length) {
+    function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) public view returns(uint length) {
         return proposalRoleVote[_proposalId][_roleId].length;
     }
 
     /// @dev Gets Vote id from the array that contains all role specific votes against proposal
     /// @param _index To get vote id at particular index from array
-    function getVoteIdAgainstProposalRole(uint _proposalId, uint _roleId, uint _index) public constant returns(uint) {
+    function getVoteIdAgainstProposalRole(uint _proposalId, uint _roleId, uint _index) public view returns(uint) {
         return (proposalRoleVote[_proposalId][_roleId][_index]);
     }
 
     /// @dev Gets vote value against Vote id
-    function getVoteValue(uint _voteId) public constant returns(uint) {
+    function getVoteValue(uint _voteId) public view returns(uint) {
         return (allVotes[_voteId].voteValue);
     }
 
     /// @dev Gets total number of votes 
-    function allVotesTotal() public constant returns(uint) {
+    function allVotesTotal() public view returns(uint) {
         return allVotes.length;
     }
 
     /// @dev Gets Total number of voting types has been added till now.
-    function getVotingTypeLength() public constant returns(uint) {
+    function getVotingTypeLength() public view returns(uint) {
         return allVotingTypeDetails.length;
     }
 
     /// @dev Gets voting type details by passing voting id
     function getVotingTypeDetailsById(uint _votingTypeId) 
         public 
-        constant 
+        view 
         returns(uint votingTypeId, bytes32 vtName, address vtAddress) 
     {
         return (
@@ -661,7 +661,7 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets Voting type address when voting type id is passes by
-    function getVotingTypeAddress(uint _votingTypeId) public constant returns(address votingAddress) {
+    function getVotingTypeAddress(uint _votingTypeId) public view returns(address votingAddress) {
         return (allVotingTypeDetails[_votingTypeId].votingTypeAddress);
     }
 
@@ -671,7 +671,7 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Returns the solution index that was being voted
-    function getSolutionByVoteId(uint _voteId) public constant returns(uint64[] solutionChosen) {
+    function getSolutionByVoteId(uint _voteId) public view returns(uint64[] solutionChosen) {
         return (allVotes[_voteId].solutionChosen);
     }
 
@@ -680,7 +680,7 @@ contract GovernanceData is Upgradeable {
     ///     from solutionChosen array i.e. 0 is passed In case of Simple Voting Type.
     function getSolutionByVoteIdAndIndex(uint _voteId, uint _solutionChosenId) 
         public 
-        constant 
+        view 
         returns(uint solution) 
     {
         return (allVotes[_voteId].solutionChosen[_solutionChosenId]);
@@ -690,14 +690,14 @@ contract GovernanceData is Upgradeable {
     ///     As a proposal might have n number of solutions.
     function getSolutionAddedByProposalId(uint _proposalId, uint _index) 
         public 
-        constant 
+        view 
         returns(address memberAddress) 
     {
         return allProposalSolutions[_proposalId][_index].owner;
     }
 
     /// @dev Gets The Solution Action By solution sequence index As a proposal might have n number of solutions.
-    function getSolutionActionByProposalId(uint _proposalId, uint _index) public constant returns(bytes action) {
+    function getSolutionActionByProposalId(uint _proposalId, uint _index) public view returns(bytes action) {
         return allProposalSolutions[_proposalId][_index].action;
     }
 
@@ -724,7 +724,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Gets reputation points to proceed with updating the member reputation level
     function getMemberReputationPoints() 
         public 
-        constant 
+        view 
         returns(
             uint32 addProposalOwnPoints, 
             uint32 addSolutionOwnerPoints, 
@@ -848,7 +848,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Fetch details of proposal when giving proposal id
     function getProposalDetailsById1(uint _proposalId) 
         public 
-        constant 
+        view 
         returns(uint id, address owner, uint dateUpd, uint8 versionNum, uint8 propStatus) 
     {
         return (
@@ -863,7 +863,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Fetch details of proposal when giving proposal id
     function getProposalDetailsById2(uint _proposalId) 
         public 
-        constant 
+        view 
         returns(
             uint id,
             uint8 category, 
@@ -888,7 +888,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Fetch details of proposal when giving proposal id
     function getProposalDetailsById3(uint _proposalId) 
         public 
-        constant 
+        view 
         returns(uint proposalIndex, uint propStatus, uint8 propCategory, uint8 propStatusId, uint8 finalVerdict) 
     {
         return (
@@ -903,7 +903,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Fetch details of proposal when giving proposal id
     function getProposalDetailsById4(uint _proposalId) 
         public 
-        constant 
+        view 
         returns(uint totalTokenToDistribute, uint totalVoteValue) 
     {
         return (allProposalData[_proposalId].totalreward, allProposalData[_proposalId].totalVoteValue);
@@ -916,7 +916,7 @@ contract GovernanceData is Upgradeable {
     /// @param finalVerdict Final solution index that has won by maximum votes.
     function getProposalDetailsById6(uint _proposalId) 
         public 
-        constant 
+        view 
         returns(
             uint proposalId,
             uint status, 
@@ -939,7 +939,7 @@ contract GovernanceData is Upgradeable {
     /// @return totalProposalCount Total proposal count
     function getAllProposalIdsLengthByAddress(address _memberAddress) 
         public 
-        constant 
+        view 
         returns(uint totalProposalCount) 
     {
         uint length = getProposalLength();
@@ -950,60 +950,60 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets date when proposal is last updated
-    function getProposalDateUpd(uint _proposalId) public constant returns(uint) {
+    function getProposalDateUpd(uint _proposalId) public view returns(uint) {
         return allProposal[_proposalId].dateUpd;
     }
 
     /// @dev Gets member address who created the proposal i.e. proposal owner
-    function getProposalOwner(uint _proposalId) public constant returns(address) {
+    function getProposalOwner(uint _proposalId) public view returns(address) {
         return allProposal[_proposalId].owner;
     }
 
     /// @dev Gets proposal incentive that will get distributed once the proposal is closed
-    function getProposalIncentive(uint _proposalId) public constant returns(uint commonIncentive) {
+    function getProposalIncentive(uint _proposalId) public view returns(uint commonIncentive) {
         return allProposalData[_proposalId].commonIncentive;
     }
 
     /// @dev Gets the total incentive amount given by dApp to different proposals
-    function getTotalProposalIncentive() public constant returns(uint allIncentive) {
+    function getTotalProposalIncentive() public view returns(uint allIncentive) {
         for (uint i = 0; i < allProposal.length; i++) {
             allIncentive = allIncentive + allProposalData[i].commonIncentive;
         }
     }
 
     /// @dev Gets proposal current voting status i.e. Who is next in voting sequence
-    function getProposalCurrentVotingId(uint _proposalId) public constant returns(uint8 _currVotingStatus) {
+    function getProposalCurrentVotingId(uint _proposalId) public view returns(uint8 _currVotingStatus) {
         return (allProposalData[_proposalId].currVotingStatus);
     }
 
     /// @dev Get Total Amount that has been collected at the end of voting to distribute further 
     ///     i.e. Total token to distribute
-    function getProposalTotalReward(uint _proposalId) public constant returns(uint) {
+    function getProposalTotalReward(uint _proposalId) public view returns(uint) {
         return allProposalData[_proposalId].totalreward;
     }
 
     /// @dev Get Total number of Solutions being proposed against proposal.
-    function getTotalSolutions(uint _proposalId) public constant returns(uint) {
+    function getTotalSolutions(uint _proposalId) public view returns(uint) {
         return allProposalSolutions[_proposalId].length;
     }
 
     /// @dev Get Current Status of proposal when given proposal Id
-    function getProposalStatus(uint _proposalId) public constant returns(uint propStatus) {
+    function getProposalStatus(uint _proposalId) public view returns(uint propStatus) {
         return allProposalData[_proposalId].propStatus;
     }
 
     /// @dev Gets proposal voting type when given proposal id
-    function getProposalVotingType(uint _proposalId) public constant returns(address) {
+    function getProposalVotingType(uint _proposalId) public view returns(address) {
         return (allProposal[_proposalId].votingTypeAddress);
     }
 
     /// @dev Gets proposal category when given proposal id
-    function getProposalCategory(uint _proposalId) public constant returns(uint8 categoryId) {
+    function getProposalCategory(uint _proposalId) public view returns(uint8 categoryId) {
         return allProposalData[_proposalId].category;
     }
 
     /// @dev Get member's reputation points and it's likely to be updated with time.
-    function getMemberReputation(address _memberAddress) public constant returns(uint32 memberPoints) {
+    function getMemberReputation(address _memberAddress) public view returns(uint32 memberPoints) {
         if (allMemberReputationByAddress[_memberAddress] == 0)
             memberPoints = 1;
         else
@@ -1011,17 +1011,17 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets Total vote value from all the votes that has been casted against of winning solution
-    function getProposalTotalVoteValue(uint _proposalId) public constant returns(uint voteValue) {
+    function getProposalTotalVoteValue(uint _proposalId) public view returns(uint voteValue) {
         voteValue = allProposalData[_proposalId].totalVoteValue;
     }
 
     /// @dev Gets Total number of proposal created till now in dApp
-    function getProposalLength() public constant returns(uint) {
+    function getProposalLength() public view returns(uint) {
         return (allProposal.length);
     }
 
     /// @dev Get Latest updated version of proposal.
-    function getProposalVersion(uint _proposalId) public constant returns(uint) {
+    function getProposalVersion(uint _proposalId) public view returns(uint) {
         return allProposalData[_proposalId].versionNumber;
     }
 
@@ -1065,12 +1065,12 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets final solution index won after majority voting.
-    function getProposalFinalVerdict(uint _proposalId) public constant returns(uint finalSolutionIndex) {
+    function getProposalFinalVerdict(uint _proposalId) public view returns(uint finalSolutionIndex) {
         finalSolutionIndex = allProposalData[_proposalId].finalVerdict;
     }
 
     /// @dev Gets Intermidiate solution is while voting is still in progress by other voting layers
-    function getProposalIntermediateVerdict(uint _proposalId) public constant returns(uint8) {
+    function getProposalIntermediateVerdict(uint _proposalId) public view returns(uint8) {
         return allProposalData[_proposalId].currentVerdict;
     }
 
@@ -1083,7 +1083,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Get total deposit tokens against member and proposal Id with type of (proposal/solution/vote); 
     function getDepositTokensByAddressProposal(address _memberAddress, uint _proposalId) 
         public 
-        constant 
+        view 
         returns(uint, uint depositForCreatingProposal, uint depositForProposingSol, uint depositForCastingVote) 
     {
         return (
@@ -1102,7 +1102,7 @@ contract GovernanceData is Upgradeable {
     /// @param _rejectedProposals Proposal those are rejected by majority voting.
     function getStatusOfProposals() 
         public 
-        constant 
+        view 
         returns(
             uint _proposalLength, 
             uint _draftProposals, 
@@ -1137,7 +1137,7 @@ contract GovernanceData is Upgradeable {
     /// @return rejectedProposals All the proposals rejected by majority voting
     function getStatusOfProposalsForMember(uint[] _proposalsIds) 
         public 
-        constant 
+        view 
         returns(
             uint proposalLength, 
             uint draftProposals, 
@@ -1166,7 +1166,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Gets Total number of solutions provided by a specific member
     function getAllSolutionIdsLengthByAddress(address _memberAddress) 
         public 
-        constant 
+        view 
         returns(uint totalSolutionProposalCount) 
     {
         for (uint i = 0; i < allProposal.length; i++) {
@@ -1183,7 +1183,7 @@ contract GovernanceData is Upgradeable {
     /// @return depositForCastingVote Total amount that has been deposited when casting vote against proposals
     function getAllDepositTokensByAddress(address _memberAddress) 
         public 
-        constant 
+        view 
         returns(uint depositForCreatingProposal, uint depositForProposingSolution, uint depositForCastingVote) 
     {
         for (uint i = 0; i < allProposal.length; i++) {
@@ -1200,7 +1200,7 @@ contract GovernanceData is Upgradeable {
     /// @return totalSolution Count of total solutions provided by member till now
     function getAllSolutionIdsByAddress(address _memberAddress) 
         public 
-        constant 
+        view 
         returns(uint[] proposalIds, uint[] solutionProposalIds, uint totalSolution) 
     {
         uint solutionProposalLength = getAllSolutionIdsLengthByAddress(_memberAddress);

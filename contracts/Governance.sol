@@ -253,7 +253,7 @@ contract Governance is Upgradeable {
     ///      i.e. Closevalue is 1 in case of closing, 0 otherwise!
     /// @param _proposalId Proposal id to which closing value is being checked
     /// @param _roleId Voting will gets close for the role id provided here.
-    function checkForClosing(uint _proposalId, uint32 _roleId) public constant returns(uint8 closeValue) {
+    function checkForClosing(uint _proposalId, uint32 _roleId) public view returns(uint8 closeValue) {
         uint dateUpdate;
         uint pStatus;
         uint _closingTime;
@@ -364,7 +364,7 @@ contract Governance is Upgradeable {
     /// @return totalVotes Total number of votes casted by member
     function getMemberDetails(address _memberAddress) 
         public 
-        constant 
+        view 
         returns(
             uint memberReputation, 
             uint totalProposal, 
@@ -381,7 +381,7 @@ contract Governance is Upgradeable {
     /*/// @dev Return array having all votes ids casted by a member
     /// @param _memberAddress Member address
     /// @return totalVoteCasted All vote ids given by member
-    function getAllVoteIdsByAddress(address _memberAddress) public constant returns(uint[] totalVoteCasted) {
+    function getAllVoteIdsByAddress(address _memberAddress) public view returns(uint[] totalVoteCasted) {
         uint length = governanceDat.getProposalLength();
         uint j = 0;
         uint totalVoteCount = getAllVoteIdsLengthByAddress(_memberAddress);
@@ -398,7 +398,7 @@ contract Governance is Upgradeable {
     /// @dev Gets Total number count of votes casted by member
     /// @param _memberAddress Member address
     /// @return totalVoteCount Total vote count
-    function getAllVoteIdsLengthByAddress(address _memberAddress) public constant returns(uint totalVoteCount) {
+    function getAllVoteIdsLengthByAddress(address _memberAddress) public view returns(uint totalVoteCount) {
         uint length = governanceDat.getProposalLength();
         for (uint i = 0; i < length; i++) {
             uint voteId = governanceDat.getVoteIdAgainstMember(_memberAddress, i);
@@ -413,7 +413,7 @@ contract Governance is Upgradeable {
         uint _proposalId
     ) 
         public 
-        constant 
+        view 
         returns(
             uint proposalId, 
             uint solutionId, 
@@ -440,7 +440,7 @@ contract Governance is Upgradeable {
     /// @dev Gets total votes against a proposal when given proposal id
     /// @param _proposalId Proposal id
     /// @return totalVotes total votes against a proposal
-    function getAllVoteIdsLengthByProposal(uint _proposalId) public constant returns(uint totalVotes) {
+    function getAllVoteIdsLengthByProposal(uint _proposalId) public view returns(uint totalVotes) {
         // memberRole=MemberRoles(MRAddress);
         uint length = memberRole.getTotalMemberRoles();
         for (uint i = 0; i < length; i++) {
@@ -766,7 +766,7 @@ contract Governance is Upgradeable {
         uint _voteNo
     ) 
         internal 
-        constant 
+        view 
         returns(
             uint solutionChosen, 
             uint proposalStatus, 
