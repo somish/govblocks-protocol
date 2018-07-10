@@ -164,13 +164,12 @@ contract MemberRoles is Upgradeable {
     /// @param _memberAddress Address of Member
     /// @param _roleId RoleId to update 
     /// @param _typeOf typeOf is set to be True if we want to assign this role to member, False otherwise!
-    /// @param _limitedValidity 0 if not limited, 1 if limited by validity.
+
     function updateMemberRole(
         address _memberAddress, 
         uint32 _roleId, 
         bool _typeOf,
-        uint _validity,
-        bool _limitedValidity
+        uint _validity
     ) 
         public 
         checkRoleAuthority(_roleId) 
@@ -181,13 +180,11 @@ contract MemberRoles is Upgradeable {
             memberRoleData[_roleId].memberActive[_memberAddress] = true;
             memberRoleData[_roleId].memberAddress.push(_memberAddress);
             memberRoleData[_roleId].validity[_memberAddress] = _validity;
-            memberRoleData[_roleId].limitedValidity = _limitedValidity;
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.sub32(memberRoleData[_roleId].memberCounter, 1);
             memberRoleData[_roleId].memberActive[_memberAddress] = false;
             memberRoleData[_roleId].validity[_memberAddress] = _validity;
-            memberRoleData[_roleId].limitedValidity = _limitedValidity;
         }
     }
 

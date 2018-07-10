@@ -143,7 +143,7 @@ contract ProposalCategory {
         allSubIdByCategory[1].push(1);
         allSubCategory.push(SubCategory(
                 "Add new member role",
-                "QmT3sMfqAvTgCkcsdVgiHvMycEWoeoQiD86e4H744pqfhF",
+                "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
                 1,
                 master.getLatestAddress("MR"),
                 "MR"
@@ -152,7 +152,7 @@ contract ProposalCategory {
         allSubIdByCategory[1].push(2);
         allSubCategory.push(SubCategory(
                 "Update member role",
-                "QmV55gWxnEBF8reTrVKrhbg5QrwqA65kFhMEFWDnnpphrJ",
+                "QmbsXSZ3rNPd8mDizVBV33GVg1ThveUD5YnM338wisEJyd",
                 1,
                 master.getLatestAddress("MR"),
                 "MR"
