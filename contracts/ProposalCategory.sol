@@ -164,14 +164,14 @@ contract ProposalCategory {
     }
 
     /// @dev Adds new category
-    /// @param _categoryData Category hash created in IPFS having all the details
+    /// @param _name Category name
     /// @param _memberRoleSequence Voting Layer sequence in which the voting has to be performed.
     /// @param _memberRoleMajorityVote Majority Vote threshhold for Each voting layer
     /// @param _closingTime Vote closing time for Each voting layer
     /// @param _stakeAndIncentive array of minstake maxstake and incentive required against each category
     /// @param _rewardPercentage array of reward percentages for Proposal, Solution and Voting.
     function addNewCategory(
-        string _categoryData, 
+        string _name, 
         uint8[] _memberRoleSequence, 
         uint8[] _memberRoleMajorityVote, 
         uint32[] _closingTime,
@@ -185,7 +185,7 @@ contract ProposalCategory {
             && _memberRoleMajorityVote.length == _closingTime.length
         );
         allCategory.push(Category(
-                _categoryData, 
+                _name, 
                 _memberRoleSequence, 
                 _memberRoleMajorityVote, 
                 _closingTime, 
@@ -208,7 +208,7 @@ contract ProposalCategory {
     /// @param _rewardPercentage array of reward percentages for Proposal, Solution and Voting.
     function updateCategory(
         uint _categoryId, 
-        string _descHash, 
+        string _name, 
         uint8[] _roleName, 
         uint8[] _majorityVote, 
         uint32[] _closingTime, 
@@ -219,7 +219,7 @@ contract ProposalCategory {
         onlySV
     {
         require(_roleName.length == _majorityVote.length && _majorityVote.length == _closingTime.length);
-        allCategory[_categoryId].name = _descHash;
+        allCategory[_categoryId].name = _name;
         allCategory[_categoryId].minStake = _stakeAndIncentive[0];
         allCategory[_categoryId].maxStake = _stakeAndIncentive[1];
         allCategory[_categoryId].defaultIncentive = _stakeAndIncentive[2];

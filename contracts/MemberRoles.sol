@@ -28,6 +28,7 @@ contract MemberRoles is Upgradeable {
     address public masterAddress;
     Master internal master;
     uint constant UINT_MAX = uint256(0) - uint256(1);
+    address simpleVoting;
 
     struct MemberRoleDetails {
         uint32 memberCounter;
@@ -124,6 +125,15 @@ contract MemberRoles is Upgradeable {
     function updateDependencyAddresses() public {
         if (!constructorCheck)
             memberRolesInitiate();
+        master = Master(masterAddress);
+        address newSV = master.getLatestAddress("SV");
+        if (simpleVoting != newSV) {
+            for (uint i = 0; i < authorizedAddressAgainstRole.length; i++) {
+                if (authorizedAddressAgainstRole[i] == simpleVoting)
+                    authorizedAddressAgainstRole[i] = newSV;
+            }
+            simpleVoting = newSV;
+        }
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.
@@ -214,7 +224,12 @@ contract MemberRoles is Upgradeable {
     {
         uint rolelength = getTotalMemberRoles();
         memberRole.push(_newRoleName);
-        authorizedAddressAgainstRole[rolelength] = _canAddMembers;
+        if (_canAddMembers == address(0)) {
+            master = Master(masterAddress);
+            authorizedAddressAgainstRole[rolelength] = master.getLatestAddress("SV");
+        } else {
+            authorizedAddressAgainstRole[rolelength] = _canAddMembers;
+        }
         MemberRole(rolelength, _newRoleName, _roleDescription, _limitedValidity);
     }
 
