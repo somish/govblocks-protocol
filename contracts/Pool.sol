@@ -104,8 +104,8 @@ contract Pool is usingOraclize, Upgradeable {
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
         simpleVoting = SimpleVoting(master.getLatestAddress("SV"));
         gov = Governance(master.getLatestAddress("GV"));
-        if(address(this) != master.getLatestAddress("PL")){
-            gbt.transfer(master.getLatestAddress("PL"), balanceOf(address(this)) - getLockToken(address(this)));
+        if(address(this) != master.getLatestAddress("PL")) {
+            gbt.transfer(master.getLatestAddress("PL"), gbt.balanceOf(address(this)) - gbt.getLockToken(address(this)));
         }
     }
 

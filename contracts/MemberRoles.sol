@@ -127,13 +127,13 @@ contract MemberRoles is Upgradeable {
             memberRolesInitiate();
         master = Master(masterAddress);
         address newSV = master.getLatestAddress("SV");
-        if (simpleVoting != newSV) {
+        /*if (simpleVoting != newSV) {
             for (uint i = 0; i < authorizedAddressAgainstRole.length; i++) {
                 if (authorizedAddressAgainstRole[i] == simpleVoting)
                     authorizedAddressAgainstRole[i] = newSV;
             }
             simpleVoting = newSV;
-        }
+        }*/
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.
