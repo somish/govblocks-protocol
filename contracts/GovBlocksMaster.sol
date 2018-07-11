@@ -16,6 +16,7 @@
 pragma solidity ^0.4.24;
 import "./Master.sol";
 import "./GovernChecker.sol";
+import "./Governed.sol";
 
 
 contract GovBlocksMaster {
@@ -49,7 +50,8 @@ contract GovBlocksMaster {
         require(owner == address(0));
         owner = msg.sender;
         gbtAddress = _gbtAddress;
-        governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
+        Governed govern = new Governed(dAppName);
+        governChecker = GovernChecker(govern.getGovernCheckerAddress());
         //   updateGBMAddress(address(this));  
     }
 

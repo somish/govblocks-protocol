@@ -21,7 +21,7 @@ import "./GBTStandardToken.sol";
 import "./GovBlocksMaster.sol";
 import "./Ownable.sol";
 import "./GovernanceData.sol";
-import "./GovernChecker.sol";
+import "./Governed.sol";
 
 
 contract Master is Ownable, Upgradeable {
@@ -67,7 +67,7 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Returns true if the caller address is GovBlocksMaster Address.
     function isGBM(address _gbmAddress) public view returns(bool check) {
-        if(_gbmAddress == gbmAddress);
+        if(_gbmAddress == gbmAddress)
             check = true;
     }
 
@@ -75,10 +75,10 @@ contract Master is Ownable, Upgradeable {
     ///     owner allowed for debugging only, will be removed before launch.
     function isAuth() public view returns(bool check) {
         if(contractChangeDate.length < 1) {
-            if(owner == msg.sender);
+            if(owner == msg.sender)
                 check = true;
         } else {
-            if(getLatestAddress("SV") == msg.sender || owner == msg.sender);
+            if(getLatestAddress("SV") == msg.sender || owner == msg.sender)
                 check = true;
         }
     }
@@ -109,8 +109,8 @@ contract Master is Ownable, Upgradeable {
     /// @param _contractAddresses Array of nine contract addresses which will be generated
     function addNewVersion(address[6] _contractAddresses) public {
         if(versionLength == 0) {
-            GovernChecker governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
-            governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
+            Governed govern = new Governed(dAppName);
+            govern.governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
         }
         
         require(isAuth());

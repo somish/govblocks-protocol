@@ -21,7 +21,9 @@ contract Governed {
     } 
 
     function setGovernChecker() public {
-        if (getCodeSize(0x56f8fec317d95c9eb755268abc2afb99afbdcb47) > 0)    //kovan testnet
+        if (getCodeSize(0x56f8fec317d95c9eb755268abc2afb99afbdcb47) > 0)        //kovan testnet
+            governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
+        else if (getCodeSize(0x56f8fec317d95c9eb755268abc2afb99afbdcb47) > 0)   //RSK testnet
             governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
     }
 
@@ -29,5 +31,9 @@ contract Governed {
         assembly {
             _size := extcodesize(_addr)
         }
+    }
+
+    function getGovernCheckerAddress() public view returns(address) {
+        return address(governChecker);
     }
 }
