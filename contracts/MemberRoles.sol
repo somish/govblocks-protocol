@@ -83,7 +83,8 @@ contract MemberRoles is Upgradeable {
     }
 
     modifier checkRoleAuthority(uint _memberRoleId) {
-        require(isGBM() || msg.sender == authorizedAddressAgainstRole[_memberRoleId]);
+        master = Master(masterAddress);
+        require(msg.sender == authorizedAddressAgainstRole[_memberRoleId] || master.isOwner(msg.sender));
         _;
     }
 
@@ -146,6 +147,10 @@ contract MemberRoles is Upgradeable {
             }
         }
         return assignedRoles;
+    }
+
+    function getValidity(address _memberAddress, uint32 _roleId) public view returns (uint) {
+        return memberRoleData[_roleId].validity[_memberAddress];
     }
 
     /// @dev Returns true if the given role id is assigned to a member.

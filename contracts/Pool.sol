@@ -48,12 +48,6 @@ contract Pool is usingOraclize, Upgradeable {
 
     function () public payable {}
 
-    /// @dev Constructor
-    function Pool() {
-        oraclize_setCustomGasPrice(1000000000);
-        gasLimit = 3000000;
-    }
-
     /// @dev Changes master address
     /// @param _add New master address
     function changeMasterAddress(address _add) public {

@@ -67,19 +67,20 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Returns true if the caller address is GovBlocksMaster Address.
     function isGBM(address _gbmAddress) public view returns(bool check) {
-        require(_gbmAddress == gbmAddress);
-        check = true;
+        if(_gbmAddress == gbmAddress);
+            check = true;
     }
 
     /// @dev Checks if the address is authorized to make changes.
     ///     owner allowed for debugging only, will be removed before launch.
     function isAuth() public view returns(bool check) {
         if(contractChangeDate.length < 1) {
-            require(owner == msg.sender);
+            if(owner == msg.sender);
+                check = true;
         } else {
-            require(getLatestAddress("SV") == msg.sender || owner == msg.sender);
+            if(getLatestAddress("SV") == msg.sender || owner == msg.sender);
+                check = true;
         }
-        check = true;
     }
 
     /// @dev Checks if the caller address is either one of its active contract address or owner.
