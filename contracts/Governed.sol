@@ -2,6 +2,8 @@ pragma solidity ^0.4.24;
 
 contract GovernChecker {
     function authorized(bytes32 _dAppName) public view returns(address);
+    function initializeAuthorized(bytes32 _dAppName, address authorizedAddress) public;
+    function updateGBMAdress(address _govBlockMaster) public;
 }
 
 contract Governed {

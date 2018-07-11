@@ -22,7 +22,6 @@ import "./GovBlocksMaster.sol";
 import "./Ownable.sol";
 import "./GovernanceData.sol";
 import "./Governed.sol";
-import "./GovernChecker.sol";
 
 
 contract Master is Ownable, Upgradeable {
