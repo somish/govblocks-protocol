@@ -25,8 +25,8 @@ contract Governed {
     function setGovernChecker() public {
         if (getCodeSize(0x56f8fec317d95c9eb755268abc2afb99afbdcb47) > 0)        //kovan testnet
             governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
-        else if (getCodeSize(0x56f8fec317d95c9eb755268abc2afb99afbdcb47) > 0)   //RSK testnet
-            governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
+        else if (getCodeSize(0xd38c85468f36d68e3745f6b9198c4fc66b170f70) > 0)   //RSK testnet
+            governChecker = GovernChecker(0xd38c85468f36d68e3745f6b9198c4fc66b170f70);
     }
 
     function getCodeSize(address _addr) internal view returns(uint _size) {

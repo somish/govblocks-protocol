@@ -84,10 +84,9 @@ contract ProposalCategory {
         _;
     }
 
-    modifier onlySV {
+    modifier onlySV {   //Owner for debugging only, will be removed before launch 
         master = Master(masterAddress);
-        require(master.getLatestAddress("SV") == msg.sender 
-            || master.isInternal(msg.sender) 
+        require(master.getLatestAddress("SV") == msg.sender  
             || master.isOwner(msg.sender)
         );
         _;

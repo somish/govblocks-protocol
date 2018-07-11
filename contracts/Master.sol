@@ -134,6 +134,7 @@ contract Master is Ownable, Upgradeable {
     function switchToRecentVersion() public {
         require(isAuth());
         addInContractChangeDate();
+        changeMasterAddress(address(this));
         changeAllAddress();
     }
 
@@ -284,7 +285,7 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Sets the older versions of contract addresses as inactive and the latest one as active.
     function changeAllAddress() internal {
-        for (uint8 i = 0; i < allContractNames.length - 1; i++) {
+        for (uint8 i = 1; i < allContractNames.length - 1; i++) {
             addRemoveAddress(versionLength - 1, allContractNames[i]);
             up = Upgradeable(allContractVersions[versionLength - 1][allContractNames[i]]);
             up.changeMasterAddress(address(this));

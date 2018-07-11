@@ -104,13 +104,6 @@ contract MemberRoles is Upgradeable {
             return true;
     }
 
-    /// @dev Returns true if the caller address is GovBlocksMaster contract address.
-    function isGBM() public view returns(bool) {
-        master = Master(masterAddress);
-        if (master.isGBM(msg.sender))
-            return true;
-    }
-
     /// @dev Changes Master's contract address 
     /// @param _masterContractAddress New master address
     function changeMasterAddress(address _masterContractAddress) public {

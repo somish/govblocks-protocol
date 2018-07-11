@@ -352,11 +352,6 @@ contract GovernanceData is Upgradeable {
         _;
     }
 
-    /*modifier onlyGBM {
-        master = Master(masterAddress);
-        require(master.isGBM(msg.sender));
-        _;
-    }*/
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) public {
