@@ -22,6 +22,7 @@ import "./GovBlocksMaster.sol";
 import "./Ownable.sol";
 import "./GovernanceData.sol";
 import "./Governed.sol";
+import "./GovernChecker.sol";
 
 
 contract Master is Ownable, Upgradeable {
@@ -110,7 +111,8 @@ contract Master is Ownable, Upgradeable {
     function addNewVersion(address[6] _contractAddresses) public {
         if(versionLength == 0) {
             Governed govern = new Governed(dAppName);
-            govern.governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
+            GovernChecker governChecker = GovernChecker(govern.getGovernCheckerAddress());
+            governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
         }
         
         require(isAuth());

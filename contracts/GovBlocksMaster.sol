@@ -50,7 +50,7 @@ contract GovBlocksMaster {
         require(owner == address(0));
         owner = msg.sender;
         gbtAddress = _gbtAddress;
-        Governed govern = new Governed(dAppName);
+        Governed govern = new Governed("GBM");
         governChecker = GovernChecker(govern.getGovernCheckerAddress());
         //   updateGBMAddress(address(this));  
     }
