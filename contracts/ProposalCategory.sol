@@ -238,7 +238,7 @@ contract ProposalCategory {
     }
 
     /// @dev Add new sub category against category.
-    /// @param _categoryName Name of the main category
+    /// @param _categoryName Name of the sub category
     /// @param _actionHash Automated Action hash has Contract Address and function name 
     /// i.e. Functionality that needs to be performed after proposal acceptance.
     /// @param _mainCategoryId Id of main category
@@ -536,7 +536,7 @@ contract ProposalCategory {
         allSubIdByCategory[2].push(3);
         allSubCategory.push(SubCategory(
                 "Add new category",
-                "QmRLpTuiyW4st2jiWSzkAi25R9dbg57y5gBYMyb5r5tXQ6",
+                "QmcCKba6ahSEj1gdVwHVasY8DyWnLXy2pSLufH5kThmo2m",
                 2,
                 master.getLatestAddress("PC"),
                 "PC"
@@ -545,7 +545,7 @@ contract ProposalCategory {
         allSubIdByCategory[2].push(4);
         allSubCategory.push(SubCategory(
                 "Edit category",
-                "QmdbU7dDAtjVq6xyFNmu4K4AAHPookbNM3eZ8fUyMuuxYg",
+                "QmdKzy9qYsLFq62Pf23raHNz5f6otYWtWZfpwNPQeCnawx",
                 2,
                 master.getLatestAddress("PC"),
                 "PC"

@@ -406,7 +406,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                 if (currentVotingId < proposalCategory.getRoleSequencLength(category)) {
                     governance.updateProposalDetails(
                         _proposalId, 
-                        proposalCategory.getRoleSequencAtIndex(category, currentVotingId), 
+                        currentVotingId, 
                         max, 
                         0
                     );
