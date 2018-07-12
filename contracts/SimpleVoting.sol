@@ -331,7 +331,11 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint8 currentVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
         uint8 i;
         uint8 max = 0;
+
+        //used to throw if proposal closing called enough times already
+        //as the currentVotingId becomes greater than length of role sequence array
         uint32 _mrSequenceId = proposalCategory.getRoleSequencAtIndex(category, currentVotingId);
+
         require(governance.checkForClosing(_proposalId, _mrSequenceId) == 1);
         uint[] memory finalVoteValue = new uint[](governanceDat.getTotalSolutions(_proposalId));
         for (i = 0; i < governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId); i++) {
@@ -413,7 +417,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                         proposalCategory.getClosingTimeAtIndex(category, currentVotingId)
                     );
                 } else {
-                    governance.updateProposalDetails(_proposalId, currentVotingId, max, max);
+                    governance.updateProposalDetails(_proposalId, currentVotingId - 1, max, max);
                     governanceDat.changeProposalStatus(_proposalId, 3);
                     SimpleVoting x = SimpleVoting(
                         proposalCategory.getContractAddress(governanceDat.getProposalCategory(_proposalId))
