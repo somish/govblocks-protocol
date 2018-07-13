@@ -238,9 +238,9 @@ contract MemberRoles is Upgradeable {
     /// @return roleId Role id
     /// @return allMemberAddress Member addresses of specified role id
     function getAllAddressByRoleId(uint32 _memberRoleId) public view returns(uint32, address[] allMemberAddress) {
-        uint length = getAllMemberLength(_memberRoleId);
+        uint length = memberRoleData[_memberRoleId].memberAddress.length;
         uint8 j = 0;
-        allMemberAddress = new address[](length);
+        allMemberAddress = new address[](memberRoleData[_memberRoleId].memberCounter);
         for (uint8 i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
             if (memberRoleData[_memberRoleId].memberActive[member]
