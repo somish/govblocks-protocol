@@ -47,11 +47,11 @@ contract MemberRoles is Upgradeable {
         uint rolelength = getTotalMemberRoles();
         memberRole.push("");
         authorizedAddressAgainstRole[rolelength] = address(0);
-        MemberRole(rolelength, "", "", false);
+        emit MemberRole(rolelength, "", "", false);
         rolelength++;
         memberRole.push("Advisory Board");
         authorizedAddressAgainstRole[rolelength] = master.owner();
-        MemberRole(
+        emit MemberRole(
             rolelength, 
             "Advisory Board", 
             "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.",
@@ -60,7 +60,7 @@ contract MemberRoles is Upgradeable {
         rolelength++;
         memberRole.push("Token Holder");
         authorizedAddressAgainstRole[rolelength] = address(0);
-        MemberRole(
+        emit MemberRole(
             rolelength, 
             "Token Holder", 
             "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.",
@@ -230,7 +230,7 @@ contract MemberRoles is Upgradeable {
         } else {
             authorizedAddressAgainstRole[rolelength] = _canAddMembers;
         }
-        MemberRole(rolelength, _newRoleName, _roleDescription, _limitedValidity);
+        emit MemberRole(rolelength, _newRoleName, _roleDescription, _limitedValidity);
     }
 
     /// @dev Gets the member addresses assigned by a specific role

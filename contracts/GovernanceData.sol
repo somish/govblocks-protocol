@@ -106,7 +106,7 @@ contract GovernanceData is Upgradeable {
         public
         onlyInternal 
     {
-        ProposalWithSolution(proposalOwner, proposalId, proposalDescHash, solutionDescHash, dateAdd, stake);
+        emit ProposalWithSolution(proposalOwner, proposalId, proposalDescHash, solutionDescHash, dateAdd, stake);
     }
 
     /// @dev Calls proposal with stake event
@@ -118,7 +118,7 @@ contract GovernanceData is Upgradeable {
         public
         onlyInternal
     {
-        ProposalStake(_proposalOwner, _proposalId, _dateUp, _proposalStake);
+        emit ProposalStake(_proposalOwner, _proposalId, _dateUp, _proposalStake);
     }
 
     /// @dev Calls proposal version event
@@ -130,7 +130,7 @@ contract GovernanceData is Upgradeable {
         public
         onlyInternal 
     {
-        ProposalVersion(proposalId, vNumber, proposalHash, dateAdd);
+        emit ProposalVersion(proposalId, vNumber, proposalHash, dateAdd);
     }
 
     /// @dev Calls solution event
@@ -150,7 +150,7 @@ contract GovernanceData is Upgradeable {
         public
         onlyInternal 
     {
-        Solution(proposalId, solutionOwner, solutionId, solutionDescHash, dateAdd, solutionStake);
+        emit Solution(proposalId, solutionOwner, solutionId, solutionDescHash, dateAdd, solutionStake);
     }
 
     /// @dev Calls proposal event
@@ -169,7 +169,7 @@ contract GovernanceData is Upgradeable {
         public
         onlyInternal 
     {
-        Proposal(_proposalOwner, _proposalId, _dateAdd, _proposalTitle, _proposalSD, _proposalDescHash);
+        emit Proposal(_proposalOwner, _proposalId, _dateAdd, _proposalTitle, _proposalSD, _proposalDescHash);
     }
 
     /// @dev Calls event to update the reputation of the member
@@ -188,7 +188,7 @@ contract GovernanceData is Upgradeable {
         public
         onlyInternal 
     {
-        Reputation(_from, _proposalId, _description, _reputationPoints, _typeOf);
+        emit Reputation(_from, _proposalId, _description, _reputationPoints, _typeOf);
     }
 
     /// @dev Calls vote event
@@ -201,7 +201,7 @@ contract GovernanceData is Upgradeable {
         public
         onlyInternal 
     {
-        Vote(_from, _proposalId, _dateAdd, _voteStakeGBT, _voteId);
+        emit Vote(_from, _proposalId, _dateAdd, _voteStakeGBT, _voteId);
     }
 
     /// @dev Calls reward event
@@ -213,7 +213,7 @@ contract GovernanceData is Upgradeable {
         public 
         onlyInternal 
     {
-        Reward(_to, _proposalId, _description, _amount);
+        emit Reward(_to, _proposalId, _description, _amount);
     }
 
     /// @dev Calls penalty event
@@ -225,7 +225,7 @@ contract GovernanceData is Upgradeable {
         public 
         onlyInternal 
     {
-        Penalty(_to, _proposalId, _description, _amount);
+        emit Penalty(_to, _proposalId, _description, _amount);
     }
 
     /// @dev Calls Oraclize call event
@@ -236,7 +236,7 @@ contract GovernanceData is Upgradeable {
         public 
         onlyInternal 
     {
-        OraclizeCall(allProposal[_proposalId].owner, _proposalId, _dateAdd, _closingTime);
+        emit OraclizeCall(allProposal[_proposalId].owner, _proposalId, _dateAdd, _closingTime);
     }
 
     /// @dev Calls proposal status event
@@ -247,7 +247,7 @@ contract GovernanceData is Upgradeable {
         public 
         onlyInternal 
     {
-        ProposalStatus(_proposalId, _proposalStatus, _dateAdd);
+        emit ProposalStatus(_proposalId, _proposalStatus, _dateAdd);
     }
 
     using SafeMath for uint;
@@ -784,7 +784,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Changes the status of a given proposal.
     function changeProposalStatus(uint _id, uint8 _status) public onlyInternal {
         require(allProposalData[_id].category != 0);
-        ProposalStatus(_id, _status, now);
+        emit ProposalStatus(_id, _status, now);
         updateProposalStatus(_id, _status);
     }
 
@@ -824,14 +824,14 @@ contract GovernanceData is Upgradeable {
         onlyInternal 
     {
         allMemberReputationByAddress[_memberAddress] = _repPoints;
-        Reputation(_memberAddress, _proposalId, _description, _repPointsEventLog, _typeOf);
+        emit Reputation(_memberAddress, _proposalId, _description, _repPointsEventLog, _typeOf);
     }
 
     /// @dev Stores the information of version number of a given proposal. 
     ///     Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _proposalId, string _proposalDescHash) public onlyInternal {
         uint8 versionNo = allProposalData[_proposalId].versionNumber + 1;
-        ProposalVersion(_proposalId, versionNo, _proposalDescHash, now);
+        emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now);
         setProposalVersion(_proposalId, versionNo);
     }
 
