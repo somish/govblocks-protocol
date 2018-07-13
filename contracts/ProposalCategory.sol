@@ -554,7 +554,7 @@ contract ProposalCategory {
         allSubIdByCategory[2].push(5);
         allSubCategory.push(SubCategory(
                 "Add new sub category",
-                "QmdVXg2t6SPDrpFk4FXh6LApU6tSgojsnCXhZvm14Jo5S8",
+                "QmeyPccQzMTNxSavJp4dL1J88zzb4xNESn5wLTPzqMFFJX",
                 2,
                 master.getLatestAddress("PC"),
                 "PC"
@@ -563,7 +563,7 @@ contract ProposalCategory {
         allSubIdByCategory[2].push(6);
         allSubCategory.push(SubCategory(
                 "Edit sub category",
-                "QmYTMXdortXjDg73tHopPrxzPNow5sCUkuiG9M9ifSHZic",
+                "QmVeSBUghB71WHhnT8tXajSctnfz1fYx6fWXc9wXHJ8r2p",
                 2,
                 master.getLatestAddress("PC"),
                 "PC"
