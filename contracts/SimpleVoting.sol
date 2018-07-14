@@ -23,10 +23,10 @@ import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
 import "./GovBlocksMaster.sol";
-import "./BasicToken.sol";
 import "./Pool.sol";
 import "./Math.sol";
 import "./VotingType.sol";
+import "./BasicToken.sol";
 
 
 contract SimpleVoting is VotingType, Upgradeable {
@@ -93,6 +93,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         governance = Governance(govAddress);
         pool = Pool(master.getLatestAddress("PL"));
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
+        basicToken = BasicToken(govBlocksMaster.getDappTokenAddress(master.dAppName()));
     }
 
     /// @dev Changes GBT Standard Token address
@@ -287,10 +288,10 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint tokensHeld = 
             SafeMath.div(
                 SafeMath.mul(
-                    SafeMath.mul(gbt.balanceOf(_memberAddress), 100), 
+                    SafeMath.mul(basicToken.balanceOf(_memberAddress), 100), 
                     100
                 ), 
-                gbt.totalSupply()
+                basicToken.totalSupply()
             );
         uint value = 
             SafeMath.mul(
@@ -422,8 +423,6 @@ contract SimpleVoting is VotingType, Upgradeable {
     function checkForThreshold(uint _proposalId, uint32 _mrSequenceId) internal view returns(bool) {
         uint thresHoldValue;
         if (_mrSequenceId == 2) {
-            address dAppTokenAddress = govBlocksMaster.getDappTokenAddress(master.dAppName());
-            basicToken = BasicToken(dAppTokenAddress);
             uint totalTokens;
 
             for (uint8 i = 0; i < governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId); i++) {
