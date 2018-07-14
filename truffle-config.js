@@ -7,7 +7,7 @@ module.exports = {
     development: {
       gasPrice : 1,
       provider: function() {
-        return new HDWalletProvider(mnemonic, "https://parity.motv.ml/");
+        return new HDWalletProvider(mnemonic, "https://parity.govblocks.ml/");
       },
       network_id: "*"
     },

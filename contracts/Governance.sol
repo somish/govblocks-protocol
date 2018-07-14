@@ -378,35 +378,6 @@ contract Governance is Upgradeable {
         totalVotes = governanceDat.getTotalNumberOfVotesByAddress(_memberAddress);
     }
 
-    /*/// @dev Return array having all votes ids casted by a member
-    /// @param _memberAddress Member address
-    /// @return totalVoteCasted All vote ids given by member
-    function getAllVoteIdsByAddress(address _memberAddress) public view returns(uint[] totalVoteCasted) {
-        uint length = governanceDat.getProposalLength();
-        uint j = 0;
-        uint totalVoteCount = getAllVoteIdsLengthByAddress(_memberAddress);
-        totalVoteCasted = new uint[](totalVoteCount);
-        for (uint i = 0; i < length; i++) {
-            uint voteId = governanceDat.getVoteIdAgainstMember(_memberAddress, i);
-            if (voteId != 0) {
-                totalVoteCasted[j] = voteId;
-                j++;
-            }
-        }
-    }
-
-    /// @dev Gets Total number count of votes casted by member
-    /// @param _memberAddress Member address
-    /// @return totalVoteCount Total vote count
-    function getAllVoteIdsLengthByAddress(address _memberAddress) public view returns(uint totalVoteCount) {
-        uint length = governanceDat.getProposalLength();
-        for (uint i = 0; i < length; i++) {
-            uint voteId = governanceDat.getVoteIdAgainstMember(_memberAddress, i);
-            if (voteId != 0)
-                totalVoteCount++;
-        }
-    }
-    */
     /// @dev It fetchs the Index of solution provided by member against a proposal
     function getSolutionIdAgainstAddressProposal(
         address _memberAddress, 
@@ -771,7 +742,7 @@ contract Governance is Upgradeable {
         address _memberAddress, 
         uint _voteNo
     ) 
-        internal 
+        public 
         view 
         returns(
             uint solutionChosen, 
