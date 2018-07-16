@@ -39,10 +39,15 @@ contract Governed {
     } 
 
     function setGovernChecker() public {
-        if (getCodeSize(0x56f8fec317d95c9eb755268abc2afb99afbdcb47) > 0)        //kovan testnet
-            governChecker = GovernChecker(0x56f8fec317d95c9eb755268abc2afb99afbdcb47);
-        else if (getCodeSize(0xd38c85468f36d68e3745f6b9198c4fc66b170f70) > 0)   //RSK testnet
-            governChecker = GovernChecker(0xd38c85468f36d68e3745f6b9198c4fc66b170f70);
+        if (getCodeSize(0xb176c4c479837d2b8f830418c6201a4f5fdbe902) > 0)        //kovan testnet
+            governChecker = GovernChecker(0xb176c4c479837d2b8f830418c6201a4f5fdbe902);
+        else if (getCodeSize(0xc1851dec0b56f7551631fe7699bad677a6130609) > 0)   //RSK testnet
+            governChecker = GovernChecker(0xc1851dec0b56f7551631fe7699bad677a6130609);
+        else if (getCodeSize(0x67995f25f04d61614d05607044c276727dea9cf0) > 0)   //Rinkeyby testnet
+            governChecker = GovernChecker(0x67995f25f04d61614d05607044c276727dea9cf0);
+        else if (getCodeSize(0xb5fe0857770d85302585564b04c81a5be96022c8) > 0)   //Ropsten testnet
+            governChecker = GovernChecker(0xb5fe0857770d85302585564b04c81a5be96022c8);
+
     }
 
     function getCodeSize(address _addr) internal view returns(uint _size) {
