@@ -55,13 +55,11 @@ contract ProposalCategory {
     address internal masterAddress;
 
     modifier onlyInternal {
-        master = Master(masterAddress);
         require(master.isInternal(msg.sender));
         _;
     }
 
     modifier onlyOwner {
-        master = Master(masterAddress);
         require(master.isOwner(msg.sender));
         _;
     }
@@ -72,20 +70,17 @@ contract ProposalCategory {
     }
 
     modifier onlyGBM(uint8[] arr1, uint8[] arr2, uint32[] arr3) {
-        master = Master(masterAddress);
         require(master.isGBM(msg.sender));
         require(arr1.length == arr2.length && arr1.length == arr3.length);
         _;
     }
 
     modifier onlyGBMSubCategory() {
-        master = Master(masterAddress);
         require(master.isGBM(msg.sender));
         _;
     }
 
     modifier onlySV {   //Owner for debugging only, will be removed before launch 
-        master = Master(masterAddress);
         require(master.getLatestAddress("SV") == msg.sender  
             || master.isOwner(msg.sender)
         );
@@ -95,12 +90,14 @@ contract ProposalCategory {
     /// @dev Changes master's contract address
     /// @param _masterContractAddress New master contract address
     function changeMasterAddress(address _masterContractAddress) public {
-        if (masterAddress == address(0))
+        if (masterAddress == address(0)){
             masterAddress = _masterContractAddress;
-        else {
+            master = Master(masterAddress);
+        } else {
             master = Master(masterAddress);
             require(master.isInternal(msg.sender));
             masterAddress = _masterContractAddress;
+            master = Master(masterAddress);
         }
     }
 
@@ -108,7 +105,6 @@ contract ProposalCategory {
     function updateDependencyAddresses() public onlyInternal {
         if (!constructorCheck)
             proposalCategoryInitiate();
-        master = Master(masterAddress);
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
     }
@@ -118,11 +114,8 @@ contract ProposalCategory {
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
-    function proposalCategoryInitiate() public {
+    function proposalCategoryInitiate() internal {
         require(!constructorCheck);
-        
-        master = Master(masterAddress);
-        
         uint8[] memory rs = new uint8[](1);
         uint8[] memory mv = new uint8[](1);
         uint32[] memory ct = new uint32[](1);
@@ -136,30 +129,9 @@ contract ProposalCategory {
         allCategory.push(Category("Changes to categories", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
         allCategory.push(Category("Changes in parameters", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
         allCategory.push(Category("Others not specified", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
-        
-        allSubIdByCategory[0].push(0);
-        allSubCategory.push(SubCategory("Uncategorized", "", 0, address(0), "EX"));
-        allSubIdByCategory[1].push(1);
-        allSubCategory.push(SubCategory(
-                "Add new member role",
-                "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
-                1,
-                master.getLatestAddress("MR"),
-                "MR"
-            )
-        );
-        allSubIdByCategory[1].push(2);
-        allSubCategory.push(SubCategory(
-                "Update member role",
-                "QmbsXSZ3rNPd8mDizVBV33GVg1ThveUD5YnM338wisEJyd",
-                1,
-                master.getLatestAddress("MR"),
-                "MR"
-            )
-        );
 
-        addInitialSubCategories1();
-        
+        addInitialSubCategories();
+
         constructorCheck = true;
     }
 
@@ -530,15 +502,33 @@ contract ProposalCategory {
     }
 
     /// @dev adds second half of the inital categories
-    function addInitialSubCategories1() internal {
-        master = Master(masterAddress);
-        
+    function addInitialSubCategories() internal {
+        allSubIdByCategory[0].push(0);
+        allSubCategory.push(SubCategory("Uncategorized", "", 0, address(0), "EX"));
+        allSubIdByCategory[1].push(1);
+        allSubCategory.push(SubCategory(
+                "Add new member role",
+                "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
+                1,
+                masterAddress,
+                "MR"
+            )
+        );
+        allSubIdByCategory[1].push(2);
+        allSubCategory.push(SubCategory(
+                "Update member role",
+                "QmbsXSZ3rNPd8mDizVBV33GVg1ThveUD5YnM338wisEJyd",
+                1,
+                masterAddress,
+                "MR"
+            )
+        );        
         allSubIdByCategory[2].push(3);
         allSubCategory.push(SubCategory(
                 "Add new category",
                 "QmcCKba6ahSEj1gdVwHVasY8DyWnLXy2pSLufH5kThmo2m",
                 2,
-                master.getLatestAddress("PC"),
+                masterAddress,
                 "PC"
             )
         );
@@ -547,7 +537,7 @@ contract ProposalCategory {
                 "Edit category",
                 "QmdKzy9qYsLFq62Pf23raHNz5f6otYWtWZfpwNPQeCnawx",
                 2,
-                master.getLatestAddress("PC"),
+                masterAddress,
                 "PC"
             )
         );
@@ -556,7 +546,7 @@ contract ProposalCategory {
                 "Add new sub category",
                 "QmeyPccQzMTNxSavJp4dL1J88zzb4xNESn5wLTPzqMFFJX",
                 2,
-                master.getLatestAddress("PC"),
+                masterAddress,
                 "PC"
             )
         );
@@ -565,7 +555,7 @@ contract ProposalCategory {
                 "Edit sub category",
                 "QmVeSBUghB71WHhnT8tXajSctnfz1fYx6fWXc9wXHJ8r2p",
                 2,
-                master.getLatestAddress("PC"),
+                masterAddress,
                 "PC"
             )
         );
@@ -581,5 +571,4 @@ contract ProposalCategory {
         allSubIdByCategory[4].push(8);
         allSubCategory.push(SubCategory("Others, not specified", "", 4, address(0), "EX"));
     }
-
 }

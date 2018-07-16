@@ -39,7 +39,7 @@ contract MemberRoles is Upgradeable {
     }
 
     mapping(uint => address) internal authorizedAddressAgainstRole;
-    mapping(uint32 => MemberRoleDetails) internal memberRoleData;
+    mapping(uint => MemberRoleDetails) internal memberRoleData;
 
     /// @dev Initiates Default settings for Member Roles contract
     function memberRolesInitiate() public {
@@ -192,7 +192,6 @@ contract MemberRoles is Upgradeable {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.sub32(memberRoleData[_roleId].memberCounter, 1);
             memberRoleData[_roleId].memberActive[_memberAddress] = false;
-            memberRoleData[_roleId].validity[_memberAddress] = _validity;
         }
     }
 
@@ -230,6 +229,7 @@ contract MemberRoles is Upgradeable {
         } else {
             authorizedAddressAgainstRole[rolelength] = _canAddMembers;
         }
+        memberRoleData[rolelength].limitedValidity = _limitedValidity;
         emit MemberRole(rolelength, _newRoleName, _roleDescription, _limitedValidity);
     }
 

@@ -40,7 +40,6 @@ contract SimpleVoting is VotingType, Upgradeable {
     address internal govAddress;
     bool public constructorCheck;
     address public masterAddress;
-    GovBlocksMaster internal govBlocksMaster;
     BasicToken internal basicToken;
     Pool internal pool;
 
@@ -93,6 +92,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         governance = Governance(govAddress);
         pool = Pool(master.getLatestAddress("PL"));
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
+        GovBlocksMaster govBlocksMaster = GovBlocksMaster(master.gbmAddress());
         basicToken = BasicToken(govBlocksMaster.getDappTokenAddress(master.dAppName()));
     }
 
