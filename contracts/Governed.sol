@@ -32,9 +32,10 @@ contract Governed {
         _;
     }
 
-    function Governed (bytes32 _dAppName) {
+    // @dev You need to enter your dApp name here.
+    constructor() {
         setGovernChecker();
-        dAppName = _dAppName;
+        dAppName = "GOVBLOCKS";
     } 
 
     function setGovernChecker() public {
