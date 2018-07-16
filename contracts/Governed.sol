@@ -33,21 +33,20 @@ contract Governed {
     }
 
     // @dev You need to enter your dApp name here.
-    constructor() {
+    constructor(bytes32 _dAppName) {
         setGovernChecker();
-        dAppName = "GOVBLOCKS";
+        dAppName = _dAppName;
     } 
 
     function setGovernChecker() public {
-        if (getCodeSize(0xb176c4c479837d2b8f830418c6201a4f5fdbe902) > 0)        //kovan testnet
-            governChecker = GovernChecker(0xb176c4c479837d2b8f830418c6201a4f5fdbe902);
-        else if (getCodeSize(0xc1851dec0b56f7551631fe7699bad677a6130609) > 0)   //RSK testnet
-            governChecker = GovernChecker(0xc1851dec0b56f7551631fe7699bad677a6130609);
-        else if (getCodeSize(0x67995f25f04d61614d05607044c276727dea9cf0) > 0)   //Rinkeyby testnet
-            governChecker = GovernChecker(0x67995f25f04d61614d05607044c276727dea9cf0);
-        else if (getCodeSize(0xb5fe0857770d85302585564b04c81a5be96022c8) > 0)   //Ropsten testnet
-            governChecker = GovernChecker(0xb5fe0857770d85302585564b04c81a5be96022c8);
-
+        if (getCodeSize(0xb176C4C479837D2B8f830418c6201A4F5FDbE902) > 0)        //kovan testnet
+            governChecker = GovernChecker(0xb176C4C479837D2B8f830418c6201A4F5FDbE902);
+        else if (getCodeSize(0xC1851deC0b56f7551631Fe7699bAd677A6130609) > 0)   //RSK testnet
+            governChecker = GovernChecker(0xC1851deC0b56f7551631Fe7699bAd677A6130609);
+        else if (getCodeSize(0x67995F25f04d61614d05607044c276727DEA9Cf0) > 0)   //Rinkeyby testnet
+            governChecker = GovernChecker(0x67995F25f04d61614d05607044c276727DEA9Cf0);
+        else if (getCodeSize(0xb5fE0857770D85302585564b04C81a5Be96022C8) > 0)   //Ropsten testnet
+            governChecker = GovernChecker(0xb5fE0857770D85302585564b04C81a5Be96022C8);
     }
 
     function getCodeSize(address _addr) internal view returns(uint _size) {
