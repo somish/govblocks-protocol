@@ -325,7 +325,6 @@ contract GovernanceData is Upgradeable {
     uint32 internal subSolutionOwnerPoints;
     uint32 internal subMemberPoints;
 
-    string[] internal status;
     ProposalStruct[] internal allProposal;
     ProposalVote[] internal allVotes;
     VotingTypeDetails[] internal allVotingTypeDetails;

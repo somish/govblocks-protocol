@@ -33,7 +33,7 @@ contract GovBlocksMaster {
     mapping(address => bytes32) internal govBlocksDappByAddress;
     mapping(bytes32 => GBDapps) internal govBlocksDapps;
     mapping(address => string) internal govBlocksUser;
-
+    bytes public masterByteCode;
     bytes32[] internal allGovBlocksUsers;
     string internal byteCodeHash;
     string internal contractsAbiHash;
@@ -90,15 +90,13 @@ contract GovBlocksMaster {
     /// @param _dappDescriptionHash dApp description hash having dApp or token logo information
     function addGovBlocksUser(bytes32 _gbUserName, address _dappTokenAddress, string _dappDescriptionHash) public {
         require(govBlocksDapps[_gbUserName].masterAddress == address(0));
-        address _newMasterAddress = new Master(address(this), _gbUserName);
+        address _newMasterAddress = deployMaster(_gbUserName, masterByteCode);
         allGovBlocksUsers.push(_gbUserName);
         govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
         govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
-        master = Master(_newMasterAddress);
-        master.setOwner(msg.sender);
     }
 
     /// @dev Changes dApp master address
@@ -125,6 +123,11 @@ contract GovBlocksMaster {
     function setByteCodeAndAbi(string _byteCodeHash, string _abiHash) public onlyOwner {
         byteCodeHash = _byteCodeHash;
         contractsAbiHash = _abiHash;
+    }
+
+    /// @dev Sets byte code of Master
+    function setMasterByteCode(bytes _masterByteCode) public onlyOwner {
+        masterByteCode = _masterByteCode;
     }
 
     /// @dev Sets dApp user information such as Email id, name etc.
@@ -273,5 +276,14 @@ contract GovBlocksMaster {
     /// @dev Gets GBT standard token address 
     function getGBTAddress() public view returns(address) {
         return gbtAddress;
+    }
+
+    /// @dev Deploys a new Master
+    function deployMaster(bytes32 _gbUserName, bytes _masterByteCode) internal returns(address deployedAddress) {
+        assembly {
+          deployedAddress := create(0, add(_masterByteCode, 0x20), mload(_masterByteCode))  // deploys contract
+        }
+        master = Master(deployedAddress);
+        master.initMaster(msg.sender, _gbUserName);
     }
 }

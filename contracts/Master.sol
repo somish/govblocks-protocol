@@ -42,6 +42,7 @@ contract Master is Ownable, Upgradeable {
     bool public constructorCheck;
     address public gbmAddress;
 
+    /*
     /// @dev Constructor function for master
     /// @param _govBlocksMasterAddress GovBlocks master address
     /// @param _gbUserName dApp Name which is integrating GovBlocks.
@@ -51,6 +52,16 @@ contract Master is Ownable, Upgradeable {
         gbmAddress = _govBlocksMasterAddress;
         dAppName = _gbUserName;
         owner = msg.sender;
+        addContractNames();
+    }
+    */
+    
+    function initMaster(address _ownerAddress, bytes32 _gbUserName) public {
+        require (gbmAddress == address(0));
+        contractsActive[address(this)] = true;
+        gbmAddress = msg.sender;
+        dAppName = _gbUserName;
+        owner = _ownerAddress;
         addContractNames();
     }
 
