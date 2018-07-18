@@ -125,11 +125,11 @@ contract Pool is usingOraclize, Upgradeable {
     }
 
     /// @dev user can calim the tokens rewarded them till noW
-    function claimReward() public {
-        uint rewardToClaim = gov.calculateMemberReward(msg.sender);
+    function claimReward(address _claimer) public {
+        uint rewardToClaim = gov.calculateMemberReward(_claimer);
         if (rewardToClaim != 0) {
             //gbt.transferMessage(address(this), rewardToClaim, "GBT Stake Received");
-            gbt.transferMessage(msg.sender, rewardToClaim, "GBT Stake claimed");
+            gbt.transferMessage(_claimer, rewardToClaim, "GBT Stake claimed");
         }
     }
 

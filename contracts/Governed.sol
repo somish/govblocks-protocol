@@ -47,6 +47,8 @@ contract Governed {
             governChecker = GovernChecker(0x67995F25f04d61614d05607044c276727DEA9Cf0);
         else if (getCodeSize(0xb5fE0857770D85302585564b04C81a5Be96022C8) > 0)   //Ropsten testnet
             governChecker = GovernChecker(0xb5fE0857770D85302585564b04C81a5Be96022C8);
+        else if (getCodeSize(0xbb3fcbdc4fd43c79600f151a0f35b8d782ac0c28) > 0)   //Private testnet
+            governChecker = GovernChecker(0xbb3fcbdc4fd43c79600f151a0f35b8d782ac0c28);
     }
 
     function getCodeSize(address _addr) internal view returns(uint _size) {
