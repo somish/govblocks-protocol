@@ -271,8 +271,10 @@ contract Master is Ownable, Upgradeable {
     /// @param _contractName Contract name
     function addRemoveAddress(uint16 _version, bytes2 _contractName) internal {
         uint16 versionOld;
-        if (_version > 0)
+        if (contractChangeDate.length > 1)
             versionOld = contractChangeDate[contractChangeDate.length - 2].versionNo;
+        else
+            versionOld = _version - 1;
         contractsActive[allContractVersions[versionOld][_contractName]] = false;
         contractsActive[allContractVersions[_version][_contractName]] = true;
     }
