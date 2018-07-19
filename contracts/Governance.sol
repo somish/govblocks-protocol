@@ -281,14 +281,6 @@ contract Governance is Upgradeable {
         }
     }
 
-    /// @dev Checks for Vote closing time for specific role. i.e. 0 if voting time is up, 1 otherwise!
-    function checkRoleVoteClosing(uint _proposalId, uint32 _roleId) public onlyInternal {
-        if (checkForClosing(_proposalId, _roleId) == 1) {
-            pool.closeProposalOraclise(_proposalId, 0);
-            governanceDat.callOraclizeCallEvent(_proposalId, governanceDat.getProposalDateUpd(_proposalId), 0);
-        }
-    }
-
     /// @dev Changes pending proposal start variable
     function changePendingProposalStart() public onlyInternal {
         uint pendingPS = governanceDat.pendingProposalStart();

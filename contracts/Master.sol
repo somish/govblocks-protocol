@@ -39,7 +39,6 @@ contract Master is Ownable, Upgradeable {
 
     GovBlocksMaster internal gbm;
     Upgradeable internal up;
-    bool public constructorCheck;
     address public gbmAddress;
 
     /*
@@ -133,11 +132,11 @@ contract Master is Ownable, Upgradeable {
         }
         addContractDetails(versionLength, "GS", gbm.getGBTAddress());
         setVersionLength(versionLength + 1);
+        switchToRecentVersion();
     }
 
     /// @dev Switches to the recent version of contracts
-    function switchToRecentVersion() public {
-        require(isAuth());
+    function switchToRecentVersion() internal {
         addInContractChangeDate();
         changeMasterAddress(address(this));
         changeAllAddress();

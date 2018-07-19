@@ -54,8 +54,10 @@ contract Pool is usingOraclize, Upgradeable {
     /// @dev Changes master address
     /// @param _add New master address
     function changeMasterAddress(address _add) public {
-        if (masterAddress == address(0))
+        if (masterAddress == address(0)) {
             masterAddress = _add;
+            setOraclizeGas(1, 5000000);
+        }
         else {
             master = Master(masterAddress);
             require(master.isInternal(msg.sender));
@@ -130,6 +132,25 @@ contract Pool is usingOraclize, Upgradeable {
         if (rewardToClaim != 0) {
             //gbt.transferMessage(address(this), rewardToClaim, "GBT Stake Received");
             gbt.transferMessage(_claimer, rewardToClaim, "GBT Stake claimed");
+        }
+    }
+
+    /// @dev checks and closes proposal if required
+    function checkRoleVoteClosing(uint _proposalId, uint32 _roleId, address _memberAddress) public onlyInternal {
+        if (gov.checkForClosing(_proposalId, _roleId) == 1) {
+            uint gasLeft = gasleft();
+            simpleVoting.closeProposalVote(_proposalId);
+            bytes32 id = oraclize_query(
+                            "URL", 
+                            strConcat(
+                                "http://a1.govblocks.io/closeProposalVoting.js/42/", 
+                                bytes32ToString(master.dAppName()), 
+                                "/", 
+                                uint2str(_proposalId)
+                            ),
+                            30000
+                        );
+            bool gasReturned = _memberAddress.send((gasLeft - gasleft()) * 10 ** 9);
         }
     }
 
@@ -249,7 +270,7 @@ contract Pool is usingOraclize, Upgradeable {
     /// @dev Closes Proposal voting using oraclize once the time is over.
     /// @param _proposalId Proposal id
     /// @param _closingTime Remaining Closing time of proposal
-    function closeProposalOraclise(uint _proposalId, uint _closingTime) public {
+    function closeProposalOraclise(uint _proposalId, uint _closingTime) onlyInternal {
         uint index = getApiCallLength();
         bytes32 myid2;
         master = Master(masterAddress);
@@ -258,7 +279,12 @@ contract Pool is usingOraclize, Upgradeable {
             myid2 = 
                 oraclize_query(
                     "URL", 
-                    "",
+                    strConcat(
+                        "http://a1.govblocks.io/closeProposalVoting.js/42/", 
+                        bytes32ToString(master.dAppName()), 
+                        "/", 
+                        uint2str(_proposalId)
+                    ),
                     gasLimit
                 );
         else

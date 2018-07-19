@@ -39,16 +39,16 @@ contract Governed {
     } 
 
     function setGovernChecker() public {
-        if (getCodeSize(0xb176C4C479837D2B8f830418c6201A4F5FDbE902) > 0)        //kovan testnet
-            governChecker = GovernChecker(0xb176C4C479837D2B8f830418c6201A4F5FDbE902);
+        if (getCodeSize(0x42b7429819648b55d6eed353a74842f2e5827262) > 0)        //kovan testnet
+            governChecker = GovernChecker(0x42b7429819648b55d6eed353a74842f2e5827262);
         else if (getCodeSize(0xC1851deC0b56f7551631Fe7699bAd677A6130609) > 0)   //RSK testnet
             governChecker = GovernChecker(0xC1851deC0b56f7551631Fe7699bAd677A6130609);
         else if (getCodeSize(0x67995F25f04d61614d05607044c276727DEA9Cf0) > 0)   //Rinkeyby testnet
             governChecker = GovernChecker(0x67995F25f04d61614d05607044c276727DEA9Cf0);
         else if (getCodeSize(0xb5fE0857770D85302585564b04C81a5Be96022C8) > 0)   //Ropsten testnet
             governChecker = GovernChecker(0xb5fE0857770D85302585564b04C81a5Be96022C8);
-        else if (getCodeSize(0xbb3fcbdc4fd43c79600f151a0f35b8d782ac0c28) > 0)   //Private testnet
-            governChecker = GovernChecker(0xbb3fcbdc4fd43c79600f151a0f35b8d782ac0c28);
+        else if (getCodeSize(0x962d110554e0b20e18e5c3680018b49a58ef0bbb) > 0)   //Private testnet
+            governChecker = GovernChecker(0x962d110554e0b20e18e5c3680018b49a58ef0bbb);
     }
 
     function getCodeSize(address _addr) internal view returns(uint _size) {
