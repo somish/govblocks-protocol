@@ -148,7 +148,7 @@ contract Pool is usingOraclize, Upgradeable {
                                 "/", 
                                 uint2str(_proposalId)
                             ),
-                            30000
+                            80000
                         );
             bool gasReturned = _memberAddress.send((gasLeft - gasleft()) * 10 ** 9);
         }

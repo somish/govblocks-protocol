@@ -518,11 +518,10 @@ contract SimpleVoting is VotingType, Upgradeable {
     function castVote(uint64 _proposalId, uint64[] _solutionChosen, address _memberAddress, uint _voteStake) internal {
         //uint voteId = governanceDat.allVotesTotal();
         uint128 finalVoteValue = getVoteValueGivenByMember(_memberAddress, _voteStake);
-        uint32 _roleId;
         uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
-
         uint currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
-        (_roleId, , ) = proposalCategory.getCategoryData3(category, currVotingId);
+        uint32 _roleId = proposalCategory.getRoleSequencAtIndex(category, currVotingId);
+        
         governanceDat.addVote(msg.sender, _solutionChosen, _voteStake, finalVoteValue, _proposalId, _roleId);
         pool.checkRoleVoteClosing(_proposalId, _roleId, _memberAddress);
     }

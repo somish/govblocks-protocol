@@ -546,7 +546,7 @@ contract GovernanceData is Upgradeable {
         proposalRoleVote[_proposalId][_roleId].push(allVotes.length);
         allVotesByMember[_memberAddress].push(allVotes.length);
         addressProposalVote[_memberAddress][_proposalId] = allVotes.length;
-        Vote(_memberAddress, _proposalId, now, _voteStake, allVotes.length);
+        emit Vote(_memberAddress, _proposalId, now, _voteStake, allVotes.length);
         allVotes.push(ProposalVote(_memberAddress, _solutionChosen, _voteValue, _proposalId));
         allProposalData[_proposalId].totalVoteValue = allProposalData[_proposalId].totalVoteValue 
             + _voteValue;
