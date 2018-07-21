@@ -523,7 +523,11 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint32 _roleId = proposalCategory.getRoleSequencAtIndex(category, currVotingId);
         
         governanceDat.addVote(msg.sender, _solutionChosen, _voteStake, finalVoteValue, _proposalId, _roleId);
-        pool.checkRoleVoteClosing(_proposalId, _roleId, _memberAddress);
+        if (governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _roleId) 
+                == memberRole.getAllMemberLength(_roleId)) {
+            pool.checkRoleVoteClosing(_proposalId, _roleId, _memberAddress);
+        }
+        //pool.checkRoleVoteClosing(_proposalId, _roleId, _memberAddress);
     }
 
     /// @dev Receives solution stake against solution in simple voting i.e. Deposit and lock the tokens
