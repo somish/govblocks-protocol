@@ -19,9 +19,10 @@ import "./Governed.sol";
 
 
 contract GovBlocksMaster {
-    Master internal master;
+    address public eventCaller;
     address public owner;
     address public gbtAddress;
+    Master internal master;
     GovernChecker internal governChecker;
 
     struct GBDapps {
@@ -133,6 +134,11 @@ contract GovBlocksMaster {
     /// @dev Sets dApp user information such as Email id, name etc.
     function setDappUser(string _hash) public {
         govBlocksUser[msg.sender] = _hash;
+    }
+
+    /// @dev Sets global event caller address
+    function setEventCallerAddress(address _eventCaller) public onlyOwner {
+        eventCaller = _eventCaller;
     }
 
     /// @dev Gets byte code and abi hash

@@ -243,6 +243,17 @@ contract Master is Ownable, Upgradeable {
         }
     }
 
+    /// @dev adds a new contract type to master
+    function addNewContract(bytes2 _contractName) public {
+        require(isAuth());
+        allContractNames.push(allContractNames[allContractNames.length - 1]);
+        allContractNames[allContractNames.length - 2] = _contractName;
+    }
+
+    function getEventCallerAddress() public returns(address) {
+        return gbm.eventCaller();
+    }
+
     /// @dev Save the initials of all the contracts
     function addContractNames() internal {
         allContractNames.push("MS");
@@ -267,13 +278,6 @@ contract Master is Ownable, Upgradeable {
     /// @param _contractAddress Contract addresse
     function addContractDetails(uint16 _versionNo, bytes2 _contractName, address _contractAddress) internal {
         allContractVersions[_versionNo][_contractName] = _contractAddress;
-    }
-
-    /// @dev adds a new contract type to master
-    function addNewContract(bytes2 _contractName) public {
-        require(isAuth());
-        allContractNames.push(allContractNames[allContractNames.length - 1]);
-        allContractNames[allContractNames.length - 2] = _contractName;
     }
 
     /// @dev Deactivates address of a contract from last version

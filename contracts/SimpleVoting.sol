@@ -27,6 +27,7 @@ import "./Pool.sol";
 import "./Math.sol";
 import "./VotingType.sol";
 import "./BasicToken.sol";
+import "./EventCaller.sol";
 
 
 contract SimpleVoting is VotingType, Upgradeable {
@@ -42,6 +43,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     address public masterAddress;
     BasicToken internal basicToken;
     Pool internal pool;
+    EventCaller internal eventCaller;
 
     modifier onlyInternal {
         master = Master(masterAddress);
@@ -94,6 +96,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
         GovBlocksMaster govBlocksMaster = GovBlocksMaster(master.gbmAddress());
         basicToken = BasicToken(govBlocksMaster.getDappTokenAddress(master.dAppName()));
+        eventCaller = EventCaller(govBlocksMaster.eventCaller());
     }
 
     /// @dev Changes GBT Standard Token address
@@ -398,6 +401,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                         proposalCategory.getContractAddress(governanceDat.getProposalCategory(_proposalId))
                     );
                     x.call(governanceDat.getSolutionActionByProposalId(_proposalId, max));
+                    eventCaller.callProposalAccepted(master.dAppName(), _proposalId);
                     giveRewardAfterFinalDecision(_proposalId);
                 }
             } else {
@@ -523,7 +527,11 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint32 _roleId = proposalCategory.getRoleSequencAtIndex(category, currVotingId);
         
         governanceDat.addVote(msg.sender, _solutionChosen, _voteStake, finalVoteValue, _proposalId, _roleId);
-        pool.checkRoleVoteClosing(_proposalId, _roleId, _memberAddress);
+        if(governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _roleId)
+                == memberRole.getAllMemberLength(_roleId) 
+                && _roleId != 2) {
+            eventCaller.callVoteCast(_proposalId);
+        }
     }
 
     /// @dev Receives solution stake against solution in simple voting i.e. Deposit and lock the tokens

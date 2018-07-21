@@ -5,11 +5,9 @@ var mnemonic = "waste brand belt below bullet leaf sign catch clay wet volume ki
 module.exports = {
   networks: {
     development: {
-      gasPrice : 1,
-      provider: function() {
-        return new HDWalletProvider(mnemonic, "https://parity.govblocks.ml/");
-      },
-      network_id: "*"
+      host: "176.9.155.139",
+      port: 9696,
+      network_id: "*" // Match any network id
     },
     ropsten: {
       gasPrice : 1,
