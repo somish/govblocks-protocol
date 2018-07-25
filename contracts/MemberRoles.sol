@@ -172,7 +172,6 @@ contract MemberRoles is Upgradeable {
     /// @param _memberAddress Address of Member
     /// @param _roleId RoleId to update 
     /// @param _typeOf typeOf is set to be True if we want to assign this role to member, False otherwise!
-
     function updateMemberRole(
         address _memberAddress, 
         uint32 _roleId, 
@@ -193,6 +192,16 @@ contract MemberRoles is Upgradeable {
             memberRoleData[_roleId].memberCounter = SafeMath.sub32(memberRoleData[_roleId].memberCounter, 1);
             memberRoleData[_roleId].memberActive[_memberAddress] = false;
         }
+    }
+
+    /// @dev Updates Validity of a user
+    function setValidityOfMember(address _memberAddress, uint32 _roleId, uint _validity) {
+        memberRoleData[_roleId].validity[_memberAddress] = _validity;
+    }
+
+    /// @dev Update validity of role
+    function setRoleValidity(uint32 _roleId, bool _validity) {
+        memberRoleData[_roleId].limitedValidity = _validity;
     }
 
     /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
