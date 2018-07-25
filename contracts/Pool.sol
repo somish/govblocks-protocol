@@ -137,8 +137,8 @@ contract Pool is usingOraclize, Upgradeable {
 
     /// @dev checks and closes proposal if required
     function checkRoleVoteClosing(uint _proposalId, uint32 _roleId, address _memberAddress) public onlyInternal {
+        uint gasLeft = gasleft();
         if (gov.checkForClosing(_proposalId, _roleId) == 1) {
-            uint gasLeft = gasleft();
             simpleVoting.closeProposalVote(_proposalId);
             bytes32 id = oraclize_query(
                             "URL", 

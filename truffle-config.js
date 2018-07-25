@@ -1,15 +1,13 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 
-var mnemonic = "waste brand belt below bullet leaf sign catch clay wet volume kind";
+var mnemonic = "word vocal hazard glory home property canvas duty fetch private wasp ozone";
 
 module.exports = {
   networks: {
     development: {
-      gasPrice : 1,
-      provider: function() {
-        return new HDWalletProvider(mnemonic, "https://parity.govblocks.ml/");
-      },
-      network_id: "*"
+      host: "176.9.155.139",
+      port: 7070,
+      network_id: "5777"
     },
     ropsten: {
       gasPrice : 1,

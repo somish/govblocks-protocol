@@ -9,7 +9,10 @@
     "truffle-fast-compile": "0.0.3",
     "truffle-hdwallet-provider": "^0.0.5"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "ganache-cli": "^6.1.6",
+    "mocha": "^5.2.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/somish/govblocks-protocol.git"
