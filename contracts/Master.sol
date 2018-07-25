@@ -122,7 +122,8 @@ contract Master is Ownable, Upgradeable {
         if(versionLength == 0) {
             Governed govern = new Governed(dAppName);
             GovernChecker governChecker = GovernChecker(govern.getGovernCheckerAddress());
-            governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
+            if(getCodeSize(address(governChecker)) > 0 )
+                governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
         }
     
         gbm = GovBlocksMaster(gbmAddress);
@@ -132,11 +133,6 @@ contract Master is Ownable, Upgradeable {
         }
         addContractDetails(versionLength, "GS", gbm.getGBTAddress());
         setVersionLength(versionLength + 1);
-        switchToRecentVersion();
-    }
-
-    /// @dev Switches to the recent version of contracts
-    function switchToRecentVersion() internal {
         addInContractChangeDate();
         changeMasterAddress(address(this));
         changeAllAddress();
@@ -264,6 +260,12 @@ contract Master is Ownable, Upgradeable {
         allContractNames.push("GV");
         allContractNames.push("PL");
         allContractNames.push("GS");
+    }
+
+    function getCodeSize(address _addr) internal view returns(uint _size) {
+        assembly {
+            _size := extcodesize(_addr)
+        }
     }
 
     /// @dev Sets the length of version
