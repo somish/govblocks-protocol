@@ -53,6 +53,9 @@ describe('Deploy GovBlocks', function() {
     await ms.addNewVersion(add);
     assert.equal(await ms.versionLength(), 1, "dApp version not created");
   });
+  it("Member Roles should be initialized with 3 roles", async function() {
+    assert.equal(await mr.getTotalMemberRoles(), 3, "Default Member Roles not added");
+  });
 });
 
 
