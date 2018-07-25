@@ -21,16 +21,23 @@ contract EventCaller {
     ///      closeProposalAddress is used to call closeProposal(proposalId) if proposal is ready to be closed.
     event VoteCast (
         uint256 proposalId,
-        address closeProposalAddress,
-    )
+        address closeProposalAddress
+    );
 
     /// @dev ProposalAccepted event is called when a proposal is accepted so that a server can listen that can 
     ///      call any offchain actions. closeProposalAddress is used to verify that the proposal is actually closed.
     event ProposalAccepted (
-        bytes32 indexed dAppName,
         uint256 proposalId,
+        address closeProposalAddress
+    );
+
+    /// @dev CloseProposalOnTime event is called whenever a proposal is created or updated to close it on time. 
+    ///      closeProposalAddress is used to call closeProposal(proposalId) if proposal is ready to be closed.
+    event CloseProposalOnTime (
+    	uint256 proposalId,
         address closeProposalAddress,
-    )
+        uint256 time
+    );
 
     /// @dev calls VoteCast event
     /// @param _proposalId Proposal ID for which the vote is cast
@@ -39,9 +46,23 @@ contract EventCaller {
     }
 
     /// @dev calls ProposalAccepted event
-    /// @param _dAppName Name of the dApp whose proposal is accepted
     /// @param _proposalId Proposal ID of the proposal that is accepted
-    function callProposalAccepted (bytes32 _dAppName, uint256 _proposalId) public {
-        emit ProposalAccepted(_dAppName, _proposalId, msg.sender);
+    function callProposalAccepted (uint256 _proposalId) public {
+        emit ProposalAccepted(_proposalId, msg.sender);
+    }
+
+    /// @dev calls ProposalAccepted event
+    /// @param _proposalId Proposal ID of the proposal that is accepted
+    /// @param _time Time at which proposal has to be closed
+    function callCloseProposalOnTime (uint256 _proposalId, uint256 _time) public {
+        emit CloseProposalOnTime(_proposalId, msg.sender, _time);
+    }
+
+    /// @dev calls ProposalAccepted event. to be used when _closeAddress is different from msg.sender
+    /// @param _proposalId Proposal ID of the proposal that is accepted
+    /// @param _time Time at which proposal has to be closed
+    /// @param _closeAddress is the smart contract address which has closeProposal function
+    function callCloseProposalOnTimeAtAddress (uint256 _proposalId, address _closeAddress, uint256 _time) public {
+        emit CloseProposalOnTime(_proposalId, _closeAddress, _time);
     }
 }

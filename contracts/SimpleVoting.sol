@@ -282,6 +282,20 @@ contract SimpleVoting is VotingType, Upgradeable {
         return true;
     }
 
+    /// @dev gets dApp name 
+    function dAppName() public view returns (bytes32) {
+        return master.dAppName();
+    }
+
+    /// @dev checks for closing of proposal
+    function checkForClosing(uint _proposalId) public view returns(uint) {
+        uint8 category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
+        uint8 currentVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
+        uint32 _mrSequenceId = proposalCategory.getRoleSequencAtIndex(category, currentVotingId);
+
+        return governance.checkForClosing(_proposalId, _mrSequenceId);
+    }
+
     /// @dev Sets vote value given by member
     function getVoteValueGivenByMember(address _memberAddress, uint _memberStake)  
         public
@@ -324,7 +338,6 @@ contract SimpleVoting is VotingType, Upgradeable {
             finalVoteValue[solutionChosen] = finalVoteValue[solutionChosen] + voteValue;
         }
 
-        
         for (i = 0; i < finalVoteValue.length; i++) {
             if (finalVoteValue[max] < finalVoteValue[i]) {
                 max = i;
@@ -388,12 +401,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                         max, 
                         0
                     );
-                    pool.closeProposalOraclise(_proposalId, _closingTime);
-                    governanceDat.callOraclizeCallEvent(
-                        _proposalId, 
-                        governanceDat.getProposalDateUpd(_proposalId), 
-                        proposalCategory.getClosingTimeAtIndex(category, currentVotingId)
-                    );
+                    eventCaller.callCloseProposalOnTime(_proposalId, _closingTime + now);
                 } else {
                     governance.updateProposalDetails(_proposalId, currentVotingId - 1, max, max);
                     governanceDat.changeProposalStatus(_proposalId, 3);
@@ -401,7 +409,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                         proposalCategory.getContractAddress(governanceDat.getProposalCategory(_proposalId))
                     );
                     x.call(governanceDat.getSolutionActionByProposalId(_proposalId, max));
-                    eventCaller.callProposalAccepted(master.dAppName(), _proposalId);
+                    eventCaller.callProposalAccepted(_proposalId);
                     giveRewardAfterFinalDecision(_proposalId);
                 }
             } else {

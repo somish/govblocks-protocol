@@ -46,10 +46,11 @@ contract GovBlocksMaster {
 
     /// @dev Initializes GovBlocks master
     /// @param _gbtAddress GBT standard token address
-    function govBlocksMasterInit(address _gbtAddress) public {
+    function govBlocksMasterInit(address _gbtAddress, address _eventCaller) public {
         require(owner == address(0));
         owner = msg.sender;
         gbtAddress = _gbtAddress;
+        eventCaller = _eventCaller;
         Governed govern = new Governed("GBM");
         governChecker = GovernChecker(govern.getGovernCheckerAddress());
         //   updateGBMAddress(address(this));  

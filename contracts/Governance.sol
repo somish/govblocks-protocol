@@ -24,6 +24,7 @@ import "./Math.sol";
 import "./Pool.sol";
 import "./GBTStandardToken.sol";
 import "./VotingType.sol";
+import "./EventCaller.sol";
 
 
 contract Governance is Upgradeable {
@@ -38,21 +39,11 @@ contract Governance is Upgradeable {
     GovernanceData internal governanceDat;
     Pool internal pool;
     VotingType internal votingType;
+    EventCaller internal eventCaller;
 
     modifier onlyInternal {
         master = Master(masterAddress);
         require(master.isInternal(msg.sender));
-        _;
-    }
-
-    modifier onlyOwner {
-        master = Master(masterAddress);
-        require(master.isOwner(msg.sender));
-        _;
-    }
-
-    modifier onlyMaster {
-        require(msg.sender == masterAddress);
         _;
     }
 
@@ -83,11 +74,12 @@ contract Governance is Upgradeable {
         votingType = VotingType(master.getLatestAddress("SV"));
         pool = Pool(poolAddress);
         govBlocksToken = GBTStandardToken(master.getLatestAddress("GS"));
+        eventCaller = EventCaller(master.getEventCallerAddress());
     }
 
     /// @dev Changes GBT standard token address
     /// @param _gbtsAddress New GBT standard token address
-    function changeGBTSAddress(address _gbtsAddress) public onlyMaster {
+    function changeGBTSAddress(address _gbtsAddress) public onlyInternal {
         govBlocksToken = GBTStandardToken(_gbtsAddress);
     }
 
@@ -453,20 +445,17 @@ contract Governance is Upgradeable {
         }
 
         governanceDat.changeProposalStatus(_proposalId, 2);
-        callOraclize(_proposalId);
+        callCloseEvent(_proposalId);
         governanceDat.callProposalStakeEvent(msg.sender, _proposalId, now, _proposalStake);
     }
 
-    /// @dev Call oraclize for closing proposal
+    /// @dev Call event for closing proposal
     /// @param _proposalId Proposal id which voting needs to be closed
-    function callOraclize(uint _proposalId) internal {
-        uint8 subCategory=governanceDat.getProposalCategory(_proposalId);
+    function callCloseEvent(uint _proposalId) internal {
+        uint8 subCategory = governanceDat.getProposalCategory(_proposalId);
         uint8 _categoryId = proposalCategory.getCategoryIdBySubId(subCategory);
-        uint closingTime = proposalCategory.getClosingTimeAtIndex(_categoryId, 0);
-        uint proposalDateUpd=governanceDat.getProposalDateUpd(_proposalId);
-        closingTime = SafeMath.add(closingTime, proposalDateUpd);
-        pool.closeProposalOraclise(_proposalId, closingTime);
-        governanceDat.callOraclizeCallEvent(_proposalId, proposalDateUpd, closingTime);
+        uint closingTime = proposalCategory.getClosingTimeAtIndex(_categoryId, 0) + now;
+        eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, address(votingType), closingTime);
     }
 
     /// @dev Edits the details of an existing proposal and creates new version

@@ -60,13 +60,6 @@ contract GovernanceData is Upgradeable {
     event Reward(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
     
     event Penalty(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
-    
-    event OraclizeCall(
-        address indexed proposalOwner, 
-        uint256 indexed proposalId, 
-        uint256 dateAdd,
-        uint256 closingTime
-    );
 
     event ProposalStatus(uint256 indexed proposalId, uint256 proposalStatus, uint256 dateAdd);
     
@@ -226,17 +219,6 @@ contract GovernanceData is Upgradeable {
         onlyInternal 
     {
         emit Penalty(_to, _proposalId, _description, _amount);
-    }
-
-    /// @dev Calls Oraclize call event
-    /// @param _proposalId Proposal id
-    /// @param _dateAdd Date proposal was added
-    /// @param _closingTime Closing time of the proposal voting
-    function callOraclizeCallEvent(uint256 _proposalId, uint256 _dateAdd, uint256 _closingTime) 
-        public 
-        onlyInternal 
-    {
-        emit OraclizeCall(allProposal[_proposalId].owner, _proposalId, _dateAdd, _closingTime);
     }
 
     /// @dev Calls proposal status event
