@@ -167,6 +167,7 @@ contract Governance is Upgradeable {
             _lockTokenTxHash, 
             _action
         );
+        governanceDat.addHash(_proposalDescHash, _solutionHash);
     }
 
     /// @dev Submit proposal with solution
