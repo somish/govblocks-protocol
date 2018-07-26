@@ -235,7 +235,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint64 _proposalId, 
         uint64[] _solutionChosen, 
         uint _voteStake, 
-        uint _validityUpto, 
+        uint _validityUpto,     
         uint8 _v, 
         bytes32 _r, 
         bytes32 _s, 
@@ -539,7 +539,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         if(governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _roleId)
                 == memberRole.getAllMemberLength(_roleId) 
                 && _roleId != 2) {
-            eventCaller.callVoteCast(_proposalId);
+            closeProposalVote(_proposalId);
         }
     }
 

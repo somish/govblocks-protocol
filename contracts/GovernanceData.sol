@@ -280,6 +280,11 @@ contract GovernanceData is Upgradeable {
         bytes action;
     }
 
+    struct Hashes {
+        string proposalHash;
+        string solutionHash;
+    }
+
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(address => uint32) internal allMemberReputationByAddress;
@@ -310,6 +315,7 @@ contract GovernanceData is Upgradeable {
     ProposalStruct[] internal allProposal;
     ProposalVote[] internal allVotes;
     VotingTypeDetails[] internal allVotingTypeDetails;
+    Hashes[] public allHashes;
 
     Master internal master;
     GBTStandardToken internal gbt;
@@ -1008,6 +1014,10 @@ contract GovernanceData is Upgradeable {
     /// @dev Changes status from pending proposal to start proposal
     function changePendingProposalStart(uint _value) public onlyInternal {
         pendingProposalStart = _value;
+    }
+
+    function addHash(string _proposal, string _solution) public onlyInternal {
+        allHashes.push(Hashes(_proposal, _solution));
     }
 
     /// @dev Adds new proposal
