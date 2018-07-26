@@ -28,7 +28,7 @@ import "./Math.sol";
 import "./VotingType.sol";
 import "./BasicToken.sol";
 import "./EventCaller.sol";
-
+import "./GovernChecker.sol";
 
 contract SimpleVoting is VotingType, Upgradeable {
     using SafeMath for uint;
@@ -44,6 +44,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     BasicToken internal basicToken;
     Pool internal pool;
     EventCaller internal eventCaller;
+    GovernChecker internal governChecker;
 
     modifier onlyInternal {
         master = Master(masterAddress);
@@ -97,6 +98,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         GovBlocksMaster govBlocksMaster = GovBlocksMaster(master.gbmAddress());
         basicToken = BasicToken(govBlocksMaster.getDappTokenAddress(master.dAppName()));
         eventCaller = EventCaller(govBlocksMaster.eventCaller());
+        governChecker = GovernChecker(master.getGovernCheckerAddress());
     }
 
     /// @dev Changes GBT Standard Token address
@@ -484,6 +486,13 @@ contract SimpleVoting is VotingType, Upgradeable {
 
         totalReward = totalReward + governanceDat.getProposalIncentive(_proposalId);
         governance.setProposalDetails(_proposalId, totalReward, totalVoteValue);
+
+        if (subCategory == 10) {
+            address newSV = master.getLatestAddress("GS");
+            if (newSV != address(this)) {
+                governChecker.updateAuthorized(master.dAppName(), newSV);
+            }
+        }
     }
 
     /// @dev Adding member address against solution index and event call to save details of solution

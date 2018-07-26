@@ -250,6 +250,10 @@ contract Master is Ownable, Upgradeable {
         return gbm.eventCaller();
     }
 
+    function getGovernCheckerAddress public view returns(address) {
+        return govern.getGovernCheckerAddress();
+    }
+
     /// @dev Save the initials of all the contracts
     function addContractNames() internal {
         allContractNames.push("MS");

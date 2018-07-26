@@ -113,7 +113,7 @@ contract ProposalCategory is Upgradeable {
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
     function proposalCategoryInitiate() public {
-        require(!constructorCheck);
+        require(!constructorCheck && masterAddress != address(0));
         uint8[] memory rs = new uint8[](1);
         uint8[] memory mv = new uint8[](1);
         uint32[] memory ct = new uint32[](1);
