@@ -128,6 +128,8 @@ contract ProposalCategory is Upgradeable {
         allCategory.push(Category("Change to member role", rs, mv, ct, 0, INT_MAX, 10**19, 40, 40, 20));
         allCategory.push(Category("Changes to categories", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
         allCategory.push(Category("Changes in parameters", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Transfer Assets", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Deploy new contracts", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
         allCategory.push(Category("Others not specified", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
 
         addInitialSubCategories();
@@ -569,6 +571,42 @@ contract ProposalCategory is Upgradeable {
             )
         );
         allSubIdByCategory[4].push(8);
+        allSubCategory.push(SubCategory(
+                "Transfer Ether",
+                "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+                4,
+                masterAddress,
+                "PL"
+            )
+        );
+        allSubIdByCategory[4].push(9);
+        allSubCategory.push(SubCategory(
+                "Transfer Token",
+                "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+                4,
+                masterAddress,
+                "PL"
+            )
+        );
+        allSubIdByCategory[5].push(10);
+        allSubCategory.push(SubCategory(
+                "Add new version",
+                "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+                5,
+                masterAddress,
+                "MS"
+            )
+        );
+        allSubIdByCategory[5].push(11);
+        allSubCategory.push(SubCategory(
+                "Add new contract",
+                "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+                5,
+                masterAddress,
+                "MS"
+            )
+        );
+        allSubIdByCategory[6].push(12);
         allSubCategory.push(SubCategory("Others, not specified", "", 4, address(0), "EX"));
     }
 }

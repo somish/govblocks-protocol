@@ -69,6 +69,15 @@ contract Pool is Upgradeable {
         _;
     }
 
+    modifier onlySV {
+        master = Master(masterAddress);
+        require(
+            master.getLatestAddress("SV") == msg.sender 
+            || master.isInternal(msg.sender) 
+        );
+        _;
+    }
+
     /// @dev Changes GBT standard token address
     /// @param _gbtAddress New GBT standard token address
     function changeGBTSAddress(address _gbtAddress) public onlyMaster {
@@ -92,7 +101,7 @@ contract Pool is Upgradeable {
 
     /// @dev converts pool ETH to GBT
     /// @param _gbt number of GBT to buy multiplied 10^decimals
-    function buyPoolGBT(uint _gbt) public onlyInternal {
+    function buyPoolGBT(uint _gbt) public onlySV {
         uint _wei = SafeMath.mul(_gbt, gbt.tokenPrice());
         _wei = SafeMath.div(_wei, 10 ** gbt.decimals());
         gbt.buyToken.value(_wei)();
@@ -228,9 +237,20 @@ contract Pool is Upgradeable {
         }
     }
 
-    /// @dev Transfer Ether back to Pool    
-    /// @param amount Amount to be transferred back
-    function transferBackEther(uint256 amount) public onlyOwner {
-        msg.sender.transfer(amount);
+    /// @dev Transfer Ether to someone    
+    /// @param _amount Amount to be transferred back
+    /// @param _receiverAddress address where ether has to be sent
+    function transferEther(address _receiverAddress, uint256 _amount) public onlySV {
+        _receiverAddress.transfer(_amount);
     }
+
+    /// @dev Transfer token to someone    
+    /// @param _amount Amount to be transferred back
+    /// @param _receiverAddress address where tokens have to be sent
+    /// @param _token address of token to transfer
+    function transferEther(address _token, address _receiverAddress, uint256 _amount) public onlySV {
+        GBTStandardToken token = GBTStandardToken(_token);
+        token.transfer(_receiverAddress, _amount);
+    }
+
 }
