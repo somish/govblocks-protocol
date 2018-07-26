@@ -103,8 +103,6 @@ contract ProposalCategory is Upgradeable {
 
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public onlyInternal {
-        if (!constructorCheck)
-            proposalCategoryInitiate();
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
     }
@@ -114,7 +112,7 @@ contract ProposalCategory is Upgradeable {
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
-    function proposalCategoryInitiate() internal {
+    function proposalCategoryInitiate() public {
         require(!constructorCheck);
         uint8[] memory rs = new uint8[](1);
         uint8[] memory mv = new uint8[](1);
@@ -573,7 +571,7 @@ contract ProposalCategory is Upgradeable {
         allSubIdByCategory[4].push(8);
         allSubCategory.push(SubCategory(
                 "Transfer Ether",
-                "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+                "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
                 4,
                 masterAddress,
                 "PL"
@@ -582,7 +580,7 @@ contract ProposalCategory is Upgradeable {
         allSubIdByCategory[4].push(9);
         allSubCategory.push(SubCategory(
                 "Transfer Token",
-                "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+                "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB",
                 4,
                 masterAddress,
                 "PL"
@@ -591,7 +589,7 @@ contract ProposalCategory is Upgradeable {
         allSubIdByCategory[5].push(10);
         allSubCategory.push(SubCategory(
                 "Add new version",
-                "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+                "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w",
                 5,
                 masterAddress,
                 "MS"
@@ -600,7 +598,7 @@ contract ProposalCategory is Upgradeable {
         allSubIdByCategory[5].push(11);
         allSubCategory.push(SubCategory(
                 "Add new contract",
-                "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+                "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
                 5,
                 masterAddress,
                 "MS"
