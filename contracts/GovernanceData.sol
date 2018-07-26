@@ -1053,7 +1053,7 @@ contract GovernanceData is Upgradeable {
     function getDepositTokensByAddressProposal(address _memberAddress, uint _proposalId) 
         public 
         view 
-        returns(uint, uint depositForCreatingProposal, uint depositForProposingSol, uint depositForCastingVote) 
+        returns(uint, uint , uint , uint) 
     {
         return (
             _proposalId, 

@@ -202,8 +202,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         lockedTokens = 0;
         for (uint i = 0; i < userLockToken[_memberAddress].length; i++) {
             if (userLockToken[_memberAddress][i].validUpto > time)
-                lockedTokens - lockedTokens + userLockToken[_memberAddress][i].amount;
-
+                lockedTokens = lockedTokens + userLockToken[_memberAddress][i].amount;
         }
 
     }
