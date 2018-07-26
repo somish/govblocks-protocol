@@ -248,7 +248,7 @@ contract Pool is Upgradeable {
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where tokens have to be sent
     /// @param _token address of token to transfer
-    function transferEther(address _token, address _receiverAddress, uint256 _amount) public onlySV {
+    function transferToken(address _token, address _receiverAddress, uint256 _amount) public onlySV {
         GBTStandardToken token = GBTStandardToken(_token);
         token.transfer(_receiverAddress, _amount);
     }
