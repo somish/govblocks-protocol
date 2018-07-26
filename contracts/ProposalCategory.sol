@@ -19,7 +19,7 @@ import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 
 
-contract ProposalCategory {
+contract ProposalCategory is Upgradeable {
     bool public constructorCheck;
     uint constant INT_MAX = uint256(0) - uint256(1);
     
@@ -110,7 +110,7 @@ contract ProposalCategory {
     }
 
     /// @dev just to adhere to the interface
-    function changeGBTSAddress(address _gbtAddress) public {
+    function changeGBTSAddress(address) public {
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)

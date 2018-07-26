@@ -701,14 +701,7 @@ contract GovernanceData is Upgradeable {
     function getMemberReputationPoints() 
         public 
         view 
-        returns(
-            uint32 addProposalOwnPoints, 
-            uint32 addSolutionOwnerPoints, 
-            uint32 addMemPoints, 
-            uint32 subProposalOwnPoints, 
-            uint32 subSolutionOwnPoints, 
-            uint32 subMemPoints
-        ) 
+        returns(uint32, uint32, uint32, uint32, uint32, uint32) 
     {
         return (
             addProposalOwnerPoints, 

@@ -246,7 +246,7 @@ contract Master is Ownable, Upgradeable {
         allContractNames[allContractNames.length - 2] = _contractName;
     }
 
-    function getEventCallerAddress() public returns(address) {
+    function getEventCallerAddress() public view returns(address) {
         return gbm.eventCaller();
     }
 

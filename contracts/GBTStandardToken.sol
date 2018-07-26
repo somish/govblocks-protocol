@@ -40,7 +40,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     mapping(bytes32 => bool) public verifyTxHash;
 
     /// @dev constructor
-    function GBTStandardToken() {
+    constructor() public {
         owner = msg.sender;
         balances[address(this)] = 0;
         name = "GBT";
@@ -161,7 +161,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         bytes32 _s
     ) 
         public
-        view 
+        pure 
         returns(bool) 
     {
         bytes32 hash = getOrderHash(_memberAddress, _spender, _amount, _validUpto, _lockTokenTxHash);
@@ -177,7 +177,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
         bytes32 _lockTokenTxHash
     ) 
         public
-        view 
+        pure 
         returns(bytes32) 
     {
         return keccak256(_memberAddress, _spender, _amount, _validUpto, _lockTokenTxHash);
@@ -186,7 +186,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     /// @dev validates signature
     function isValidSignature(bytes32 hash, address _memberaddress, uint8 v, bytes32 r, bytes32 s) 
         public 
-        view 
+        pure 
         returns(bool) 
     {
         // bytes memory prefix = "\x19Ethereum Signed Message:\n32";

@@ -83,36 +83,35 @@ contract Pool is Upgradeable {
         gov = Governance(master.getLatestAddress("GV"));
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
-        address newPool = master.getLatestAddress("PL");
-        if(address(this) != newPool) {
-            gbt.transfer(master.getLatestAddress("PL"), gbt.balanceOf(address(this)) - gbt.getLockToken(address(this)));
-            bool sent = newPool.send(address(this).balance);
-        }
+        //address newPool = master.getLatestAddress("PL");
+        //if(address(this) != newPool) {
+        //    gbt.transfer(master.getLatestAddress("PL"), gbt.balanceOf(address(this)) - gbt.getLockToken(address(this)));
+        //    bool sent = newPool.send(address(this).balance);
+        //}
     }
 
     /// @dev converts pool ETH to GBT
     /// @param _gbt number of GBT to buy multiplied 10^decimals
-    function buyPoolGBT(uint _gbt) {
+    function buyPoolGBT(uint _gbt) public onlyInternal {
         uint _wei = SafeMath.mul(_gbt, gbt.tokenPrice());
         _wei = SafeMath.div(_wei, 10 ** gbt.decimals());
         gbt.buyToken.value(_wei)();
     }
 
-    /// @dev user can calim the tokens rewarded them till noW
+    /// @dev user can calim the tokens rewarded them till now
     function claimReward(address _claimer) public {
         uint rewardToClaim = gov.calculateMemberReward(_claimer);
         if (rewardToClaim != 0) {
-            //gbt.transferMessage(address(this), rewardToClaim, "GBT Stake Received");
             gbt.transferMessage(_claimer, rewardToClaim, "GBT Stake claimed");
         }
     }
 
     /// @dev checks and closes proposal if required
-    function checkRoleVoteClosing(uint _proposalId, uint32 _roleId, address _memberAddress) public onlyInternal {
+    function checkRoleVoteClosing(uint _proposalId, uint32 _roleId, address _memberAddress) public {
         uint gasLeft = gasleft();
         if (gov.checkForClosing(_proposalId, _roleId) == 1) {
             simpleVoting.closeProposalVote(_proposalId);
-            bool gasReturned = _memberAddress.send((gasLeft - gasleft()) * 10 ** 9);
+            _memberAddress.transfer((gasLeft - gasleft()) * 10 ** 9);
         }
     }
 

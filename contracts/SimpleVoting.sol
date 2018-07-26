@@ -380,7 +380,7 @@ contract SimpleVoting is VotingType, Upgradeable {
             }    
         }
         
-        giveRewardAfterFinalDecision1(finalVerdict, _proposalId, ownerAddress, depositedTokens, totalReward);
+        giveRewardAfterFinalDecision1(_proposalId, totalReward);
     }
 
     /// @dev This does the remaining functionality of closing proposal vote
@@ -408,7 +408,9 @@ contract SimpleVoting is VotingType, Upgradeable {
                     SimpleVoting x = SimpleVoting(
                         proposalCategory.getContractAddress(governanceDat.getProposalCategory(_proposalId))
                     );
-                    x.call(governanceDat.getSolutionActionByProposalId(_proposalId, max));
+                    if (address(x).call(governanceDat.getSolutionActionByProposalId(_proposalId, max))) {
+                        eventCaller.callActionSuccess(_proposalId);
+                    }
                     eventCaller.callProposalAccepted(_proposalId);
                     giveRewardAfterFinalDecision(_proposalId);
                 }
@@ -456,17 +458,16 @@ contract SimpleVoting is VotingType, Upgradeable {
     
     /// @dev Distributing reward after final decision
     function giveRewardAfterFinalDecision1(
-        uint finalVerdict,
         uint _proposalId,
-        address _ownerAddress,
-        uint depositedTokens,
         uint totalReward
     ) 
         internal
     {
         uint8 subCategory = governanceDat.getProposalCategory(_proposalId); 
         uint totalVoteValue;
+        uint depositedTokens;
         uint category = proposalCategory.getCategoryIdBySubId(subCategory);
+        address _ownerAddress;
         // uint mrLength = PC.getRoleSequencLength(category);
         for (uint i = 0; i < proposalCategory.getRoleSequencLength(category); i++) {
             uint roleId = proposalCategory.getRoleSequencAtIndex(category, i);

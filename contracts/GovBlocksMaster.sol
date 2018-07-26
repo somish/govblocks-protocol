@@ -22,7 +22,6 @@ contract GovBlocksMaster {
     address public eventCaller;
     address public owner;
     address public gbtAddress;
-    Master internal master;
     GovernChecker internal governChecker;
 
     struct GBDapps {
@@ -68,7 +67,7 @@ contract GovBlocksMaster {
         gbtAddress = _gbtContractAddress;
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
-            master = Master(masterAddress);
+            Master master = Master(masterAddress);
             if (master.versionLength() > 0)
                 master.changeGBTSAddress(_gbtContractAddress);
         }
@@ -79,7 +78,7 @@ contract GovBlocksMaster {
     function updateGBMAddress(address _newGBMAddress) public onlyOwner {
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
-            master = Master(masterAddress);
+            Master master = Master(masterAddress);
             if (master.versionLength() > 0)
                 master.changeGBMAddress(_newGBMAddress);
         }
@@ -175,7 +174,7 @@ contract GovBlocksMaster {
         address masterAddress = govBlocksDapps[_gbUserName].masterAddress;
         if (masterAddress == address(0))
             return (_gbUserName, address(0), "", "", 0);
-        master = Master(masterAddress);
+        Master master = Master(masterAddress);
         versionNo = master.versionLength();
         return (_gbUserName, govBlocksDapps[_gbUserName].masterAddress, byteCodeHash, contractsAbiHash, versionNo);
     }
@@ -213,7 +212,7 @@ contract GovBlocksMaster {
         if (masterAddress == address(0))
             return (_gbUserName, address(0), address(0), "", "", 0);
             
-        master = Master(masterAddress);
+        Master master = Master(masterAddress);
         versionNo = master.versionLength();
         return (
             _gbUserName, 
@@ -290,7 +289,7 @@ contract GovBlocksMaster {
         assembly {
           deployedAddress := create(0, add(_masterByteCode, 0x20), mload(_masterByteCode))  // deploys contract
         }
-        master = Master(deployedAddress);
+        Master master = Master(deployedAddress);
         master.initMaster(msg.sender, _gbUserName);
     }
 }

@@ -118,7 +118,7 @@ contract MemberRoles is Upgradeable {
     }
 
     /// @dev just to adhere to the interface
-    function changeGBTSAddress(address _gbtAddress) public {
+    function changeGBTSAddress(address) public {
     }
 
     /// @dev To Initiate default settings whenever the contract is regenerated!
@@ -195,12 +195,15 @@ contract MemberRoles is Upgradeable {
     }
 
     /// @dev Updates Validity of a user
-    function setValidityOfMember(address _memberAddress, uint32 _roleId, uint _validity) {
+    function setValidityOfMember(address _memberAddress, uint32 _roleId, uint _validity) 
+        public 
+        checkRoleAuthority(_roleId) 
+    {
         memberRoleData[_roleId].validity[_memberAddress] = _validity;
     }
 
     /// @dev Update validity of role
-    function setRoleValidity(uint32 _roleId, bool _validity) {
+    function setRoleValidity(uint32 _roleId, bool _validity) public checkRoleAuthority(_roleId) {
         memberRoleData[_roleId].limitedValidity = _validity;
     }
 

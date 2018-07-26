@@ -39,6 +39,13 @@ contract EventCaller {
         uint256 time
     );
 
+    /// @dev ActionSuccess event is called whenever an onchain action is executed. 
+    ///      closeProposalAddress is used to know which action.
+    event ActionSuccess (
+    	uint256 proposalId,
+        address closeProposalAddress
+    );
+
     /// @dev calls VoteCast event
     /// @param _proposalId Proposal ID for which the vote is cast
     function callVoteCast (uint256 _proposalId) public {
@@ -64,5 +71,11 @@ contract EventCaller {
     /// @param _closeAddress is the smart contract address which has closeProposal function
     function callCloseProposalOnTimeAtAddress (uint256 _proposalId, address _closeAddress, uint256 _time) public {
         emit CloseProposalOnTime(_proposalId, _closeAddress, _time);
+    }
+
+    /// @dev calls ActionSuccess event
+    /// @param _proposalId Proposal ID for which the action is executed
+    function callActionSuccess (uint256 _proposalId) public {
+    	emit ActionSuccess(_proposalId, msg.sender);
     }
 }
