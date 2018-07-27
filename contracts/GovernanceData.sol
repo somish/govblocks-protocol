@@ -869,6 +869,18 @@ contract GovernanceData is Upgradeable {
         );
     }
 
+    function getProposalDetailsForSV(uint _proposalId) 
+        public
+        view
+        returns(uint8, uint8, uint8) 
+    {
+        return(
+            allProposalData[_proposalId].category,
+            allProposalData[_proposalId].currVotingStatus,
+            allProposalData[_proposalId].currentVerdict
+        );
+    }
+
     /// @dev Fetch details of proposal when giving proposal id
     function getProposalDetailsById4(uint _proposalId) 
         public 

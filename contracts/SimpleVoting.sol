@@ -58,9 +58,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     }
 
     modifier validateStake(uint _proposalId, uint _stake) {    
-        uint stake = _stake / (10 ** gbt.decimals());
-        uint _category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
-        require(stake <= proposalCategory.getMaxStake(_category) && stake >= proposalCategory.getMinStake(_category));
+        require(proposalCategory.validateStake(_proposalId, _stake));
         _;
     }
 
@@ -265,17 +263,19 @@ contract SimpleVoting is VotingType, Upgradeable {
 
     /// @dev Returns true if the member passes all the checks to vote. i.e. If he is authorize to vote
     function validateMember(uint _proposalId, uint64[] _solutionChosen) public view returns(bool) {
-        uint8 _mrSequence;
+        uint8 mrSequence;
         uint8 category;
         uint currentVotingId;
         uint intermediateVerdict;
-        (, category, currentVotingId, intermediateVerdict, , , ) = governanceDat.getProposalDetailsById2(_proposalId);
-        uint _categoryId = proposalCategory.getCategoryIdBySubId(category);
-        (_mrSequence, , ) = proposalCategory.getCategoryData3(_categoryId, currentVotingId);
+        (category, currentVotingId, intermediateVerdict) = governanceDat.getProposalDetailsForSV(_proposalId);
+        mrSequence = proposalCategory.getMRSequenceBySubCat(category, currentVotingId);
 
-        require(memberRole.checkRoleIdByAddress(msg.sender, _mrSequence) 
-                && _solutionChosen.length == 1
-                && !governanceDat.checkVoteIdAgainstMember(msg.sender, _proposalId));
+        require(
+            memberRole.checkRoleIdByAddress(msg.sender, mrSequence) 
+            && _solutionChosen.length == 1
+            && !governanceDat.checkVoteIdAgainstMember(msg.sender, _proposalId)
+        );
+
         if (currentVotingId == 0)
             require(_solutionChosen[0] <= governanceDat.getTotalSolutions(_proposalId));
         else
@@ -363,7 +363,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     }
 
     /// @dev Gives rewards to respective members after final decision
-    function giveRewardAfterFinalDecision(uint _proposalId) public {
+    function giveRewardAfterFinalDecision(uint _proposalId) internal {
         uint   totalReward;
         address  ownerAddress;
         uint  depositedTokens;

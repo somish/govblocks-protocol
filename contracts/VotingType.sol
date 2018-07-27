@@ -30,5 +30,5 @@ contract VotingType {
 
     function closeProposalVote(uint _proposalId) public;
 
-    function giveRewardAfterFinalDecision(uint _proposalId) public;
+    function giveRewardAfterFinalDecision(uint _proposalId) internal;
 }

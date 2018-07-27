@@ -486,6 +486,18 @@ contract ProposalCategory is Upgradeable {
         );
     }
 
+    function getMRSequenceBySubCat(uint _subCategoryId, uint _currVotingIndex) public view returns (uint8) {
+        uint category = allSubCategory[_subCategoryId].categoryId;
+        return allCategory[category].memberRoleSequence[_currVotingIndex];
+    }
+
+    function validateStake(uint _proposalId, uint _stake) public view returns (bool result) {
+        uint64 subCat = governanceDat.getProposalCategory(_proposalId);
+        uint64 category = allSubCategory[subCat].categoryId;
+        if(_stake <= allCategory[category].maxStake && _stake >= allCategory[category].minStake)
+            result = true;
+    }
+
     /// @dev Gets Category and SubCategory name from Proposal ID.
     function getCatAndSubNameByPropId(uint _proposalId) 
         public 
@@ -498,7 +510,7 @@ contract ProposalCategory is Upgradeable {
 
     /// @dev Gets Category ID from Proposal ID.
     function getCatIdByPropId(uint _proposalId) public view returns(uint8 catId) {
-        catId = getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
+        catId = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryId;
     }
 
     /// @dev adds second half of the inital categories
