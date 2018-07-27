@@ -28,7 +28,7 @@ import "./Math.sol";
 import "./VotingType.sol";
 import "./BasicToken.sol";
 import "./EventCaller.sol";
-import "./GovernChecker.sol";
+import "./Governed.sol";
 
 contract SimpleVoting is VotingType, Upgradeable {
     using SafeMath for uint;
@@ -488,13 +488,17 @@ contract SimpleVoting is VotingType, Upgradeable {
         governance.setProposalDetails(_proposalId, totalReward, totalVoteValue);
 
         if (subCategory == 10) {
-            address newSV = master.getLatestAddress("GS");
-            if (newSV != address(this)) {
-                governChecker.updateAuthorized(master.dAppName(), newSV);
-            }
-            pool.transferAssets();
+            upgrade();
         }
     }
+
+    function upgrade() internal {
+        address newSV = master.getLatestAddress("GS");
+        if (newSV != address(this)) {
+            governChecker.updateAuthorized(master.dAppName(), newSV);
+        }
+        pool.transferAssets();
+    } 
 
     /// @dev Adding member address against solution index and event call to save details of solution
     function addSolution1(
