@@ -879,7 +879,7 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets proposal details of given proposal id
-    /// @param totalVotes Total number of votes that has been casted so far against proposal
+    /// @param totalVoteValue Total value of votes that has been casted so far against proposal
     /// @param totalSolutions Total number of solutions proposed till now against proposal
     /// @param commonIncentive Incentive that needs to be distributed once the proposal is closed.
     /// @param finalVerdict Final solution index that has won by maximum votes.
@@ -889,7 +889,7 @@ contract GovernanceData is Upgradeable {
         returns(
             uint proposalId,
             uint status, 
-            uint totalVotes, 
+            uint totalVoteValue, 
             uint totalSolutions, 
             uint commonIncentive, 
             uint finalVerdict
@@ -897,7 +897,7 @@ contract GovernanceData is Upgradeable {
     {
         proposalId = _proposalId;
         status = getProposalStatus(_proposalId);
-        totalVotes = getProposalTotalVoteValue(_proposalId);
+        totalVoteValue = getProposalTotalVoteValue(_proposalId);
         totalSolutions = getTotalSolutions(_proposalId);
         commonIncentive = getProposalIncentive(_proposalId);
         finalVerdict = allProposalData[_proposalId].finalVerdict;

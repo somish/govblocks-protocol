@@ -26,7 +26,7 @@ contract GBTStandardToken is ERC20Basic, ERC20 {
     string public name;
     string public symbol;
     uint public decimals;
-    address internal owner;
+    address public owner;
     uint public totalSupply;
     //address internal GBTCAddress;
 

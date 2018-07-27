@@ -21,7 +21,7 @@ var pl;
 var add = [];
 var ms;
 const json = require('./../build/contracts/Master.json');
-const bytecode = json['bytecode'];
+var bytecode = json['bytecode'];
 
 describe('Deploy GovBlocks', function() {
   it("Should deploy gbm", async function () {
@@ -30,6 +30,7 @@ describe('Deploy GovBlocks', function() {
     ec = await EventCaller.new();
     gbm = await GovBlocksMaster.new();
     await gbm.govBlocksMasterInit(gbts.address, ec.address);
+    await gbm.setMasterByteCode(bytecode.substring(10000));
     await gbm.setMasterByteCode(bytecode);
     assert.equal(await gbm.gbtAddress(), gbts.address, "GBM not initialized");
   });
