@@ -39,6 +39,7 @@ contract Master is Ownable, Upgradeable {
 
     GovBlocksMaster internal gbm;
     Upgradeable internal up;
+    Governed internal govern;
     address public gbmAddress;
 
     /*
@@ -120,7 +121,7 @@ contract Master is Ownable, Upgradeable {
         require(isAuth());
 
         if(versionLength == 0) {
-            Governed govern = new Governed(dAppName);
+            govern = new Governed(dAppName);
             GovernChecker governChecker = GovernChecker(govern.getGovernCheckerAddress());
             if(getCodeSize(address(governChecker)) > 0 )
                 governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
@@ -250,7 +251,7 @@ contract Master is Ownable, Upgradeable {
         return gbm.eventCaller();
     }
 
-    function getGovernCheckerAddress public view returns(address) {
+    function getGovernCheckerAddress() public view returns(address) {
         return govern.getGovernCheckerAddress();
     }
 

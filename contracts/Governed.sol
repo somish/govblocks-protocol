@@ -19,6 +19,7 @@ contract GovernChecker {
     function authorized(bytes32 _dAppName) public view returns(address);
     function initializeAuthorized(bytes32 _dAppName, address authorizedAddress) public;
     function updateGBMAdress(address _govBlockMaster) public;
+    function updateAuthorized(bytes32 _dAppName, address authorizedAddress) public;
 }
 
 contract Governed {
@@ -41,8 +42,8 @@ contract Governed {
     function setGovernChecker() public {
         if (getCodeSize(0x42b7429819648B55d6eed353a74842F2e5827262) > 0)        //kovan testnet
             governChecker = GovernChecker(0x42b7429819648B55d6eed353a74842F2e5827262);
-        else if (getCodeSize(0xc3ddcd5a44cb660fb2b69e983f6550805fc92ed4) > 0)   //RSK testnet
-            governChecker = GovernChecker(0xc3ddcd5a44cb660fb2b69e983f6550805fc92ed4);
+        else if (getCodeSize(0xdf6c6a73bcf71e8caa6a2c131bcf98f10ebb5162) > 0)   //RSK testnet
+            governChecker = GovernChecker(0xdf6c6a73bcf71e8caa6a2c131bcf98f10ebb5162);
         else if (getCodeSize(0x67995F25f04d61614d05607044c276727DEA9Cf0) > 0)   //Rinkeyby testnet
             governChecker = GovernChecker(0x67995F25f04d61614d05607044c276727DEA9Cf0);
         else if (getCodeSize(0xb5fE0857770D85302585564b04C81a5Be96022C8) > 0)   //Ropsten testnet
