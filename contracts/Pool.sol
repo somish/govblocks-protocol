@@ -92,11 +92,14 @@ contract Pool is Upgradeable {
         gov = Governance(master.getLatestAddress("GV"));
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
-        //address newPool = master.getLatestAddress("PL");
-        //if(address(this) != newPool) {
-        //    gbt.transfer(master.getLatestAddress("PL"), gbt.balanceOf(address(this)) - gbt.getLockToken(address(this)));
-        //    bool sent = newPool.send(address(this).balance);
-        //}
+    }
+
+    function transferAssets() public {
+        address newPool = master.getLatestAddress("PL");
+        if(address(this) != newPool) {
+           gbt.transfer(master.getLatestAddress("PL"), gbt.balanceOf(address(this)) - gbt.getLockToken(address(this)));
+           bool sent = newPool.send(address(this).balance);
+        }
     }
 
     /// @dev converts pool ETH to GBT

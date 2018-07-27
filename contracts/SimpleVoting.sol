@@ -492,6 +492,7 @@ contract SimpleVoting is VotingType, Upgradeable {
             if (newSV != address(this)) {
                 governChecker.updateAuthorized(master.dAppName(), newSV);
             }
+            pool.transferAssets();
         }
     }
 
