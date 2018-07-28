@@ -403,7 +403,7 @@ contract SimpleVoting is VotingType, Upgradeable {
                         max, 
                         0
                     );
-                    eventCaller.callCloseProposalOnTime(_proposalId, _closingTime + now);
+                    //eventCaller.callCloseProposalOnTime(_proposalId, _closingTime + now);
                 } else {
                     governance.updateProposalDetails(_proposalId, currentVotingId - 1, max, max);
                     governanceDat.changeProposalStatus(_proposalId, 3);
@@ -411,15 +411,15 @@ contract SimpleVoting is VotingType, Upgradeable {
                         proposalCategory.getContractAddress(governanceDat.getProposalCategory(_proposalId))
                     );
                     if (address(x).call(governanceDat.getSolutionActionByProposalId(_proposalId, max))) {
-                        eventCaller.callActionSuccess(_proposalId);
+                        //eventCaller.callActionSuccess(_proposalId);
                     }
-                    eventCaller.callProposalAccepted(_proposalId);
-                    giveRewardAfterFinalDecision(_proposalId);
+                    //eventCaller.callProposalAccepted(_proposalId);
+                    //giveRewardAfterFinalDecision(_proposalId);
                 }
             } else {
                 governance.updateProposalDetails(_proposalId, currentVotingId, max, max);
                 governanceDat.changeProposalStatus(_proposalId, 4);
-                giveRewardAfterFinalDecision(_proposalId);
+                //giveRewardAfterFinalDecision(_proposalId);
                 governance.changePendingProposalStart();
             }
         } else {
