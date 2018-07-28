@@ -442,6 +442,11 @@ contract ProposalCategory is Upgradeable {
         return allCategory[_categoryId].memberRoleSequence[_index];
     }
 
+    function getRoleSequencByProposal(uint _proposalId, uint _currVotingId) public view returns(uint32) {
+        uint32 category = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryId;
+        return allCategory[category].memberRoleSequence[_currVotingId];
+    }
+
     /// @dev Gets Majority threshold value at particular index from Majority Vote array
     /// @param _categoryId Id of main category
     /// @param _index Current voting status againt proposal act as an index here

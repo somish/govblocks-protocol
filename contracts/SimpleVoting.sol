@@ -242,13 +242,23 @@ contract SimpleVoting is VotingType, Upgradeable {
         bytes32 _lockTokenTxHash
     ) 
         public 
-        validateStake(_proposalId, _voteStake) 
     {
-        require(validateMember(_proposalId, _solutionChosen));
-        require(governanceDat.getProposalStatus(_proposalId) == 2);
-
-        receiveStake("V", _proposalId, _voteStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-        castVote(_proposalId, _solutionChosen, msg.sender, _voteStake);
+        uint8 mrSequence;
+        uint8 category;
+        uint8 currentVotingId;
+        uint8 intermediateVerdict;
+        uint finalVoteValue;
+        (category, currentVotingId, intermediateVerdict) 
+            = governanceDat.getProposalDetailsForSV(msg.sender, _proposalId);
+        mrSequence = proposalCategory.getMRSequenceBySubCat(category, currentVotingId);
+        require(memberRole.checkRoleIdByAddress(msg.sender, mrSequence) && _solutionChosen.length == 1);
+        if (currentVotingId == 0)
+            require(_solutionChosen[0] <= governanceDat.getTotalSolutions(_proposalId));
+        else
+            require(_solutionChosen[0] == intermediateVerdict || _solutionChosen[0] == 0);
+        if (_voteStake != 0)
+            receiveStake("V", _proposalId, _voteStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+        castVote(_voteStake, _solutionChosen, _proposalId, mrSequence);
     }
 
     /// @dev Checks if the solution is already added by a member against specific proposal
@@ -267,9 +277,8 @@ contract SimpleVoting is VotingType, Upgradeable {
         uint8 category;
         uint currentVotingId;
         uint intermediateVerdict;
-        (category, currentVotingId, intermediateVerdict) = governanceDat.getProposalDetailsForSV(_proposalId);
+        (category, currentVotingId, intermediateVerdict) = governanceDat.getProposalDetailsForSV(msg.sender, _proposalId);
         mrSequence = proposalCategory.getMRSequenceBySubCat(category, currentVotingId);
-
         require(
             memberRole.checkRoleIdByAddress(msg.sender, mrSequence) 
             && _solutionChosen.length == 1
@@ -302,8 +311,12 @@ contract SimpleVoting is VotingType, Upgradeable {
     function getVoteValueGivenByMember(address _memberAddress, uint _memberStake)  
         public
         view 
-        returns(uint128 finalVoteValue) 
+        returns(uint finalVoteValue) 
     {
+        uint scalingWeight;
+        uint membershipScalingFactor;
+        uint memberReputation;
+        (scalingWeight, membershipScalingFactor, memberReputation) = governanceDat.getMemberReputationSV(_memberAddress);
         uint tokensHeld = 
             SafeMath.div(
                 SafeMath.mul(
@@ -314,10 +327,10 @@ contract SimpleVoting is VotingType, Upgradeable {
             );
         uint value = 
             SafeMath.mul(
-                Math.max256(_memberStake, governanceDat.scalingWeight()), 
-                Math.max256(tokensHeld, governanceDat.membershipScalingFactor())
+                Math.max256(_memberStake, scalingWeight), 
+                Math.max256(tokensHeld, membershipScalingFactor)
             );
-        finalVoteValue = SafeMath.mul128(governanceDat.getMemberReputation(_memberAddress), uint128(value));
+        finalVoteValue = SafeMath.mul(memberReputation, value);
     }
 
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
@@ -435,6 +448,18 @@ contract SimpleVoting is VotingType, Upgradeable {
 
     }
 
+    /// @dev castsVote
+    function castVote(uint _voteStake, uint64[] _solutionChosen, uint64 _proposalId, uint32 mrSequence) internal {
+        uint finalVoteValue = getVoteValueGivenByMember(msg.sender, _voteStake);
+        governanceDat.addVote(msg.sender, _solutionChosen, _voteStake, finalVoteValue, _proposalId, mrSequence);
+        if(governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, mrSequence) 
+            == memberRole.getAllMemberLength(mrSequence) 
+            && mrSequence != 2
+        ) {
+            eventCaller.callVoteCast(_proposalId);
+        }
+    }
+
     /// @dev Checks if the vote count against any solution passes the threshold value or not.
     function checkForThreshold(uint _proposalId, uint32 _mrSequenceId) internal view returns(bool) {
         uint thresHoldValue;
@@ -537,26 +562,6 @@ contract SimpleVoting is VotingType, Upgradeable {
         governanceDat.callSolutionEvent(_proposalId, msg.sender, solutionId, _solutionHash, _dateAdd, _solutionStake);
     }
 
-    /// @dev Castes vote
-    /// @param _proposalId Proposal id
-    /// @param _solutionChosen solution chosen while casting vote against proposal.
-    /// @param _memberAddress Voter address who is casting a vote.
-    /// @param _voteStake Vote stake in GBT while casting a vote
-    function castVote(uint64 _proposalId, uint64[] _solutionChosen, address _memberAddress, uint _voteStake) internal {
-        //uint voteId = governanceDat.allVotesTotal();
-        uint128 finalVoteValue = getVoteValueGivenByMember(_memberAddress, _voteStake);
-        uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
-        uint currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
-        uint32 _roleId = proposalCategory.getRoleSequencAtIndex(category, currVotingId);
-        
-        governanceDat.addVote(msg.sender, _solutionChosen, _voteStake, finalVoteValue, _proposalId, _roleId);
-        if(governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _roleId)
-                == memberRole.getAllMemberLength(_roleId) 
-                && _roleId != 2) {
-            eventCaller.callVoteCast(_proposalId);
-        }
-    }
-
     /// @dev Receives solution stake against solution in simple voting i.e. Deposit and lock the tokens
     function receiveStake(
         bytes2 _type, 
@@ -570,12 +575,12 @@ contract SimpleVoting is VotingType, Upgradeable {
     ) 
         internal 
     {
-        uint8 currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
-        uint depositPerc = governanceDat.depositPercVote();
-        uint deposit = SafeMath.div(SafeMath.mul(_stake, depositPerc), 100);
-        uint category = proposalCategory.getCatIdByPropId(_proposalId);
-
         if (_stake != 0) {
+            require(proposalCategory.validateStake(_proposalId, _stake));
+            uint8 currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
+            uint depositPerc = governanceDat.depositPercVote();
+            uint deposit = SafeMath.div(SafeMath.mul(_stake, depositPerc), 100);
+            uint category = proposalCategory.getCatIdByPropId(_proposalId);
             require(_validityUpto >= proposalCategory.getRemainingClosingTime(_proposalId, category, currVotingId));
             if (depositPerc == 0) {
                 gbt.lockToken(msg.sender, _stake, _validityUpto, _v, _r, _s, _lockTokenTxHash);

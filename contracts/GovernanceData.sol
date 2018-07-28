@@ -518,9 +518,9 @@ contract GovernanceData is Upgradeable {
         address _memberAddress, 
         uint64[] _solutionChosen, 
         uint _voteStake, 
-        uint128 _voteValue, 
+        uint _voteValue, 
         uint128 _proposalId, 
-        uint _roleId
+        uint128 _roleId
     ) 
         public 
         onlyInternal
@@ -529,7 +529,7 @@ contract GovernanceData is Upgradeable {
         allVotesByMember[_memberAddress].push(allVotes.length);
         addressProposalVote[_memberAddress][_proposalId] = allVotes.length;
         emit Vote(_memberAddress, _proposalId, now, _voteStake, allVotes.length);
-        allVotes.push(ProposalVote(_memberAddress, _solutionChosen, _voteValue, _proposalId));
+        allVotes.push(ProposalVote(_memberAddress, _solutionChosen, uint128(_voteValue), _proposalId));
         allProposalData[_proposalId].totalVoteValue = allProposalData[_proposalId].totalVoteValue 
             + _voteValue;
 
@@ -869,11 +869,13 @@ contract GovernanceData is Upgradeable {
         );
     }
 
-    function getProposalDetailsForSV(uint _proposalId) 
+    function getProposalDetailsForSV(address _voter, uint _proposalId) 
         public
         view
         returns(uint8, uint8, uint8) 
     {
+        require(addressProposalVote[_voter][_proposalId] == 0);
+        require(allProposalData[_proposalId].propStatus == 2);
         return(
             allProposalData[_proposalId].category,
             allProposalData[_proposalId].currVotingStatus,
@@ -989,6 +991,16 @@ contract GovernanceData is Upgradeable {
             memberPoints = 1;
         else
             memberPoints = allMemberReputationByAddress[_memberAddress];
+    }
+
+    /// @dev Get member's reputation points and scalind data for sv.
+    function getMemberReputationSV(address _memberAddress) public view returns(uint, uint, uint) {
+        uint memberPoints;
+        if (allMemberReputationByAddress[_memberAddress] == 0)
+            memberPoints = 1;
+        else
+            memberPoints = allMemberReputationByAddress[_memberAddress];
+        return(scalingWeight, membershipScalingFactor, memberPoints);
     }
 
     /// @dev Gets Total vote value from all the votes that has been casted against of winning solution
