@@ -158,8 +158,6 @@ contract Master is Ownable, Upgradeable {
     function changeMasterAddress(address _masterAddress) public {
         if(_masterAddress != address(this)){
             require(isAuth());
-            Master master = Master(_masterAddress);
-            require(master.versionLength() > 0);
         }
         addContractDetails(versionLength - 1, "MS", _masterAddress);
         for (uint i = 1; i < allContractNames.length - 1; i++) {

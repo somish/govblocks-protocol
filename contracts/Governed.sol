@@ -42,8 +42,8 @@ contract Governed {
     } 
 
     function setGovernChecker() public {
-        if (getCodeSize(0x42b7429819648B55d6eed353a74842F2e5827262) > 0)        //kovan testnet
-            governChecker = GovernChecker(0x42b7429819648B55d6eed353a74842F2e5827262);
+        if (getCodeSize(0x48f73ed5d20135e24b1afed5eeedf5ef695ff506) > 0)        //kovan testnet
+            governChecker = GovernChecker(0x48f73ed5d20135e24b1afed5eeedf5ef695ff506);
         else if (getCodeSize(0xdf6c6a73bcf71e8caa6a2c131bcf98f10ebb5162) > 0)   //RSK testnet
             governChecker = GovernChecker(0xdf6c6a73bcf71e8caa6a2c131bcf98f10ebb5162);
         else if (getCodeSize(0x67995F25f04d61614d05607044c276727DEA9Cf0) > 0)   //Rinkeyby testnet

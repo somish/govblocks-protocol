@@ -4,7 +4,6 @@ var Master = artifacts.require("Master");
 var GBTStandardToken = artifacts.require("GBTStandardToken");
 var Governance = artifacts.require("Governance");
 var GovernanceData = artifacts.require("GovernanceData");
-var MemberRoles = artifacts.require("MemberRoles");
 var Pool = artifacts.require("Pool");
 var ProposalCategory = artifacts.require("ProposalCategory");
 var SimpleVoting = artifacts.require("SimpleVoting");
@@ -54,9 +53,12 @@ describe('Deploy GovBlocks', function() {
     await ms.addNewVersion(add);
     assert.equal(await ms.versionLength(), 1, "dApp version not created");
   });
+});
+
+describe('Test Member Roles', function() {
   it("Member Roles should be initialized with 3 roles", async function() {
+    this.timeout(100000);
     assert.equal(await mr.getTotalMemberRoles(), 3, "Default Member Roles not added");
   });
 });
-
 
