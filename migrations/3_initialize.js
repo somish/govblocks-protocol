@@ -21,20 +21,24 @@ module.exports = function(deployer) {
                             instance.addGovBlocksUser("0x41", GBTStandardToken.address, "descHash").then(function(){
                                 GovernanceData.deployed().then(function(){ 
                                     MemberRoles.deployed().then(function(){
-                                        ProposalCategory.deployed().then(function(){ 
+                                        ProposalCategory.deployed().then(function(pc){
+                                            pc.proposalCategoryInitiate(); 
                                             SimpleVoting.deployed().then(function(){ 
                                                 Governance.deployed().then(function(){ 
                                                     Pool.deployed().then(function(){
-                                                        // Master.deployed().then(function(mast){
-                                                        //     mast.initMaster(owner,"0x41").then(function(){
-                                                        //         mast.changeGBMAddress(GovBlocksMaster.address).then(function(){
-                                                        //             instance.changeDappMasterAddress("0x41", master.address).then(function(){
-                                                        //                 var addr = [GovernanceData.address, MemberRoles.address, ProposalCategory.address, SimpleVoting.address, Governance.address, Pool.address];
-                                                        //                 mast.addNewVersion(addr);
-                                                        //             });
-                                                        //         });
-                                                        //     });
-                                                        // });
+                                                        Master.deployed().then(function(mast){
+                                                            instance.owner().then(function(own){
+                                                                mast.initMaster(own,"0x41").then(function(){
+                                                                    mast.changeGBMAddress(GovBlocksMaster.address).then(function(){
+                                                                        var addr = [GovernanceData.address, MemberRoles.address, ProposalCategory.address, SimpleVoting.address, Governance.address, Pool.address];
+                                                                        mast.addNewVersion(addr).then(function(){
+                                                                            instance.changeDappMasterAddress("0x41", Master.address).then(function(){
+                                                                            });
+                                                                        });
+                                                                    });
+                                                                });
+                                                            });  
+                                                        });
                                                     });
                                                 });
                                             });
@@ -50,11 +54,16 @@ module.exports = function(deployer) {
     });
 };
 
-// var mad = instance.getDappMasterAddress("0x41").then(function(madr){
-//     console.log(madr);
-//     console.log(addr);
-//     let ms = Master.at(madr).then(function(){
-//         ms.addNewVersion.call(addr);
-//     });
-// }); 
 
+
+/*
+
+
+instance.getDappMasterAddress("0x41").then(function(madr){
+                                                            var addr = [GovernanceData.address, MemberRoles.address, ProposalCategory.address, SimpleVoting.address, Governance.address, Pool.address];
+                                                            let ms = Master.at(madr).then(function(){
+                                                                ms.addNewVersion(addr);
+                                                            });
+                                                        }); 
+
+*/

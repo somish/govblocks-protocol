@@ -2,9 +2,11 @@ var GBTStandardToken = artifacts.require("GBTStandardToken");
 var gbts;
 
 contract('gbt', function([owner,taker]) {
-  it("should deploy gbt", async function () {
+  it("should be initialized", async function () {
     this.timeout(100000);
-    gbts = await GBTStandardToken.new();
+    GBTStandardToken.deployed().then(function(instance){
+      gbts = instance;
+    });
     assert.equal(await gbts.owner(), owner, "owner was not set properly");
     assert.equal(await gbts.name(), "GBT", "name was not set properly");
     assert.equal(await gbts.symbol(), "GBT", "symbol was not set properly");
