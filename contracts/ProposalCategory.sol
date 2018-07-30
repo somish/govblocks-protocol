@@ -147,7 +147,7 @@ contract ProposalCategory is Upgradeable {
         uint8[] _memberRoleSequence, 
         uint8[] _memberRoleMajorityVote, 
         uint32[] _closingTime,
-        uint64[] _stakeAndIncentive, 
+        uint[] _stakeAndIncentive, 
         uint8[] _rewardPercentage
     ) 
         public
@@ -543,7 +543,7 @@ contract ProposalCategory is Upgradeable {
         allSubIdByCategory[2].push(3);
         allSubCategory.push(SubCategory(
                 "Add new category",
-                "QmcCKba6ahSEj1gdVwHVasY8DyWnLXy2pSLufH5kThmo2m",
+                "QmNazQ3hQ5mssf8KAYkjxwVjwZvM9XjZgrJ1kf3QUmprCB",
                 2,
                 masterAddress,
                 "PC"

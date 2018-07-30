@@ -182,11 +182,16 @@ contract MemberRoles is Upgradeable {
         checkRoleAuthority(_roleId) 
     {
         if (_typeOf) {
-            require(!memberRoleData[_roleId].memberActive[_memberAddress]);
-            memberRoleData[_roleId].memberCounter = SafeMath.add32(memberRoleData[_roleId].memberCounter, 1);
-            memberRoleData[_roleId].memberActive[_memberAddress] = true;
-            memberRoleData[_roleId].memberAddress.push(_memberAddress);
-            memberRoleData[_roleId].validity[_memberAddress] = _validity;
+            if(memberRoleData[_roleId].validity[_memberAddress] < now) {
+                if(!memberRoleData[_roleId].memberActive[_memberAddress]) {
+                    memberRoleData[_roleId].memberCounter = SafeMath.add32(memberRoleData[_roleId].memberCounter, 1);
+                    memberRoleData[_roleId].memberActive[_memberAddress] = true;
+                    memberRoleData[_roleId].memberAddress.push(_memberAddress);
+                    memberRoleData[_roleId].validity[_memberAddress] = _validity;
+                } else {
+                    memberRoleData[_roleId].validity[_memberAddress] = _validity;
+                }     
+            }  
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.sub32(memberRoleData[_roleId].memberCounter, 1);
@@ -251,16 +256,21 @@ contract MemberRoles is Upgradeable {
     /// @return allMemberAddress Member addresses of specified role id
     function getAllAddressByRoleId(uint32 _memberRoleId) public view returns(uint32, address[] allMemberAddress) {
         uint length = memberRoleData[_memberRoleId].memberAddress.length;
-        uint8 j = 0;
-        allMemberAddress = new address[](memberRoleData[_memberRoleId].memberCounter);
-        for (uint8 i = 0; i < length; i++) {
+        uint64 j;
+        uint64 i;
+        address[] memory tempAllMemberAddress = new address[](memberRoleData[_memberRoleId].memberCounter);
+        for (i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
             if (memberRoleData[_memberRoleId].memberActive[member]
                 && (!memberRoleData[_memberRoleId].limitedValidity || memberRoleData[_memberRoleId].validity[member] > now)
             ) {
-                allMemberAddress[j] = member;
+                tempAllMemberAddress[j] = member;
                 j++;
             }
+        }
+        allMemberAddress = new address[](j);
+        for(i = 0; i < j; i++) {
+            allMemberAddress[i] = tempAllMemberAddress[i];
         }
         return (_memberRoleId, allMemberAddress);
     }
