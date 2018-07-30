@@ -25,12 +25,11 @@ import "./ProposalCategory.sol";
 import "./GovBlocksMaster.sol";
 import "./Pool.sol";
 import "./Math.sol";
-import "./VotingType.sol";
 import "./BasicToken.sol";
 import "./EventCaller.sol";
 import "./Governed.sol";
 
-contract SimpleVoting is VotingType, Upgradeable {
+contract SimpleVoting is Upgradeable {
     using SafeMath for uint;
     GBTStandardToken internal gbt;
     GovernanceData internal governanceDat;
@@ -45,6 +44,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     Pool internal pool;
     EventCaller internal eventCaller;
     GovernChecker internal governChecker;
+    bytes32 public votingTypeName;
 
     modifier onlyInternal {
         master = Master(masterAddress);
@@ -232,10 +232,10 @@ contract SimpleVoting is VotingType, Upgradeable {
     /// @param _solutionChosen solution chosen while voting
     /// @param _voteStake Amount payable in GBT tokens
     function proposalVoting(
-        uint64 _proposalId, 
+        uint _voteStake,
         uint64[] _solutionChosen, 
-        uint _voteStake, 
-        uint _validityUpto, 
+        uint32 _proposalId,  
+        uint64 _validityUpto, 
         uint8 _v, 
         bytes32 _r, 
         bytes32 _s, 
@@ -250,7 +250,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         (category, currentVotingId, intermediateVerdict) 
             = governanceDat.getProposalDetailsForSV(msg.sender, _proposalId);
         mrSequence = proposalCategory.getMRSequenceBySubCat(category, currentVotingId);
-        require(memberRole.checkRoleIdByAddress(msg.sender, mrSequence) && _solutionChosen.length == 1);
+        require(memberRole.checkRoleIdByAddress(msg.sender, mrSequence));
         if (currentVotingId == 0)
             require(_solutionChosen[0] <= governanceDat.getTotalSolutions(_proposalId));
         else
@@ -448,7 +448,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     }
 
     /// @dev castsVote
-    function castVote(uint _voteStake, uint64[] _solutionChosen, uint64 _proposalId, uint32 mrSequence) internal {
+    function castVote(uint _voteStake, uint64[] _solutionChosen, uint32 _proposalId, uint32 mrSequence) internal {
         uint finalVoteValue = getVoteValueGivenByMember(msg.sender, _voteStake);
         governanceDat.addVote(msg.sender, _solutionChosen, _voteStake, finalVoteValue, _proposalId, mrSequence);
         if(governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, mrSequence) 

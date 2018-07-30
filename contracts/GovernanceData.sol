@@ -260,8 +260,8 @@ contract GovernanceData is Upgradeable {
     struct ProposalVote {
         address voter;
         uint64[] solutionChosen;
-        uint128 voteValue;
-        uint128 proposalId;
+        uint208 voteValue;
+        uint32 proposalId;
     }
 
     struct LastReward {
@@ -519,7 +519,7 @@ contract GovernanceData is Upgradeable {
         uint64[] _solutionChosen, 
         uint _voteStake, 
         uint _voteValue, 
-        uint128 _proposalId, 
+        uint32 _proposalId, 
         uint128 _roleId
     ) 
         external 
@@ -529,7 +529,7 @@ contract GovernanceData is Upgradeable {
         allVotesByMember[_memberAddress].push(allVotes.length);
         addressProposalVote[_memberAddress][_proposalId] = allVotes.length;
         emit Vote(_memberAddress, _proposalId, now, _voteStake, allVotes.length);
-        allVotes.push(ProposalVote(_memberAddress, _solutionChosen, uint128(_voteValue), _proposalId));
+        allVotes.push(ProposalVote(_memberAddress, _solutionChosen, uint208(_voteValue), _proposalId));
         allProposalData[_proposalId].totalVoteValue = allProposalData[_proposalId].totalVoteValue 
             + _voteValue;
 
@@ -558,8 +558,8 @@ contract GovernanceData is Upgradeable {
         returns(
             address voter, 
             uint64[] solutionChosen, 
-            uint128 voteValue,
-            uint128 proposalId
+            uint208 voteValue,
+            uint32 proposalId
         ) 
     {
         return (
