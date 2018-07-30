@@ -8,6 +8,9 @@ contract('gbt', function([owner,taker]) {
     });
     assert.equal(1, 1, "something is not right");
   });
+  it("should should have the instance", async function () {
+    assert.equal(1, 1, "something is not right");
+  });
   it("should be initialized", async function () {
     this.timeout(100000);
     assert.equal(await gbts.owner(), owner, "owner was not set properly");

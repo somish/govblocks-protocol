@@ -23,14 +23,13 @@ const json = require('./../build/contracts/Master.json');
 var bytecode = json['bytecode'];
 
 describe('Deploy new dApp', function() {
-  it("should get the deployed insance of GBM", async function () {
-    GovBlocksMaster.deployed().then(function(instance){
-      gbm = instance;
-    });
-    assert.equal(1, 1, "something is not right");
-  });
   it("should create a new dApp", async function () {
     this.timeout(100000);
+    gbm = await GovBlocksMaster.new();
+    gbts =  await GBTStandardToken.new();
+    await gbm.govBlocksMasterInit("0x0", "0x0");
+    await gbm.setMasterByteCode(bytecode.substring(10000));
+    await gbm.setMasterByteCode(bytecode);
     await gbm.addGovBlocksUser("0x42", gbts.address, "descHash");
     gd = await GovernanceData.new();
     mr = await MemberRoles.new();
@@ -51,10 +50,4 @@ describe('Deploy new dApp', function() {
   });
 });
 
-// describe('Test Member Roles', function() {
-//   it("Member Roles should be initialized with 3 roles", async function() {
-//     this.timeout(100000);
-//     assert.equal(await mr.getTotalMemberRoles(), 3, "Default Member Roles not added");
-//   });
-// });
 
