@@ -37,7 +37,7 @@ contract Governed {
         setGovernChecker();
     }
 
-    function setDappName(bytes32 _dAppName) {
+    function setDappName(bytes32 _dAppName) internal {
         dAppName = _dAppName;
     } 
 

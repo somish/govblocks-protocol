@@ -491,7 +491,7 @@ contract ProposalCategory is Upgradeable {
         );
     }
 
-    function getMRSequenceBySubCat(uint _subCategoryId, uint _currVotingIndex) public view returns (uint8) {
+    function getMRSequenceBySubCat(uint _subCategoryId, uint _currVotingIndex) external view returns (uint8) {
         uint category = allSubCategory[_subCategoryId].categoryId;
         return allCategory[category].memberRoleSequence[_currVotingIndex];
     }

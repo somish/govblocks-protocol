@@ -208,7 +208,7 @@ contract SimpleVoting is VotingType, Upgradeable {
         );
     }
 
-    /// @dev Creates proposal for voting (Stake in ether)
+    /*/// @dev Creates proposal for voting (Stake in ether)
     /// @param _proposalId Proposal id
     /// @param _solutionChosen solution id chosen while voting as a proposal might have different solution
     function proposalVotingInEther(
@@ -225,7 +225,7 @@ contract SimpleVoting is VotingType, Upgradeable {
     {
         uint tokenAmount = gbt.buyToken.value(msg.value)();
         proposalVoting(_proposalId, _solutionChosen, tokenAmount, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-    }
+    }*/
 
     /// @dev Creates proposal for voting
     /// @param _proposalId Proposal id
@@ -241,13 +241,12 @@ contract SimpleVoting is VotingType, Upgradeable {
         bytes32 _s, 
         bytes32 _lockTokenTxHash
     ) 
-        public 
+        external 
     {
         uint8 mrSequence;
         uint8 category;
         uint8 currentVotingId;
         uint8 intermediateVerdict;
-        uint finalVoteValue;
         (category, currentVotingId, intermediateVerdict) 
             = governanceDat.getProposalDetailsForSV(msg.sender, _proposalId);
         mrSequence = proposalCategory.getMRSequenceBySubCat(category, currentVotingId);

@@ -522,7 +522,7 @@ contract GovernanceData is Upgradeable {
         uint128 _proposalId, 
         uint128 _roleId
     ) 
-        public 
+        external 
         onlyInternal
     {
         proposalRoleVote[_proposalId][_roleId].push(allVotes.length);
@@ -598,7 +598,7 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets Total number of votes of specific role against proposal
-    function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) public view returns(uint length) {
+    function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) external view returns(uint length) {
         return proposalRoleVote[_proposalId][_roleId].length;
     }
 
@@ -869,8 +869,9 @@ contract GovernanceData is Upgradeable {
         );
     }
 
+    /// @dev fetches details for simplevoting and also verifies that the voter has not casted a vote already
     function getProposalDetailsForSV(address _voter, uint _proposalId) 
-        public
+        external
         view
         returns(uint8, uint8, uint8) 
     {

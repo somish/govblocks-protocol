@@ -48,20 +48,20 @@ contract EventCaller {
 
     /// @dev calls VoteCast event
     /// @param _proposalId Proposal ID for which the vote is cast
-    function callVoteCast (uint256 _proposalId) public {
+    function callVoteCast (uint256 _proposalId) external {
         emit VoteCast(_proposalId, msg.sender);
     }
 
     /// @dev calls ProposalAccepted event
     /// @param _proposalId Proposal ID of the proposal that is accepted
-    function callProposalAccepted (uint256 _proposalId) public {
+    function callProposalAccepted (uint256 _proposalId) external {
         emit ProposalAccepted(_proposalId, msg.sender);
     }
 
     /// @dev calls ProposalAccepted event
     /// @param _proposalId Proposal ID of the proposal that is accepted
     /// @param _time Time at which proposal has to be closed
-    function callCloseProposalOnTime (uint256 _proposalId, uint256 _time) public {
+    function callCloseProposalOnTime (uint256 _proposalId, uint256 _time) external {
         emit CloseProposalOnTime(_proposalId, msg.sender, _time);
     }
 
@@ -69,13 +69,13 @@ contract EventCaller {
     /// @param _proposalId Proposal ID of the proposal that is accepted
     /// @param _time Time at which proposal has to be closed
     /// @param _closeAddress is the smart contract address which has closeProposal function
-    function callCloseProposalOnTimeAtAddress (uint256 _proposalId, address _closeAddress, uint256 _time) public {
+    function callCloseProposalOnTimeAtAddress (uint256 _proposalId, address _closeAddress, uint256 _time) external {
         emit CloseProposalOnTime(_proposalId, _closeAddress, _time);
     }
 
     /// @dev calls ActionSuccess event
     /// @param _proposalId Proposal ID for which the action is executed
-    function callActionSuccess (uint256 _proposalId) public {
+    function callActionSuccess (uint256 _proposalId) external {
     	emit ActionSuccess(_proposalId, msg.sender);
     }
 }
