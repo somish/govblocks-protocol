@@ -1,7 +1,7 @@
 var GBTStandardToken = artifacts.require("GBTStandardToken");
 var gbts;
 
-contract('gbt', function([owner,taker]) {
+contract('GBTStandardToken', function([owner,taker]) {
   it("should get the deployed insance of GBT", async function () {
     GBTStandardToken.deployed().then(function(instance){
       gbts = instance;

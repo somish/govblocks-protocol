@@ -552,7 +552,7 @@ contract ProposalCategory is Upgradeable {
         allSubIdByCategory[2].push(4);
         allSubCategory.push(SubCategory(
                 "Edit category",
-                "QmdKzy9qYsLFq62Pf23raHNz5f6otYWtWZfpwNPQeCnawx",
+                "QmYWSuy3aZFK1Yavpq5Pm89rg6esyZ8rn5CNf6PdgJCpR6",
                 2,
                 masterAddress,
                 "PC"

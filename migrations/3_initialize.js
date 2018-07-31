@@ -12,58 +12,104 @@ const json = require('./../build/contracts/Master.json');
 var bytecode = json['bytecode'];
 
 module.exports = function(deployer) {
-    GBTStandardToken.deployed().then(function(){ 
-        EventCaller.deployed().then(function(){
-            GovBlocksMaster.deployed().then(function(instance){
-                instance.govBlocksMasterInit(GBTStandardToken.address, EventCaller.address).then(function() {
-                    instance.setMasterByteCode(bytecode.substring(10000)).then(function() {
-                        instance.setMasterByteCode(bytecode).then(function() {
-                            instance.addGovBlocksUser("0x41", GBTStandardToken.address, "descHash").then(function(){
-                                GovernanceData.deployed().then(function(){ 
-                                    MemberRoles.deployed().then(function(){
-                                        ProposalCategory.deployed().then(function(pc){
-                                            pc.proposalCategoryInitiate(); 
-                                            SimpleVoting.deployed().then(function(){ 
-                                                Governance.deployed().then(function(){ 
-                                                    Pool.deployed().then(function(){
-                                                        Master.deployed().then(function(mast){
-                                                            instance.owner().then(function(own){
-                                                                mast.initMaster(own,"0x41").then(function(){
-                                                                    mast.changeGBMAddress(GovBlocksMaster.address).then(function(){
-                                                                        var addr = [GovernanceData.address, MemberRoles.address, ProposalCategory.address, SimpleVoting.address, Governance.address, Pool.address];
-                                                                        mast.addNewVersion(addr).then(function(){
-                                                                            instance.changeDappMasterAddress("0x41", Master.address).then(function(){
-                                                                            });
-                                                                        });
-                                                                    });
-                                                                });
-                                                            });  
-                                                        });
-                                                    });
-                                                });
-                                            });
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
-            });
-        });
+    let gbt;
+    let ec;
+    let gbm;
+    let gd;
+    let mr;
+    let sv;
+    let pc;
+    let gv;
+    let pl;
+    let ms;
+    console.log("1");
+    GBTStandardToken.deployed().then(function(instance){ 
+        gbt = instance;
+        console.log("2");
+        return EventCaller.deployed();
+    })
+    .then(function(instance){
+        ec = instance;
+        console.log("3");
+        return GovBlocksMaster.deployed();
+    })
+    .then(function(instance){
+        gbm = instance;
+        console.log("4");
+        return gbm.govBlocksMasterInit(gbt.address, ec.address);
+    })
+    .then(function() {
+        console.log("5");
+        return gbm.setMasterByteCode(bytecode.substring(10000));
+    })
+    .then(function() {
+        console.log("6");
+        return gbm.setMasterByteCode(bytecode);
+    })
+    .then(function() {
+        console.log("7");
+        return gbm.addGovBlocksUser("0x41", GBTStandardToken.address, "descHash");
+    })
+    .then(function(){
+        console.log("8");
+        return GovernanceData.deployed();
+    })
+    .then(function(instance){ 
+        gd = instance;
+        console.log("9");
+        return MemberRoles.deployed();
+    })
+    .then(function(instance){
+        mr = instance;
+        console.log("10");
+        return ProposalCategory.deployed();
+    })
+    .then(function(instance){
+        pc = instance;
+        console.log("11");
+        return pc.proposalCategoryInitiate();
+    })
+    .then(function(){ 
+        return SimpleVoting.deployed();
+    })
+    .then(function(instance){ 
+        sv = instance;
+        console.log("12");
+        return Governance.deployed();
+    })
+    .then(function(instance){ 
+        gv = instance;
+        console.log("13");
+        return Pool.deployed();
+    })
+    .then(function(instance){
+        pl = instance;
+        console.log("14");
+        return Master.deployed();
+    })
+    .then(function(instance){
+        ms = instance;
+        console.log("15");
+        return gbm.owner();
+    })
+    .then(function(own){
+        console.log("16");
+        return ms.initMaster(own,"0x41");
+    })
+    .then(function(){
+        console.log("17");
+        return ms.changeGBMAddress(GovBlocksMaster.address);
+    })
+    .then(function(){
+        console.log("18");
+        var addr = [gd.address, mr.address, pc.address, sv.address, gv.address, pl.address];
+        return ms.addNewVersion(addr);
+    })
+    .then(function(){
+        console.log("19");
+        return gbm.changeDappMasterAddress("0x41", Master.address);
+    })
+    .then(function(){
+        console.log("20");
     });
 };
-
-
-
-/*
-
-
-instance.getDappMasterAddress("0x41").then(function(madr){
-                                                            var addr = [GovernanceData.address, MemberRoles.address, ProposalCategory.address, SimpleVoting.address, Governance.address, Pool.address];
-                                                            let ms = Master.at(madr).then(function(){
-                                                                ms.addNewVersion(addr);
-                                                            });
-                                                        }); 
-
-*/
