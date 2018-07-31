@@ -16,10 +16,11 @@ contract('MemberRoles', function([owner,member]) {
   });
   it("should be initialized with default roles", async function () {
     this.timeout(100000);
-    console.log(mr.address);
+    let ab = await mr.getMemberRoleNameById(1);
+    let th = await mr.getMemberRoleNameById(2);
     assert.equal(await mr.constructorCheck(), true, "constructorCheck wasn't false");
-    //assert.equal(await mr.getMemberRoleNameById(1).toString(), "Advisory Board", "Advisory Board not created");
-    //assert.equal(await mr.getMemberRoleNameById(2).toString(), "Token Holder", "Token Holder not created");
+    assert.equal(ab.toString(), "Advisory Board", "Advisory Board not created");
+    assert.equal(th.toString(), "Token Holder", "Token Holder not created");
     assert.equal(await mr.checkRoleIdByAddress(owner,1), true, "Owner not added to AB");
   });
   it("should add a member to a role", async function () {
