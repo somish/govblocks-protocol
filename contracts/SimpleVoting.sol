@@ -46,12 +46,6 @@ contract SimpleVoting is Upgradeable {
     GovernChecker internal governChecker;
     bytes32 public votingTypeName;
 
-    modifier onlyInternal {
-        master = Master(masterAddress);
-        require(master.isInternal(msg.sender));
-        _;
-    }
-
     modifier onlyMaster {
         require(msg.sender == masterAddress);
         _;
@@ -82,7 +76,7 @@ contract SimpleVoting is Upgradeable {
     }
 
     /// @dev updates dependancies
-    function updateDependencyAddresses() public onlyInternal {
+    function updateDependencyAddresses() public {
         if (!constructorCheck)
             simpleVotingInitiate();
         master = Master(masterAddress);
@@ -104,7 +98,7 @@ contract SimpleVoting is Upgradeable {
     function changeGBTSAddress(address _gbtAddress) public onlyMaster {
         gbt = GBTStandardToken(_gbtAddress);
     }
-
+    /*
     /// @dev Initiates add solution (Stake in ether)
     /// @param _solutionHash It contains parameters, values and description needed according to proposal
     function addSolutionInEther(
@@ -132,7 +126,7 @@ contract SimpleVoting is Upgradeable {
             _lockTokenTxHash, 
             _action
         );
-    }
+    }*/
 
     /// @dev Initiates add solution 
     /// @param _memberAddress Address of member who is adding the solution
@@ -232,10 +226,10 @@ contract SimpleVoting is Upgradeable {
     /// @param _solutionChosen solution chosen while voting
     /// @param _voteStake Amount payable in GBT tokens
     function proposalVoting(
-        uint _voteStake,
-        uint64[] _solutionChosen, 
         uint32 _proposalId,  
-        uint64 _validityUpto, 
+        uint64[] _solutionChosen, 
+        uint _voteStake,
+        uint _validityUpto, 
         uint8 _v, 
         bytes32 _r, 
         bytes32 _s, 
@@ -270,7 +264,7 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
-    /// @dev Returns true if the member passes all the checks to vote. i.e. If he is authorize to vote
+    /*/// @dev Returns true if the member passes all the checks to vote. i.e. If he is authorize to vote
     function validateMember(uint _proposalId, uint64[] _solutionChosen) public view returns(bool) {
         uint8 mrSequence;
         uint8 category;
@@ -291,7 +285,7 @@ contract SimpleVoting is Upgradeable {
 
         return true;
     }
-
+    */
     /// @dev gets dApp name 
     function dAppName() public view returns (bytes32) {
         return master.dAppName();

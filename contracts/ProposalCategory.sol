@@ -46,8 +46,7 @@ contract ProposalCategory is Upgradeable {
 
     SubCategory[] public allSubCategory;
     Category[] public allCategory;
-    // mapping(uint8=>uint8) categoryIdBySubId; // Given SubcategoryidThen CategoryId
-    mapping(uint8 => uint[]) internal allSubIdByCategory;
+    mapping(uint => uint[]) internal allSubIdByCategory;
 
     Master internal master;
     MemberRoles internal memberRole;
@@ -56,27 +55,6 @@ contract ProposalCategory is Upgradeable {
 
     modifier onlyInternal {
         require(master.isInternal(msg.sender));
-        _;
-    }
-
-    modifier onlyOwner {
-        require(master.isOwner(msg.sender));
-        _;
-    }
-
-    modifier onlyMaster {
-        require(msg.sender == masterAddress);
-        _;
-    }
-
-    modifier onlyGBM(uint8[] arr1, uint8[] arr2, uint32[] arr3) {
-        require(master.isGBM(msg.sender));
-        require(arr1.length == arr2.length && arr1.length == arr3.length);
-        _;
-    }
-
-    modifier onlyGBMSubCategory() {
-        require(master.isGBM(msg.sender));
         _;
     }
 
@@ -97,12 +75,12 @@ contract ProposalCategory is Upgradeable {
             master = Master(masterAddress);
             require(master.isInternal(msg.sender));
             masterAddress = _masterContractAddress;
-            master = Master(masterAddress);
+            master = Master(_masterContractAddress);
         }
     }
 
     /// @dev updates all dependency addresses to latest ones from Master
-    function updateDependencyAddresses() public onlyInternal {
+    function updateDependencyAddresses() public {
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
     }
@@ -123,12 +101,12 @@ contract ProposalCategory is Upgradeable {
         ct[0] = 1800;
         
         allCategory.push(Category("Uncategorized", rs, mv, ct, 0, 0, 0, 0, 0, 0));
-        allCategory.push(Category("Change to member role", rs, mv, ct, 0, INT_MAX, 10**19, 40, 40, 20));
-        allCategory.push(Category("Changes to categories", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
-        allCategory.push(Category("Changes in parameters", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Member role", rs, mv, ct, 0, INT_MAX, 10**19, 40, 40, 20));
+        allCategory.push(Category("Categories", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Parameters", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
         allCategory.push(Category("Transfer Assets", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
-        allCategory.push(Category("Deploy new contracts", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
-        allCategory.push(Category("Others not specified", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("New contracts", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Others", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
 
         addInitialSubCategories();
 
