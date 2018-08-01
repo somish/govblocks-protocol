@@ -317,13 +317,11 @@ contract GovernanceData is Upgradeable {
     address internal masterAddress;
 
     modifier onlyInternal {
-        master = Master(masterAddress);
         require(master.isInternal(msg.sender));
         _;
     }
 
     modifier onlyOwner {
-        master = Master(masterAddress);
         require(master.isOwner(msg.sender));
         _;
     }
@@ -342,6 +340,7 @@ contract GovernanceData is Upgradeable {
             master = Master(masterAddress);
             require(master.isInternal(msg.sender));
             masterAddress = _masterContractAddress;
+            master = Master(_masterContractAddress);
         }
     }
 
@@ -374,7 +373,6 @@ contract GovernanceData is Upgradeable {
     function updateDependencyAddresses() public onlyInternal {
         if (!constructorCheck)
             governanceDataInitiate();
-        master = Master(masterAddress);
         gov = Governance(master.getLatestAddress("GV"));
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
         editVotingTypeDetails(0, master.getLatestAddress("SV"));
@@ -525,15 +523,14 @@ contract GovernanceData is Upgradeable {
         external 
         onlyInternal
     {
-        proposalRoleVote[_proposalId][_roleId].push(allVotes.length);
-        allVotesByMember[_memberAddress].push(allVotes.length);
-        addressProposalVote[_memberAddress][_proposalId] = allVotes.length;
-        emit Vote(_memberAddress, _proposalId, now, _voteStake, allVotes.length);
+        uint totalVotes = allVotes.length;
+        proposalRoleVote[_proposalId][_roleId].push(totalVotes);
+        allVotesByMember[_memberAddress].push(totalVotes);
+        addressProposalVote[_memberAddress][_proposalId] = totalVotes;
+        emit Vote(_memberAddress, _proposalId, now, _voteStake, totalVotes);
         allVotes.push(ProposalVote(_memberAddress, _solutionChosen, uint208(_voteValue), _proposalId));
         allProposalData[_proposalId].totalVoteValue = allProposalData[_proposalId].totalVoteValue 
             + _voteValue;
-
-
     }
 
     function getAllVoteIdsByAddress(address _memberAddress) public view returns(uint[]) {
