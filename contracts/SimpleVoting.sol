@@ -403,7 +403,7 @@ contract SimpleVoting is Upgradeable {
             }    
         }
         
-        giveRewardAfterFinalDecision1(_proposalId, totalReward);
+        giveRewardAfterFinalDecision1(_proposalId, totalReward, finalVerdict);
     }
 
     /// @dev This does the remaining functionality of closing proposal vote
@@ -494,35 +494,58 @@ contract SimpleVoting is Upgradeable {
     /// @dev Distributing reward after final decision
     function giveRewardAfterFinalDecision1(
         uint _proposalId,
-        uint totalReward
+        uint totalReward,
+        uint _finalVerdict
     ) 
         internal
     {
-        uint8 subCategory = governanceDat.getProposalCategory(_proposalId); 
+        uint8 subCategoryThenCategory = governanceDat.getProposalCategory(_proposalId); 
+        if (subCategoryThenCategory == 10) {
+            upgrade();
+        }
         uint totalVoteValue;
-        uint depositedTokens;
-        uint category = proposalCategory.getCategoryIdBySubId(subCategory);
-        address _ownerAddress;
-        // uint mrLength = PC.getRoleSequencLength(category);
-        for (uint i = 0; i < proposalCategory.getRoleSequencLength(category); i++) {
-            uint roleId = proposalCategory.getRoleSequencAtIndex(category, i);
+        subCategoryThenCategory = proposalCategory.getCategoryIdBySubId(subCategoryThenCategory);
+        uint mrLength = proposalCategory.getRoleSequencLength(subCategoryThenCategory);
+        for (uint i = 0; i < mrLength; i++) {
+            uint roleId = proposalCategory.getRoleSequencAtIndex(subCategoryThenCategory, i);
             uint mrVoteLength = governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, roleId);
             for (uint j = 0; j < mrVoteLength; j++) {
                 uint voteId = governanceDat.getVoteIdAgainstProposalRole(_proposalId, roleId, j);
-                _ownerAddress = governanceDat.getVoterAddress(voteId);
-                depositedTokens = governanceDat.getDepositedTokens(_ownerAddress, _proposalId, "V");
-                totalReward = SafeMath.add(totalReward, depositedTokens);
-                uint voteValue=governanceDat.getVoteValue(voteId);
-                totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
+                (totalReward, totalVoteValue) = giveRewardAfterFinalDecision2(voteId, _proposalId, _finalVerdict, totalReward, totalVoteValue);
             }
         }
-
         totalReward = totalReward + governanceDat.getProposalIncentive(_proposalId);
         governance.setProposalDetails(_proposalId, totalReward, totalVoteValue);
+    }
 
-        if (subCategory == 10) {
-            upgrade();
-        }
+    /// @dev Distributing reward after final decision
+    function giveRewardAfterFinalDecision2(
+        uint voteId,
+        uint _proposalId,
+        uint _finalVerdict,
+        uint _totalReward,
+        uint _totalVoteValue
+    ) 
+        internal
+        returns (uint, uint)
+    {
+        address ownerAddress;
+        uint depositedTokens;
+        uint voteValue;
+        bool punishVoters = governanceDat.punishVoters();
+        if(governanceDat.getSolutionByVoteIdAndIndex(voteId, 0) != _finalVerdict) {
+            ownerAddress = governanceDat.getVoterAddress(voteId);
+            depositedTokens = governanceDat.getDepositedTokens(ownerAddress, _proposalId, "V");
+            _totalReward = SafeMath.add(_totalReward, depositedTokens);
+            if (!punishVoters) {
+                voteValue = governanceDat.getVoteValue(voteId);
+                _totalVoteValue = SafeMath.add(_totalVoteValue, voteValue);
+            }
+        } else {
+            voteValue = governanceDat.getVoteValue(voteId);
+            _totalVoteValue = SafeMath.add(_totalVoteValue, voteValue);
+        } 
+        return(_totalReward, _totalVoteValue);
     }
 
     function upgrade() internal {

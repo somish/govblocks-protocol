@@ -715,6 +715,18 @@ contract Governance is Upgradeable {
                 );
             }
             governanceDat.setReturnedTokensFlag(_memberAddress, _proposalId, "V", 1);
+        } else if (!governanceDat.punishVoters() && finalVredict > 0 && returnedTokensFlag == 0 && totalReward != 0) {
+            calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
+                / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
+            tempfinalRewardToDistribute = tempfinalRewardToDistribute + calcReward;
+            if (calcReward > 0) {
+                governanceDat.callRewardEvent(
+                    _memberAddress, 
+                    _proposalId, 
+                    "GBT Reward earned for voting", 
+                    calcReward
+                );
+            }
         }
     }
 

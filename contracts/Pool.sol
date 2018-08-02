@@ -236,6 +236,10 @@ contract Pool is Upgradeable {
                     pendingVoteReward 
                     + calcReward 
                     + governanceDat.getDepositedTokens(_memberAddress, proposalId, "V");
+            } else if (!governanceDat.punishVoters() && finalVredict > 0 && returnedTokensFlag == 0 && totalReward != 0) {
+                calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
+                    / (100 * governanceDat.getProposalTotalVoteValue(proposalId));
+                pendingVoteReward = pendingVoteReward + calcReward;
             }
         }
     }
