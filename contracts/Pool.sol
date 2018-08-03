@@ -98,7 +98,7 @@ contract Pool is Upgradeable {
         address newPool = master.getLatestAddress("PL");
         if(address(this) != newPool) {
            gbt.transfer(master.getLatestAddress("PL"), gbt.balanceOf(address(this)) - gbt.getLockToken(address(this)));
-           bool sent = newPool.send(address(this).balance);
+           newPool.send(address(this).balance);
         }
     }
 
