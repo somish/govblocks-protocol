@@ -99,14 +99,12 @@ contract Governance is Upgradeable {
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
-    /// @param _dateAdd Date the proposal was added
     function createProposal(
         string _proposalTitle, 
         string _proposalSD, 
         string _proposalDescHash, 
         uint _votingTypeId, 
-        uint8 _categoryId, 
-        uint _dateAdd
+        uint8 _categoryId
     ) 
         public 
     {
@@ -117,17 +115,17 @@ contract Governance is Upgradeable {
         governanceDat.callProposalEvent(
             msg.sender, 
             _proposalId, 
-            _dateAdd, 
+            now, 
             _proposalTitle, 
             _proposalSD, 
             _proposalDescHash
         );
         if (_categoryId > 0) {
-            governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, _dateAdd);
+            governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress);
             uint incentive=proposalCategory.getCatIncentive(category);
             governanceDat.setProposalIncentive(_proposalId, incentive);
         } else
-            governanceDat.createProposal1(msg.sender, votingAddress, _dateAdd);
+            governanceDat.createProposal1(msg.sender, votingAddress);
     }
 
     /// @dev Creates a new proposal
@@ -145,26 +143,18 @@ contract Governance is Upgradeable {
         uint _proposalSolutionStake, 
         string _solutionHash, 
         uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash,
         bytes _action
     ) 
-        public
+        external
     {
         uint _proposalId = governanceDat.getProposalLength();
-        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _categoryId, now);
+        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _categoryId);
         proposalSubmission(
             _proposalId, 
             _categoryId, 
             _proposalSolutionStake, 
             _solutionHash, 
             _validityUpto, 
-            _v, 
-            _r, 
-            _s, 
-            _lockTokenTxHash, 
             _action
         );
     }
@@ -178,10 +168,6 @@ contract Governance is Upgradeable {
         uint _proposalSolutionStake, 
         string _solutionHash, 
         uint _validityUpto,
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s,
-        bytes32 _lockTokenTxHash,
         bytes _action
     ) 
         public 
@@ -193,10 +179,6 @@ contract Governance is Upgradeable {
             _proposalSolutionStake, 
             _solutionHash, 
             _validityUpto, 
-            _v, 
-            _r, 
-            _s, 
-            _lockTokenTxHash, 
             _action
         );
     }
@@ -224,11 +206,7 @@ contract Governance is Upgradeable {
         uint _proposalId, 
         uint8 _categoryId,
         uint _proposalStake, 
-        uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash
+        uint _validityUpto
     ) 
         public 
         validateStake(_categoryId, _proposalStake) 
@@ -237,7 +215,7 @@ contract Governance is Upgradeable {
     {
         uint8 category = proposalCategory.getCategoryIdBySubId(_categoryId);
         require(category != 0);
-        openProposalForVoting2(_proposalId, category, _proposalStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+        openProposalForVoting2(_proposalId, category, _proposalStake, _validityUpto);
 
     }
 
@@ -408,40 +386,23 @@ contract Governance is Upgradeable {
         uint _proposalId, 
         uint8 _categoryId, 
         uint _proposalStake, 
-        uint validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s,
-        bytes32 _lockTokenTxHash
+        uint validityUpto 
     ) 
         internal 
     {
         uint depositPerc = governanceDat.depositPercProposal();
         uint _currVotingStatus = governanceDat.getProposalCurrentVotingId(_proposalId);
         uint proposalDepositPerc = governanceDat.depositPercProposal();
-        uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake, proposalDepositPerc), 100);
 
         if (_proposalStake != 0) {
             require(validityUpto >= 
                 proposalCategory.getRemainingClosingTime(_proposalId, _categoryId, _currVotingStatus)
             );
-            if (depositPerc == 0) {
-                uint _stake = SafeMath.sub(_proposalStake, depositAmount);
-                govBlocksToken.lockToken(msg.sender, _stake, validityUpto, _v, _r, _s, _lockTokenTxHash);
-            } else {
-                govBlocksToken.depositAndLockToken(
-                    msg.sender, 
-                    _proposalStake, 
-                    depositAmount, 
-                    validityUpto, 
-                    _v, 
-                    _r, 
-                    _s, 
-                    _lockTokenTxHash, 
-                    address(pool)
-                );
+            if (depositPerc != 0) {
+                uint depositAmount = SafeMath.div(SafeMath.mul(_proposalStake, proposalDepositPerc), 100);
+                require(pool.putDeposit(msg.sender, depositAmount));
                 governanceDat.setDepositTokens(msg.sender, _proposalId, "P", depositAmount);
-            }
+            }       
         }
 
         governanceDat.changeProposalStatus(_proposalId, 2);
@@ -765,10 +726,6 @@ contract Governance is Upgradeable {
         uint _proposalSolutionStake, 
         string _solutionHash, 
         uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash,
         bytes _action
     ) 
         internal 
@@ -778,21 +735,13 @@ contract Governance is Upgradeable {
             _proposalId, 
             _categoryId, 
             _proposalSolutionStake, 
-            _validityUpto, 
-            _v, 
-            _r, 
-            _s, 
-            _lockTokenTxHash
+            _validityUpto 
         );
 
         proposalSubmission1(
             _proposalId, 
             _solutionHash, 
             _validityUpto, 
-            _v, 
-            _r, 
-            _s, 
-            _lockTokenTxHash, 
             _proposalSolutionStake, 
             _action
         );
@@ -803,10 +752,6 @@ contract Governance is Upgradeable {
         uint _proposalId, 
         string _solutionHash, 
         uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash, 
         uint _proposalSolutionStake,
         bytes _action
     ) 
@@ -820,10 +765,6 @@ contract Governance is Upgradeable {
             _solutionHash, 
             now, 
             _validityUpto, 
-            _v, 
-            _r, 
-            _s, 
-            _lockTokenTxHash, 
             _action
         );
 

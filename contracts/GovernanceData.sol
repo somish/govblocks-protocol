@@ -1041,22 +1041,21 @@ contract GovernanceData is Upgradeable {
         uint _proposalId, 
         address _memberAddress, 
         uint8 _categoryId, 
-        address _votingTypeAddress, 
-        uint _dateAdd
+        address _votingTypeAddress
     ) 
         public 
         onlyInternal 
     {
-        allProposal.push(ProposalStruct(_memberAddress, _dateAdd, _votingTypeAddress));
+        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress));
         allProposalData[_proposalId].category = _categoryId;
     }
 
     /// @dev Creates new proposal
-    function createProposal1(address _memberAddress, address _votingTypeAddress, uint _dateAdd) 
+    function createProposal1(address _memberAddress, address _votingTypeAddress) 
         public 
         onlyInternal 
     {
-        allProposal.push(ProposalStruct(_memberAddress, _dateAdd, _votingTypeAddress));
+        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress));
     }
 
     /// @dev Gets final solution index won after majority voting.

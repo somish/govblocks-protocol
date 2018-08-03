@@ -132,18 +132,12 @@ contract SimpleVoting is Upgradeable {
     /// @param _memberAddress Address of member who is adding the solution
     /// @param _solutionStake Stake in GBT against adding solution
     /// @param _solutionHash Solution hash having required data against adding solution
-    /// @param _dateAdd Date when the solution was added
     function addSolution(
         uint _proposalId,
         address _memberAddress, 
         uint _solutionStake, 
         string _solutionHash, 
-        uint _dateAdd, 
         uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash, 
         bytes _action
     ) 
         public 
@@ -159,12 +153,7 @@ contract SimpleVoting is Upgradeable {
             _memberAddress, 
             _solutionStake, 
             _solutionHash, 
-            _dateAdd, 
             _validityUpto, 
-            _v, 
-            _r,
-            _s, 
-            _lockTokenTxHash, 
             _action
         );
 
@@ -179,10 +168,6 @@ contract SimpleVoting is Upgradeable {
         uint _solutionStake, 
         string _solutionHash, 
         uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash, 
         bytes _action
     ) 
         public 
@@ -192,12 +177,7 @@ contract SimpleVoting is Upgradeable {
             msg.sender, 
             _solutionStake, 
             _solutionHash, 
-            now, 
             _validityUpto, 
-            _v, 
-            _r, 
-            _s, 
-            _lockTokenTxHash, 
             _action
         );
     }
@@ -229,11 +209,7 @@ contract SimpleVoting is Upgradeable {
         uint32 _proposalId,  
         uint64[] _solutionChosen, 
         uint _voteStake,
-        uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash
+        uint _validityUpto
     ) 
         external
     {
@@ -251,7 +227,7 @@ contract SimpleVoting is Upgradeable {
         else
             require(_solutionChosen[0] == intermediateVerdict || _solutionChosen[0] == 0);
         if (_voteStake != 0)
-            receiveStake("V", proposalId, _voteStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
+            receiveStake("V", proposalId, _voteStake, _validityUpto);
         currentVotingIdThenVoteValue = getVoteValueGivenByMember(msg.sender, _voteStake);
         governanceDat.addVote(
             msg.sender, 
@@ -316,6 +292,7 @@ contract SimpleVoting is Upgradeable {
     }
 
     /// @dev Sets vote value given by member
+    // TODO Need to devise a new formula
     function getVoteValueGivenByMember(address _memberAddress, uint _memberStake)  
         public
         view 
@@ -325,14 +302,7 @@ contract SimpleVoting is Upgradeable {
         uint membershipScalingFactor;
         uint memberReputation;
         (scalingWeight, membershipScalingFactor, memberReputation) = governanceDat.getMemberReputationSV(_memberAddress);
-        uint tokensHeld = 
-            SafeMath.div(
-                SafeMath.mul(
-                    SafeMath.mul(basicToken.balanceOf(_memberAddress), 100), 
-                    100
-                ), 
-                basicToken.totalSupply()
-            );
+        uint tokensHeld = basicToken.balanceOf(_memberAddress);
         uint value = 
             SafeMath.mul(
                 Math.max256(_memberStake, scalingWeight), 
@@ -562,20 +532,15 @@ contract SimpleVoting is Upgradeable {
         address _memberAddress, 
         uint _solutionStake, 
         string _solutionHash, 
-        uint _dateAdd, 
         uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash, 
         bytes _action
     ) 
         internal 
     {
         require(governanceDat.getProposalCategory(_proposalId) > 0);
         if (msg.sender == _memberAddress)
-            receiveStake("S", _proposalId, _solutionStake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-        addSolution2(_proposalId, _memberAddress, _action, _solutionHash, _dateAdd, _solutionStake);
+            receiveStake("S", _proposalId, _solutionStake, _validityUpto);
+        addSolution2(_proposalId, _memberAddress, _action, _solutionHash, _solutionStake);
     }
     
     function addSolution2(
@@ -583,7 +548,6 @@ contract SimpleVoting is Upgradeable {
         address _memberAddress, 
         bytes _action, 
         string _solutionHash, 
-        uint _dateAdd, 
         uint _solutionStake
     ) 
         internal 
@@ -598,11 +562,7 @@ contract SimpleVoting is Upgradeable {
         bytes2 _type, 
         uint _proposalId, 
         uint _stake, 
-        uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r,
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash
+        uint _validityUpto
     ) 
         internal 
     {
@@ -610,34 +570,17 @@ contract SimpleVoting is Upgradeable {
             require(proposalCategory.validateStake(_proposalId, _stake));
             uint8 currVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
             uint depositPerc = governanceDat.depositPercVote();
-            uint deposit = SafeMath.div(SafeMath.mul(_stake, depositPerc), 100);
             uint category = proposalCategory.getCatIdByPropId(_proposalId);
             require(_validityUpto >= proposalCategory.getRemainingClosingTime(_proposalId, category, currVotingId));
-            if (depositPerc == 0) {
-                gbt.lockToken(msg.sender, _stake, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-            } else {
-                gbt.depositAndLockToken(
-                    msg.sender, 
-                    _stake, 
-                    deposit, 
-                    _validityUpto, 
-                    _v, 
-                    _r, 
-                    _s, 
-                    _lockTokenTxHash, 
-                    address(pool)
-                );
+            if (depositPerc != 0) {
+                uint deposit = SafeMath.div(SafeMath.mul(_stake, depositPerc), 100);
                 uint depositedTokens;
                 uint depositAmount;
-                if (_type == "S") {
-                    depositedTokens = governanceDat.getDepositedTokens(msg.sender, _proposalId, "S");
-                    depositAmount = deposit + depositedTokens;
-                    governanceDat.setDepositTokens(msg.sender, _proposalId, "S", depositAmount);
-                }else {
-                    depositedTokens = governanceDat.getDepositedTokens(msg.sender, _proposalId, "V");
-                    depositAmount = deposit + depositedTokens;
-                    governanceDat.setDepositTokens(msg.sender, _proposalId, "V", depositAmount);
-                } 
+                //require(pool.putDeposit(msg.sender, deposit));
+                require(pool.putDeposit(msg.sender, deposit));
+                depositedTokens = governanceDat.getDepositedTokens(msg.sender, _proposalId, _type);
+                depositAmount = deposit + depositedTokens;
+                governanceDat.setDepositTokens(msg.sender, _proposalId, _type, depositAmount);
             }
         }
     }

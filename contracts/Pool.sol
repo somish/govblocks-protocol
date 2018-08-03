@@ -110,6 +110,10 @@ contract Pool is Upgradeable {
         gbt.buyToken.value(_wei)();
     }
 
+    function putDeposit(address _memberAddress, uint _amount) public returns(bool) {
+        return gbt.transferFrom(_memberAddress, address(this), _amount);
+    }
+
     /// @dev user can calim the tokens rewarded them till now
     function claimReward(address _claimer) public {
         uint rewardToClaim = gov.calculateMemberReward(_claimer);

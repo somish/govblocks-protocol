@@ -22,11 +22,11 @@ pragma solidity ^0.4.24;
 contract VotingType {
     string public votingTypeName;
 
-    function addSolution(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) public;
+    function addSolution(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, bytes _action) public;
 
-    function initiateAddSolution(uint _proposalId, uint _solutionStake, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) public;
+    function initiateAddSolution(uint _proposalId, uint _solutionStake, string _solutionHash, uint _validityUpto, bytes _action) public;
 
-    function proposalVoting(uint64 _proposalId, uint64[] _solutionChosen, uint _voteStake, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) external;
+    function proposalVoting(uint64 _proposalId, uint64[] _solutionChosen, uint _voteStake, uint _validityUpto) external;
 
     function closeProposalVote(uint _proposalId) public;
 
