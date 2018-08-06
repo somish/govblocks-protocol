@@ -13,8 +13,8 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity ^0.4.24;
-import "./SafeMath.sol";
+pragma solidity 0.4.24;
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import "./Master.sol";
 import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";

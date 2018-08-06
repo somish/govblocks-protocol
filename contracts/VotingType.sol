@@ -17,7 +17,7 @@
  * @title votingType interface for All Types of voting.
  */
 
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
 contract VotingType {
     string public votingTypeName;

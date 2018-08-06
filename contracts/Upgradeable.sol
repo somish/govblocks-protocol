@@ -17,7 +17,7 @@
  * @title Upgradeable interface for all internal contracts of a DApp.
  */
 
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
 contract Upgradeable{
 

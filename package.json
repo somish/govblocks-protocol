@@ -4,6 +4,7 @@
   "description": "GovBlocks Smart Contracts",
   "main": "truffle-config.js",
   "dependencies": {
+    "openzeppelin-solidity": "^1.11.0",
     "solc": "^0.4.24",
     "truffle": "^4.1.13",
     "truffle-hdwallet-provider": "^0.0.5"

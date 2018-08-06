@@ -13,7 +13,7 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
 import "./Master.sol";
 import "./GovernanceData.sol";
@@ -24,8 +24,8 @@ import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
 import "./GovBlocksMaster.sol";
 import "./Pool.sol";
-import "./Math.sol";
-import "./BasicToken.sol";
+import 'openzeppelin-solidity/contracts/math/Math.sol';
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import "./EventCaller.sol";
 import "./Governed.sol";
 
@@ -40,7 +40,7 @@ contract SimpleVoting is Upgradeable {
     address internal govAddress;
     bool public constructorCheck;
     address public masterAddress;
-    BasicToken internal basicToken;
+    GBTStandardToken internal basicToken;
     Pool internal pool;
     EventCaller internal eventCaller;
     GovernChecker internal governChecker;
@@ -88,7 +88,7 @@ contract SimpleVoting is Upgradeable {
         pool = Pool(master.getLatestAddress("PL"));
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
         GovBlocksMaster govBlocksMaster = GovBlocksMaster(master.gbmAddress());
-        basicToken = BasicToken(govBlocksMaster.getDappTokenAddress(master.dAppName()));
+        basicToken = GBTStandardToken(govBlocksMaster.getDappTokenAddress(master.dAppName()));
         eventCaller = EventCaller(govBlocksMaster.eventCaller());
         governChecker = GovernChecker(master.getGovernCheckerAddress());
     }

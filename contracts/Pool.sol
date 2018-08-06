@@ -13,10 +13,10 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
 import "./Master.sol";
-import "./SafeMath.sol";
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import "./GBTStandardToken.sol";
 import "./Upgradeable.sol";
 import "./SimpleVoting.sol";
@@ -97,7 +97,7 @@ contract Pool is Upgradeable {
     function transferAssets() public {
         address newPool = master.getLatestAddress("PL");
         if(address(this) != newPool) {
-           gbt.transfer(master.getLatestAddress("PL"), gbt.balanceOf(address(this)) - gbt.getLockToken(address(this)));
+           gbt.transfer(newPool, gbt.balanceOf(address(this)));
            newPool.send(address(this).balance);
         }
     }
@@ -106,7 +106,7 @@ contract Pool is Upgradeable {
     /// @param _gbt number of GBT to buy multiplied 10^decimals
     function buyPoolGBT(uint _gbt) public onlySV {
         uint _wei = SafeMath.mul(_gbt, gbt.tokenPrice());
-        _wei = SafeMath.div(_wei, 10 ** gbt.decimals());
+        _wei = SafeMath.div(_wei, uint256(10) ** gbt.decimals());
         gbt.buyToken.value(_wei)();
     }
 
@@ -118,7 +118,7 @@ contract Pool is Upgradeable {
     function claimReward(address _claimer) public {
         uint rewardToClaim = gov.calculateMemberReward(_claimer);
         if (rewardToClaim != 0) {
-            gbt.transferMessage(_claimer, rewardToClaim, "GBT Stake claimed");
+            gbt.transfer(_claimer, rewardToClaim);
         }
     }
 
@@ -127,7 +127,7 @@ contract Pool is Upgradeable {
         uint gasLeft = gasleft();
         if (gov.checkForClosing(_proposalId, _roleId) == 1) {
             simpleVoting.closeProposalVote(_proposalId);
-            _memberAddress.transfer((gasLeft - gasleft()) * 10 ** 9);
+            _memberAddress.transfer((gasLeft - gasleft()) * uint256(10) ** 9);
         }
     }
 

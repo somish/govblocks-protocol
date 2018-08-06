@@ -13,9 +13,9 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 import "./Master.sol";
-import "./SafeMath.sol";
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import "./Upgradeable.sol";
 
 
@@ -31,7 +31,7 @@ contract MemberRoles is Upgradeable {
     address simpleVoting;
 
     struct MemberRoleDetails {
-        uint32 memberCounter;
+        uint memberCounter;
         mapping(address => bool) memberActive;
         bool limitedValidity;
         mapping(address => uint) validity;
@@ -184,7 +184,7 @@ contract MemberRoles is Upgradeable {
         if (_typeOf) {
             if(memberRoleData[_roleId].validity[_memberAddress] < now) {
                 if(!memberRoleData[_roleId].memberActive[_memberAddress]) {
-                    memberRoleData[_roleId].memberCounter = SafeMath.add32(memberRoleData[_roleId].memberCounter, 1);
+                    memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
                     memberRoleData[_roleId].memberActive[_memberAddress] = true;
                     memberRoleData[_roleId].memberAddress.push(_memberAddress);
                     memberRoleData[_roleId].validity[_memberAddress] = _validity;
@@ -194,7 +194,7 @@ contract MemberRoles is Upgradeable {
             }  
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
-            memberRoleData[_roleId].memberCounter = SafeMath.sub32(memberRoleData[_roleId].memberCounter, 1);
+            memberRoleData[_roleId].memberCounter = SafeMath.sub(memberRoleData[_roleId].memberCounter, 1);
             memberRoleData[_roleId].memberActive[_memberAddress] = false;
         }
     }
@@ -333,7 +333,7 @@ contract MemberRoles is Upgradeable {
     function setOwnerRole() internal {
         master = Master(masterAddress);
         address ownAddress = master.owner();
-        memberRoleData[1].memberCounter = SafeMath.add32(memberRoleData[1].memberCounter, 1);
+        memberRoleData[1].memberCounter = 1;
         memberRoleData[1].memberActive[ownAddress] = true;
         memberRoleData[1].memberAddress.push(ownAddress);
         memberRoleData[1].validity[ownAddress] = UINT_MAX;

@@ -13,14 +13,14 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 import "./Master.sol";
-import "./SafeMath.sol";
-import "./Math.sol";
+import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import 'openzeppelin-solidity/contracts/math/Math.sol';
 import "./Pool.sol";
 import "./GBTStandardToken.sol";
 import "./VotingType.sol";
@@ -58,7 +58,7 @@ contract Governance is Upgradeable {
     }
 
     modifier validateStake(uint8 _categoryId, uint _proposalStake) {
-        uint stake = _proposalStake / (10 ** govBlocksToken.decimals());
+        uint stake = _proposalStake / (uint256(10) ** govBlocksToken.decimals());
         uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
         require(stake <= proposalCategory.getMaxStake(category) && stake >= proposalCategory.getMinStake(category));
         _;
@@ -514,7 +514,7 @@ contract Governance is Upgradeable {
             "Reputation credit-proposal owner", 
             i, 
             _memberAddress, 
-            SafeMath.add32(governanceDat.getMemberReputation(_memberAddress), addProposalOwnerPoints), 
+            uint32(governanceDat.getMemberReputation(_memberAddress) + addProposalOwnerPoints), 
             addProposalOwnerPoints, 
             "C"
         );
@@ -604,7 +604,7 @@ contract Governance is Upgradeable {
                 "Reputation credit-solution owner", 
                 i, 
                 _memberAddress, 
-                SafeMath.add32(governanceDat.getMemberReputation(_memberAddress), addSolutionOwnerPoints), 
+                uint32(governanceDat.getMemberReputation(_memberAddress) + addSolutionOwnerPoints), 
                 addSolutionOwnerPoints, 
                 "C"
             );
