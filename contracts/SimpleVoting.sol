@@ -298,14 +298,17 @@ contract SimpleVoting is Upgradeable {
         view 
         returns(uint finalVoteValue) 
     {
-        uint scalingWeight;
-        uint membershipScalingFactor;
+        uint stakeWeight;
+        uint bonusStake;
+        uint reputationWeight;
+        uint bonusReputation;
         uint memberReputation;
-        (scalingWeight, membershipScalingFactor, memberReputation) = governanceDat.getMemberReputationSV(_memberAddress);
-       
-        _memberStake = SafeMath.mul(log(SafeMath.div(_memberStake, gbt.decimals())), membershipScalingFactor);
-        memberReputation = SafeMath.mul(log(memberReputation), scalingWeight);
-        finalVoteValue = SafeMath.add(_memberStake, memberReputation);
+        (stakeWeight, bonusStake, reputationWeight, bonusReputation, memberReputation) 
+            = governanceDat.getMemberReputationSV(_memberAddress);
+        _memberStake = SafeMath.div(_memberStake, gbt.decimals());
+        stakeWeight = SafeMath.mul(SafeMath.add(log(_memberStake), bonusStake), stakeWeight);
+        reputationWeight = SafeMath.mul(SafeMath.add(log(memberReputation), bonusReputation), reputationWeight);
+        finalVoteValue = SafeMath.add(stakeWeight, reputationWeight);
     }
 
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.

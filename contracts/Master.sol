@@ -123,7 +123,7 @@ contract Master is Ownable, Upgradeable {
         if(versionLength == 0) {
             govern = new Governed();
             GovernChecker governChecker = GovernChecker(govern.getGovernCheckerAddress());
-            if(getCodeSize(address(governChecker)) > 0 ) {
+            if(getCodeSize(address(governChecker)) > 0 ){
                 if(governChecker.authorized(dAppName) != _contractAddresses[3])
                     governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
             }
@@ -229,17 +229,22 @@ contract Master is Ownable, Upgradeable {
             governanceDat.changeSolutionOwnerSub(_value);
         } else if (_typeOf == "SVM") {
             governanceDat.changeMemberSub(_value);
-        } else if (_typeOf == "GBTS") {
-            governanceDat.changeGBTStakeValue(_value);
-        } else if (_typeOf == "MSF") {
-            governanceDat.changeMembershipScalingFator(_value);
+        } else if (_typeOf == "RW") {
+            governanceDat.changeReputationWeight(_value);
         } else if (_typeOf == "SW") {
-            governanceDat.changeScalingWeight(_value);
+            governanceDat.changeStakeWeight(_value);
+        } else if (_typeOf == "BR") {
+            governanceDat.changeBonusReputation(_value);
+        } else if (_typeOf == "BS") {
+            governanceDat.changeBonusStake(_value);
         } else if (_typeOf == "QP") {
             governanceDat.changeQuorumPercentage(_value);
         }
     }
-
+uint public stakeWeight;
+    uint public bonusStake;
+    uint public reputationWeight;
+    uint public bonusReputation;
     /// @dev adds a new contract type to master
     function addNewContract(bytes2 _contractName) public {
         require(isAuth());

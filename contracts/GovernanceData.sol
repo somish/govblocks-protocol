@@ -292,15 +292,19 @@ contract GovernanceData is Upgradeable {
 
     uint public quorumPercentage;
     uint public pendingProposalStart;
-    uint public gbtStakeValue;
-    uint public membershipScalingFactor;
-    uint public scalingWeight;
+    //uint public gbtStakeValue;
+    //uint public membershipScalingFactor;
+    //uint public scalingWeight;
     bool public constructorCheck;
     bool public punishVoters;
     uint public depositPercProposal;
     uint public depositPercSolution;
     uint public depositPercVote;
     uint public tokenHoldingTime;
+    uint public stakeWeight;
+    uint public bonusStake;
+    uint public reputationWeight;
+    uint public bonusReputation;
     uint32 internal addProposalOwnerPoints;
     uint32 internal addSolutionOwnerPoints;
     uint32 internal addMemberPoints;
@@ -674,19 +678,24 @@ contract GovernanceData is Upgradeable {
         return allProposalSolutions[_proposalId][_index].action;
     }
 
-    /// @dev Changes stake value that helps in calculation of reward distribution
-    function changeGBTStakeValue(uint _gbtStakeValue) public onlyMaster {
-        gbtStakeValue = _gbtStakeValue;
+    /// @dev Changes stakeWeight that helps in calculation of reward distribution
+    function changeStakeWeight(uint _stakeWeight) public onlyMaster {
+        stakeWeight = _stakeWeight;
     }
 
-    /// @dev Changes member scaling factor that helps in calculation of reward distribution
-    function changeMembershipScalingFator(uint _membershipScalingFactor) public onlyMaster {
-        membershipScalingFactor = _membershipScalingFactor;
+    /// @dev Changes bonusStake that helps in calculation of reward distribution
+    function changeBonusStake(uint _bonusStake) public onlyMaster {
+        bonusStake = _bonusStake;
     }
 
-    /// @dev Changes scaling weight that helps in calculation of reward distribution
-    function changeScalingWeight(uint _scalingWeight) public onlyMaster {
-        scalingWeight = _scalingWeight;
+    /// @dev Changes reputationWeight that helps in calculation of reward distribution
+    function changeReputationWeight(uint _reputationWeight) public onlyMaster {
+        reputationWeight = _reputationWeight;
+    }
+
+    /// @dev Changes bonusReputation that helps in calculation of reward distribution
+    function changeBonusReputation(uint _bonusReputation) public onlyMaster {
+        bonusReputation = _bonusReputation;
     }
 
     /// @dev Changes quoram percentage. Value required to pass proposal.
@@ -996,13 +1005,8 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Get member's reputation points and scalind data for sv.
-    function getMemberReputationSV(address _memberAddress) public view returns(uint, uint, uint) {
-        uint memberPoints;
-        if (allMemberReputationByAddress[_memberAddress] == 0)
-            memberPoints = 1;
-        else
-            memberPoints = allMemberReputationByAddress[_memberAddress];
-        return(scalingWeight, membershipScalingFactor, memberPoints);
+    function getMemberReputationSV(address _memberAddress) public view returns(uint, uint, uint, uint, uint) {
+        return(stakeWeight, bonusStake, reputationWeight, bonusReputation, allMemberReputationByAddress[_memberAddress]);
     }
 
     /// @dev Gets Total vote value from all the votes that has been casted against of winning solution
@@ -1223,11 +1227,11 @@ contract GovernanceData is Upgradeable {
 
     /// @dev Sets global parameters that will help in distributing reward
     function setGlobalParameters() internal {
-        pendingProposalStart = 0;
         quorumPercentage = 25;
-        gbtStakeValue = 0;
-        membershipScalingFactor = 1;
-        scalingWeight = 1;
+        stakeWeight = 1;
+        bonusStake = 2;
+        reputationWeight = 1;
+        bonusReputation = 2;
         depositPercProposal = 30;
         depositPercSolution = 30;
         depositPercVote = 40;
