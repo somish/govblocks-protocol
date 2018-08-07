@@ -15,7 +15,9 @@
 
 pragma solidity 0.4.24;
 import "./Master.sol";
+import "./GovBlocksMaster.sol";
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/BasicToken.sol';
 import "./Upgradeable.sol";
 
 
@@ -26,6 +28,7 @@ contract MemberRoles is Upgradeable {
     uint8 internal authorizedAddressToCategorize;
     bool public constructorCheck;
     address public masterAddress;
+    BasicToken public dAppToken;
     Master internal master;
     uint constant UINT_MAX = uint256(0) - uint256(1);
     address simpleVoting;
@@ -47,13 +50,13 @@ contract MemberRoles is Upgradeable {
         uint rolelength = getTotalMemberRoles();
         memberRole.push("");
         authorizedAddressAgainstRole[rolelength] = address(0);
-        emit MemberRole(rolelength, "", "", false);
+        emit MemberRole(rolelength, "Everyone", "Professionals that are a part of the GBT network", false);
         rolelength++;
         memberRole.push("Advisory Board");
         authorizedAddressAgainstRole[rolelength] = master.owner();
         emit MemberRole(
-            rolelength, 
-            "Advisory Board", 
+            rolelength,
+            "Advisory Board",
             "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.",
             false
         );
@@ -61,8 +64,8 @@ contract MemberRoles is Upgradeable {
         memberRole.push("Token Holder");
         authorizedAddressAgainstRole[rolelength] = address(0);
         emit MemberRole(
-            rolelength, 
-            "Token Holder", 
+            rolelength,
+            "Token Holder",
             "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.",
             false
         );
@@ -72,28 +75,24 @@ contract MemberRoles is Upgradeable {
     }
 
     modifier onlyInternal {
-        master = Master(masterAddress);
         require(master.isInternal(msg.sender));
         _;
     }
 
     modifier onlyOwner {
-        master = Master(masterAddress);
         require(master.isOwner(msg.sender));
         _;
     }
 
     modifier checkRoleAuthority(uint _memberRoleId) {
-        master = Master(masterAddress);
         require(msg.sender == authorizedAddressAgainstRole[_memberRoleId] || master.isOwner(msg.sender));
         _;
     }
 
     modifier onlySV {
-        master = Master(masterAddress);
         require(
-            master.getLatestAddress("SV") == msg.sender 
-            || master.isInternal(msg.sender) 
+            master.getLatestAddress("SV") == msg.sender
+            || master.isInternal(msg.sender)
             || master.isOwner(msg.sender)
         );
         _;
@@ -105,15 +104,17 @@ contract MemberRoles is Upgradeable {
             return true;
     }
 
-    /// @dev Changes Master's contract address 
+    /// @dev Changes Master's contract address
     /// @param _masterContractAddress New master address
     function changeMasterAddress(address _masterContractAddress) public {
-        if (masterAddress == address(0))
+        if (masterAddress == address(0)) {
             masterAddress = _masterContractAddress;
-        else {
+            master = Master(masterAddress);
+        } else {
             master = Master(masterAddress);
             require(master.isInternal(msg.sender));
             masterAddress = _masterContractAddress;
+            master = Master(masterAddress);
         }
     }
 
@@ -125,7 +126,6 @@ contract MemberRoles is Upgradeable {
     function updateDependencyAddresses() public {
         if (!constructorCheck)
             memberRolesInitiate();
-        master = Master(masterAddress);
         address newSV = master.getLatestAddress("SV");
         if (simpleVoting != newSV) {
             for (uint i = 0; i < memberRole.length; i++) {
@@ -134,6 +134,8 @@ contract MemberRoles is Upgradeable {
             }
             simpleVoting = newSV;
         }
+        GovBlocksMaster govBlocksMaster = GovBlocksMaster(master.gbmAddress());
+        dAppToken = BasicToken(govBlocksMaster.getDappTokenAddress(master.dAppName()));
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.
@@ -142,13 +144,17 @@ contract MemberRoles is Upgradeable {
         uint8 j = 0;
         assignedRoles = new uint32[](length);
         for (uint8 i = 0; i < getTotalMemberRoles(); i++) {
-            if (memberRoleData[i].memberActive[_memberAddress] 
+            if (memberRoleData[i].memberActive[_memberAddress]
                 && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now)
             ) {
                 assignedRoles[j] = i;
                 j++;
             }
         }
+        if(dAppToken.balanceOf(_memberAddress) > 0) {
+            assignedRoles[j] = 2;
+        }
+
         return assignedRoles;
     }
 
@@ -158,10 +164,18 @@ contract MemberRoles is Upgradeable {
 
     /// @dev Returns true if the given role id is assigned to a member.
     /// @param _memberAddress Address of member
-    /// @param _roleId Checks member's authenticity with the roleId. 
+    /// @param _roleId Checks member's authenticity with the roleId.
     /// i.e. Returns true if this roleId is assigned to member
     function checkRoleIdByAddress(address _memberAddress, uint32 _roleId) external view returns(bool) {
-        if (memberRoleData[_roleId].memberActive[_memberAddress] 
+        if (_roleId == 0)
+            return true;
+        if (_roleId == 2) {
+            if(dAppToken.balanceOf(_memberAddress) > 0)
+                return true;
+            else
+                return false;
+        }
+        if (memberRoleData[_roleId].memberActive[_memberAddress]
             && (!memberRoleData[_roleId].limitedValidity || memberRoleData[_roleId].validity[_memberAddress] > now))
             return true;
         else
@@ -170,16 +184,16 @@ contract MemberRoles is Upgradeable {
 
     /// @dev Assign or Delete a member from specific role.
     /// @param _memberAddress Address of Member
-    /// @param _roleId RoleId to update 
+    /// @param _roleId RoleId to update
     /// @param _typeOf typeOf is set to be True if we want to assign this role to member, False otherwise!
     function updateMemberRole(
-        address _memberAddress, 
-        uint32 _roleId, 
+        address _memberAddress,
+        uint32 _roleId,
         bool _typeOf,
         uint _validity
-    ) 
-        public 
-        checkRoleAuthority(_roleId) 
+    )
+        public
+        checkRoleAuthority(_roleId)
     {
         if (_typeOf) {
             if(memberRoleData[_roleId].validity[_memberAddress] < now) {
@@ -190,8 +204,8 @@ contract MemberRoles is Upgradeable {
                     memberRoleData[_roleId].validity[_memberAddress] = _validity;
                 } else {
                     memberRoleData[_roleId].validity[_memberAddress] = _validity;
-                }     
-            }  
+                }
+            }
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.sub(memberRoleData[_roleId].memberCounter, 1);
@@ -200,9 +214,9 @@ contract MemberRoles is Upgradeable {
     }
 
     /// @dev Updates Validity of a user
-    function setValidityOfMember(address _memberAddress, uint32 _roleId, uint _validity) 
-        public 
-        checkRoleAuthority(_roleId) 
+    function setValidityOfMember(address _memberAddress, uint32 _roleId, uint _validity)
+        public
+        checkRoleAuthority(_roleId)
     {
         memberRoleData[_roleId].validity[_memberAddress] = _validity;
     }
@@ -234,14 +248,13 @@ contract MemberRoles is Upgradeable {
     /// @param _newRoleName New role name
     /// @param _roleDescription New description hash
     /// @param _canAddMembers Authorized member against every role id
-    function addNewMemberRole(bytes32 _newRoleName, string _roleDescription, address _canAddMembers, bool _limitedValidity) 
-        public 
-        onlySV 
+    function addNewMemberRole(bytes32 _newRoleName, string _roleDescription, address _canAddMembers, bool _limitedValidity)
+        public
+        onlySV
     {
         uint rolelength = getTotalMemberRoles();
         memberRole.push(_newRoleName);
         if (_canAddMembers == address(0)) {
-            master = Master(masterAddress);
             authorizedAddressAgainstRole[rolelength] = master.getLatestAddress("SV");
         } else {
             authorizedAddressAgainstRole[rolelength] = _canAddMembers;
@@ -296,10 +309,10 @@ contract MemberRoles is Upgradeable {
     /// @param _memberRoleId Role id to get the Role name details
     /// @return  roleId Same role id
     /// @return memberRoleName Role name against that role id.
-    function getMemberRoleNameById(uint32 _memberRoleId) 
-        public 
-        view 
-        returns(uint32 roleId, bytes32 memberRoleName) 
+    function getMemberRoleNameById(uint32 _memberRoleId)
+        public
+        view
+        returns(uint32 roleId, bytes32 memberRoleName)
     {
         memberRoleName = memberRole[_memberRoleId];
         roleId = _memberRoleId;
@@ -331,7 +344,6 @@ contract MemberRoles is Upgradeable {
 
     /// @dev Add dApp Owner in Advisory Board Members.
     function setOwnerRole() internal {
-        master = Master(masterAddress);
         address ownAddress = master.owner();
         memberRoleData[1].memberCounter = 1;
         memberRoleData[1].memberActive[ownAddress] = true;
@@ -343,9 +355,11 @@ contract MemberRoles is Upgradeable {
     function getRoleIdLengthByAddress(address _memberAddress) internal view returns(uint8 count) {
         uint length = getTotalMemberRoles();
         for (uint8 i = 0; i < length; i++) {
-            if (memberRoleData[i].memberActive[_memberAddress] 
+            if (memberRoleData[i].memberActive[_memberAddress]
                 && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now))
                 count++;
+            if(dAppToken.balanceOf(_memberAddress) > 0)
+                count++;       
         }
         return count;
     }

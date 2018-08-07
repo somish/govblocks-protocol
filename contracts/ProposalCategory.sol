@@ -27,6 +27,7 @@ contract ProposalCategory is Upgradeable {
         string name;
         uint8[] memberRoleSequence;
         uint8[] memberRoleMajorityVote;
+        uint8[] allowedToCreateProposal;
         uint32[] closingTime;
         uint minStake;
         uint maxStake;
@@ -93,20 +94,22 @@ contract ProposalCategory is Upgradeable {
     function proposalCategoryInitiate() public {
         require(!constructorCheck);
         uint8[] memory rs = new uint8[](1);
+        uint8[] memory al = new uint8[](1);
         uint8[] memory mv = new uint8[](1);
         uint32[] memory ct = new uint32[](1);
         
         rs[0] = 1;
         mv[0] = 50;
+        al[0] = 0;
         ct[0] = 1800;
         
-        allCategory.push(Category("Uncategorized", rs, mv, ct, 0, 0, 0, 0, 0, 0));
-        allCategory.push(Category("Member role", rs, mv, ct, 0, INT_MAX, 10**19, 40, 40, 20));
-        allCategory.push(Category("Categories", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
-        allCategory.push(Category("Parameters", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
-        allCategory.push(Category("Transfer Assets", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
-        allCategory.push(Category("New contracts", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
-        allCategory.push(Category("Others", rs, mv, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Uncategorized", rs, mv, al, ct, 0, 0, 0, 0, 0, 0));
+        allCategory.push(Category("Member role", rs, mv, al, ct, 0, INT_MAX, 10**19, 40, 40, 20));
+        allCategory.push(Category("Categories", rs, mv, al, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Parameters", rs, mv, al, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Transfer Assets", rs, mv, al, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("New contracts", rs, mv, al, ct, 0, INT_MAX, 0, 40, 40, 20));
+        allCategory.push(Category("Others", rs, mv, al, ct, 0, INT_MAX, 0, 40, 40, 20));
 
         addInitialSubCategories();
 
@@ -116,19 +119,19 @@ contract ProposalCategory is Upgradeable {
     /// @dev Adds new category
     /// @param _name Category name
     /// @param _memberRoleSequence Voting Layer sequence in which the voting has to be performed.
+    /// @param _allowedToCreateProposal Member roles allowed to create the proposal
     /// @param _memberRoleMajorityVote Majority Vote threshhold for Each voting layer
     /// @param _closingTime Vote closing time for Each voting layer
-    /// @param _stakeAndIncentive array of minstake maxstake and incentive required against each category
-    /// @param _rewardPercentage array of reward percentages for Proposal, Solution and Voting.
+    /// @param _stakeIncentiveReward array of minstake maxstake incentive reward percentages for Proposal, Solution and Voting
     function addNewCategory(
         string _name, 
-        uint8[] _memberRoleSequence, 
+        uint8[] _memberRoleSequence,
         uint8[] _memberRoleMajorityVote, 
+        uint8[] _allowedToCreateProposal,
         uint32[] _closingTime,
-        uint[] _stakeAndIncentive, 
-        uint8[] _rewardPercentage
+        uint[] _stakeIncentiveReward
     ) 
-        public
+        external
         onlySV 
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length 
@@ -138,13 +141,14 @@ contract ProposalCategory is Upgradeable {
                 _name, 
                 _memberRoleSequence, 
                 _memberRoleMajorityVote, 
+                _allowedToCreateProposal,
                 _closingTime, 
-                _stakeAndIncentive[0], 
-                _stakeAndIncentive[1], 
-                _stakeAndIncentive[2], 
-                _rewardPercentage[0], 
-                _rewardPercentage[1], 
-                _rewardPercentage[2]
+                _stakeIncentiveReward[0], 
+                _stakeIncentiveReward[1], 
+                _stakeIncentiveReward[2], 
+                uint8(_stakeIncentiveReward[3]), 
+                uint8(_stakeIncentiveReward[4]), 
+                uint8(_stakeIncentiveReward[5])
             )
         );
     }
@@ -153,38 +157,55 @@ contract ProposalCategory is Upgradeable {
     /// @param _categoryId Category id that needs to be updated
     /// @param _roleName Updated Role sequence to vote i.e. Updated voting layer sequence
     /// @param _majorityVote Updated Majority threshhold value against each voting layer.
+    /// @param _allowedToCreateProposal Member roles allowed to create the proposal
     /// @param _closingTime Updated Vote closing time against each voting layer
-    /// @param _stakeAndIncentive array of minstake maxstake and incentive
-    /// @param _rewardPercentage array of reward percentages for Proposal, Solution and Voting.
-    function updateCategory(
+    function updateCategoryMeta(
         uint _categoryId, 
         string _name, 
         uint8[] _roleName, 
         uint8[] _majorityVote, 
-        uint32[] _closingTime, 
-        uint[] _stakeAndIncentive, 
-        uint8[] _rewardPercentage
+        uint8[] _allowedToCreateProposal,
+        uint32[] _closingTime
     )
-        public 
+        external 
         onlySV
     {
         require(_roleName.length == _majorityVote.length && _majorityVote.length == _closingTime.length);
         allCategory[_categoryId].name = _name;
+        allCategory[_categoryId].allowedToCreateProposal.length = _allowedToCreateProposal.length;
+        allCategory[_categoryId].memberRoleSequence.length = _roleName.length;
+        allCategory[_categoryId].memberRoleMajorityVote.length = _majorityVote.length;
+        allCategory[_categoryId].closingTime.length = _closingTime.length;
+        uint i;
+
+        for (i = 0; i < _roleName.length; i++) {
+            allCategory[_categoryId].memberRoleSequence[i] = _roleName[i];
+            allCategory[_categoryId].memberRoleMajorityVote[i] = _majorityVote[i];
+            allCategory[_categoryId].closingTime[i] = _closingTime[i];
+        }
+        for (i = 0; i < _allowedToCreateProposal.length; i++) {
+            allCategory[_categoryId].allowedToCreateProposal[i] = _allowedToCreateProposal[i];
+        }
+    }
+
+    /// @dev Updates category details
+    /// @param _categoryId Category id that needs to be updated
+    /// @param _stakeAndIncentive array of minstake maxstake and incentive
+    /// @param _rewardPercentage array of reward percentages for Proposal, Solution and Voting.
+    function updateCategoryTokens(
+        uint _categoryId,
+        uint[] _stakeAndIncentive, 
+        uint8[] _rewardPercentage
+    )
+        external 
+        onlySV
+    {
         allCategory[_categoryId].minStake = _stakeAndIncentive[0];
         allCategory[_categoryId].maxStake = _stakeAndIncentive[1];
         allCategory[_categoryId].defaultIncentive = _stakeAndIncentive[2];
         allCategory[_categoryId].rewardPercProposal = _rewardPercentage[0];
         allCategory[_categoryId].rewardPercSolution = _rewardPercentage[1];
         allCategory[_categoryId].rewardPercVote = _rewardPercentage[2];
-        allCategory[_categoryId].memberRoleSequence = new uint8[](_roleName.length);
-        allCategory[_categoryId].memberRoleMajorityVote = new uint8[](_majorityVote.length);
-        allCategory[_categoryId].closingTime = new uint32[](_closingTime.length);
-
-        for (uint i = 0; i < _roleName.length; i++) {
-            allCategory[_categoryId].memberRoleSequence[i] = _roleName[i];
-            allCategory[_categoryId].memberRoleMajorityVote[i] = _majorityVote[i];
-            allCategory[_categoryId].closingTime[i] = _closingTime[i];
-        }
     }
 
     /// @dev Add new sub category against category.
@@ -199,7 +220,7 @@ contract ProposalCategory is Upgradeable {
         address _contractAddress,
         bytes2 _contractName
     ) 
-        public
+        external
         onlySV 
     {
         allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
@@ -216,7 +237,7 @@ contract ProposalCategory is Upgradeable {
         address _address, 
         bytes2 _contractName
     ) 
-        public 
+        external 
         onlySV 
     {
         allSubCategory[_subCategoryId].categoryName = _categoryName;
@@ -278,6 +299,12 @@ contract ProposalCategory is Upgradeable {
     /// @dev Gets Main category when giving sub category id. 
     function getCategoryIdBySubId(uint8 _subCategoryId) public view returns(uint8) {
         return allSubCategory[_subCategoryId].categoryId;
+    }
+
+    function isProposalExternal(uint _proposalId) public view returns(bool) {
+        uint32 category = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryId;
+        if(allCategory[category].allowedToCreateProposal[0] == 0)
+            return true;
     }
 
     /// @dev Gets remaining vote closing time against proposal 
@@ -382,6 +409,18 @@ contract ProposalCategory is Upgradeable {
     /// @dev Gets maximum stake for category id
     function getMaxStake(uint _categoryId) public view returns(uint) {
         return allCategory[_categoryId].maxStake;
+    }
+
+    /// @dev returns if a member is allowed to vote.
+    function allowedToCreateProposal(address _member, uint _category) public view returns (bool) {
+        if (allCategory[_category].allowedToCreateProposal[0] == 0)
+            return true;
+        else {
+            for(uint i = 0; i<allCategory[_category].allowedToCreateProposal.length; i++) {
+                if (memberRole.checkRoleIdByAddress(_member, allCategory[_category].allowedToCreateProposal[i]))
+                    return true;
+            }
+        }
     }
 
     /// @dev Gets Majority threshold array length when giving main category id
@@ -529,7 +568,7 @@ contract ProposalCategory is Upgradeable {
         );
         allSubIdByCategory[2].push(4);
         allSubCategory.push(SubCategory(
-                "Edit category",
+                "Edit category meta",
                 "QmYWSuy3aZFK1Yavpq5Pm89rg6esyZ8rn5CNf6PdgJCpR6",
                 2,
                 masterAddress,
@@ -538,6 +577,15 @@ contract ProposalCategory is Upgradeable {
         );
         allSubIdByCategory[2].push(5);
         allSubCategory.push(SubCategory(
+                "Edit category token",
+                "QmYWSuy3aZFK1Yavpq5Pm89rg6esyZ8rn5CNf6PdgJCpR6",
+                2,
+                masterAddress,
+                "PC"
+            )
+        );
+        allSubIdByCategory[2].push(6);
+        allSubCategory.push(SubCategory(
                 "Add new sub category",
                 "QmeyPccQzMTNxSavJp4dL1J88zzb4xNESn5wLTPzqMFFJX",
                 2,
@@ -545,7 +593,7 @@ contract ProposalCategory is Upgradeable {
                 "PC"
             )
         );
-        allSubIdByCategory[2].push(6);
+        allSubIdByCategory[2].push(7);
         allSubCategory.push(SubCategory(
                 "Edit sub category",
                 "QmVeSBUghB71WHhnT8tXajSctnfz1fYx6fWXc9wXHJ8r2p",
@@ -554,7 +602,7 @@ contract ProposalCategory is Upgradeable {
                 "PC"
             )
         );
-        allSubIdByCategory[3].push(7);
+        allSubIdByCategory[3].push(8);
         allSubCategory.push(SubCategory(
                 "Configure parameters",
                 "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
@@ -563,7 +611,7 @@ contract ProposalCategory is Upgradeable {
                 "MS"
             )
         );
-        allSubIdByCategory[4].push(8);
+        allSubIdByCategory[4].push(9);
         allSubCategory.push(SubCategory(
                 "Transfer Ether",
                 "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
@@ -572,7 +620,7 @@ contract ProposalCategory is Upgradeable {
                 "PL"
             )
         );
-        allSubIdByCategory[4].push(9);
+        allSubIdByCategory[4].push(10);
         allSubCategory.push(SubCategory(
                 "Transfer Token",
                 "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB",
@@ -581,7 +629,7 @@ contract ProposalCategory is Upgradeable {
                 "PL"
             )
         );
-        allSubIdByCategory[5].push(10);
+        allSubIdByCategory[5].push(11);
         allSubCategory.push(SubCategory(
                 "Add new version",
                 "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w",
@@ -590,7 +638,7 @@ contract ProposalCategory is Upgradeable {
                 "MS"
             )
         );
-        allSubIdByCategory[5].push(11);
+        allSubIdByCategory[5].push(12);
         allSubCategory.push(SubCategory(
                 "Add new contract",
                 "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
@@ -599,7 +647,7 @@ contract ProposalCategory is Upgradeable {
                 "MS"
             )
         );
-        allSubIdByCategory[6].push(12);
+        allSubIdByCategory[6].push(13);
         allSubCategory.push(SubCategory("Others, not specified", "", 4, address(0), "EX"));
     }
 }

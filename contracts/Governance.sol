@@ -108,8 +108,9 @@ contract Governance is Upgradeable {
     ) 
         public 
     {
-        address votingAddress = governanceDat.getVotingTypeAddress(_votingTypeId);
         uint8 category = proposalCategory.getCategoryIdBySubId(_categoryId);
+        require(proposalCategory.allowedToCreateProposal(msg.sender, category));
+        address votingAddress = governanceDat.getVotingTypeAddress(_votingTypeId);
         uint _proposalId = governanceDat.getProposalLength();
         governanceDat.setSolutionAdded(_proposalId, address(0), "address(0)");
         governanceDat.callProposalEvent(
@@ -195,6 +196,8 @@ contract Governance is Upgradeable {
     {
         require(memberRole.checkRoleIdByAddress(msg.sender, memberRole.getAuthorizedMemberId()));
         require(_dappIncentive <= govBlocksToken.balanceOf(poolAddress));
+        uint8 category = proposalCategory.getCategoryIdBySubId(_categoryId);
+        require(proposalCategory.allowedToCreateProposal(msg.sender, category));
 
         governanceDat.setProposalIncentive(_proposalId, _dappIncentive);
         governanceDat.setProposalCategory(_proposalId, _categoryId);
@@ -235,7 +238,7 @@ contract Governance is Upgradeable {
             governanceDat.getProposalCurrentVotingId(_proposalId)
         );
 
-        if (pStatus == 2 && _roleId != 2) {
+        if (pStatus == 2 && _roleId != 2 && _roleId != 0) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now || 
                 governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _roleId) 
                 == memberRole.getAllMemberLength(_roleId)

@@ -98,35 +98,6 @@ contract SimpleVoting is Upgradeable {
     function changeGBTSAddress(address _gbtAddress) public onlyMaster {
         gbt = GBTStandardToken(_gbtAddress);
     }
-    /*
-    /// @dev Initiates add solution (Stake in ether)
-    /// @param _solutionHash It contains parameters, values and description needed according to proposal
-    function addSolutionInEther(
-        uint _proposalId, 
-        string _solutionHash, 
-        uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash, 
-        bytes _action
-    ) 
-        public
-        payable 
-    {
-        uint tokenAmount = gbt.buyToken.value(msg.value)();
-        initiateAddSolution(
-            _proposalId, 
-            tokenAmount, 
-            _solutionHash,
-            _validityUpto, 
-            _v, 
-            _r,
-            _s, 
-            _lockTokenTxHash, 
-            _action
-        );
-    }*/
 
     /// @dev Initiates add solution 
     /// @param _memberAddress Address of member who is adding the solution
@@ -182,25 +153,6 @@ contract SimpleVoting is Upgradeable {
         );
     }
 
-    /*/// @dev Creates proposal for voting (Stake in ether)
-    /// @param _proposalId Proposal id
-    /// @param _solutionChosen solution id chosen while voting as a proposal might have different solution
-    function proposalVotingInEther(
-        uint64 _proposalId, 
-        uint64[] _solutionChosen, 
-        uint _validityUpto, 
-        uint8 _v, 
-        bytes32 _r, 
-        bytes32 _s, 
-        bytes32 _lockTokenTxHash
-    ) 
-        public
-        payable 
-    {
-        uint tokenAmount = gbt.buyToken.value(msg.value)();
-        proposalVoting(_proposalId, _solutionChosen, tokenAmount, _validityUpto, _v, _r, _s, _lockTokenTxHash);
-    }*/
-
     /// @dev Creates proposal for voting
     /// @param _proposalId Proposal id
     /// @param _solutionChosen solution chosen while voting
@@ -240,6 +192,7 @@ contract SimpleVoting is Upgradeable {
         if(governanceDat.getAllVoteIdsLengthByProposalRole(proposalId, categoryThenMRSequence) 
             == memberRole.getAllMemberLength(categoryThenMRSequence) 
             && categoryThenMRSequence != 2
+            && categoryThenMRSequence != 0
         ) {
             eventCaller.callVoteCast(proposalId);
         }
@@ -297,7 +250,7 @@ contract SimpleVoting is Upgradeable {
         public
         view 
         returns(uint finalVoteValue) 
-    {
+    {   
         uint stakeWeight;
         uint bonusStake;
         uint reputationWeight;
@@ -452,6 +405,8 @@ contract SimpleVoting is Upgradeable {
             thresHoldValue = totalTokens * 100 / basicToken.totalSupply();
             if (thresHoldValue > governanceDat.quorumPercentage())
                 return true;
+        } else if (_mrSequenceId == 0) {
+            return true;
         } else {
             thresHoldValue = (governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId) * 100)
                 / memberRole.getAllMemberLength(_mrSequenceId);
