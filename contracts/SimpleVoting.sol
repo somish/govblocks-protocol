@@ -24,8 +24,8 @@ import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
 import "./GovBlocksMaster.sol";
 import "./Pool.sol";
-import 'openzeppelin-solidity/contracts/math/Math.sol';
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
+import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./EventCaller.sol";
 import "./Governed.sol";
 

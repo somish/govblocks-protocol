@@ -16,8 +16,8 @@
 pragma solidity 0.4.24;
 import "./Master.sol";
 import "./GovBlocksMaster.sol";
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
-import 'openzeppelin-solidity/contracts/token/ERC20/BasicToken.sol';
+import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./imports/openzeppelin-solidity/contracts/token/ERC20/BasicToken.sol";
 import "./Upgradeable.sol";
 
 
@@ -84,10 +84,6 @@ contract MemberRoles is Upgradeable {
             || master.owner() == msg.sender
         );
         _;
-    }
-
-    /// @dev just to adhere to the interface
-    function changeGBTSAddress(address) public {
     }
 
     /// @dev To Initiate default settings whenever the contract is regenerated!

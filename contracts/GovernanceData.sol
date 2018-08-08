@@ -14,7 +14,7 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity 0.4.24;
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Master.sol";
 import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";

@@ -19,8 +19,8 @@ import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 import "./Master.sol";
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
-import 'openzeppelin-solidity/contracts/math/Math.sol';
+import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
 import "./Pool.sol";
 import "./GBTStandardToken.sol";
 import "./VotingType.sol";
@@ -128,11 +128,9 @@ contract Governance is Upgradeable {
 
     /// @dev Submit proposal with solution
     /// @param _proposalId Proposal id
-    /// @param _proposalSolutionStake Stake in GBT at the time of proposal creation with solution
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
     function submitProposalWithSolution(
         uint _proposalId, 
-        uint _proposalSolutionStake, 
         string _solutionHash, 
         bytes _action
     ) 
@@ -194,8 +192,8 @@ contract Governance is Upgradeable {
         checkProposalValidity(_proposalId) 
     {
         uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
-        require(category != 0);
         uint currVotingStatus = governanceDat.getProposalCurrentVotingId(_proposalId);
+        require(category != 0 && currVotingStatus < 2);
         governanceDat.changeProposalStatus(_proposalId, 2);
         callCloseEvent(_proposalId);
     }
@@ -491,7 +489,6 @@ contract Governance is Upgradeable {
         uint proposalId;
         uint totalReward;
         uint category;
-        uint addSolutionOwnerPoints = governanceDat.addSolutionOwnerPoints();
 
         for (i = _lastRewardSolutionProposalId; i < allProposalLength; i++) {
             (proposalId, solutionId, proposalStatus, finalVerdict, totalReward, category) = 
@@ -508,8 +505,7 @@ contract Governance is Upgradeable {
                             i, 
                             calcReward, 
                             totalReward, 
-                            category, 
-                            proposalId
+                            category                            
                         );
             }
         }
@@ -524,8 +520,7 @@ contract Governance is Upgradeable {
         uint i, 
         uint calcReward, 
         uint totalReward, 
-        uint category, 
-        uint proposalId
+        uint category
     ) 
         internal  
         returns(uint tempfinalRewardToDistribute) 

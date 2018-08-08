@@ -18,7 +18,7 @@ pragma solidity 0.4.24;
 import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./GovBlocksMaster.sol";
-import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
+import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./GovernanceData.sol";
 import "./Governed.sol";
 

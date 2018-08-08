@@ -16,7 +16,7 @@
 pragma solidity 0.4.24;
 
 import "./Master.sol";
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./GBTStandardToken.sol";
 import "./Upgradeable.sol";
 import "./SimpleVoting.sol";
