@@ -39,8 +39,8 @@ contract GBTStandardToken is LockableToken, MintableToken, DetailedERC20 {
         mint(msg.sender, actualAmount);
     } 
 
-    /// @dev function to change Token price
+    /*/// @dev function to change Token price
     function changeTokenPrice(uint _price) public onlyOwner {
         tokenPrice = _price;
-    }
+    }*/
 }

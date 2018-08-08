@@ -35,8 +35,8 @@ contract GovBlocksMaster {
     mapping(address => string) internal govBlocksUser;
     bytes public masterByteCode;
     bytes32[] internal allGovBlocksUsers;
-    string internal byteCodeHash;
-    string internal contractsAbiHash;
+    bytes32 internal byteCodeHash;
+    bytes32 internal contractsAbiHash;
 
     modifier onlyOwner() {
         require(msg.sender == owner);
@@ -68,7 +68,7 @@ contract GovBlocksMaster {
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             Master master = Master(masterAddress);
-            if (master.versionLength() > 0)
+            if (master.getCurrentVersion() > 0)
                 master.changeGBTSAddress(_gbtContractAddress);
         }
     }
@@ -79,7 +79,7 @@ contract GovBlocksMaster {
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             Master master = Master(masterAddress);
-            if (master.versionLength() > 0)
+            if (master.getCurrentVersion() > 0)
                 master.changeGBMAddress(_newGBMAddress);
         }
         governChecker.updateGBMAdress(_newGBMAddress);
@@ -135,7 +135,7 @@ contract GovBlocksMaster {
     /// @dev Sets byte code and abi hash that will help in generating new set of contracts for every dApp
     /// @param _byteCodeHash Byte code hash of all contracts    
     /// @param _abiHash Abi hash of all contracts
-    function setByteCodeAndAbi(string _byteCodeHash, string _abiHash) public onlyOwner {
+    function setByteCodeAndAbi(bytes32 _byteCodeHash, bytes32 _abiHash) public onlyOwner {
         byteCodeHash = _byteCodeHash;
         contractsAbiHash = _abiHash;
     }
@@ -158,7 +158,7 @@ contract GovBlocksMaster {
     /// @dev Gets byte code and abi hash
     /// @param byteCode Byte code hash 
     /// @param abiHash Application binary interface hash
-    function getByteCodeAndAbi() public view returns(string byteCode, string abiHash) {
+    function getByteCodeAndAbi() public view returns(bytes32 byteCode, bytes32 abiHash) {
         return (byteCodeHash, contractsAbiHash);
     }
 
@@ -180,8 +180,8 @@ contract GovBlocksMaster {
         returns(
             bytes32 gbUserName, 
             address masterContractAddress, 
-            string allContractsbyteCodeHash, 
-            string allCcontractsAbiHash, 
+            bytes32 allContractsbyteCodeHash, 
+            bytes32 allCcontractsAbiHash, 
             uint versionNo
         ) 
     {
@@ -189,7 +189,7 @@ contract GovBlocksMaster {
         if (masterAddress == address(0))
             return (_gbUserName, address(0), "", "", 0);
         Master master = Master(masterAddress);
-        versionNo = master.versionLength();
+        versionNo = master.getCurrentVersion();
         return (_gbUserName, govBlocksDapps[_gbUserName].masterAddress, byteCodeHash, contractsAbiHash, versionNo);
     }
 
@@ -217,8 +217,8 @@ contract GovBlocksMaster {
             bytes32 gbUserName, 
             address masterContractAddress, 
             address dappTokenAddress, 
-            string allContractsbyteCodeHash, 
-            string allCcontractsAbiHash, 
+            bytes32 allContractsbyteCodeHash, 
+            bytes32 allCcontractsAbiHash, 
             uint versionNo
         ) 
     {
@@ -227,7 +227,7 @@ contract GovBlocksMaster {
             return (_gbUserName, address(0), address(0), "", "", 0);
             
         Master master = Master(masterAddress);
-        versionNo = master.versionLength();
+        versionNo = master.getCurrentVersion();
         return (
             _gbUserName, 
             govBlocksDapps[_gbUserName].masterAddress, 

@@ -38,37 +38,6 @@ contract Pool is Upgradeable {
 
     function () public payable {}
 
-    /// @dev Changes master address
-    /// @param _add New master address
-    function changeMasterAddress(address _add) public {
-        if (masterAddress == address(0)) {
-            masterAddress = _add;
-        }
-        else {
-            master = Master(masterAddress);
-            require(master.isInternal(msg.sender));
-            masterAddress = _add;
-        }
-
-    }
-
-    modifier onlyInternal {
-        master = Master(masterAddress);
-        require(master.isInternal(msg.sender));
-        _;
-    }
-
-    modifier onlyOwner {
-        master = Master(masterAddress);
-        require(master.isOwner(msg.sender));
-        _;
-    }
-
-    modifier onlyMaster {
-        require(msg.sender == masterAddress);
-        _;
-    }
-
     modifier onlySV {
         master = Master(masterAddress);
         require(
@@ -76,12 +45,6 @@ contract Pool is Upgradeable {
             || master.isInternal(msg.sender) 
         );
         _;
-    }
-
-    /// @dev Changes GBT standard token address
-    /// @param _gbtAddress New GBT standard token address
-    function changeGBTSAddress(address _gbtAddress) public onlyMaster {
-        gbt = GBTStandardToken(_gbtAddress);
     }
 
     /// @dev just to adhere to the interface
@@ -151,9 +114,9 @@ contract Pool is Upgradeable {
     {
         uint allProposalLength = governanceDat.getProposalLength();
         uint finalVredict;
-        uint proposalStatus;
+        uint8 proposalStatus;
         uint calcReward;
-        uint8 category;
+        uint category;
 
         for (uint i = _lastRewardProposalId; i < allProposalLength; i++) {
             if (_memberAddress == governanceDat.getProposalOwner(i)) {
@@ -161,7 +124,6 @@ contract Pool is Upgradeable {
                 if (
                     proposalStatus > 2 && 
                     finalVredict > 0 && 
-                    governanceDat.getReturnedTokensFlag(_memberAddress, i, "P") == 0 &&
                     governanceDat.getProposalTotalReward(i) != 0
                 ) 
                 {
@@ -170,11 +132,7 @@ contract Pool is Upgradeable {
                         proposalCategory.getRewardPercProposal(category) 
                         * governanceDat.getProposalTotalReward(i)
                         / 100;
-                    pendingProposalReward = 
-                        pendingProposalReward 
-                        + calcReward 
-                        + governanceDat.getDepositedTokens(_memberAddress, i, "P");
-
+                    pendingProposalReward = pendingProposalReward + calcReward;
                 }
             }
         }
@@ -198,13 +156,8 @@ contract Pool is Upgradeable {
             (proposalId, solutionId, , finalVerdict, totalReward, category) = 
                 gov.getSolutionIdAgainstAddressProposal(_memberAddress, i);
             if (finalVerdict > 0 && finalVerdict == solutionId && proposalId == i) {
-                if (governanceDat.getReturnedTokensFlag(_memberAddress, proposalId, "S") == 0) {
-                    calcReward = (proposalCategory.getRewardPercSolution(category) * totalReward) / 100;
-                    pendingSolutionReward = 
-                        pendingSolutionReward
-                        + calcReward 
-                        + governanceDat.getDepositedTokens(_memberAddress, i, "S");
-                }
+                calcReward = (proposalCategory.getRewardPercSolution(category) * totalReward) / 100;
+                pendingSolutionReward = pendingSolutionReward + calcReward;                
             }
         }
     }
@@ -224,23 +177,18 @@ contract Pool is Upgradeable {
         uint totalReward;
         uint category;
         uint calcReward;
-        uint returnedTokensFlag;
         for (i = _lastRewardVoteId; i < totalVotes; i++) {
             voteId = governanceDat.getVoteIdOfNthVoteOfMember(_memberAddress, i);
             (, , , proposalId) = governanceDat.getVoteDetailById(voteId);
-            returnedTokensFlag = governanceDat.getReturnedTokensFlag(_memberAddress, proposalId, "V");
             (solutionChosen, , finalVredict, voteValue, totalReward, category, ) = 
                 gov.getVoteDetailsToCalculateReward(_memberAddress, i);
 
-            if (finalVredict > 0 && solutionChosen == finalVredict && returnedTokensFlag == 0 && totalReward != 0) {
+            if (finalVredict > 0 && solutionChosen == finalVredict && totalReward != 0) {
                 calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
                     / (100 * governanceDat.getProposalTotalVoteValue(proposalId));
 
-                pendingVoteReward = 
-                    pendingVoteReward 
-                    + calcReward 
-                    + governanceDat.getDepositedTokens(_memberAddress, proposalId, "V");
-            } else if (!governanceDat.punishVoters() && finalVredict > 0 && returnedTokensFlag == 0 && totalReward != 0) {
+                pendingVoteReward = pendingVoteReward + calcReward;
+            } else if (!governanceDat.punishVoters() && finalVredict > 0 && totalReward != 0) {
                 calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
                     / (100 * governanceDat.getProposalTotalVoteValue(proposalId));
                 pendingVoteReward = pendingVoteReward + calcReward;

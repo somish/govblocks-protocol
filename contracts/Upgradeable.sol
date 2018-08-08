@@ -13,17 +13,27 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-/**
- * @title Upgradeable interface for all internal contracts of a DApp.
- */
-
 pragma solidity 0.4.24;
+
+import "./Master.sol";
 
 contract Upgradeable{
 
-	function updateDependencyAddresses() public;
+    Master public master;
 
-	function changeGBTSAddress(address _GBTSAddress) public;
+    modifier onlyInternal {
+        require(master.isInternal(msg.sender));
+        _;
+    }
 
-	function changeMasterAddress(address _MasterAddress) public;
+	function updateDependencyAddresses() public; //To be implemented by every contract depending on its needs
+
+	function changeMasterAddress(address _masterContractAddress) public {
+        if (address(master) == address(0)){
+            master = Master(_masterContractAddress);
+        } else {
+            require(master.isInternal(msg.sender));
+            master = Master(_masterContractAddress);
+        }
+    }
 }

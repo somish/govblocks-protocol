@@ -37,15 +37,14 @@ contract GovernanceData is Upgradeable {
         address indexed solutionOwner, 
         uint256 indexed solutionId, 
         string solutionDescHash, 
-        uint256 dateAdd, 
-        uint256 solutionStake
+        uint256 dateAdd
     );
 
     event Reputation(
         address indexed from, 
         uint256 indexed proposalId, 
         string description, 
-        uint32 reputationPoints,
+        uint256 reputationPoints,
         bytes4 typeOf
     );
 
@@ -53,7 +52,6 @@ contract GovernanceData is Upgradeable {
         address indexed from, 
         uint256 indexed proposalId, 
         uint256 dateAdd, 
-        uint256 voteStakeGBT, 
         uint256 voteId
     );
 
@@ -69,16 +67,13 @@ contract GovernanceData is Upgradeable {
         string proposalDescHash, 
         uint256 dateAdd
     );
-    
-    event ProposalStake(address indexed proposalOwner, uint256 indexed proposalId, uint dateUp, uint256 proposalStake);
-    
+        
     event ProposalWithSolution(
         address indexed proposalOwner, 
         uint256 indexed proposalId, 
         string proposalDescHash, 
         string solutionDescHash, 
-        uint256 dateAdd, 
-        uint stake
+        uint256 dateAdd
     );
 
     /// @dev Calls proposal with solution event 
@@ -87,31 +82,17 @@ contract GovernanceData is Upgradeable {
     /// @param proposalDescHash Description hash of proposal having short and long description for proposal
     /// @param solutionDescHash Description hash of Solution 
     /// @param dateAdd Date when proposal was created
-    /// @param stake GBT stake at the time of proposal creation
     function callProposalWithSolutionEvent(
         address proposalOwner, 
         uint256 proposalId, 
         string proposalDescHash, 
         string solutionDescHash, 
-        uint256 dateAdd, 
-        uint stake
+        uint256 dateAdd
     )
         public
         onlyInternal 
     {
-        emit ProposalWithSolution(proposalOwner, proposalId, proposalDescHash, solutionDescHash, dateAdd, stake);
-    }
-
-    /// @dev Calls proposal with stake event
-    /// @param _proposalOwner Address of the member who has created the proposal
-    /// @param _proposalId Id of proposal
-    /// @param _dateUp Date when the proposal description was updated
-    /// @param _proposalStake Proposal stake in GBT
-    function callProposalStakeEvent(address _proposalOwner, uint _proposalId, uint _dateUp, uint _proposalStake) 
-        public
-        onlyInternal
-    {
-        emit ProposalStake(_proposalOwner, _proposalId, _dateUp, _proposalStake);
+        emit ProposalWithSolution(proposalOwner, proposalId, proposalDescHash, solutionDescHash, dateAdd);
     }
 
     /// @dev Calls proposal version event
@@ -131,19 +112,17 @@ contract GovernanceData is Upgradeable {
     /// @param solutionOwner Member Address who has provided a solution
     /// @param solutionDescHash Solution description hash
     /// @param dateAdd Date the solution was added
-    /// @param solutionStake Stake of the solution provider
     function callSolutionEvent(
         uint256 proposalId, 
         address solutionOwner, 
         uint solutionId, 
         string solutionDescHash, 
-        uint256 dateAdd, 
-        uint256 solutionStake
+        uint256 dateAdd
     ) 
         public
         onlyInternal 
     {
-        emit Solution(proposalId, solutionOwner, solutionId, solutionDescHash, dateAdd, solutionStake);
+        emit Solution(proposalId, solutionOwner, solutionId, solutionDescHash, dateAdd);
     }
 
     /// @dev Calls proposal event
@@ -175,7 +154,7 @@ contract GovernanceData is Upgradeable {
         address _from, 
         uint256 _proposalId, 
         string _description, 
-        uint32 _reputationPoints, 
+        uint _reputationPoints, 
         bytes4 _typeOf
     )
         public
@@ -189,12 +168,11 @@ contract GovernanceData is Upgradeable {
     /// @param _voteId Id of vote
     /// @param _proposalId Id of proposal
     /// @param _dateAdd Date when the vote was casted
-    /// @param _voteStakeGBT Stake in GBT against Vote
-    function callVoteEvent(address _from, uint _proposalId, uint _dateAdd, uint _voteStakeGBT, uint256 _voteId) 
+    function callVoteEvent(address _from, uint _proposalId, uint _dateAdd, uint256 _voteId) 
         public
         onlyInternal 
     {
-        emit Vote(_from, _proposalId, _dateAdd, _voteStakeGBT, _voteId);
+        emit Vote(_from, _proposalId, _dateAdd, _voteId);
     }
 
     /// @dev Calls reward event
@@ -241,15 +219,16 @@ contract GovernanceData is Upgradeable {
     }
 
     struct ProposalData {
-        uint8 currVotingStatus;
         uint8 propStatus;
-        uint8 category;
-        uint8 finalVerdict;
-        uint8 currentVerdict;
-        uint8 versionNumber;
+        uint64 finalVerdict;
+        uint64 currentVerdict;
+        uint currVotingStatus;
+        uint category;
+        uint versionNumber;
         uint totalVoteValue;
         uint totalreward;
         uint commonIncentive;
+        address stakeToken;
     }
 
     struct VotingTypeDetails {
@@ -272,7 +251,7 @@ contract GovernanceData is Upgradeable {
 
     struct Deposit {
         uint amount;
-        uint8 returned;
+        uint returned;
     }
 
     struct SolutionStruct {
@@ -282,100 +261,40 @@ contract GovernanceData is Upgradeable {
 
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
-    mapping(address => uint32) internal allMemberReputationByAddress;
+    mapping(address => uint) internal allMemberReputationByAddress;
     mapping(address => mapping(uint => uint)) internal addressProposalVote;
     mapping(uint => mapping(uint => uint[])) internal proposalRoleVote;
     //mapping(address => uint[]) internal allProposalByMember;
     mapping(address => uint[]) internal allVotesByMember;
-    mapping(address => mapping(uint => mapping(bytes4 => Deposit))) internal allMemberDepositTokens;
     mapping(address => LastReward) internal lastRewardDetails;
 
     uint public quorumPercentage;
     uint public pendingProposalStart;
-    //uint public gbtStakeValue;
-    //uint public membershipScalingFactor;
-    //uint public scalingWeight;
     bool public constructorCheck;
     bool public punishVoters;
     uint public depositPercProposal;
     uint public depositPercSolution;
     uint public depositPercVote;
-    uint public tokenHoldingTime;
     uint public stakeWeight;
     uint public bonusStake;
     uint public reputationWeight;
     uint public bonusReputation;
-    uint32 internal addProposalOwnerPoints;
-    uint32 internal addSolutionOwnerPoints;
-    uint32 internal addMemberPoints;
-    uint32 internal subProposalOwnerPoints;
-    uint32 internal subSolutionOwnerPoints;
-    uint32 internal subMemberPoints;
+    uint public addProposalOwnerPoints;
+    uint public addSolutionOwnerPoints;
+    uint public addMemberPoints;
+    uint public subProposalOwnerPoints;
+    uint public subSolutionOwnerPoints;
+    uint public subMemberPoints;
 
     ProposalStruct[] internal allProposal;
     ProposalVote[] internal allVotes;
     VotingTypeDetails[] internal allVotingTypeDetails;
 
-    Master internal master;
     GBTStandardToken internal gbt;
     Governance internal gov;
-    address internal masterAddress;
-
-    modifier onlyInternal {
-        require(master.isInternal(msg.sender));
-        _;
-    }
-
-    modifier onlyOwner {
-        require(master.isOwner(msg.sender));
-        _;
-    }
-
-    modifier onlyMaster {
-        require(msg.sender == masterAddress);
-        _;
-    }
-
-    /// @dev Changes master's contract address
-    /// @param _masterContractAddress New master contract address
-    function changeMasterAddress(address _masterContractAddress) public {
-        if (masterAddress == address(0))
-            masterAddress = _masterContractAddress;
-        else {
-            master = Master(masterAddress);
-            require(master.isInternal(msg.sender));
-            masterAddress = _masterContractAddress;
-            master = Master(_masterContractAddress);
-        }
-    }
-
-    /// @dev Changes GovBlocks standard token address
-    /// @param _gbtAddress New GovBlocks token address
-    function changeGBTSAddress(address _gbtAddress) public onlyMaster {
-        gbt = GBTStandardToken(_gbtAddress);
-    }
-    /*
-    /// @dev Changes Global objects of the contracts || Uses latest version
-    /// @param contractName Contract name 
-    /// @param contractAddress Contract addresses
-    function changeAddress(bytes4 contractName, address contractAddress) onlyInternal
-    {
-        if(contractName == 'GV'){
-          GOV = Governance(contractAddress);
-        } 
-        else if(contractName == 'SV'){
-          editVotingTypeDetails(0,contractAddress);
-        } 
-        else  if(contractName == 'RB'){
-          editVotingTypeDetails(1,contractAddress);
-        } 
-        else if(contractName == 'FW'){
-          editVotingTypeDetails(2,contractAddress);
-        }
-    }*/
     
     /// @dev updates all dependency addresses to latest ones from Master
-    function updateDependencyAddresses() public onlyInternal {
+    function updateDependencyAddresses() public {
         if (!constructorCheck)
             governanceDataInitiate();
         gov = Governance(master.getLatestAddress("GV"));
@@ -409,15 +328,15 @@ contract GovernanceData is Upgradeable {
     /// @param _subMemberPoints Points that needs to be subtracted 
     ///     from Other members reputation for casting vote against correct solution
     function changeMemberReputationPoints(
-        uint32 _addProposalOwnerPoints, 
-        uint32 _addSolutionOwnerPoints, 
-        uint32 _addMemberPoints, 
-        uint32 _subProposalOwnerPoints, 
-        uint32 _subSolutionOwnerPoints, 
-        uint32 _subMemberPoints
+        uint _addProposalOwnerPoints, 
+        uint _addSolutionOwnerPoints, 
+        uint _addMemberPoints, 
+        uint _subProposalOwnerPoints, 
+        uint _subSolutionOwnerPoints, 
+        uint _subMemberPoints
     ) 
         public 
-        onlyOwner 
+        onlyInternal 
     {
         addProposalOwnerPoints = _addProposalOwnerPoints;
         addSolutionOwnerPoints = _addSolutionOwnerPoints;
@@ -477,53 +396,13 @@ contract GovernanceData is Upgradeable {
         );
     }
 
-    /// @dev Sets the amount being deposited by a member against proposal
-    /// @param _typeOf TypeOf is "P" in case of proposal creation, 
-    ///     "S" in case of providing solution, "V" in case of casting vote i.e. Stating the stage of proposal
-    /// @param _depositAmount Amount to deposit
-    function setDepositTokens(address _memberAddress, uint _proposalId, bytes4 _typeOf, uint _depositAmount) 
-        public 
-        onlyInternal 
-    {
-        allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].amount = _depositAmount;
-    }
-
-    /// @dev Gets the amount being deposited against proposal by a member at different stages of proposal  
-    /// @param _typeOf typeOf is P for Proposal, S for Solution and V for Voting stage of proposal
-    function getDepositedTokens(address _memberAddress, uint _proposalId, bytes4 _typeOf) 
-        public 
-        view 
-        returns(uint) 
-    {
-        return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].amount;
-    }
-
-    /// @dev Checks if the reward has been distributed for particular proposal at specific stage 
-    ///     i.e. returned flag is 0 if reward is not yet distributed
-    function getReturnedTokensFlag(address _memberAddress, uint _proposalId, bytes4 _typeOf) 
-        public 
-        view 
-        returns(uint8) 
-    {
-        return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned;
-    }
-
-    /// @dev Sets returned tokens to be 1 in case the member has claimed the reward and we distributed that 
-    function setReturnedTokensFlag(address _memberAddress, uint _proposalId, bytes4 _typeOf, uint8 _returnedIndex)
-        public 
-        onlyInternal 
-    {
-        allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned = _returnedIndex;
-    }
-
     /// @dev Add vote details such as Solution id to which he has voted and vote value
     function addVote(
         address _memberAddress, 
         uint64[] _solutionChosen, 
-        uint _voteStake, 
         uint _voteValue, 
         uint32 _proposalId, 
-        uint128 _roleId
+        uint _roleId
     ) 
         external 
         onlyInternal
@@ -531,10 +410,8 @@ contract GovernanceData is Upgradeable {
         proposalRoleVote[_proposalId][_roleId].push(allVotes.length);
         allVotesByMember[_memberAddress].push(allVotes.length);
         addressProposalVote[_memberAddress][_proposalId] = allVotes.length;
-        emit Vote(_memberAddress, _proposalId, now, _voteStake, allVotes.length);
+        emit Vote(_memberAddress, _proposalId, now, allVotes.length);
         allVotes.push(ProposalVote(_memberAddress, _solutionChosen, uint208(_voteValue), _proposalId));
-        allProposalData[_proposalId].totalVoteValue = allProposalData[_proposalId].totalVoteValue 
-            + _voteValue;
     }
 
     function getAllVoteIdsByAddress(address _memberAddress) public view returns(uint[]) {
@@ -679,27 +556,27 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Changes stakeWeight that helps in calculation of reward distribution
-    function changeStakeWeight(uint _stakeWeight) public onlyMaster {
+    function changeStakeWeight(uint _stakeWeight) public onlyInternal {
         stakeWeight = _stakeWeight;
     }
 
     /// @dev Changes bonusStake that helps in calculation of reward distribution
-    function changeBonusStake(uint _bonusStake) public onlyMaster {
+    function changeBonusStake(uint _bonusStake) public onlyInternal {
         bonusStake = _bonusStake;
     }
 
     /// @dev Changes reputationWeight that helps in calculation of reward distribution
-    function changeReputationWeight(uint _reputationWeight) public onlyMaster {
+    function changeReputationWeight(uint _reputationWeight) public onlyInternal {
         reputationWeight = _reputationWeight;
     }
 
     /// @dev Changes bonusReputation that helps in calculation of reward distribution
-    function changeBonusReputation(uint _bonusReputation) public onlyMaster {
+    function changeBonusReputation(uint _bonusReputation) public onlyInternal {
         bonusReputation = _bonusReputation;
     }
 
     /// @dev Changes quoram percentage. Value required to pass proposal.
-    function changeQuorumPercentage(uint _quorumPercentage) public onlyMaster {
+    function changeQuorumPercentage(uint _quorumPercentage) public onlyInternal {
         quorumPercentage = _quorumPercentage;
     }
 
@@ -707,57 +584,42 @@ contract GovernanceData is Upgradeable {
         punishVoters = _punish;
     }
 
-    /// @dev Gets reputation points to proceed with updating the member reputation level
-    function getMemberReputationPoints() 
-        public 
-        view 
-        returns(uint32, uint32, uint32, uint32, uint32, uint32) 
-    {
-        return (
-            addProposalOwnerPoints, 
-            addSolutionOwnerPoints, 
-            addMemberPoints, 
-            subProposalOwnerPoints, 
-            subSolutionOwnerPoints, 
-            subMemberPoints
-        );
-    }
-
     /// @dev Changes Proposal owner reputation points that needs to be added at proposal acceptance
-    function changeProposalOwnerAdd(uint32 _repPoints) public onlyMaster {
+    function changeProposalOwnerAdd(uint _repPoints) public onlyInternal {
         addProposalOwnerPoints = _repPoints;
     }
 
     /// @dev Changes Solution owner reputation points that needs to be added if solution has won. 
     ///     (Upvoted with many votes)
-    function changeSolutionOwnerAdd(uint32 _repPoints) public onlyMaster {
+    function changeSolutionOwnerAdd(uint _repPoints) public onlyInternal {
         addSolutionOwnerPoints = _repPoints;
     }
 
     /// @dev Change proposal owner reputation points that needs to be subtracted if proposal gets rejected. 
-    function changeProposalOwnerSub(uint32 _repPoints) public onlyMaster {
+    function changeProposalOwnerSub(uint _repPoints) public onlyInternal {
         subProposalOwnerPoints = _repPoints;
     }
 
     /// @dev Changes solution owner reputation points that needs to be subtracted 
     ///     if solution is downvoted with many votes   
-    function changeSolutionOwnerSub(uint32 _repPoints) public onlyMaster {
+    function changeSolutionOwnerSub(uint _repPoints) public onlyInternal {
         subSolutionOwnerPoints = _repPoints;
     }
 
     /// @dev Change member points that needs to be added when voting in favour of final solution
-    function changeMemberAdd(uint32 _repPoints) public onlyMaster {
+    function changeMemberAdd(uint _repPoints) public onlyInternal {
         addMemberPoints = _repPoints;
     }
 
     /// @dev Change member points that needs to be subtracted when voted against final solution
-    function changeMemberSub(uint32 _repPoints) public onlyMaster {
+    function changeMemberSub(uint _repPoints) public onlyInternal {
         subMemberPoints = _repPoints;
     }
 
     /// @dev Sets proposal category
-    function setProposalCategory(uint _proposalId, uint8 _categoryId) public onlyInternal {
+    function setProposalCategory(uint _proposalId, uint _categoryId, address _stakeToken) public onlyInternal {
         allProposalData[_proposalId].category = _categoryId;
+        allProposalData[_proposalId].stakeToken = _stakeToken;
     }
 
     /// @dev Sets proposal incentive/reward that needs to be distributed at the end of proposal closing
@@ -774,18 +636,18 @@ contract GovernanceData is Upgradeable {
 
     /// @dev Sets proposal current voting id i.e. Which Role id is next in row to vote against proposal
     /// @param _currVotingStatus It is the index to fetch the role id from voting sequence array. 
-    function setProposalCurrentVotingId(uint _proposalId, uint8 _currVotingStatus) public onlyInternal {
+    function setProposalCurrentVotingId(uint _proposalId, uint _currVotingStatus) public onlyInternal {
         allProposalData[_proposalId].currVotingStatus = _currVotingStatus;
     }
 
     /// @dev Updates proposal's intermediateVerdict after every voting layer is passed.
-    function setProposalIntermediateVerdict(uint _proposalId, uint8 _intermediateVerdict) public onlyInternal {
+    function setProposalIntermediateVerdict(uint _proposalId, uint64 _intermediateVerdict) public onlyInternal {
         allProposalData[_proposalId].currentVerdict = _intermediateVerdict;
     }
 
     /// @dev Sets proposal's final verdict once the final voting layer is crossed 
     ///     and voting is final closed for proposal
-    function setProposalFinalVerdict(uint _proposalId, uint8 _finalVerdict) public onlyInternal {
+    function setProposalFinalVerdict(uint _proposalId, uint64 _finalVerdict) public onlyInternal {
         allProposalData[_proposalId].finalVerdict = _finalVerdict;
     }
 
@@ -800,8 +662,8 @@ contract GovernanceData is Upgradeable {
         string _description, 
         uint _proposalId, 
         address _memberAddress, 
-        uint32 _repPoints, 
-        uint32 _repPointsEventLog,
+        uint _repPoints, 
+        uint _repPointsEventLog,
         bytes4 _typeOf
     ) 
         public 
@@ -814,7 +676,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Stores the information of version number of a given proposal. 
     ///     Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _proposalId, string _proposalDescHash) public onlyInternal {
-        uint8 versionNo = allProposalData[_proposalId].versionNumber + 1;
+        uint versionNo = allProposalData[_proposalId].versionNumber + 1;
         emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now);
         setProposalVersion(_proposalId, versionNo);
     }
@@ -828,7 +690,7 @@ contract GovernanceData is Upgradeable {
     function getProposalDetailsById1(uint _proposalId) 
         public 
         view 
-        returns(uint id, address owner, uint dateUpd, uint8 versionNum, uint8 propStatus) 
+        returns(uint id, address owner, uint dateUpd, uint versionNum, uint8 propStatus) 
     {
         return (
             _proposalId, 
@@ -845,10 +707,10 @@ contract GovernanceData is Upgradeable {
         view 
         returns(
             uint id,
-            uint8 category, 
-            uint8 currentVotingId, 
-            uint8 intermediateVerdict, 
-            uint8 finalVerdict, 
+            uint category, 
+            uint currentVotingId, 
+            uint64 intermediateVerdict, 
+            uint64 finalVerdict, 
             address votingTypeAddress, 
             uint totalSolutions
         ) 
@@ -868,7 +730,7 @@ contract GovernanceData is Upgradeable {
     function getProposalDetailsById3(uint _proposalId) 
         public 
         view 
-        returns(uint proposalIndex, uint propStatus, uint8 propCategory, uint8 propStatusId, uint8 finalVerdict) 
+        returns(uint proposalIndex, uint propStatus, uint propCategory, uint8 propStatusId, uint64 finalVerdict) 
     {
         return (
             _proposalId, 
@@ -883,7 +745,7 @@ contract GovernanceData is Upgradeable {
     function getProposalDetailsForSV(address _voter, uint _proposalId) 
         external
         view
-        returns(uint8, uint8, uint8) 
+        returns(uint, uint, uint64) 
     {
         require(addressProposalVote[_voter][_proposalId] == 0);
         require(allProposalData[_proposalId].propStatus == 2);
@@ -966,7 +828,7 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets proposal current voting status i.e. Who is next in voting sequence
-    function getProposalCurrentVotingId(uint _proposalId) public view returns(uint8 _currVotingStatus) {
+    function getProposalCurrentVotingId(uint _proposalId) public view returns(uint _currVotingStatus) {
         return (allProposalData[_proposalId].currVotingStatus);
     }
 
@@ -992,12 +854,12 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets proposal category when given proposal id
-    function getProposalCategory(uint _proposalId) public view returns(uint8 categoryId) {
+    function getProposalCategory(uint _proposalId) public view returns(uint categoryId) {
         return allProposalData[_proposalId].category;
     }
 
     /// @dev Get member's reputation points and it's likely to be updated with time.
-    function getMemberReputation(address _memberAddress) public view returns(uint32 memberPoints) {
+    function getMemberReputation(address _memberAddress) public view returns(uint memberPoints) {
         if (allMemberReputationByAddress[_memberAddress] == 0)
             memberPoints = 1;
         else
@@ -1005,13 +867,34 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Get member's reputation points and scalind data for sv.
-    function getMemberReputationSV(address _memberAddress) public view returns(uint, uint, uint, uint, uint) {
-        return(stakeWeight, bonusStake, reputationWeight, bonusReputation, allMemberReputationByAddress[_memberAddress]);
+    function getMemberReputationSV(address _memberAddress, uint32 _proposalId) 
+        public 
+        view 
+        returns (uint, uint, uint, uint, uint, address, uint) {
+        return(
+            stakeWeight, 
+            bonusStake, 
+            reputationWeight, 
+            bonusReputation, 
+            allMemberReputationByAddress[_memberAddress],
+            allProposalData[_proposalId].stakeToken, 
+            allProposalData[_proposalId].category
+        );
     }
 
     /// @dev Gets Total vote value from all the votes that has been casted against of winning solution
     function getProposalTotalVoteValue(uint _proposalId) public view returns(uint voteValue) {
         voteValue = allProposalData[_proposalId].totalVoteValue;
+    }
+
+    /// @dev Gets stakeToken proposal
+    function getStakeToken(uint _proposalId) public view returns(address) {
+        return allProposalData[_proposalId].stakeToken;
+    }
+
+    /// @dev Gets stakeToken and sub cat proposal
+    function getTokenAndSubCat(uint _proposalId) public view returns(address, uint) {
+        return (allProposalData[_proposalId].stakeToken, allProposalData[_proposalId].category);
     }
 
     /// @dev Gets Total number of proposal created till now in dApp
@@ -1044,14 +927,16 @@ contract GovernanceData is Upgradeable {
     function addNewProposal(
         uint _proposalId, 
         address _memberAddress, 
-        uint8 _categoryId, 
-        address _votingTypeAddress
+        uint _categoryId, 
+        address _votingTypeAddress,
+        address _stakeToken
     ) 
         public 
         onlyInternal 
     {
         allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress));
         allProposalData[_proposalId].category = _categoryId;
+        allProposalData[_proposalId].stakeToken = _stakeToken;
     }
 
     /// @dev Creates new proposal
@@ -1068,28 +953,8 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets Intermidiate solution is while voting is still in progress by other voting layers
-    function getProposalIntermediateVerdict(uint _proposalId) public view returns(uint8) {
+    function getProposalIntermediateVerdict(uint _proposalId) public view returns(uint64) {
         return allProposalData[_proposalId].currentVerdict;
-    }
-
-    /// @dev Change token holding time i.e. When user submits stake, 
-    ///     Few tokens gets deposited and rest is locked for a period of time.
-    function changeTokenHoldingTime(uint _time) public onlyOwner {
-        tokenHoldingTime = _time;
-    }
-
-    /// @dev Get total deposit tokens against member and proposal Id with type of (proposal/solution/vote); 
-    function getDepositTokensByAddressProposal(address _memberAddress, uint _proposalId) 
-        public 
-        view 
-        returns(uint, uint , uint , uint) 
-    {
-        return (
-            _proposalId, 
-            getDepositedTokens(_memberAddress, _proposalId, "P"), 
-            getDepositedTokens(_memberAddress, _proposalId, "S"), 
-            getDepositedTokens(_memberAddress, _proposalId, "V")
-        );
     }
 
     /// @dev Gets statuses of proposals
@@ -1175,22 +1040,6 @@ contract GovernanceData is Upgradeable {
         }
     }
 
-    /// @dev Get Total tokens deposited by member till date against all proposal.
-    /// @return depositForCreatingProposal tokens deposited for crating proposals so far
-    /// @return depositForProposingSolution Total amount that has been deposited for proposing solutions
-    /// @return depositForCastingVote Total amount that has been deposited when casting vote against proposals
-    function getAllDepositTokensByAddress(address _memberAddress) 
-        public 
-        view 
-        returns(uint depositForCreatingProposal, uint depositForProposingSolution, uint depositForCastingVote) 
-    {
-        for (uint i = 0; i < allProposal.length; i++) {
-            depositForCreatingProposal = depositForCreatingProposal + getDepositedTokens(_memberAddress, i, "P");
-            depositForProposingSolution = depositForProposingSolution + getDepositedTokens(_memberAddress, i, "S");
-            depositForCastingVote = depositForCastingVote + getDepositedTokens(_memberAddress, i, "V");
-        }
-    }
-
     /// @dev Gets All the solution ids provided by a member so far
     /// @param _memberAddress Address of member whose address we need to fetch
     /// @return proposalIds All the proposal ids array to which the solution being provided
@@ -1235,7 +1084,6 @@ contract GovernanceData is Upgradeable {
         depositPercProposal = 30;
         depositPercSolution = 30;
         depositPercVote = 40;
-        tokenHoldingTime = 259200; // In seconds
     }
 
     /// @dev Sets Voting type details such as Voting type name and address
@@ -1255,7 +1103,7 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Sets version number of proposal i.e. Version number increases everytime the proposal is modified
-    function setProposalVersion(uint _proposalId, uint8 _versionNum) internal {
+    function setProposalVersion(uint _proposalId, uint _versionNum) internal {
         allProposalData[_proposalId].versionNumber = _versionNum;
     }
 
