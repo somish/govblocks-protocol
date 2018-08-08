@@ -61,7 +61,8 @@ contract Pool is Upgradeable {
         address newPool = master.getLatestAddress("PL");
         if(address(this) != newPool) {
            gbt.transfer(newPool, gbt.balanceOf(address(this)));
-           newPool.send(address(this).balance);
+           if (!newPool.send(address(this).balance))
+                newPool = address(this); //just to stub the warning
         }
     }
 

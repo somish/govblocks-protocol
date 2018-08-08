@@ -17,11 +17,10 @@ import "./Master.sol";
 import "./GovernanceData.sol";
 import "./MemberRoles.sol";
 import "./Upgradeable.sol";
-
+import "./ProposalCategoryAdder.sol";
 
 contract ProposalCategory is Upgradeable {
     bool public constructorCheck;
-    
     struct Category {
         string name;
         uint[] memberRoleSequence;
@@ -442,110 +441,68 @@ contract ProposalCategory is Upgradeable {
         catId = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryId;
     }
 
+    function addInitialSubC(
+        string _subCategoryName, 
+        string _actionHash, 
+        uint _mainCategoryId, 
+        address _contractAddress,
+        bytes2 _contractName,
+        uint[] _stakeAndIncentive, 
+        uint8[] _rewardPercentage
+    ) 
+        external 
+    {
+        require(allSubCategory.length < 13);
+        allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
+        allSubCategory.push(SubCategory(
+                _subCategoryName, 
+                _actionHash, 
+                _mainCategoryId, 
+                _contractAddress, 
+                _contractName,
+                _stakeAndIncentive[0],
+                _stakeAndIncentive[1],
+                _stakeAndIncentive[2],
+                _rewardPercentage[0],
+                _rewardPercentage[1],
+                _rewardPercentage[2]
+            )
+        );
+    }
+
+    function getCodeSize(address _addr) internal view returns(uint _size) {
+        assembly {
+            _size := extcodesize(_addr)
+        }
+    }
+
     /// @dev adds second half of the inital categories
     function addInitialSubCategories() internal {
+        uint[] memory stakeInecntive = new uint[](3); 
+        uint8[] memory rewardPerc = new uint8[](3);
+        stakeInecntive[0] = 0;
+        stakeInecntive[1] = 604800;
+        stakeInecntive[2] = 0;
+        rewardPerc[0] = 10;
+        rewardPerc[1] = 20;
+        rewardPerc[2] = 70;
         allSubIdByCategory[0].push(0);
-        // allSubCategory.push(SubCategory("Uncategorized", "", 0, address(0), "EX"));
-        // allSubIdByCategory[1].push(1);
-        // allSubCategory.push(SubCategory(
-        //         "Add new member role",
-        //         "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
-        //         1,
-        //         address(0),
-        //         "MR"
-        //     )
-        // );
-        // allSubIdByCategory[1].push(2);
-        // allSubCategory.push(SubCategory(
-        //         "Update member role",
-        //         "QmbsXSZ3rNPd8mDizVBV33GVg1ThveUD5YnM338wisEJyd",
-        //         1,
-        //         address(0),
-        //         "MR"
-        //     )
-        // );        
-        // allSubIdByCategory[2].push(3);
-        // allSubCategory.push(SubCategory(
-        //         "Add new category",
-        //         "QmNazQ3hQ5mssf8KAYkjxwVjwZvM9XjZgrJ1kf3QUmprCB",
-        //         2,
-        //         address(0),
-        //         "PC"
-        //     )
-        // );
-        // allSubIdByCategory[2].push(4);
-        // allSubCategory.push(SubCategory(
-        //         "Edit category",
-        //         "QmYWSuy3aZFK1Yavpq5Pm89rg6esyZ8rn5CNf6PdgJCpR6",
-        //         2,
-        //         address(0),
-        //         "PC"
-        //     )
-        // );
-        // allSubIdByCategory[2].push(5);
-        // allSubCategory.push(SubCategory(
-        //         "Add new sub category",
-        //         "QmeyPccQzMTNxSavJp4dL1J88zzb4xNESn5wLTPzqMFFJX",
-        //         2,
-        //         address(0),
-        //         "PC"
-        //     )
-        // );
-        // allSubIdByCategory[2].push(6);
-        // allSubCategory.push(SubCategory(
-        //         "Edit sub category",
-        //         "QmVeSBUghB71WHhnT8tXajSctnfz1fYx6fWXc9wXHJ8r2p",
-        //         2,
-        //         address(0),
-        //         "PC"
-        //     )
-        // );
-        // allSubIdByCategory[3].push(7);
-        // allSubCategory.push(SubCategory(
-        //         "Configure parameters",
-        //         "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
-        //         3,
-        //         address(0),
-        //         "MS"
-        //     )
-        // );
-        // allSubIdByCategory[4].push(8);
-        // allSubCategory.push(SubCategory(
-        //         "Transfer Ether",
-        //         "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
-        //         4,
-        //         address(0),
-        //         "PL"
-        //     )
-        // );
-        // allSubIdByCategory[4].push(9);
-        // allSubCategory.push(SubCategory(
-        //         "Transfer Token",
-        //         "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB",
-        //         4,
-        //         address(0),
-        //         "PL"
-        //     )
-        // );
-        // allSubIdByCategory[5].push(10);
-        // allSubCategory.push(SubCategory(
-        //         "Add new version",
-        //         "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w",
-        //         5,
-        //         address(0),
-        //         "MS"
-        //     )
-        // );
-        // allSubIdByCategory[5].push(11);
-        // allSubCategory.push(SubCategory(
-        //         "Add new contract",
-        //         "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
-        //         5,
-        //         address(0),
-        //         "MS"
-        //     )
-        // );
-        // allSubIdByCategory[6].push(12);
-        // allSubCategory.push(SubCategory("Others, not specified", "", 4, address(0), "EX"));
+        allSubCategory.push(SubCategory(
+                "Uncategorized",
+                "", 
+                0, 
+                address(0), 
+                "EX", 
+                stakeInecntive[0], 
+                stakeInecntive[1], 
+                stakeInecntive[2],
+                rewardPerc[0], 
+                rewardPerc[1], 
+                rewardPerc[2]
+            )
+        );
+        if (getCodeSize(0xe96edEECf546631eAC4E23d73fD8802480a09bB5) > 0)        //kovan testnet
+            ProposalCategoryAdder proposalCategoryAdder = ProposalCategoryAdder(0xe96edEECf546631eAC4E23d73fD8802480a09bB5);
+        proposalCategoryAdder.addSubC();
     }
 }
