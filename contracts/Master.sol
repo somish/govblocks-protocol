@@ -42,6 +42,7 @@ contract Master is Ownable, Upgradeable {
         gbm = GovBlocksMaster(msg.sender);
         dAppName = _gbUserName;
         owner = _ownerAddress;
+        versionDates.push(now);
         addContractNames();
     }
 
@@ -59,7 +60,7 @@ contract Master is Ownable, Upgradeable {
     /// @dev Checks if the address is authorized to make changes.
     ///     owner allowed for debugging only, will be removed before launch.
     function isAuth() public view returns(bool check) {
-        if(versionDates.length < 1) {
+        if(versionDates.length < 2) {
             if(owner == msg.sender)
                 check = true;
         } else {
@@ -85,7 +86,7 @@ contract Master is Ownable, Upgradeable {
     function addNewVersion(address[] _contractAddresses) public {
         require(isAuth());
 
-        if(versionDates.length == 0) {
+        if(versionDates.length < 2) {
             govern = new Governed();
             GovernChecker governChecker = GovernChecker(govern.getGovernCheckerAddress());
             if(getCodeSize(address(governChecker)) > 0 ){
@@ -95,13 +96,13 @@ contract Master is Ownable, Upgradeable {
             dAppToken = gbm.getDappTokenAddress(dAppName);
         }
 
-        allContractVersions[versionDates.length]["MS"] = address(this);
+        allContractVersions[versionDates.length - 1]["MS"] = address(this);
 
         for (uint i = 0; i < allContractNames.length - 2; i++) {
-            allContractVersions[versionDates.length][allContractNames[i+1]] = _contractAddresses[i];
+            allContractVersions[versionDates.length - 1][allContractNames[i+1]] = _contractAddresses[i];
         }
 
-        allContractVersions[versionDates.length]["GS"] = gbm.getGBTAddress();
+        allContractVersions[versionDates.length - 1]["GS"] = gbm.getGBTAddress();
 
         versionDates.push(now);
         changeMasterAddress(address(this));
@@ -172,7 +173,7 @@ contract Master is Ownable, Upgradeable {
     /// @param _contractName Contract name to fetch
     function getLatestAddress(bytes2 _contractName) public view returns(address contractAddress) {
         contractAddress =
-            allContractVersions[versionDates.length][_contractName];
+            allContractVersions[versionDates.length - 1][_contractName];
     }
 
     /// @dev Configures global parameters i.e. Voting or Reputation parameters
