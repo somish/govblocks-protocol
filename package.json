@@ -1,0 +1,31 @@
+{
+  "name": "govblocks-protocol",
+  "version": "1.0.0",
+  "description": "GovBlocks Smart Contracts",
+  "main": "truffle-config.js",
+  "dependencies": {
+    "openzeppelin-solidity": "^1.11.0",
+    "solc": "^0.4.24",
+    "truffle": "^4.1.13",
+    "truffle-fast-compile": "0.0.3",
+    "truffle-flattener": "^1.2.6",
+    "truffle-hdwallet-provider": "^0.0.5"
+  },
+  "devDependencies": {
+    "ganache-cli": "^6.1.6",
+    "mocha": "^5.2.0",
+    "solidity-coverage": "^0.5.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/somish/govblocks-protocol.git"
+  },
+  "contributors": [
+    "Mudit Gupta <guptamudit@ymail.com>"
+  ],
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/somish/govblocks-protocol/issues"
+  },
+  "homepage": "https://github.com/somish/govblocks-protocol#readme"
+}

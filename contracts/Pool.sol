@@ -125,13 +125,13 @@ contract Pool is Upgradeable {
                 if (
                     proposalStatus > 2 && 
                     finalVredict > 0 && 
-                    governanceDat.getProposalTotalReward(i) != 0
+                    governanceDat.getProposalIncentive(i) != 0
                 ) 
                 {
                     category = proposalCategory.getCategoryIdBySubId(category);
                     calcReward = 
                         proposalCategory.getRewardPercProposal(category) 
-                        * governanceDat.getProposalTotalReward(i)
+                        * governanceDat.getProposalIncentive(i)
                         / 100;
                     pendingProposalReward = pendingProposalReward + calcReward;
                 }

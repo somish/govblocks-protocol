@@ -293,7 +293,6 @@ contract SimpleVoting is Upgradeable {
         if (subCategory == 10) {
             upgrade();
         }
-        governanceDat.setProposalTotalReward(_proposalId, governanceDat.getProposalIncentive(_proposalId));
     }
 
     /// @dev This does the remaining functionality of closing proposal vote

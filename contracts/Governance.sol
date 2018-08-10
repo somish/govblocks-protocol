@@ -265,22 +265,6 @@ contract Governance is Upgradeable {
         governanceDat.setProposalDateUpd(_proposalId);
     }
 
-    /// @dev Updating proposal details after reward being distributed
-    /// @param _proposalId Proposal id
-    /// @param _totalRewardToDistribute Total reward to be distributed 
-    /// @param _totalVoteValue Total vote value not favourable to the solution
-    function setProposalDetails(
-        uint _proposalId, 
-        uint _totalRewardToDistribute, 
-        uint _totalVoteValue
-    ) 
-    public 
-    onlyInternal 
-    {
-        governanceDat.setProposalTotalReward(_proposalId, _totalRewardToDistribute);
-        governanceDat.setProposalTotalVoteValue(_proposalId, _totalVoteValue);
-    }
-
     /// @dev Calculates member reward to be claimed
     /// @param _memberAddress Member address
     /// @return rewardToClaim Rewards to be claimed
@@ -342,7 +326,7 @@ contract Governance is Upgradeable {
                 proposalId = _proposalId;
                 proposalStatus = governanceDat.getProposalStatus(_proposalId);
                 finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
-                totalReward = governanceDat.getProposalTotalReward(_proposalId);
+                totalReward = governanceDat.getProposalIncentive(_proposalId);
                 category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
                 break;
             }
@@ -418,11 +402,11 @@ contract Governance is Upgradeable {
                     lastIndex = i;
                 else if (proposalStatus > 2 && 
                     finalVredict > 0 && 
-                    governanceDat.getProposalTotalReward(i) != 0
+                    governanceDat.getProposalIncentive(i) != 0
                 ) {
                     category = proposalCategory.getCategoryIdBySubId(category);
                     calcReward = proposalCategory.getRewardPercProposal(category) 
-                        * governanceDat.getProposalTotalReward(i)
+                        * governanceDat.getProposalIncentive(i)
                         / 100;
 
                     tempfinalRewardToDistribute = 
@@ -643,7 +627,7 @@ contract Governance is Upgradeable {
         solutionChosen = governanceDat.getSolutionByVoteIdAndIndex(_voteId, 0);
         proposalStatus = governanceDat.getProposalStatus(proposalId);
         finalVerdict = governanceDat.getProposalFinalVerdict(proposalId);
-        totalReward = governanceDat.getProposalTotalReward(proposalId);
+        totalReward = governanceDat.getProposalIncentive(proposalId);
         category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(proposalId));
         totalVoteValueProposal = governanceDat.getProposalTotalVoteValue(proposalId);
     }

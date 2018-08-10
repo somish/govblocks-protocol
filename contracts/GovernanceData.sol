@@ -226,7 +226,6 @@ contract GovernanceData is Upgradeable {
         uint category;
         uint versionNumber;
         uint totalVoteValue;
-        uint totalreward;
         uint commonIncentive;
         address stakeToken;
     }
@@ -756,15 +755,6 @@ contract GovernanceData is Upgradeable {
         );
     }
 
-    /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById4(uint _proposalId) 
-        public 
-        view 
-        returns(uint totalTokenToDistribute, uint totalVoteValue) 
-    {
-        return (allProposalData[_proposalId].totalreward, allProposalData[_proposalId].totalVoteValue);
-    }
-
     /// @dev Gets proposal details of given proposal id
     /// @param totalVoteValue Total value of votes that has been casted so far against proposal
     /// @param totalSolutions Total number of solutions proposed till now against proposal
@@ -830,12 +820,6 @@ contract GovernanceData is Upgradeable {
     /// @dev Gets proposal current voting status i.e. Who is next in voting sequence
     function getProposalCurrentVotingId(uint _proposalId) public view returns(uint _currVotingStatus) {
         return (allProposalData[_proposalId].currVotingStatus);
-    }
-
-    /// @dev Get Total Amount that has been collected at the end of voting to distribute further 
-    ///     i.e. Total token to distribute
-    function getProposalTotalReward(uint _proposalId) public view returns(uint) {
-        return allProposalData[_proposalId].totalreward;
     }
 
     /// @dev Get Total number of Solutions being proposed against proposal.
@@ -910,12 +894,6 @@ contract GovernanceData is Upgradeable {
     /// @dev Sets Total calculated vote value from all the votes that has been casted against of winning solution
     function setProposalTotalVoteValue(uint _proposalId, uint _voteValue) public onlyInternal {
         allProposalData[_proposalId].totalVoteValue = _voteValue;
-    }
-
-    /// @dev Get Total Amount that has been collected at the end of voting to distribute further 
-    ///     i.e. Total token to distribute
-    function setProposalTotalReward(uint _proposalId, uint _totalreward) public onlyInternal {
-        allProposalData[_proposalId].totalreward = _totalreward;
     }
 
     /// @dev Changes status from pending proposal to start proposal
