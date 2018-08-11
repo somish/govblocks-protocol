@@ -250,12 +250,13 @@ contract GovernanceData is Upgradeable {
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(address => uint) internal allMemberReputationByAddress;
     mapping(address => LastReward) internal lastRewardDetails;
-
+    mapping(uint => bool) public proposalPaused;
+    
     uint public quorumPercentage;
     uint public pendingProposalStart;
     bool public constructorCheck;
     bool public punishVoters;
-    bool public dAppTokenSupportsLocking; //TODO use
+    bool public dAppTokenSupportsLocking;
     uint public stakeWeight;
     uint public bonusStake;
     uint public reputationWeight;
@@ -339,6 +340,16 @@ contract GovernanceData is Upgradeable {
     ///     (For providing correct solution Reward)
     function setLastRewardIdOfSolutionProposals(address _memberAddress, uint _proposalId) public onlyInternal {
         lastRewardDetails[_memberAddress].lastRewardSolutionProposalId = _proposalId;
+    }
+
+    function setProposalPaused(uint _proposalId, bool _paused) public onlyInternal {
+        proposalPaused[_proposalId] = _paused;
+    }
+
+    function resumeProposal(uint _proposalId) public onlyInternal {
+        require(proposalPaused[_proposalId]);
+        proposalPaused[_proposalId] = false;
+        allProposal[_proposalId].dateUpd = now;
     }
 
     /// @dev Gets last Proposal id till the reward has been distributed (Proposal creation and acceptance)

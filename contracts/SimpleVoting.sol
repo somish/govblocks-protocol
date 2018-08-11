@@ -416,6 +416,9 @@ contract SimpleVoting is Upgradeable {
         uint pStatus;
         uint _closingTime;
         uint _majorityVote;
+
+        require (!governanceDat.proposalPaused(_proposalId));
+        
         (, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById1(_proposalId);
         (, _majorityVote, _closingTime) = proposalCategory.getCategoryData3(
             _category, 
