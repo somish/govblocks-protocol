@@ -19,18 +19,16 @@ import "./Master.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./GBTStandardToken.sol";
 import "./Upgradeable.sol";
-import "./SimpleVoting.sol";
 import "./Governance.sol";
 import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
-
+import "./VotingType.sol";
 
 contract Pool is Upgradeable {
     using SafeMath for uint;
 
     address public masterAddress;
     Master internal master;
-    SimpleVoting internal simpleVoting;
     GBTStandardToken internal gbt;
     Governance internal gov;
     GovernanceData internal governanceDat;
@@ -51,7 +49,6 @@ contract Pool is Upgradeable {
     function updateDependencyAddresses() public {
         master = Master(masterAddress);
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
-        simpleVoting = SimpleVoting(master.getLatestAddress("SV"));
         gov = Governance(master.getLatestAddress("GV"));
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
@@ -74,10 +71,6 @@ contract Pool is Upgradeable {
         gbt.buyToken.value(_wei)();
     }
 
-    function putDeposit(address _memberAddress, uint _amount) public returns(bool) {
-        return gbt.transferFrom(_memberAddress, address(this), _amount);
-    }
-
     /// @dev user can calim the tokens rewarded them till now
     function claimReward(address _claimer) public {
         uint rewardToClaim = gov.calculateMemberReward(_claimer);
@@ -86,26 +79,30 @@ contract Pool is Upgradeable {
         }
     }
 
-    /// @dev checks and closes proposal if required
-    function checkRoleVoteClosing(uint _proposalId, uint32 _roleId, address _memberAddress) public {
-        uint gasLeft = gasleft();
-        if (gov.checkForClosing(_proposalId, _roleId) == 1) {
-            simpleVoting.closeProposalVote(_proposalId);
-            _memberAddress.transfer((gasLeft - gasleft()) * uint256(10) ** 9);
-        }
-    }
+    // /// @dev checks and closes proposal if required
+    // function checkRoleVoteClosing(uint _proposalId, uint32 _roleId, address _memberAddress) public {
+    //     uint gasLeft = gasleft();
+    //     if (simpleVoting.checkForClosing(_proposalId, _roleId) == 1) {
+    //         simpleVoting.closeProposalVote(_proposalId);
+    //         _memberAddress.transfer((gasLeft - gasleft()) * uint256(10) ** 9);
+    //     }
+    // }
 
     function getPendingReward() public view returns (uint pendingReward) {
         uint lastRewardProposalId;
         uint lastRewardSolutionProposalId;
-        uint lastRewardVoteId;
-        (lastRewardProposalId, lastRewardSolutionProposalId, lastRewardVoteId) = 
+        (lastRewardProposalId, lastRewardSolutionProposalId) = 
             governanceDat.getAllidsOfLastReward(msg.sender);
 
         pendingReward = 
             getPendingProposalReward(msg.sender, lastRewardProposalId) 
-            + getPendingSolutionReward(msg.sender, lastRewardSolutionProposalId) 
-            + getPendingVoteReward(msg.sender, lastRewardVoteId);
+            + getPendingSolutionReward(msg.sender, lastRewardSolutionProposalId);
+
+        uint votingTypes = governanceDat.getVotingTypeLength();
+        for(uint i = 0; i < votingTypes; i++) {
+            VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
+            pendingReward += votingType.getPendingReward(msg.sender);
+        }
     }
 
     function getPendingProposalReward(address _memberAddress, uint _lastRewardProposalId)
@@ -159,40 +156,6 @@ contract Pool is Upgradeable {
             if (finalVerdict > 0 && finalVerdict == solutionId && proposalId == i) {
                 calcReward = (proposalCategory.getRewardPercSolution(category) * totalReward) / 100;
                 pendingSolutionReward = pendingSolutionReward + calcReward;                
-            }
-        }
-    }
-
-    function getPendingVoteReward(address _memberAddress, uint _lastRewardVoteId)
-        public
-        view
-        returns (uint pendingVoteReward)
-    {
-        uint i;
-        uint totalVotes = governanceDat.getTotalNumberOfVotesByAddress(_memberAddress);
-        uint voteId;
-        uint proposalId;
-        uint solutionChosen;
-        uint finalVredict;
-        uint voteValue;
-        uint totalReward;
-        uint category;
-        uint calcReward;
-        for (i = _lastRewardVoteId; i < totalVotes; i++) {
-            voteId = governanceDat.getVoteIdOfNthVoteOfMember(_memberAddress, i);
-            (, , , proposalId) = governanceDat.getVoteDetailById(voteId);
-            (solutionChosen, , finalVredict, voteValue, totalReward, category, ) = 
-                gov.getVoteDetailsToCalculateReward(_memberAddress, i);
-
-            if (finalVredict > 0 && solutionChosen == finalVredict && totalReward != 0) {
-                calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
-                    / (100 * governanceDat.getProposalTotalVoteValue(proposalId));
-
-                pendingVoteReward = pendingVoteReward + calcReward;
-            } else if (!governanceDat.punishVoters() && finalVredict > 0 && totalReward != 0) {
-                calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
-                    / (100 * governanceDat.getProposalTotalVoteValue(proposalId));
-                pendingVoteReward = pendingVoteReward + calcReward;
             }
         }
     }

@@ -131,6 +131,15 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
+            "Add new voting type",
+            "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
+            5,
+            address(0),
+            "MS",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
             "Others, not specified",
             "", 
             4, 

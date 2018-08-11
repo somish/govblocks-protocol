@@ -28,5 +28,13 @@ contract VotingType {
 
     function closeProposalVote(uint _proposalId) public;
 
+    function getTotalNumberOfVotesByAddress(address _memberAddress) public view returns(uint);
+
+    function claimVoteReward(address _memberAddress) public returns(uint);
+
+    function getPendingReward(address _memberAddress) public view returns(uint);
+
     function giveRewardAfterFinalDecision(uint _proposalId) internal;
+
+    function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) public view returns(uint length);
 }

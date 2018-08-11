@@ -36,7 +36,6 @@ contract Governance is Upgradeable {
     ProposalCategory internal proposalCategory;
     GovernanceData internal governanceDat;
     Pool internal pool;
-    VotingType internal votingType;
     EventCaller internal eventCaller;
     address internal dAppToken;
 
@@ -57,7 +56,6 @@ contract Governance is Upgradeable {
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
         poolAddress = master.getLatestAddress("PL");
-        votingType = VotingType(master.getLatestAddress("SV"));
         pool = Pool(poolAddress);
         govBlocksToken = GBTStandardToken(master.getLatestAddress("GS"));
         eventCaller = EventCaller(master.getEventCallerAddress());
@@ -198,38 +196,6 @@ contract Governance is Upgradeable {
         callCloseEvent(_proposalId);
     }
 
-    /// @dev Checks If the proposal voting time is up and it's ready to close 
-    ///      i.e. Closevalue is 1 in case of closing, 0 otherwise!
-    /// @param _proposalId Proposal id to which closing value is being checked
-    /// @param _roleId Voting will gets close for the role id provided here.
-    function checkForClosing(uint _proposalId, uint _roleId) public view returns(uint8 closeValue) {
-        uint dateUpdate;
-        uint pStatus;
-        uint _closingTime;
-        uint _majorityVote;
-        (, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById1(_proposalId);
-        uint _categoryId = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
-        (, _majorityVote, _closingTime) = proposalCategory.getCategoryData3(
-            _categoryId, 
-            governanceDat.getProposalCurrentVotingId(_proposalId)
-        );
-
-        if (pStatus == 2 && _roleId != 2 && _roleId != 0) {
-            if (SafeMath.add(dateUpdate, _closingTime) <= now || 
-                governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, _roleId) 
-                == memberRole.getAllMemberLength(_roleId)
-            )
-                closeValue = 1;
-        } else if (pStatus == 2) {
-            if (SafeMath.add(dateUpdate, _closingTime) <= now)
-                closeValue = 1;
-        } else if (pStatus > 2) {
-            closeValue = 2;
-        } else {
-            closeValue = 0;
-        }
-    }
-
     /// @dev Changes pending proposal start variable
     function changePendingProposalStart() public onlyInternal {
         uint pendingPS = governanceDat.pendingProposalStart();
@@ -271,14 +237,18 @@ contract Governance is Upgradeable {
     function calculateMemberReward(address _memberAddress) public returns(uint tempFinalRewardToDistribute) {
         uint lastRewardProposalId;
         uint lastRewardSolutionProposalId;
-        uint lastRewardVoteId;
-        (lastRewardProposalId, lastRewardSolutionProposalId, lastRewardVoteId) = 
+        (lastRewardProposalId, lastRewardSolutionProposalId) = 
             governanceDat.getAllidsOfLastReward(_memberAddress);
 
         tempFinalRewardToDistribute = 
             calculateProposalReward(_memberAddress, lastRewardProposalId) 
-            + calculateSolutionReward(_memberAddress, lastRewardSolutionProposalId) 
-            + calculateVoteReward(_memberAddress, lastRewardVoteId);
+            + calculateSolutionReward(_memberAddress, lastRewardSolutionProposalId);
+        uint votingTypes = governanceDat.getVotingTypeLength();
+        for(uint i = 0; i < votingTypes; i++) {
+            VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
+            tempFinalRewardToDistribute += votingType.claimVoteReward(_memberAddress);
+        }
+
     }
 
     /// @dev Gets member details
@@ -339,8 +309,9 @@ contract Governance is Upgradeable {
     function getAllVoteIdsLengthByProposal(uint _proposalId) public view returns(uint totalVotes) {
         // memberRole=MemberRoles(MRAddress);
         uint length = memberRole.getTotalMemberRoles();
+        VotingType votingType = VotingType(governanceDat.getProposalVotingAddress(_proposalId));
         for (uint i = 0; i < length; i++) {
-            totalVotes = totalVotes + governanceDat.getAllVoteIdsLengthByProposalRole(_proposalId, i);
+            totalVotes = totalVotes + votingType.getAllVoteIdsLengthByProposalRole(_proposalId, i);
         }
     }
 
@@ -350,7 +321,8 @@ contract Governance is Upgradeable {
         uint subCategory = governanceDat.getProposalCategory(_proposalId);
         uint _categoryId = proposalCategory.getCategoryIdBySubId(subCategory);
         uint closingTime = proposalCategory.getClosingTimeAtIndex(_categoryId, 0) + now;
-        eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, address(votingType), closingTime);
+        address votingType = governanceDat.getProposalVotingAddress(_proposalId);
+        eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
     }
 
     /// @dev Edits the details of an existing proposal and creates new version
@@ -529,108 +501,6 @@ contract Governance is Upgradeable {
             );
         }
     }
-    
-    /// @dev Calculate reward for casting vote against member
-    /// @param _memberAddress Address of member who claimed the reward
-    /// @param _lastRewardVoteId Last vote id till which the reward being distributed
-    function calculateVoteReward(
-        address _memberAddress, 
-        uint _lastRewardVoteId
-    ) 
-        internal  
-        returns(uint tempfinalRewardToDistribute) 
-    {
-
-        uint lastIndex = 0;
-        uint i;
-        uint totalVotes = governanceDat.getTotalNumberOfVotesByAddress(_memberAddress);
-        uint tempfinalReward;
-        uint voteId;
-        uint proposalId;
-        for (i = _lastRewardVoteId; i < totalVotes; i++) {
-            voteId = governanceDat.getVoteIdOfNthVoteOfMember(_memberAddress, i);
-            (, , , proposalId) = governanceDat.getVoteDetailById(voteId);
-            (tempfinalReward, lastIndex) = calculateVoteReward1(_memberAddress, i, proposalId);
-            tempfinalRewardToDistribute = tempfinalRewardToDistribute + tempfinalReward;
-        }
-        if (lastIndex == 0)
-            lastIndex = i;
-        governanceDat.setLastRewardIdOfVotes(_memberAddress, lastIndex);
-    }
-
-    function calculateVoteReward1(address _memberAddress, uint _voteNo, uint _proposalId) 
-        internal
-        returns (uint tempfinalRewardToDistribute, uint lastIndex) 
-    {
-        uint solutionChosen;
-        uint proposalStatus;
-        uint finalVredict;
-        uint voteValue;
-        uint totalReward;
-        uint category;
-        uint calcReward;
-
-        (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, category, ) = 
-            getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
-
-        if (proposalStatus < 2)
-            lastIndex = _voteNo;
-        if (finalVredict > 0 && solutionChosen == finalVredict && totalReward != 0) {
-            calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
-                / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
-
-            tempfinalRewardToDistribute = tempfinalRewardToDistribute + calcReward;
-
-            if (calcReward > 0) {
-                governanceDat.callRewardEvent(
-                    _memberAddress, 
-                    _proposalId, 
-                    "GBT Reward-vote accepted", 
-                    calcReward
-                );
-            }
-        } else if (!governanceDat.punishVoters() && finalVredict > 0 && totalReward != 0) {
-            calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
-                / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
-            tempfinalRewardToDistribute = tempfinalRewardToDistribute + calcReward;
-            if (calcReward > 0) {
-                governanceDat.callRewardEvent(
-                    _memberAddress, 
-                    _proposalId, 
-                    "GBT Reward-voting", 
-                    calcReward
-                );
-            }
-        }
-    }
-
-    /// @dev Gets vote id details when giving member address and proposal id
-    function getVoteDetailsToCalculateReward(
-        address _memberAddress, 
-        uint _voteNo
-    ) 
-        public 
-        view 
-        returns(
-            uint solutionChosen, 
-            uint proposalStatus, 
-            uint finalVerdict, 
-            uint voteValue, 
-            uint totalReward, 
-            uint category, 
-            uint totalVoteValueProposal
-        ) 
-    {
-        uint proposalId;
-        uint _voteId = governanceDat.getVoteIdOfNthVoteOfMember(_memberAddress, _voteNo);
-        (, , voteValue, proposalId) = governanceDat.getVoteDetailById(_voteId);
-        solutionChosen = governanceDat.getSolutionByVoteIdAndIndex(_voteId, 0);
-        proposalStatus = governanceDat.getProposalStatus(proposalId);
-        finalVerdict = governanceDat.getProposalFinalVerdict(proposalId);
-        totalReward = governanceDat.getProposalIncentive(proposalId);
-        category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(proposalId));
-        totalVoteValueProposal = governanceDat.getProposalTotalVoteValue(proposalId);
-    }
 
     /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
     function proposalSubmission( 
@@ -662,6 +532,7 @@ contract Governance is Upgradeable {
     ) 
         internal  
     {
+        VotingType votingType = VotingType(governanceDat.getProposalVotingAddress(_proposalId));
         // VT = VotingType(0x68D2e5342Dae099C1894ce022B6101bb6d4BBF3C);
         votingType.addSolution(
             _proposalId, 

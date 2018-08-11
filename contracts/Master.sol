@@ -90,7 +90,7 @@ contract Master is Ownable, Upgradeable {
             govern = new Governed();
             GovernChecker governChecker = GovernChecker(govern.getGovernCheckerAddress());
             if(getCodeSize(address(governChecker)) > 0 ){
-                if(governChecker.authorized(dAppName) != _contractAddresses[3])
+                if(governChecker.authorizedAddressNumber(dAppName, _contractAddresses[3]) == 0)
                     governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
             }
             dAppToken = gbm.getDappTokenAddress(dAppName);
@@ -209,10 +209,12 @@ contract Master is Ownable, Upgradeable {
     }
 
     /// @dev adds a new contract type to master
-    function addNewContract(bytes2 _contractName) public {
+    function addNewContract(bytes2 _contractName, address _contractAddress) public {
         require(isAuth());
         allContractNames.push(allContractNames[allContractNames.length - 1]);
         allContractNames[allContractNames.length - 2] = _contractName;
+        contractsActive[_contractAddress] = true;
+        allContractVersions[versionDates.length - 1][_contractName] = _contractAddress;
     }
 
     function getEventCallerAddress() public view returns(address) {

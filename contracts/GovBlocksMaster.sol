@@ -105,7 +105,7 @@ contract GovBlocksMaster {
     /// @param _newMasterAddress dApp new master address
     function changeDappMasterAddress(bytes32 _gbUserName, address _newMasterAddress) public {
         if(address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
-            require(msg.sender == governChecker.authorized(_gbUserName) || owner == msg.sender);
+            require(governChecker.authorizedAddressNumber(_gbUserName, msg.sender) > 0 || owner == msg.sender);
         else
             require(owner == msg.sender);
         govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;                   
@@ -117,7 +117,7 @@ contract GovBlocksMaster {
     /// @param _descHash dApp new desc hash
     function changeDappMasterAddress(bytes32 _gbUserName, string _descHash) public {
         if(address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
-            require(msg.sender == governChecker.authorized(_gbUserName) || owner == msg.sender);
+            require(governChecker.authorizedAddressNumber(_gbUserName, msg.sender) > 0 || owner == msg.sender);
         else
             require(owner == msg.sender);
         govBlocksDapps[_gbUserName].dappDescHash = _descHash;                   
@@ -127,7 +127,7 @@ contract GovBlocksMaster {
     /// @param _gbUserName  dApp name
     /// @param _dappTokenAddress dApp new token address
     function changeDappTokenAddress(bytes32 _gbUserName, address _dappTokenAddress) public {
-        require(msg.sender == governChecker.authorized(_gbUserName) || owner == msg.sender); // Owner for debugging only
+        require(governChecker.authorizedAddressNumber(_gbUserName, msg.sender) > 0 || owner == msg.sender); // Owner for debugging only
         govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;                        // will be removed before launch
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
     }
@@ -161,12 +161,7 @@ contract GovBlocksMaster {
     function getByteCodeAndAbi() public view returns(bytes32 byteCode, bytes32 abiHash) {
         return (byteCodeHash, contractsAbiHash);
     }
-
-    /// @dev Get Address of member that is authorized for a dApp.
-    function getDappAuthorizedAddress(bytes32 _gbUserName) public view returns(address) {
-        return governChecker.authorized(_gbUserName);
-    }
-
+    
     /// @dev Gets dApp details
     /// @param _gbUserName dApp name
     /// @return gbUserName dApp name

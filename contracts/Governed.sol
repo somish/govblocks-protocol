@@ -16,10 +16,11 @@
 pragma solidity 0.4.24;
 
 contract GovernChecker {
-    function authorized(bytes32 _dAppName) public view returns(address);
-    function initializeAuthorized(bytes32 _dAppName, address authorizedAddress) public;
+    function authorizedAddressNumber(bytes32 _dAppName, address _authorizedAddress) public view returns(uint);
+    function initializeAuthorized(bytes32 _dAppName, address _authorizedAddress) public;
     function updateGBMAdress(address _govBlockMaster) public;
-    function updateAuthorized(bytes32 _dAppName, address authorizedAddress) public;
+    function updateAuthorized(bytes32 _dAppName, address _authorizedAddress) public;
+    function addAuthorized(bytes32 _dAppName, address _authorizedAddress) public;
 }
 
 contract Governed {
@@ -29,7 +30,7 @@ contract Governed {
     bytes32 internal dAppName;
 
     modifier onlyAuthorizedToGovern() {
-        require(governChecker.authorized(dAppName) == msg.sender);
+        require(governChecker.authorizedAddressNumber(dAppName, msg.sender) > 0);
         _;
     }
 
