@@ -30,6 +30,7 @@ contract Master is Ownable, Upgradeable {
     bytes2[] internal allContractNames;
     mapping(address => bool) public contractsActive;
     mapping(uint => mapping(bytes2 => address)) public allContractVersions;
+    address public dAppTokenProxy;
 
     GovBlocksMaster internal gbm;
     Upgradeable internal up;
@@ -111,6 +112,12 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev just for the interface
     function updateDependencyAddresses() public {
+    }
+
+    function setDAppTokenProxy(address _dAppTokenProxy) public {
+        require(isAuth());
+        contractsActive[_dAppTokenProxy] = true;
+        dAppTokenProxy = _dAppTokenProxy;
     }
 
     /// @dev just for the interface

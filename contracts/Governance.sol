@@ -38,6 +38,7 @@ contract Governance is Upgradeable {
     Pool internal pool;
     EventCaller internal eventCaller;
     address internal dAppToken;
+    address internal dAppTokenProxy;
 
     modifier onlyProposalOwner(uint _proposalId) {
         require(msg.sender == governanceDat.getProposalOwner(_proposalId));
@@ -52,6 +53,7 @@ contract Governance is Upgradeable {
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public {
         dAppToken = master.dAppToken();
+        dAppTokenProxy = master.dAppTokenProxy();
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
@@ -90,6 +92,8 @@ contract Governance is Upgradeable {
         if (_categoryId > 0) {
             if (proposalCategory.isCategoryExternal(category))
                 governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, address(govBlocksToken));
+            else if (!governanceDat.dAppTokenSupportsLocking())
+                governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, dAppTokenProxy);
             else
                 governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, dAppToken);            
             uint incentive=proposalCategory.getCatIncentive(category);
@@ -175,6 +179,8 @@ contract Governance is Upgradeable {
         address tokenAddress;
         if (proposalCategory.isCategoryExternal(category))
             tokenAddress = address(govBlocksToken);
+        else if (!governanceDat.dAppTokenSupportsLocking())
+            tokenAddress = dAppTokenProxy;
         else
             tokenAddress = dAppToken;
         require (validateStake(_categoryId, tokenAddress));

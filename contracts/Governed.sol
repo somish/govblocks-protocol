@@ -27,10 +27,10 @@ contract Governed {
 
     GovernChecker internal governChecker;
 
-    bytes32 internal dAppName;
+    bytes32 internal dappName;
 
     modifier onlyAuthorizedToGovern() {
-        require(governChecker.authorizedAddressNumber(dAppName, msg.sender) > 0);
+        require(governChecker.authorizedAddressNumber(dappName, msg.sender) > 0);
         _;
     }
 
@@ -39,7 +39,7 @@ contract Governed {
     }
 
     function setDappName(bytes32 _dAppName) internal {
-        dAppName = _dAppName;
+        dappName = _dAppName;
     } 
 
     function setGovernChecker() public {
