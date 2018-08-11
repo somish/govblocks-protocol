@@ -331,6 +331,10 @@ contract GovernanceData is Upgradeable {
         lastRewardDetails[_memberAddress].lastRewardProposalId = _proposalId;
     }
 
+    function setDAppTokenSupportsLocking(bool _value) public onlyInternal {
+        dAppTokenSupportsLocking = _value;
+    }
+
     /// @dev Sets the last proposal id till which the reward has been distributed for Solution Owner 
     ///     (For providing correct solution Reward)
     function setLastRewardIdOfSolutionProposals(address _memberAddress, uint _proposalId) public onlyInternal {
