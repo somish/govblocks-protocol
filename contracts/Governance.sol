@@ -509,8 +509,7 @@ contract Governance is Upgradeable {
                     lastIndex = i;
                 else if (proposalStatus > 2 && 
                     finalVredict > 0 && 
-                    governanceDat.getReturnedTokensFlag(_memberAddress, i, "P") == 0 &&
-                    governanceDat.getProposalTotalReward(i) != 0
+                    governanceDat.getReturnedTokensFlag(_memberAddress, i, "P") == 0
                 ) {
                     category = proposalCategory.getCategoryIdBySubId(category);
                     calcReward = proposalCategory.getRewardPercProposal(category) 
