@@ -187,9 +187,10 @@ contract Governance is Upgradeable {
         public 
         onlyProposalOwner(_proposalId) 
     {
+        uint8 category = governanceDat.getProposalCategory(_proposalId);
         proposalSubmission(
             _proposalId, 
-            0, 
+            category, 
             _proposalSolutionStake, 
             _solutionHash, 
             _validityUpto, 
