@@ -43,8 +43,8 @@ contract Governed {
     } 
 
     function setGovernChecker() public {
-        if (getCodeSize(0x48F73ED5D20135E24b1AfeD5eeeDf5Ef695fF506) > 0)        //kovan testnet
-            governChecker = GovernChecker(0x48F73ED5D20135E24b1AfeD5eeeDf5Ef695fF506);
+        if (getCodeSize(0xB89a0D1c826D7C8Db49bDA9C7dBBA91b7C1dF6a1) > 0)        //kovan testnet
+            governChecker = GovernChecker(0xB89a0D1c826D7C8Db49bDA9C7dBBA91b7C1dF6a1);
         else if (getCodeSize(0xdF6c6a73BCf71E8CAa6A2c131bCf98f10eBb5162) > 0)   //RSK testnet
             governChecker = GovernChecker(0xdF6c6a73BCf71E8CAa6A2c131bCf98f10eBb5162);
         else if (getCodeSize(0x67995F25f04d61614d05607044c276727DEA9Cf0) > 0)   //Rinkeyby testnet

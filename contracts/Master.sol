@@ -61,13 +61,13 @@ contract Master is Ownable, Upgradeable {
     /// @dev Checks if the address is authorized to make changes.
     ///     owner allowed for debugging only, will be removed before launch.
     function isAuth() public view returns(bool check) {
-        if(versionDates.length < 2) {
-            if(owner == msg.sender)
-                check = true;
-        } else {
+        // if(versionDates.length < 2) {
+        //     if(owner == msg.sender)
+        //         check = true;
+        // } else {
             if(getLatestAddress("SV") == msg.sender || owner == msg.sender)
                 check = true;
-        }
+        // }
     }
 
     /// @dev Checks if the caller address is either one of its active contract address or owner.
@@ -97,15 +97,14 @@ contract Master is Ownable, Upgradeable {
             dAppToken = gbm.getDappTokenAddress(dAppName);
         }
 
-        allContractVersions[versionDates.length - 1]["MS"] = address(this);
-
         for (uint i = 0; i < allContractNames.length - 2; i++) {
-            allContractVersions[versionDates.length - 1][allContractNames[i+1]] = _contractAddresses[i];
+            allContractVersions[versionDates.length][allContractNames[i+1]] = _contractAddresses[i];
         }
 
-        allContractVersions[versionDates.length - 1]["GS"] = gbm.getGBTAddress();
+        allContractVersions[versionDates.length]["GS"] = gbm.getGBTAddress();
 
         versionDates.push(now);
+
         changeMasterAddress(address(this));
         changeAllAddress();
     }
@@ -153,7 +152,7 @@ contract Master is Ownable, Upgradeable {
     /// @dev Gets current version amd its master address
     /// @return versionNo Current version number that is active
     function getCurrentVersion() public view returns(uint versionNo) {
-        return versionDates.length;
+        return versionDates.length - 1;
     }
 
     /// @dev Gets latest version name and address
@@ -252,11 +251,20 @@ contract Master is Ownable, Upgradeable {
 
     /// @dev Sets the older versions of contract addresses as inactive and the latest one as active.
     function changeAllAddress() internal {
-        for (uint i = 1; i < allContractNames.length - 1; i++) {
-            contractsActive[allContractVersions[versionDates.length - 2][allContractNames[i]]] = false;
-            contractsActive[allContractVersions[versionDates.length - 1][allContractNames[i]]] = true;
-            up = Upgradeable(allContractVersions[versionDates.length - 1][allContractNames[i]]);
-            up.updateDependencyAddresses();
+        uint i;
+        if(versionDates.length < 3) {
+            for (i = 1; i < allContractNames.length - 1; i++) {
+                contractsActive[allContractVersions[versionDates.length - 1][allContractNames[i]]] = true;
+                up = Upgradeable(allContractVersions[versionDates.length - 1][allContractNames[i]]);
+                up.updateDependencyAddresses();
+            }
+        } else {
+            for (i = 1; i < allContractNames.length - 1; i++) {
+                contractsActive[allContractVersions[versionDates.length - 2][allContractNames[i]]] = false;
+                contractsActive[allContractVersions[versionDates.length - 1][allContractNames[i]]] = true;
+                up = Upgradeable(allContractVersions[versionDates.length - 1][allContractNames[i]]);
+                up.updateDependencyAddresses();
+            }
         }
     }
 }

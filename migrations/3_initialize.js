@@ -8,6 +8,7 @@ var Pool = artifacts.require("Pool");
 var ProposalCategory = artifacts.require("ProposalCategory");
 var SimpleVoting = artifacts.require("SimpleVoting");
 var EventCaller = artifacts.require("EventCaller");
+var ProposalCategoryAdder = artifacts.require("ProposalCategoryAdder");
 const json = require('./../build/contracts/Master.json');
 var bytecode = json['bytecode'];
 
@@ -22,6 +23,7 @@ module.exports = deployer => {
     let gv;
     let pl;
     let ms;
+    let pca;
     deployer
     .then(() => GBTStandardToken.deployed())
     .then(function(instance){ 
@@ -90,9 +92,12 @@ module.exports = deployer => {
         return ms.addNewVersion(addr);
     })
     .then(function(){
+        return ms.getCurrentVersion();
+    })
+    .then(function(v){
         return gbm.changeDappMasterAddress("0x41", Master.address);
     })
     .then(function(){
-        console.log("Initialization completed!");
+        console.log("GovBlocks Initialization completed!");
     });
 };

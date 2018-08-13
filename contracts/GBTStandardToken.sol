@@ -23,13 +23,10 @@ contract GBTStandardToken is LockableToken, MintableToken, DetailedERC20 {
     uint public tokenPrice;
 
     /// @dev constructor
-    constructor() public {
+    constructor() DetailedERC20("GovBlocks Standard Token", "GBT", 18) public {
         owner = msg.sender;
         totalSupply_ = 10 ** 20;
         balances[address(msg.sender)] = totalSupply_;
-        name = "GovBlocks Standard Token";
-        symbol = "GBT";
-        decimals = 18;
         tokenPrice = 10 ** 15;
     }
 

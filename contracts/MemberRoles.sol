@@ -14,7 +14,6 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity 0.4.24;
-import "./Master.sol";
 import "./GovBlocksMaster.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/BasicToken.sol";
@@ -28,7 +27,6 @@ contract MemberRoles is Upgradeable {
     bool public constructorCheck;
     address public masterAddress;
     BasicToken public dAppToken;
-    Master internal master;
     uint constant UINT_MAX = uint256(0) - uint256(1);
     address simpleVoting;
 

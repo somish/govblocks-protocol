@@ -15,7 +15,6 @@
 
 pragma solidity 0.4.24;
 
-import "./Master.sol";
 import "./GovernanceData.sol";
 import "./Governance.sol";
 import "./MemberRoles.sol";
@@ -38,7 +37,6 @@ contract SimpleVoting is Upgradeable {
     ProposalCategory internal proposalCategory;
     address internal govAddress;
     bool public constructorCheck;
-    address public masterAddress;
     GBTStandardToken internal basicToken;
     Pool internal pool;
     EventCaller internal eventCaller;
@@ -76,7 +74,6 @@ contract SimpleVoting is Upgradeable {
     function updateDependencyAddresses() public {
         if (!constructorCheck)
             simpleVotingInitiate();
-        master = Master(masterAddress);
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
@@ -140,7 +137,6 @@ contract SimpleVoting is Upgradeable {
     ) 
         public 
     {
-        master = Master(masterAddress);
         if(msg.sender == _memberAddress) {
             require(validateStake(_proposalId));
         }

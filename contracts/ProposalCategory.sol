@@ -452,7 +452,7 @@ contract ProposalCategory is Upgradeable {
     ) 
         external 
     {
-        require(allSubCategory.length < 13);
+        require(allSubCategory.length < 15);
         allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
         allSubCategory.push(SubCategory(
                 _subCategoryName, 
@@ -501,8 +501,9 @@ contract ProposalCategory is Upgradeable {
                 rewardPerc[2]
             )
         );
-        if (getCodeSize(0xe96edEECf546631eAC4E23d73fD8802480a09bB5) > 0)        //kovan testnet
-            ProposalCategoryAdder proposalCategoryAdder = ProposalCategoryAdder(0xe96edEECf546631eAC4E23d73fD8802480a09bB5);
-        proposalCategoryAdder.addSubC();
+        if (getCodeSize(0x14cBB966262F027730D0a100e3788D7BC50f9bE8) > 0)        //kovan testnet
+            ProposalCategoryAdder proposalCategoryAdder = ProposalCategoryAdder(0x14cBB966262F027730D0a100e3788D7BC50f9bE8);
+        if(address(proposalCategoryAdder) != 0)
+            proposalCategoryAdder.addSubC(address(this));
     }
 }

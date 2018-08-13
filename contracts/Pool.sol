@@ -15,7 +15,6 @@
 
 pragma solidity 0.4.24;
 
-import "./Master.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./GBTStandardToken.sol";
 import "./Upgradeable.sol";
@@ -27,8 +26,6 @@ import "./VotingType.sol";
 contract Pool is Upgradeable {
     using SafeMath for uint;
 
-    address public masterAddress;
-    Master internal master;
     GBTStandardToken internal gbt;
     Governance internal gov;
     GovernanceData internal governanceDat;
@@ -37,7 +34,6 @@ contract Pool is Upgradeable {
     function () public payable {}
 
     modifier onlySV {
-        master = Master(masterAddress);
         require(
             master.getLatestAddress("SV") == msg.sender 
             || master.isInternal(msg.sender) 
@@ -47,7 +43,6 @@ contract Pool is Upgradeable {
 
     /// @dev just to adhere to the interface
     function updateDependencyAddresses() public {
-        master = Master(masterAddress);
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
         gov = Governance(master.getLatestAddress("GV"));
         governanceDat = GovernanceData(master.getLatestAddress("GD"));

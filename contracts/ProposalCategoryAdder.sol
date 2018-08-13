@@ -21,11 +21,11 @@ contract ProposalCategoryAdder {
 
     ProposalCategory internal proposalCategory;
 
-    function addSubC() public {
-        proposalCategory = ProposalCategory(msg.sender);
+    function addSubC(address _to) public {
+        proposalCategory = ProposalCategory(_to);
         uint[] memory stakeInecntive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
-        stakeInecntive[0] = 0;
+        stakeInecntive[0] = 1 ** 18;
         stakeInecntive[1] = 604800;
         stakeInecntive[2] = 0;
         rewardPerc[0] = 10;
