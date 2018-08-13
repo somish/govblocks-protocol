@@ -61,13 +61,13 @@ contract Master is Ownable, Upgradeable {
     /// @dev Checks if the address is authorized to make changes.
     ///     owner allowed for debugging only, will be removed before launch.
     function isAuth() public view returns(bool check) {
-        // if(versionDates.length < 2) {
-        //     if(owner == msg.sender)
-        //         check = true;
-        // } else {
+        if(versionDates.length < 2) {
+            if(owner == msg.sender)
+                check = true;
+        } else {
             if(getLatestAddress("SV") == msg.sender || owner == msg.sender)
                 check = true;
-        // }
+        }
     }
 
     /// @dev Checks if the caller address is either one of its active contract address or owner.

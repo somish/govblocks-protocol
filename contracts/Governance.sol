@@ -380,8 +380,7 @@ contract Governance is Upgradeable {
                 if (proposalStatus < 2)
                     lastIndex = i;
                 else if (proposalStatus > 2 && 
-                    finalVredict > 0 && 
-                    governanceDat.getProposalIncentive(i) != 0
+                    finalVredict > 0
                 ) {
                     category = proposalCategory.getCategoryIdBySubId(category);
                     calcReward = proposalCategory.getRewardPercProposal(category) 
@@ -498,7 +497,8 @@ contract Governance is Upgradeable {
                 "GBT Reward-Solution owner", 
                 calcReward
             );
-            governanceDat.setMemberReputation(
+        }
+        governanceDat.setMemberReputation(
                 "Reputation credit-solution owner", 
                 i, 
                 _memberAddress, 
@@ -506,7 +506,6 @@ contract Governance is Upgradeable {
                 addSolutionOwnerPoints, 
                 "C"
             );
-        }
     }
 
     /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
@@ -540,9 +539,8 @@ contract Governance is Upgradeable {
         internal  
     {
         VotingType votingType = VotingType(governanceDat.getProposalVotingAddress(_proposalId));
-        // VT = VotingType(0x68D2e5342Dae099C1894ce022B6101bb6d4BBF3C);
         votingType.addSolution(
-            _proposalId, 
+            uint32(_proposalId), 
             msg.sender, 
             _solutionHash, 
             _action
