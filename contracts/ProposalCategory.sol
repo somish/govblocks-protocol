@@ -452,22 +452,23 @@ contract ProposalCategory is Upgradeable {
     ) 
         external 
     {
-        require(allSubCategory.length < 15);
-        allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
-        allSubCategory.push(SubCategory(
-                _subCategoryName, 
-                _actionHash, 
-                _mainCategoryId, 
-                _contractAddress, 
-                _contractName,
-                _stakeAndIncentive[0],
-                _stakeAndIncentive[1],
-                _stakeAndIncentive[2],
-                _rewardPercentage[0],
-                _rewardPercentage[1],
-                _rewardPercentage[2]
-            )
-        );
+        if (allSubCategory.length < 15) {
+            allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
+            allSubCategory.push(SubCategory(
+                    _subCategoryName, 
+                    _actionHash, 
+                    _mainCategoryId, 
+                    _contractAddress, 
+                    _contractName,
+                    _stakeAndIncentive[0],
+                    _stakeAndIncentive[1],
+                    _stakeAndIncentive[2],
+                    _rewardPercentage[0],
+                    _rewardPercentage[1],
+                    _rewardPercentage[2]
+                )
+            );
+        }     
     }
 
     function getCodeSize(address _addr) internal view returns(uint _size) {

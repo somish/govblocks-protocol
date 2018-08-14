@@ -14,21 +14,17 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity 0.4.24;
-import "./GovBlocksMaster.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/BasicToken.sol";
-import "./Upgradeable.sol";
+import "./Governed.sol";
 
-
-contract MemberRoles is Upgradeable {
+contract MemberRoles is Governed {
     event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription, bool limitedValidity);
     using SafeMath for uint;
+
     bytes32[] internal memberRole;
-    bool public constructorCheck;
-    address public masterAddress;
     BasicToken public dAppToken;
     uint constant UINT_MAX = uint256(0) - uint256(1);
-    address simpleVoting;
 
     struct MemberRoleDetails {
         uint memberCounter;
@@ -41,63 +37,47 @@ contract MemberRoles is Upgradeable {
     mapping(uint => address) internal authorizedAddressAgainstRole;
     mapping(uint => MemberRoleDetails) internal memberRoleData;
 
-    /// @dev Initiates Default settings for Member Roles contract
-    function memberRolesInitiate() public {
-        require(!constructorCheck);
-        uint rolelength = getTotalMemberRoles();
+    modifier checkRoleAuthority(uint _memberRoleId) {
+        if(authorizedAddressAgainstRole[_memberRoleId] != address(0))
+            require(msg.sender == authorizedAddressAgainstRole[_memberRoleId]);
+        else
+            require (isAuthorizedToGovern(msg.sender));
+        _;
+    }
+
+    constructor(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
+        dappName = _dAppName;
+        dAppToken = BasicToken(_dAppToken);
         memberRole.push("");
-        authorizedAddressAgainstRole[rolelength] = address(0);
-        emit MemberRole(rolelength, "Everyone", "Professionals that are a part of the GBT network", false);
-        rolelength++;
+        emit MemberRole(0, "Everyone", "Professionals that are a part of the GBT network", false);
         memberRole.push("Advisory Board");
-        authorizedAddressAgainstRole[rolelength] = master.owner();
         emit MemberRole(
-            rolelength,
+            1,
             "Advisory Board",
             "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.",
             false
         );
-        rolelength++;
         memberRole.push("Token Holder");
-        authorizedAddressAgainstRole[rolelength] = address(0);
         emit MemberRole(
-            rolelength,
+            2,
             "Token Holder",
             "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.",
             false
         );
-        setOwnerRole();
-        constructorCheck = true;
-    }
-
-    modifier checkRoleAuthority(uint _memberRoleId) {
-        require(msg.sender == authorizedAddressAgainstRole[_memberRoleId] || master.owner() == msg.sender);
-        _;
-    }
-
-    modifier onlySV {
-        require(
-            master.getLatestAddress("SV") == msg.sender
-            || master.isInternal(msg.sender)
-            || master.owner() == msg.sender
-        );
-        _;
+        memberRoleData[1].memberCounter = 1;
+        memberRoleData[1].memberActive[_firstAB] = true;
+        memberRoleData[1].memberAddress.push(_firstAB);
+        memberRoleData[1].validity[_firstAB] = UINT_MAX;
     }
 
     /// @dev To Initiate default settings whenever the contract is regenerated!
-    function updateDependencyAddresses() public {
-        if (!constructorCheck)
-            memberRolesInitiate();
-        address newSV = master.getLatestAddress("SV");
-        if (simpleVoting != newSV) {
-            for (uint i = 0; i < memberRole.length; i++) {
-                if (authorizedAddressAgainstRole[i] == simpleVoting)
-                    authorizedAddressAgainstRole[i] = newSV;
-            }
-            simpleVoting = newSV;
-        }
-        GovBlocksMaster govBlocksMaster = GovBlocksMaster(master.gbmAddress());
-        dAppToken = BasicToken(govBlocksMaster.getDappTokenAddress(master.dAppName()));
+    function updateDependencyAddresses() public pure {
+
+    }
+
+    /// @dev just to adhere to GovBlockss' Upgradeable interface
+    function changeMasterAddress() public pure {
+
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.
@@ -206,15 +186,11 @@ contract MemberRoles is Upgradeable {
     /// @param _canAddMembers Authorized member against every role id
     function addNewMemberRole(bytes32 _newRoleName, string _roleDescription, address _canAddMembers, bool _limitedValidity)
         public
-        onlySV
+        onlyAuthorizedToGovern
     {
-        uint rolelength = getTotalMemberRoles();
+        uint rolelength = memberRole.length;
         memberRole.push(_newRoleName);
-        if (_canAddMembers == address(0)) {
-            authorizedAddressAgainstRole[rolelength] = master.getLatestAddress("SV");
-        } else {
-            authorizedAddressAgainstRole[rolelength] = _canAddMembers;
-        }
+        authorizedAddressAgainstRole[rolelength] = _canAddMembers;
         memberRoleData[rolelength].limitedValidity = _limitedValidity;
         emit MemberRole(rolelength, _newRoleName, _roleDescription, _limitedValidity);
     }
@@ -291,15 +267,6 @@ contract MemberRoles is Upgradeable {
     /// @dev Gets total number of member roles available
     function getTotalMemberRoles() public view returns(uint) {
         return memberRole.length;
-    }
-
-    /// @dev Add dApp Owner in Advisory Board Members.
-    function setOwnerRole() internal {
-        address ownAddress = master.owner();
-        memberRoleData[1].memberCounter = 1;
-        memberRoleData[1].memberActive[ownAddress] = true;
-        memberRoleData[1].memberAddress.push(ownAddress);
-        memberRoleData[1].validity[ownAddress] = UINT_MAX;
     }
 
     /// @dev Get Total number of role ids that has been assigned to a member so far.

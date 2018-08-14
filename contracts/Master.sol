@@ -23,7 +23,7 @@ import "./GovernanceData.sol";
 import "./Governed.sol";
 
 
-contract Master is Ownable, Upgradeable {
+contract Master is Ownable {
 
     uint[] public versionDates;
     bytes32 public dAppName;
@@ -41,6 +41,7 @@ contract Master is Ownable, Upgradeable {
         require (address(gbm) == address(0));
         contractsActive[address(this)] = true;
         gbm = GovBlocksMaster(msg.sender);
+        dAppTokenProxy = gbm.getGBTAddress();
         dAppName = _gbUserName;
         owner = _ownerAddress;
         versionDates.push(now);
@@ -109,10 +110,6 @@ contract Master is Ownable, Upgradeable {
         changeAllAddress();
     }
 
-    /// @dev just for the interface
-    function updateDependencyAddresses() public {
-    }
-
     function setDAppTokenProxy(address _dAppTokenProxy) public {
         require(isAuth());
         contractsActive[_dAppTokenProxy] = true;
@@ -136,7 +133,7 @@ contract Master is Ownable, Upgradeable {
         allContractVersions[versionDates.length - 1]["MS"] = _masterAddress;
         for (uint i = 1; i < allContractNames.length - 1; i++) {
             up = Upgradeable(allContractVersions[versionDates.length - 1][allContractNames[i]]);
-            up.changeMasterAddress(_masterAddress);
+            up.changeMasterAddress();
         }
         contractsActive[address(this)] = false;
         contractsActive[_masterAddress] = true;

@@ -30,12 +30,18 @@ contract Governed {
     bytes32 internal dappName;
 
     modifier onlyAuthorizedToGovern() {
-        require(governChecker.authorizedAddressNumber(dappName, msg.sender) > 0);
+        if(address(governChecker) != address(0))
+            require(governChecker.authorizedAddressNumber(dappName, msg.sender) > 0);
         _;
     }
 
     constructor() public {
         setGovernChecker();
+    }
+
+    function isAuthorizedToGovern(address _toCheck) public view returns(bool) {
+        if(address(governChecker) == address(0) || governChecker.authorizedAddressNumber(dappName, _toCheck) > 0)
+            return true;
     }
 
     function setDappName(bytes32 _dAppName) internal {

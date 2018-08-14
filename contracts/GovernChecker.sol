@@ -39,7 +39,8 @@ contract GovernChecker {
 	/// @param _authorizedAddress authorized address of the new dapp
 	function initializeAuthorized(bytes32 _dAppName, address _authorizedAddress) public {
 		require(authorized[_dAppName].length == 0);
-		require(govBlockMaster.getDappMasterAddress(_dAppName) == msg.sender);
+		if(address(govBlockMaster) != address(0))
+			require(govBlockMaster.getDappMasterAddress(_dAppName) == msg.sender);
 		authorized[_dAppName].push(_authorizedAddress);
 	}
 
