@@ -135,7 +135,7 @@ contract SimpleVoting is Upgradeable {
         string _solutionHash, 
         bytes _action
     ) 
-        public 
+        external 
     {
         if(msg.sender == _memberAddress) {
             require(validateStake(_proposalId));

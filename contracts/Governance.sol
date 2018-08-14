@@ -141,7 +141,6 @@ contract Governance is Upgradeable {
         createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _categoryId);
         proposalSubmission(
             _proposalId, 
-            _categoryId, 
             _solutionHash, 
             _action
         );
@@ -158,10 +157,8 @@ contract Governance is Upgradeable {
         public 
         onlyProposalOwner(_proposalId) 
     {
-        uint category = governanceDat.getProposalCategory(_proposalId);
         proposalSubmission(
             _proposalId, 
-            category, 
             _solutionHash, 
             _action
         );
@@ -192,7 +189,9 @@ contract Governance is Upgradeable {
     {
         require(memberRole.checkRoleIdByAddress(msg.sender, 2) || msg.sender == governanceDat.getProposalOwner(_proposalId));
         require(_dappIncentive <= govBlocksToken.balanceOf(poolAddress));
+        
         uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
+        
         require(allowedToCreateProposal(category));
         governanceDat.setProposalIncentive(_proposalId, _dappIncentive);
         address tokenAddress;
@@ -208,16 +207,14 @@ contract Governance is Upgradeable {
 
     /// @dev Proposal is open for voting.
     function openProposalForVoting(
-        uint _proposalId, 
-        uint _categoryId
+        uint _proposalId
     ) 
         public 
         onlyProposalOwner(_proposalId) 
         checkProposalValidity(_proposalId) 
     {
-        uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
-        uint currVotingStatus = governanceDat.getProposalCurrentVotingId(_proposalId);
-        require(category != 0 && currVotingStatus < 2);
+        uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
+        require(category != 0);
         governanceDat.changeProposalStatus(_proposalId, 2);
         callCloseEvent(_proposalId);
     }
@@ -567,16 +564,13 @@ contract Governance is Upgradeable {
     /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
     function proposalSubmission( 
         uint _proposalId,  
-        uint _categoryId, 
         string _solutionHash, 
         bytes _action
     ) 
         internal 
     {
-        require(_categoryId > 0);
         openProposalForVoting(
-            _proposalId, 
-            _categoryId 
+            _proposalId
         );
 
         proposalSubmission1(
