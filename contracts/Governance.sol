@@ -63,6 +63,20 @@ contract Governance is Upgradeable {
         eventCaller = EventCaller(master.getEventCallerAddress());
     }
 
+    function allowedToCreateProposal(uint category) public view returns(bool check) {
+        uint[] memory mrAllowed = proposalCategory.getMRAllowed(category);
+        if (mrAllowed[0] == 0)
+            check = true;
+        else {
+            for(uint i = 0; i<mrAllowed.length; i++) {
+                if (memberRole.checkRoleIdByAddress(msg.sender, mrAllowed[i])) {
+                    check = true;
+                    break;
+                }
+            }
+        }
+    }
+
     /// @dev Creates a new proposal
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
@@ -77,7 +91,7 @@ contract Governance is Upgradeable {
         public 
     {
         uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
-        require(proposalCategory.allowedToCreateProposal(msg.sender, category));
+        require (allowedToCreateProposal(category));
         address votingAddress = governanceDat.getVotingTypeAddress(_votingTypeId);
         uint _proposalId = governanceDat.getProposalLength();
         governanceDat.setSolutionAdded(_proposalId, address(0), "address(0)");
@@ -174,7 +188,7 @@ contract Governance is Upgradeable {
         require(memberRole.checkRoleIdByAddress(msg.sender, 2) || msg.sender == governanceDat.getProposalOwner(_proposalId));
         require(_dappIncentive <= govBlocksToken.balanceOf(poolAddress));
         uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
-        require(proposalCategory.allowedToCreateProposal(msg.sender, category));
+        require(allowedToCreateProposal(category));
         governanceDat.setProposalIncentive(_proposalId, _dappIncentive);
         address tokenAddress;
         if (proposalCategory.isCategoryExternal(category))
@@ -255,7 +269,44 @@ contract Governance is Upgradeable {
             VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
             tempFinalRewardToDistribute += votingType.claimVoteReward(_memberAddress);
         }
+    }
 
+    /// @dev Gets remaining vote closing time against proposal 
+    /// i.e. Calculated closing time from current voting index to the last layer.
+    /// @param _proposalId Proposal Id
+    /// @param _index Current voting status id works as index here in voting layer sequence. 
+    /// @return totalTime Total time that left for proposal closing.
+    function getRemainingClosingTime(uint _proposalId, uint _index) 
+        public 
+        view 
+        returns(uint totalTime) 
+    {
+        uint pClosingTime;
+        uint subc = governanceDat.getProposalCategory(_proposalId);
+        uint categoryId = proposalCategory.getCategoryIdBySubId(subc);
+        uint ctLength = proposalCategory.getCloseTimeLength(categoryId);
+        for (uint i = _index; i < ctLength; i++) {
+            pClosingTime = pClosingTime + proposalCategory.getClosingTimeAtIndex(categoryId, i);
+        }
+
+        totalTime = pClosingTime 
+            + proposalCategory.getTokenHoldingTime(subc)
+            + governanceDat.getProposalDateUpd(_proposalId)
+            - now;
+    }
+
+    /// @dev Gets Total vote closing time against sub category i.e. 
+    /// Calculated Closing time from first voting layer where current voting index is 0.
+    /// @param _subCategoryId Category id
+    /// @return totalTime Total time before the voting gets closed
+    function getMaxCategoryTokenHoldTime(uint _subCategoryId) public view returns(uint totalTime) {
+        uint categoryId = proposalCategory.getCategoryIdBySubId(_subCategoryId);
+        uint ctLength = proposalCategory.getCloseTimeLength(categoryId);
+        for (uint i = 0; i < ctLength; i++) {
+            totalTime = totalTime + proposalCategory.getClosingTimeAtIndex(categoryId, i);
+        }
+        totalTime = totalTime + proposalCategory.getTokenHoldingTime(_subCategoryId);
+        return totalTime;
     }
 
     /// @dev Gets member details

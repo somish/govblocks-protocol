@@ -13,13 +13,10 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity 0.4.24;
-import "./Master.sol";
-import "./GovernanceData.sol";
-import "./MemberRoles.sol";
-import "./Upgradeable.sol";
+import "./Governed.sol";
 import "./ProposalCategoryAdder.sol";
 
-contract ProposalCategory is Upgradeable {
+contract ProposalCategory is Governed {
     bool public constructorCheck;
     struct Category {
         string name;
@@ -47,20 +44,12 @@ contract ProposalCategory is Upgradeable {
     Category[] public allCategory;
     mapping(uint => uint[]) internal allSubIdByCategory;
 
-    MemberRoles internal memberRole;
-    GovernanceData internal governanceDat;
-
-    modifier onlySV {   //Owner for debugging only, will be removed before launch 
-        require(master.getLatestAddress("SV") == msg.sender  
-            || master.owner() == msg.sender
-        );
-        _;
+    ///@dev just to follow the interface
+    function updateDependencyAddresses() public pure {
     }
 
-    /// @dev updates all dependency addresses to latest ones from Master
-    function updateDependencyAddresses() public {
-        governanceDat = GovernanceData(master.getLatestAddress("GD"));
-        memberRole = MemberRoles(master.getLatestAddress("MR"));
+    /// @dev just to adhere to GovBlockss' Upgradeable interface
+    function changeMasterAddress() public pure {
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
@@ -103,7 +92,7 @@ contract ProposalCategory is Upgradeable {
         uint[] _closingTime
     ) 
         external
-        onlySV 
+        onlyAuthorizedToGovern 
     {
         require(_memberRoleSequence.length == _memberRoleMajorityVote.length 
             && _memberRoleMajorityVote.length == _closingTime.length
@@ -133,7 +122,7 @@ contract ProposalCategory is Upgradeable {
         uint[] _closingTime
     )
         external 
-        onlySV
+        onlyAuthorizedToGovern
     {
         require(_roleName.length == _majorityVote.length && _majorityVote.length == _closingTime.length);
         allCategory[_categoryId].name = _name;
@@ -168,7 +157,7 @@ contract ProposalCategory is Upgradeable {
         uint8[] _rewardPercentage
     ) 
         external
-        onlySV 
+        onlyAuthorizedToGovern 
     {
         allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
         allSubCategory.push(SubCategory(
@@ -200,7 +189,7 @@ contract ProposalCategory is Upgradeable {
         uint8[] _rewardPercentage
     ) 
         external 
-        onlySV 
+        onlyAuthorizedToGovern 
     {
         allSubCategory[_subCategoryId].categoryName = _subCategoryName;
         allSubCategory[_subCategoryId].actionHash = _actionHash;
@@ -220,13 +209,15 @@ contract ProposalCategory is Upgradeable {
         return (_subCategoryId, allSubCategory[_subCategoryId].categoryName);
     }
 
+    /// @dev Get contractName
+    function getContractName(uint _subCategoryId) public view returns(bytes2) {
+        return allSubCategory[_subCategoryId].contractName;
+    }  
+
     /// @dev Get contractAddress 
-    function getContractAddress(uint _subCategoryId) public view returns(address _contractAddress) {
-        if(allSubCategory[_subCategoryId].contractName == "EX")
-            _contractAddress = allSubCategory[_subCategoryId].contractAddress;
-        else
-            _contractAddress = master.getLatestAddress(allSubCategory[_subCategoryId].contractName);
-    }
+    function getContractAddress(uint _subCategoryId) public view returns(address) {
+        return allSubCategory[_subCategoryId].contractAddress;
+    } 
 
     /// @dev Get Sub category id at specific index when giving main category id 
     /// @param _categoryId Id of main category
@@ -238,6 +229,11 @@ contract ProposalCategory is Upgradeable {
     /// @dev Get Sub categories array against main category
     function getAllSubIdsByCategory(uint _categoryId) public view returns(uint[]) {
         return allSubIdByCategory[_categoryId];
+    }
+
+    /// @dev Get Member Roles allowed to create proposal by category
+    function getMRAllowed(uint _categoryId) public view returns(uint[]) {
+        return allCategory[_categoryId].allowedToCreateProposal;
     }
 
     /// @dev Get Total number of sub categories against main category
@@ -262,40 +258,8 @@ contract ProposalCategory is Upgradeable {
         );
     }
 
-    /// @dev Gets remaining vote closing time against proposal 
-    /// i.e. Calculated closing time from current voting index to the last layer.
-    /// @param _proposalId Proposal Id
-    /// @param _subCategoryId SubCategory of proposal.
-    /// @param _index Current voting status id works as index here in voting layer sequence. 
-    /// @return totalTime Total time that left for proposal closing.
-    function getRemainingClosingTime(uint _proposalId, uint _subCategoryId, uint _index) 
-        public 
-        view 
-        returns(uint totalTime) 
-    {
-        uint pClosingTime;
-        uint categoryId = allSubCategory[_subCategoryId].categoryId;
-        for (uint i = _index; i < allCategory[categoryId].closingTime.length; i++) {
-            pClosingTime = pClosingTime + allCategory[categoryId].closingTime[i];
-        }
-
-        totalTime = pClosingTime 
-            + allSubCategory[_subCategoryId].tokenHoldingTime
-            + governanceDat.getProposalDateUpd(_proposalId)
-            - now;
-    }
-    
-    /// @dev Gets Total vote closing time against sub category i.e. 
-    /// Calculated Closing time from first voting layer where current voting index is 0.
-    /// @param _subCategoryId Category id
-    /// @return totalTime Total time before the voting gets closed
-    function getMaxCategoryTokenHoldTime(uint _subCategoryId) public view returns(uint totalTime) {
-        uint categoryId = allSubCategory[_subCategoryId].categoryId;
-        for (uint i = 0; i < allCategory[categoryId].closingTime.length; i++) {
-            totalTime = totalTime + allCategory[categoryId].closingTime[i];
-        }
-        totalTime = totalTime + allSubCategory[_subCategoryId].tokenHoldingTime;
-        return totalTime;
+    function getTokenHoldingTime(uint _subCategoryId) public view returns(uint) {
+        return allSubCategory[_subCategoryId].tokenHoldingTime;
     }
 
     /// @dev Gets reward percentage for Proposal to distribute stake on proposal acceptance
@@ -316,18 +280,6 @@ contract ProposalCategory is Upgradeable {
     /// @dev Gets minimum stake for sub category id
     function getMinStake(uint _subCategoryId) public view returns(uint) {
         return allSubCategory[_subCategoryId].minStake;
-    }
-
-    /// @dev returns if a member is allowed to vote.
-    function allowedToCreateProposal(address _member, uint _category) public view returns (bool) {
-        if (allCategory[_category].allowedToCreateProposal[0] == 0)
-            return true;
-        else {
-            for(uint i = 0; i<allCategory[_category].allowedToCreateProposal.length; i++) {
-                if (memberRole.checkRoleIdByAddress(_member, allCategory[_category].allowedToCreateProposal[i]))
-                    return true;
-            }
-        }
     }
 
     /// @dev Gets Majority threshold array length when giving main category id
@@ -364,11 +316,6 @@ contract ProposalCategory is Upgradeable {
     /// @param _index Current voting status againt proposal act as an index here
     function getRoleSequencAtIndex(uint _categoryId, uint _index) public view returns(uint roleId) {
         return allCategory[_categoryId].memberRoleSequence[_index];
-    }
-
-    function getRoleSequencByProposal(uint _proposalId, uint _currVotingId) public view returns(uint) {
-        uint category = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryId;
-        return allCategory[category].memberRoleSequence[_currVotingId];
     }
 
     /// @dev Gets Majority threshold value at particular index from Majority Vote array
@@ -420,26 +367,20 @@ contract ProposalCategory is Upgradeable {
         return allCategory[category].memberRoleSequence[_currVotingIndex];
     }
 
-    function validateStake(uint _proposalId, uint _stake) public view returns (bool result) {
-        uint subCat = governanceDat.getProposalCategory(_proposalId);
-        if(_stake >= allSubCategory[subCat].minStake)
-            result = true;
-    }
+    // /// @dev Gets Category and SubCategory name from Proposal ID.
+    // function getCatAndSubNameByPropId(uint _proposalId) 
+    //     public 
+    //     view 
+    //     returns(string categoryName, string subCategoryName) 
+    // {
+    //     categoryName = allCategory[getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId))].name;
+    //     subCategoryName = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryName;
+    // }
 
-    /// @dev Gets Category and SubCategory name from Proposal ID.
-    function getCatAndSubNameByPropId(uint _proposalId) 
-        public 
-        view 
-        returns(string categoryName, string subCategoryName) 
-    {
-        categoryName = allCategory[getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId))].name;
-        subCategoryName = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryName;
-    }
-
-    /// @dev Gets Category ID from Proposal ID.
-    function getCatIdByPropId(uint _proposalId) public view returns(uint catId) {
-        catId = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryId;
-    }
+    // /// @dev Gets Category ID from Proposal ID.
+    // function getCatIdByPropId(uint _proposalId) public view returns(uint catId) {
+    //     catId = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryId;
+    // }
 
     function addInitialSubC(
         string _subCategoryName, 

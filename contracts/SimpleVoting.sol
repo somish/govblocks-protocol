@@ -467,8 +467,13 @@ contract SimpleVoting is Upgradeable {
                 } else {
                     governance.updateProposalDetails(_proposalId, currentVotingId - 1, max, max);
                     governanceDat.changeProposalStatus(_proposalId, 3);
-                    address actionAddress = 
-                        proposalCategory.getContractAddress(governanceDat.getProposalCategory(_proposalId));
+                    uint subCategory = governanceDat.getProposalCategory(_proposalId);
+                    bytes2 contractName = proposalCategory.getContractName(subCategory);
+                    address actionAddress;
+                    if(contractName == "EX")
+                        actionAddress = proposalCategory.getContractAddress(subCategory);
+                    else
+                        actionAddress = master.getLatestAddress(contractName);
                     if (actionAddress.call(governanceDat.getSolutionActionByProposalId(_proposalId, max))) {
                         eventCaller.callActionSuccess(_proposalId);
                     }

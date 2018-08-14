@@ -72,12 +72,10 @@ contract MemberRoles is Governed {
 
     /// @dev To Initiate default settings whenever the contract is regenerated!
     function updateDependencyAddresses() public pure {
-
     }
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
     function changeMasterAddress() public pure {
-
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.

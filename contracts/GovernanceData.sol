@@ -688,8 +688,8 @@ contract GovernanceData is Upgradeable {
         return (allProposal[_proposalId].votingTypeAddress);
     }
 
-    /// @dev Gets proposal category when given proposal id
-    function getProposalCategory(uint _proposalId) public view returns(uint categoryId) {
+    /// @dev Gets proposal sub category when given proposal id
+    function getProposalCategory(uint _proposalId) public view returns(uint) {
         return allProposalData[_proposalId].category;
     }
 
