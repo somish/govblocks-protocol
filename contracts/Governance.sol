@@ -91,6 +91,8 @@ contract Governance is Upgradeable {
         public 
     {
         uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
+
+        
         require (allowedToCreateProposal(category));
         address votingAddress = governanceDat.getVotingTypeAddress(_votingTypeId);
         uint _proposalId = governanceDat.getProposalLength();
@@ -103,15 +105,18 @@ contract Governance is Upgradeable {
             _proposalSD, 
             _proposalDescHash
         );
+        address token;
         if (_categoryId > 0) {
             if (proposalCategory.isCategoryExternal(category))
-                governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, address(govBlocksToken));
+                token = address(govBlocksToken);
             else if (!governanceDat.dAppTokenSupportsLocking())
-                governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, dAppTokenProxy);
+                token = dAppTokenProxy;
             else
-                governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, dAppToken);            
+                token = dAppToken;
+            require (validateStake(_categoryId, token));
+            governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, token);            
             uint incentive=proposalCategory.getCatIncentive(category);
-            governanceDat.setProposalIncentive(_proposalId, incentive);
+            governanceDat.setProposalIncentive(_proposalId, incentive); 
         } else
             governanceDat.createProposal1(msg.sender, votingAddress);
     }

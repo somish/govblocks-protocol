@@ -4,14 +4,12 @@
   "description": "GovBlocks Smart Contracts",
   "main": "truffle-config.js",
   "dependencies": {
-    "openzeppelin-solidity": "^1.11.0",
-    "solc": "^0.4.24",
     "truffle": "^4.1.13",
-    "truffle-fast-compile": "0.0.3",
-    "truffle-flattener": "^1.2.6",
     "truffle-hdwallet-provider": "^0.0.5"
   },
   "devDependencies": {
+    "openzeppelin-solidity": "^1.11.0",
+    "ethereumjs-abi": "^0.6.5",
     "ganache-cli": "^6.1.6",
     "mocha": "^5.2.0",
     "solidity-coverage": "^0.5.5"

@@ -5,8 +5,8 @@ var mnemonic = "word vocal hazard glory home property canvas duty fetch private 
 module.exports = {
   networks: {
     development: {
-      host: "176.9.155.139",
-      port: 7070,
+      host: "127.0.0.1",
+      port: 7545,
       network_id: "5777"
     },
     ropsten: {

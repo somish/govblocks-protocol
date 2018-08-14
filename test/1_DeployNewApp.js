@@ -8,6 +8,7 @@ var Pool = artifacts.require("Pool");
 var ProposalCategory = artifacts.require("ProposalCategory");
 var SimpleVoting = artifacts.require("SimpleVoting");
 var EventCaller = artifacts.require("EventCaller");
+var ProposalCategoryAdder = artifacts.require("ProposalCategoryAdder");
 var gbts;
 var gbm;
 var ec;
@@ -19,6 +20,7 @@ var gv;
 var pl;
 var add = [];
 var ms;
+var pca;
 const json = require('./../build/contracts/Master.json');
 var bytecode = json['bytecode'];
 
@@ -27,8 +29,8 @@ describe('Deploy new dApp', function() {
     this.timeout(100000);
     gbm = await GovBlocksMaster.new();
     gbts =  await GBTStandardToken.new();
-    await gbm.govBlocksMasterInit("0x0", "0x0");
-    await gbm.setMasterByteCode(bytecode.substring(10000));
+    ec = await EventCaller.new();
+    await gbm.govBlocksMasterInit(gbts.address, ec.address);
     await gbm.setMasterByteCode(bytecode);
     await gbm.addGovBlocksUser("0x42", gbts.address, "descHash");
     gd = await GovernanceData.new();
@@ -37,6 +39,9 @@ describe('Deploy new dApp', function() {
     sv = await SimpleVoting.new();
     gv = await Governance.new();
     pl = await Pool.new();
+    let owner = await gbm.owner();
+    await mr.memberRolesInitiate("0x42", gbts.address, owner)
+    await pc.proposalCategoryInitiate("0x42");
     add.push(gd.address);
     add.push(mr.address);
     add.push(pc.address);
@@ -46,8 +51,7 @@ describe('Deploy new dApp', function() {
     let mad = await gbm.getDappMasterAddress("0x42");
     ms = await Master.at(mad);
     await ms.addNewVersion(add);
-    assert.equal(await ms.versionLength(), 1, "dApp version not created");
+    let cv = await ms.getCurrentVersion();
+    assert.equal(cv.toNumber(), 1, "dApp version not created");
   });
 });
-
-
