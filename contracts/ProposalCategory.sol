@@ -52,6 +52,10 @@ contract ProposalCategory is Governed {
     function changeMasterAddress() public pure {
     }
 
+    constructor(bytes32 _dAppName) public {
+        dappName = _dAppName;
+    }
+
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
     function proposalCategoryInitiate() public {
         require(!constructorCheck);
