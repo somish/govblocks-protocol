@@ -52,6 +52,7 @@ contract GovBlocksMaster {
         eventCaller = _eventCaller;
         Governed govern = new Governed();
         governChecker = GovernChecker(govern.getGovernCheckerAddress());
+        masterByteCode = "0x496e6974616c697a65";
         //   updateGBMAddress(address(this));  
     }
 
@@ -141,7 +142,7 @@ contract GovBlocksMaster {
     }
 
     /// @dev Sets byte code of Master
-    function setMasterByteCode(bytes _masterByteCode) public onlyOwner {
+    function setMasterByteCode(bytes _masterByteCode) external onlyOwner {
         masterByteCode = _masterByteCode;
     }
 

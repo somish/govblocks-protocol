@@ -23,7 +23,7 @@ module.exports = deployer => {
     let gv;
     let pl;
     let ms;
-    let pca;
+    let owner;
     deployer
     .then(() => GBTStandardToken.deployed())
     .then(function(instance){ 
@@ -37,9 +37,6 @@ module.exports = deployer => {
     .then(function(instance){
         gbm = instance;
         return gbm.govBlocksMasterInit(gbt.address, ec.address);
-    })
-    .then(function() {
-        return gbm.setMasterByteCode(bytecode.substring(10000));
     })
     .then(function() {
         return gbm.setMasterByteCode(bytecode);
@@ -60,7 +57,14 @@ module.exports = deployer => {
     })
     .then(function(instance){
         pc = instance;
-        return pc.proposalCategoryInitiate();
+        return pc.proposalCategoryInitiate("0x41");
+    })
+    .then(function(){
+        return ProposalCategoryAdder.deployed();
+    })
+    .then(function(instance){ 
+        pca = instance;
+        return pca.addSubC(pc.address);
     })
     .then(function(){ 
         return SimpleVoting.deployed();
@@ -82,7 +86,11 @@ module.exports = deployer => {
         return gbm.owner();
     })
     .then(function(own){
+        owner = own;
         return ms.initMaster(own,"0x41");
+    })
+    .then(function(){ 
+        return mr.memberRolesInitiate("0x41", GBTStandardToken.address, owner);
     })
     .then(function(){
         return ms.changeGBMAddress(GovBlocksMaster.address);

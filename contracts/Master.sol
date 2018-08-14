@@ -29,7 +29,7 @@ contract Master is Ownable {
     bytes32 public dAppName;
     bytes2[] internal allContractNames;
     mapping(address => bool) public contractsActive;
-    mapping(uint => mapping(bytes2 => address)) public allContractVersions;
+    mapping(uint => mapping(bytes2 => address)) internal allContractVersions;
     address public dAppTokenProxy;
 
     GovBlocksMaster internal gbm;
@@ -41,22 +41,10 @@ contract Master is Ownable {
         require (address(gbm) == address(0));
         contractsActive[address(this)] = true;
         gbm = GovBlocksMaster(msg.sender);
-        dAppTokenProxy = gbm.getGBTAddress();
         dAppName = _gbUserName;
         owner = _ownerAddress;
         versionDates.push(now);
         addContractNames();
-    }
-
-    modifier onlyInternal { //Owner to be removed before launch
-        require(contractsActive[msg.sender] || owner == msg.sender);
-        _;
-    }
-
-    /// @dev Returns true if the caller address is GovBlocksMaster Address.
-    function isGBM(address _gbmAddress) public view returns(bool check) {
-        if(_gbmAddress == address(gbm))
-            check = true;
     }
 
     /// @dev Checks if the address is authorized to make changes.
@@ -87,7 +75,7 @@ contract Master is Ownable {
     /// @param _contractAddresses Array of contract addresses which will be generated
     function addNewVersion(address[] _contractAddresses) public {
         require(isAuth());
-
+        address gbt = gbm.getGBTAddress();
         if(versionDates.length < 2) {
             govern = new Governed();
             GovernChecker governChecker = GovernChecker(govern.getGovernCheckerAddress());
@@ -96,13 +84,14 @@ contract Master is Ownable {
                     governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
             }
             dAppToken = gbm.getDappTokenAddress(dAppName);
+            dAppTokenProxy = gbt;
         }
 
         for (uint i = 0; i < allContractNames.length - 2; i++) {
             allContractVersions[versionDates.length][allContractNames[i+1]] = _contractAddresses[i];
         }
 
-        allContractVersions[versionDates.length]["GS"] = gbm.getGBTAddress();
+        allContractVersions[versionDates.length]["GS"] = gbt;
 
         versionDates.push(now);
 
@@ -112,7 +101,6 @@ contract Master is Ownable {
 
     function setDAppTokenProxy(address _dAppTokenProxy) public {
         require(isAuth());
-        contractsActive[_dAppTokenProxy] = true;
         dAppTokenProxy = _dAppTokenProxy;
     }
 

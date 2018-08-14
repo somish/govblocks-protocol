@@ -24,6 +24,7 @@ contract MemberRoles is Governed {
 
     bytes32[] internal memberRole;
     BasicToken public dAppToken;
+    bool internal constructorCheck;
     uint constant UINT_MAX = uint256(0) - uint256(1);
 
     struct MemberRoleDetails {
@@ -45,7 +46,8 @@ contract MemberRoles is Governed {
         _;
     }
 
-    constructor(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
+    function memberRolesInitiate(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
+        require(!constructorCheck);
         dappName = _dAppName;
         dAppToken = BasicToken(_dAppToken);
         memberRole.push("");
@@ -68,6 +70,7 @@ contract MemberRoles is Governed {
         memberRoleData[1].memberActive[_firstAB] = true;
         memberRoleData[1].memberAddress.push(_firstAB);
         memberRoleData[1].validity[_firstAB] = UINT_MAX;
+        constructorCheck = true;
     }
 
     /// @dev To Initiate default settings whenever the contract is regenerated!
