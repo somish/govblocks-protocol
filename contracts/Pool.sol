@@ -27,6 +27,7 @@ contract Pool is Upgradeable {
     using SafeMath for uint;
 
     GBTStandardToken internal gbt;
+    GBTStandardToken internal dAppToken;
     Governance internal gov;
     GovernanceData internal governanceDat;
     ProposalCategory internal proposalCategory;
@@ -47,6 +48,7 @@ contract Pool is Upgradeable {
         gov = Governance(master.getLatestAddress("GV"));
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
+        dAppToken = GBTStandardToken(master.dAppToken());
     }
 
     function transferAssets() public {
@@ -68,42 +70,43 @@ contract Pool is Upgradeable {
 
     /// @dev user can calim the tokens rewarded them till now
     function claimReward(address _claimer) public {
-        uint rewardToClaim = gov.calculateMemberReward(_claimer);
-        if (rewardToClaim != 0) {
-            gbt.transfer(_claimer, rewardToClaim);
+        uint pendingGBTReward;
+        uint pendingDAppReward;
+        (pendingGBTReward, pendingDAppReward) = gov.calculateMemberReward(_claimer);
+        if (pendingGBTReward != 0) {
+            gbt.transfer(_claimer, pendingGBTReward);
+        }
+        if (pendingDAppReward != 0) {
+            dAppToken.transfer(_claimer, pendingDAppReward);
         }
     }
 
-    // /// @dev checks and closes proposal if required
-    // function checkRoleVoteClosing(uint _proposalId, uint32 _roleId, address _memberAddress) public {
-    //     uint gasLeft = gasleft();
-    //     if (simpleVoting.checkForClosing(_proposalId, _roleId) == 1) {
-    //         simpleVoting.closeProposalVote(_proposalId);
-    //         _memberAddress.transfer((gasLeft - gasleft()) * uint256(10) ** 9);
-    //     }
-    // }
-
-    function getPendingReward() public view returns (uint pendingReward) {
+    function getPendingReward(address _memberAddress) public view returns (uint pendingGBTReward, uint pendingDAppReward) {
         uint lastRewardProposalId;
         uint lastRewardSolutionProposalId;
-        (lastRewardProposalId, lastRewardSolutionProposalId) = 
-            governanceDat.getAllidsOfLastReward(msg.sender);
+        uint tempGBTReward;
+        uint tempDAppRward;
 
-        pendingReward = 
-            getPendingProposalReward(msg.sender, lastRewardProposalId) 
-            + getPendingSolutionReward(msg.sender, lastRewardSolutionProposalId);
+        (lastRewardProposalId, lastRewardSolutionProposalId) = governanceDat.getAllidsOfLastReward(msg.sender);
+        (pendingGBTReward, pendingDAppReward) = getPendingProposalReward(_memberAddress, lastRewardProposalId); 
+        (tempGBTReward, tempDAppRward) = getPendingSolutionReward(_memberAddress, lastRewardSolutionProposalId);
+
+        pendingGBTReward += tempGBTReward;
+        pendingDAppReward += tempDAppRward;
 
         uint votingTypes = governanceDat.getVotingTypeLength();
         for(uint i = 0; i < votingTypes; i++) {
             VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
-            pendingReward += votingType.getPendingReward(msg.sender);
+            (tempGBTReward, tempDAppRward) = votingType.getPendingReward(_memberAddress);
+            pendingGBTReward += tempGBTReward;
+            pendingDAppReward += tempDAppRward;
         }
     }
 
     function getPendingProposalReward(address _memberAddress, uint _lastRewardProposalId)
         public
         view
-        returns (uint pendingProposalReward)
+        returns (uint pendingGBTReward, uint pendingDAppReward)
     {
         uint allProposalLength = governanceDat.getProposalLength();
         uint finalVredict;
@@ -125,7 +128,10 @@ contract Pool is Upgradeable {
                         proposalCategory.getRewardPercProposal(category) 
                         * governanceDat.getProposalIncentive(i)
                         / 100;
-                    pendingProposalReward = pendingProposalReward + calcReward;
+                    if (proposalCategory.isCategoryExternal(category))    
+                        pendingGBTReward += calcReward;
+                    else
+                        pendingDAppReward += calcReward;                
                 }
             }
         }
@@ -134,7 +140,7 @@ contract Pool is Upgradeable {
     function getPendingSolutionReward(address _memberAddress, uint _lastRewardSolutionProposalId)
         public
         view
-        returns (uint pendingSolutionReward)
+        returns (uint pendingGBTReward, uint pendingDAppReward)
     {
         uint allProposalLength = governanceDat.getProposalLength();
         uint calcReward;
@@ -150,7 +156,10 @@ contract Pool is Upgradeable {
                 gov.getSolutionIdAgainstAddressProposal(_memberAddress, i);
             if (finalVerdict > 0 && finalVerdict == solutionId && proposalId == i) {
                 calcReward = (proposalCategory.getRewardPercSolution(category) * totalReward) / 100;
-                pendingSolutionReward = pendingSolutionReward + calcReward;                
+                if (proposalCategory.isCategoryExternal(category))    
+                    pendingGBTReward += calcReward;
+                else
+                    pendingDAppReward += calcReward;                
             }
         }
     }

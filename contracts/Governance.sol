@@ -20,7 +20,6 @@ import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 import "./Master.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
 import "./Pool.sol";
 import "./GBTStandardToken.sol";
 import "./VotingType.sol";
@@ -257,19 +256,24 @@ contract Governance is Upgradeable {
     /// @dev Calculates member reward to be claimed
     /// @param _memberAddress Member address
     /// @return rewardToClaim Rewards to be claimed
-    function calculateMemberReward(address _memberAddress) public returns(uint tempFinalRewardToDistribute) {
+    function calculateMemberReward(address _memberAddress) public returns(uint pendingGBTReward, uint pendingDAppReward) {
         uint lastRewardProposalId;
         uint lastRewardSolutionProposalId;
         (lastRewardProposalId, lastRewardSolutionProposalId) = 
             governanceDat.getAllidsOfLastReward(_memberAddress);
 
-        tempFinalRewardToDistribute = 
-            calculateProposalReward(_memberAddress, lastRewardProposalId) 
-            + calculateSolutionReward(_memberAddress, lastRewardSolutionProposalId);
+        (pendingGBTReward, pendingDAppReward) = calculateProposalReward(_memberAddress, lastRewardProposalId); 
+        uint tempGBTReward;
+        uint tempDAppRward;
+        (tempGBTReward, tempDAppRward) = calculateSolutionReward(_memberAddress, lastRewardSolutionProposalId);
+        pendingGBTReward += tempGBTReward;
+        pendingDAppReward += tempDAppRward;
         uint votingTypes = governanceDat.getVotingTypeLength();
         for(uint i = 0; i < votingTypes; i++) {
             VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
-            tempFinalRewardToDistribute += votingType.claimVoteReward(_memberAddress);
+            (tempGBTReward, tempDAppRward) = votingType.claimVoteReward(_memberAddress);
+            pendingGBTReward += tempGBTReward;
+            pendingDAppReward += tempDAppRward;
         }
     }
 
@@ -417,7 +421,7 @@ contract Governance is Upgradeable {
         uint _lastRewardProposalId
     ) 
         internal  
-        returns(uint tempfinalRewardToDistribute)
+        returns(uint pendingGBTReward, uint pendingDAppReward)
     {
         uint allProposalLength = governanceDat.getProposalLength();
         uint lastIndex = 0;
@@ -430,7 +434,7 @@ contract Governance is Upgradeable {
         for (uint i = _lastRewardProposalId; i < allProposalLength; i++) {
             if (_memberAddress == governanceDat.getProposalOwner(i)) {
                 (, , category, proposalStatus, finalVredict) = governanceDat.getProposalDetailsById3(i);
-                if (proposalStatus < 2)
+                if (proposalStatus < 2 && lastIndex == 0)
                     lastIndex = i;
                 else if (proposalStatus > 2 && 
                     finalVredict > 0
@@ -439,10 +443,10 @@ contract Governance is Upgradeable {
                     calcReward = proposalCategory.getRewardPercProposal(category) 
                         * governanceDat.getProposalIncentive(i)
                         / 100;
-
-                    tempfinalRewardToDistribute = 
-                        tempfinalRewardToDistribute 
-                        + calcReward;
+                    if (proposalCategory.isCategoryExternal(category))    
+                        pendingGBTReward += calcReward;
+                    else
+                        pendingDAppReward += calcReward;
 
                     calculateProposalReward1(_memberAddress, i, calcReward, addProposalOwnerPoints);
                 }
@@ -467,7 +471,7 @@ contract Governance is Upgradeable {
             governanceDat.callRewardEvent(
                 _memberAddress, 
                 i, 
-                "GBT Reward-Proposal owner", 
+                "Reward-Proposal owner", 
                 calcReward
             );
         }
@@ -492,7 +496,7 @@ contract Governance is Upgradeable {
         uint _lastRewardSolutionProposalId
     ) 
         internal  
-        returns(uint tempfinalRewardToDistribute) 
+        returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
         uint allProposalLength = governanceDat.getProposalLength();
         uint calcReward;
@@ -501,27 +505,26 @@ contract Governance is Upgradeable {
         uint proposalStatus;
         uint finalVerdict;
         uint solutionId;
-        uint proposalId;
         uint totalReward;
         uint category;
-
+        uint addSolutionOwnerPoints = governanceDat.addSolutionOwnerPoints();
         for (i = _lastRewardSolutionProposalId; i < allProposalLength; i++) {
-            (proposalId, solutionId, proposalStatus, finalVerdict, totalReward, category) = 
+            (, solutionId, proposalStatus, finalVerdict, totalReward, category) = 
                 getSolutionIdAgainstAddressProposal(_memberAddress, i);
-
-            if (proposalId == i) {
-                if (proposalStatus < 2)
-                    lastIndex = i;
-                if (finalVerdict > 0 && finalVerdict == solutionId)
-                    tempfinalRewardToDistribute = 
-                        tempfinalRewardToDistribute 
-                        + calculateSolutionReward1(
-                            _memberAddress, 
-                            i, 
-                            calcReward, 
-                            totalReward, 
-                            category                            
-                        );
+            if (proposalStatus < 2 && lastIndex == 0)
+                lastIndex = i;
+            if (finalVerdict > 0 && finalVerdict == solutionId) {
+                calcReward = (proposalCategory.getRewardPercSolution(category) * totalReward) / 100;
+                if (proposalCategory.isCategoryExternal(category))    
+                    pendingGBTReward += calcReward;
+                else
+                    pendingDAppReward += calcReward;
+                calculateSolutionReward1(
+                        _memberAddress, 
+                        i, 
+                        calcReward, 
+                        addSolutionOwnerPoints                            
+                    );
             }
         }
 
@@ -534,20 +537,16 @@ contract Governance is Upgradeable {
         address _memberAddress, 
         uint i, 
         uint calcReward, 
-        uint totalReward, 
-        uint category
+        uint addSolutionOwnerPoints
     ) 
         internal  
-        returns(uint tempfinalRewardToDistribute) 
     {
-        uint addSolutionOwnerPoints = governanceDat.addSolutionOwnerPoints();
-        calcReward = (proposalCategory.getRewardPercSolution(category) * totalReward) / 100;
-        tempfinalRewardToDistribute = calcReward;
+        
         if (calcReward > 0) {
             governanceDat.callRewardEvent(
                 _memberAddress, 
                 i, 
-                "GBT Reward-Solution owner", 
+                "Reward-Solution owner", 
                 calcReward
             );
         }

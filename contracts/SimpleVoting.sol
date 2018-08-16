@@ -23,7 +23,6 @@ import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
 import "./GovBlocksMaster.sol";
 import "./Pool.sol";
-import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./EventCaller.sol";
 import "./Governed.sol";
@@ -197,35 +196,41 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
-    function claimVoteReward(address _memberAddress) public returns(uint tempfinalRewardToDistribute) {
+    function claimVoteReward(address _memberAddress) public returns(uint pendingGBTReward, uint pendingDAppReward) {
         uint lastIndex = 0;
         uint i;
         uint totalVotes = getTotalNumberOfVotesByAddress(_memberAddress);
-        uint tempfinalReward;
         uint voteId;
         uint proposalId;
         uint _lastRewardVoteId = lastRewardVoteId[_memberAddress];
+        uint tempGBTReward;
+        uint tempDAppReward;
         for (i = _lastRewardVoteId; i < totalVotes; i++) {
             voteId = getVoteIdOfNthVoteOfMember(_memberAddress, i);
             proposalId = allVotes[voteId].proposalId;
-            (tempfinalReward, lastIndex) = calculateVoteReward(_memberAddress, i, proposalId);
-            tempfinalRewardToDistribute = tempfinalRewardToDistribute + tempfinalReward;
+            (tempGBTReward, tempDAppReward, lastIndex) = calculateVoteReward(_memberAddress, i, proposalId);
+            pendingGBTReward += tempGBTReward;
+            pendingDAppReward += tempDAppReward;
         }
         if (lastIndex == 0)
             lastIndex = i;
         lastRewardVoteId[_memberAddress] = lastIndex;
     }
 
-    function getPendingReward(address _memberAddress) public view returns(uint tempfinalRewardToDistribute) {
+    function getPendingReward(address _memberAddress) public view returns(uint pendingGBTReward, uint pendingDAppReward) {
         uint i;
         uint totalVotes = getTotalNumberOfVotesByAddress(_memberAddress);
         uint voteId;
         uint proposalId;
         uint _lastRewardVoteId = lastRewardVoteId[_memberAddress];
+        uint tempGBTReward;
+        uint tempDAppReward;
         for (i = _lastRewardVoteId; i < totalVotes; i++) {
             voteId = getVoteIdOfNthVoteOfMember(_memberAddress, i);
             proposalId = allVotes[voteId].proposalId;
-            tempfinalRewardToDistribute += calculatePendingVoteReward(_memberAddress, i, proposalId);
+            (tempGBTReward, tempDAppReward) = calculatePendingVoteReward(_memberAddress, i, proposalId);
+            pendingGBTReward += tempGBTReward;
+            pendingDAppReward += tempDAppReward;
         }
     }
 
@@ -537,7 +542,7 @@ contract SimpleVoting is Upgradeable {
     function calculatePendingVoteReward(address _memberAddress, uint _voteNo, uint _proposalId) 
         internal
         view
-        returns (uint tempfinalRewardToDistribute) 
+        returns (uint pendingGBTReward, uint pendingDAppReward) 
     {
         uint solutionChosen;
         uint proposalStatus;
@@ -554,18 +559,19 @@ contract SimpleVoting is Upgradeable {
             calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
                 / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
 
-            tempfinalRewardToDistribute = tempfinalRewardToDistribute + calcReward;
-
         } else if (!governanceDat.punishVoters() && finalVredict > 0 && totalReward != 0) {
             calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
                 / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
-            tempfinalRewardToDistribute = tempfinalRewardToDistribute + calcReward;
         }
+        if (proposalCategory.isCategoryExternal(category))    
+            pendingGBTReward = calcReward;
+        else
+            pendingDAppReward = calcReward;
     }
 
     function calculateVoteReward(address _memberAddress, uint _voteNo, uint _proposalId) 
         internal
-        returns (uint tempfinalRewardToDistribute, uint lastIndex) 
+        returns (uint pendingGBTReward, uint pendingDAppReward, uint lastIndex) 
     {
         uint solutionChosen;
         uint proposalStatus;
@@ -578,35 +584,35 @@ contract SimpleVoting is Upgradeable {
         (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, category, ) = 
             getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
 
-        if (proposalStatus < 2)
+        if (proposalStatus < 2 && lastIndex == 0)
             lastIndex = _voteNo;
         if (finalVredict > 0 && solutionChosen == finalVredict) {
             calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
                 / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
-
-            tempfinalRewardToDistribute = tempfinalRewardToDistribute + calcReward;
-
             if (calcReward > 0) {
                 governanceDat.callRewardEvent(
                     _memberAddress, 
                     _proposalId, 
-                    "GBT Reward-vote accepted", 
+                    "Reward-vote accepted", 
                     calcReward
                 );
             }
         } else if (!governanceDat.punishVoters() && finalVredict > 0) {
             calcReward = (proposalCategory.getRewardPercVote(category) * voteValue * totalReward) 
                 / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
-            tempfinalRewardToDistribute = tempfinalRewardToDistribute + calcReward;
             if (calcReward > 0) {
                 governanceDat.callRewardEvent(
                     _memberAddress, 
                     _proposalId, 
-                    "GBT Reward-voting", 
+                    "Reward-voting", 
                     calcReward
                 );
             }
         }
+        if (proposalCategory.isCategoryExternal(category))    
+            pendingGBTReward = calcReward;
+        else
+            pendingDAppReward = calcReward;
     }
 
     /// @dev Gets vote id details when giving member address and proposal id

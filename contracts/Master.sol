@@ -106,7 +106,7 @@ contract Master is Ownable {
 
     /// @dev just for the interface
     function changeGBTSAddress(address _gbtAddress) public {
-        require(isAuth());
+        require(msg.sender == address(gbm));
         contractsActive[allContractVersions[versionDates.length - 1]["GS"]] = false;
         allContractVersions[versionDates.length - 1]["GS"] = _gbtAddress;
         contractsActive[_gbtAddress] = true;
