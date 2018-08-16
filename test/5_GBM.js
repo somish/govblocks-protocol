@@ -83,7 +83,7 @@ contract('GovBlocksMaster', function([owner,taker]) {
         let dAppName = await gbm.getAllDappById(0);
         let allDappNameArray = await gbm.getAllDappArray();
         let getDappNameByAddress = await gbm.getDappNameByAddress(gbm.address);
-        await ec.callActionSuccess(0); //for coverage
+        await ec.callCloseProposalOnTime(1,1); //for coverage
         assert.isAtLeast(dAppLength.toNumber(), 1, "dApp Length not proper");
         assert.equal(dAppName, allDappNameArray[0], "dApp name not consistent");
 
