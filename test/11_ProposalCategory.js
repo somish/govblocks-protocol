@@ -7,7 +7,6 @@ let gv;
 const sampleBytes32 = "0x41647669736f727920426f617264000000000000000000000000000000000000";
 const sampleAddress = "0x0000000000000000000000000000000000000001";
 
-// proposalVoting, adddSolution, claimReward, closeProposal tested already
 contract('Proposal Category', function([owner,taker]) {
     before(function(){
       ProposalCategory.deployed().then(function(instance){
@@ -32,7 +31,6 @@ contract('Proposal Category', function([owner,taker]) {
     let g11 = await pc.getRoleMajorityVotelength(0);
     let g12 = await pc.getCategoryIncentive(0);
     let g13 = await pc.addInitialSubC("Yo","yo",1,sampleAddress,"0x4164",[1,1,1],[1,1,1]);
-    //assert.equal(g2, true, "Not initialized");
     //TODO verify the data returned
   });
   it("Should add a proposal category", async function() {

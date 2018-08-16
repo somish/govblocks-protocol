@@ -58,7 +58,7 @@ contract GovernanceData is Upgradeable {
 
     event Reward(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
     
-    event Penalty(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
+    // event Penalty(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
 
     event ProposalStatus(uint256 indexed proposalId, uint256 proposalStatus, uint256 dateAdd);
     
@@ -188,17 +188,17 @@ contract GovernanceData is Upgradeable {
         emit Reward(_to, _proposalId, _description, _amount);
     }
 
-    /// @dev Calls penalty event
-    /// @param _to Address to whom penalty is charged
-    /// @param _proposalId Proposal id
-    /// @param _description Tells the cause of penalty against Proposal, Solution or Vote.
-    /// @param _amount Penalty amount
-    function callPenaltyEvent(address _to, uint256 _proposalId, string _description, uint256 _amount) 
-        public 
-        onlyInternal 
-    {
-        emit Penalty(_to, _proposalId, _description, _amount);
-    }
+    // /// @dev Calls penalty event
+    // /// @param _to Address to whom penalty is charged
+    // /// @param _proposalId Proposal id
+    // /// @param _description Tells the cause of penalty against Proposal, Solution or Vote.
+    // /// @param _amount Penalty amount
+    // function callPenaltyEvent(address _to, uint256 _proposalId, string _description, uint256 _amount) 
+    //     public 
+    //     onlyInternal 
+    // {
+    //     emit Penalty(_to, _proposalId, _description, _amount);
+    // }
 
     /// @dev Calls proposal status event
     /// @param _proposalId Proposal id
@@ -263,10 +263,8 @@ contract GovernanceData is Upgradeable {
     uint public bonusReputation;
     uint public addProposalOwnerPoints;
     uint public addSolutionOwnerPoints;
-    uint public addMemberPoints;
-    uint public subProposalOwnerPoints;
-    uint public subSolutionOwnerPoints;
-    uint public subMemberPoints;
+    // uint public subProposalOwnerPoints;
+    // uint public subSolutionOwnerPoints;
 
     ProposalStruct[] internal allProposal;
     VotingTypeDetails[] internal allVotingTypeDetails;
@@ -299,31 +297,15 @@ contract GovernanceData is Upgradeable {
     ///     after proposal acceptance
     /// @param _addSolutionOwnerPoints Points that needs to be added in Solution Owner reputation 
     ///     for providing correct solution against proposal
-    /// @param _addMemberPoints Points that needs to be added in Other members reputation 
-    ///     for casting vote in favour of correct solution
-    /// @param _subProposalOwnerPoints Points that needs to be subtracted 
-    ///     from Proposal owner reputation in case proposal gets rejected
-    /// @param _subSolutionOwnerPoints  Points that needs to be subtracted 
-    ///     from Solution Owner reputation for providing wrong solution against proposal
-    /// @param _subMemberPoints Points that needs to be subtracted 
-    ///     from Other members reputation for casting vote against correct solution
     function changeMemberReputationPoints(
         uint _addProposalOwnerPoints, 
-        uint _addSolutionOwnerPoints, 
-        uint _addMemberPoints, 
-        uint _subProposalOwnerPoints, 
-        uint _subSolutionOwnerPoints, 
-        uint _subMemberPoints
+        uint _addSolutionOwnerPoints
     ) 
         public 
         onlyInternal 
     {
         addProposalOwnerPoints = _addProposalOwnerPoints;
         addSolutionOwnerPoints = _addSolutionOwnerPoints;
-        addMemberPoints = _addMemberPoints;
-        subProposalOwnerPoints = _subProposalOwnerPoints;
-        subSolutionOwnerPoints = _subSolutionOwnerPoints;
-        subMemberPoints = _subMemberPoints;
     }
 
     /// @dev Sets the Last proposal id till which the reward has been distributed
@@ -350,16 +332,6 @@ contract GovernanceData is Upgradeable {
         require(proposalPaused[_proposalId]);
         proposalPaused[_proposalId] = false;
         allProposal[_proposalId].dateUpd = now;
-    }
-
-    /// @dev Gets last Proposal id till the reward has been distributed (Proposal creation and acceptance)
-    function getLastRewardIdOfCreatedProposals(address _memberAddress) public view returns(uint) {
-        return lastRewardDetails[_memberAddress].lastRewardProposalId;
-    }
-
-    /// @dev Gets the last proposal id till the reward has been distributed for being Solution Owner
-    function getLastRewardIdOfSolutionProposals(address _memberAddress) public view returns(uint) {
-        return lastRewardDetails[_memberAddress].lastRewardSolutionProposalId;
     }
 
     /// @dev Get all Last Id's till which the reward has been distributed against member
@@ -458,27 +430,6 @@ contract GovernanceData is Upgradeable {
     ///     (Upvoted with many votes)
     function changeSolutionOwnerAdd(uint _repPoints) public onlyInternal {
         addSolutionOwnerPoints = _repPoints;
-    }
-
-    /// @dev Change proposal owner reputation points that needs to be subtracted if proposal gets rejected. 
-    function changeProposalOwnerSub(uint _repPoints) public onlyInternal {
-        subProposalOwnerPoints = _repPoints;
-    }
-
-    /// @dev Changes solution owner reputation points that needs to be subtracted 
-    ///     if solution is downvoted with many votes   
-    function changeSolutionOwnerSub(uint _repPoints) public onlyInternal {
-        subSolutionOwnerPoints = _repPoints;
-    }
-
-    /// @dev Change member points that needs to be added when voting in favour of final solution
-    function changeMemberAdd(uint _repPoints) public onlyInternal {
-        addMemberPoints = _repPoints;
-    }
-
-    /// @dev Change member points that needs to be subtracted when voted against final solution
-    function changeMemberSub(uint _repPoints) public onlyInternal {
-        subMemberPoints = _repPoints;
     }
 
     /// @dev Sets proposal category
@@ -683,11 +634,6 @@ contract GovernanceData is Upgradeable {
         return allProposalData[_proposalId].propStatus;
     }
 
-    /// @dev Gets proposal voting type when given proposal id
-    function getProposalVotingType(uint _proposalId) public view returns(address) {
-        return (allProposal[_proposalId].votingTypeAddress);
-    }
-
     /// @dev Gets proposal sub category when given proposal id
     function getProposalCategory(uint _proposalId) public view returns(uint) {
         return allProposalData[_proposalId].category;
@@ -766,6 +712,7 @@ contract GovernanceData is Upgradeable {
     function getProposalVotingAddress(uint _proposalId) public view returns(address) {
         return allProposal[_proposalId].votingTypeAddress;
     }
+    
     /// @dev Get Latest updated version of proposal.
     function getProposalVersion(uint _proposalId) public view returns(uint) {
         return allProposalData[_proposalId].versionNumber;
@@ -936,10 +883,6 @@ contract GovernanceData is Upgradeable {
     function addMemberReputationPoints() internal {
         addProposalOwnerPoints = 5;
         addSolutionOwnerPoints = 5;
-        addMemberPoints = 1;
-        subProposalOwnerPoints = 1;
-        subSolutionOwnerPoints = 1;
-        subMemberPoints = 1;
     }
 
     /// @dev Sets global parameters that will help in distributing reward

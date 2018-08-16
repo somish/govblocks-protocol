@@ -178,14 +178,6 @@ contract Master is Ownable {
             governanceDat.changeProposalOwnerAdd(_value);
         } else if (_typeOf == "AOO") {
             governanceDat.changeSolutionOwnerAdd(_value);
-        } else if (_typeOf == "AVM") {
-            governanceDat.changeMemberAdd(_value);
-        } else if (_typeOf == "SPO") {
-            governanceDat.changeProposalOwnerSub(_value);
-        } else if (_typeOf == "SOO") {
-            governanceDat.changeSolutionOwnerSub(_value);
-        } else if (_typeOf == "SVM") {
-            governanceDat.changeMemberSub(_value);
         } else if (_typeOf == "RW") {
             governanceDat.changeReputationWeight(_value);
         } else if (_typeOf == "SW") {
