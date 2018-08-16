@@ -172,13 +172,8 @@ contract MemberRoles is Governed {
     /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
     /// @param _roleId roleId to update its Authorized Address
     /// @param _newCanAddMember New authorized address against role id
-    function changeCanAddMember(uint _roleId, address _newCanAddMember) public {
-        if (authorizedAddressAgainstRole[_roleId] == address(0))
-            authorizedAddressAgainstRole[_roleId] = _newCanAddMember;
-        else {
-            require(msg.sender == authorizedAddressAgainstRole[_roleId]);
-            authorizedAddressAgainstRole[_roleId] = _newCanAddMember;
-        }
+    function changeCanAddMember(uint _roleId, address _newCanAddMember) public checkRoleAuthority(_roleId) {
+        authorizedAddressAgainstRole[_roleId] = _newCanAddMember;
     }
 
     /// @dev Adds new member role
@@ -273,13 +268,13 @@ contract MemberRoles is Governed {
     /// @dev Get Total number of role ids that has been assigned to a member so far.
     function getRoleIdLengthByAddress(address _memberAddress) internal view returns(uint8 count) {
         uint length = getTotalMemberRoles();
-        for (uint8 i = 0; i < length; i++) {
+        for (uint i = 0; i < length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress]
                 && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now))
-                count++;
-            if(dAppToken.balanceOf(_memberAddress) > 0)
                 count++;       
         }
+        if(dAppToken.balanceOf(_memberAddress) > 0)
+            count++;
         return count;
     }
 }

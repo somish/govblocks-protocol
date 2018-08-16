@@ -44,10 +44,6 @@ contract Governed {
             return true;
     }
 
-    function setDappName(bytes32 _dAppName) internal {
-        dappName = _dAppName;
-    } 
-
     function setGovernChecker() public {
         if (getCodeSize(0xB89a0D1c826D7C8Db49bDA9C7dBBA91b7C1dF6a1) > 0)        //kovan testnet
             governChecker = GovernChecker(0xB89a0D1c826D7C8Db49bDA9C7dBBA91b7C1dF6a1);
