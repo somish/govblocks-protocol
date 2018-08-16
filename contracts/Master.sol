@@ -104,7 +104,7 @@ contract Master is Ownable {
         dAppTokenProxy = _dAppTokenProxy;
     }
 
-    /// @dev just for the interface
+    /// @dev changeGBTSAddress
     function changeGBTSAddress(address _gbtAddress) public {
         require(msg.sender == address(gbm));
         contractsActive[allContractVersions[versionDates.length - 1]["GS"]] = false;

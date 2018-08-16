@@ -7,7 +7,6 @@ let gv;
 const sampleBytes32 = "0x41647669736f727920426f617264000000000000000000000000000000000000";
 const sampleAddress = "0x0000000000000000000000000000000000000001";
 
-//todo changePendingProposalStart
 
 contract('Governance', function([owner,taker]) {
     before(function(){
@@ -45,9 +44,11 @@ contract('Governance', function([owner,taker]) {
     await assert.isAtLeast(remainingTime.toNumber(), 1, "Remaining time not set");
   });
   it("Should check getters", async function (){
-    let g1 = gv.getMemberDetails(owner);
-    let g2 = gv.getSolutionIdAgainstAddressProposal(owner,0);
-    let g3 = gv.getAllVoteIdsLengthByProposal(0);
+    this.timeout(100000);
+    let g1 = await gv.getMemberDetails(owner);
+    let g2 = await gv.getSolutionIdAgainstAddressProposal(owner,0);
+    let g3 = await gv.getAllVoteIdsLengthByProposal(0);
+    let g4 = await gv.master();
     try {await gv.changePendingProposalStart();}
     catch(exceptions) {
         console.log("need to be run after master is initialized");
