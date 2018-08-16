@@ -21,7 +21,6 @@ import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
-import "./GovBlocksMaster.sol";
 import "./Pool.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./EventCaller.sol";
@@ -80,9 +79,8 @@ contract SimpleVoting is Upgradeable {
         governance = Governance(govAddress);
         pool = Pool(master.getLatestAddress("PL"));
         gbt = GBTStandardToken(master.getLatestAddress("GS"));
-        GovBlocksMaster govBlocksMaster = GovBlocksMaster(master.gbmAddress());
         basicToken = GBTStandardToken(master.dAppToken());
-        eventCaller = EventCaller(govBlocksMaster.eventCaller());
+        eventCaller = EventCaller(master.getEventCallerAddress());
         governChecker = GovernChecker(master.getGovernCheckerAddress());
     }
 
@@ -501,7 +499,6 @@ contract SimpleVoting is Upgradeable {
             governanceDat.changeProposalStatus(_proposalId, 5);
             governance.changePendingProposalStart();
         }
-
     }
 
     /// @dev Checks if the vote count against any solution passes the threshold value or not.

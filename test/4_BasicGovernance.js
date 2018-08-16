@@ -110,8 +110,8 @@ contract('Proposal, solution and voting', function([owner]) {
       });
       it("Should show zero pending reward when only rep is to be earned", async function () {
         this.timeout(100000);
-        var reward = await pl.getPendingReward();
-        assert.equal(reward.toNumber(), 0, "Incorrect Reward");
+        var reward = await pl.getPendingReward(owner);
+        assert.equal(reward[0].toNumber(), 0, "Incorrect Reward");
       });
       it("Should claim pending reward/reputation", async function () {
         this.timeout(100000);

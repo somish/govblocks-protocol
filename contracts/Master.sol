@@ -75,7 +75,7 @@ contract Master is Ownable {
     /// @param _contractAddresses Array of contract addresses which will be generated
     function addNewVersion(address[] _contractAddresses) public {
         require(isAuth());
-        address gbt = gbm.getGBTAddress();
+        address gbt = gbm.gbtAddress();
         if(versionDates.length < 2) {
             govern = new Governed();
             GovernChecker governChecker = GovernChecker(govern.getGovernCheckerAddress());
