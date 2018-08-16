@@ -114,7 +114,7 @@ contract Governance is Upgradeable {
                 token = dAppToken;
             require (validateStake(_categoryId, token));
             governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, token);            
-            uint incentive=proposalCategory.getCatIncentive(category);
+            uint incentive = proposalCategory.getCatIncentive(category);
             governanceDat.setProposalIncentive(_proposalId, incentive); 
         } else
             governanceDat.createProposal1(msg.sender, votingAddress);

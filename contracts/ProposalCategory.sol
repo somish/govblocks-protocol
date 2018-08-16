@@ -167,12 +167,12 @@ contract ProposalCategory is Governed {
                 _mainCategoryId, 
                 _contractAddress, 
                 _contractName,
+                _stakeAndIncentive[0],
                 _stakeAndIncentive[1],
                 _stakeAndIncentive[2],
-                _stakeAndIncentive[3],
+                _rewardPercentage[0],
                 _rewardPercentage[1],
-                _rewardPercentage[2],
-                _rewardPercentage[3]
+                _rewardPercentage[2]
             )
         );
     }
@@ -196,12 +196,12 @@ contract ProposalCategory is Governed {
         allSubCategory[_subCategoryId].actionHash = _actionHash;
         allSubCategory[_subCategoryId].contractAddress = _address;
         allSubCategory[_subCategoryId].contractName = _contractName;
-        allSubCategory[_subCategoryId].minStake = _stakeAndIncentive[1];
-        allSubCategory[_subCategoryId].tokenHoldingTime = _stakeAndIncentive[2];
-        allSubCategory[_subCategoryId].defaultIncentive = _stakeAndIncentive[3];
-        allSubCategory[_subCategoryId].rewardPercProposal = _rewardPercentage[1];
-        allSubCategory[_subCategoryId].rewardPercSolution = _rewardPercentage[2];
-        allSubCategory[_subCategoryId].rewardPercVote = _rewardPercentage[3];
+        allSubCategory[_subCategoryId].minStake = _stakeAndIncentive[0];
+        allSubCategory[_subCategoryId].tokenHoldingTime = _stakeAndIncentive[1];
+        allSubCategory[_subCategoryId].defaultIncentive = _stakeAndIncentive[2];
+        allSubCategory[_subCategoryId].rewardPercProposal = _rewardPercentage[0];
+        allSubCategory[_subCategoryId].rewardPercSolution = _rewardPercentage[1];
+        allSubCategory[_subCategoryId].rewardPercVote = _rewardPercentage[2];
 
     }
 
@@ -289,12 +289,6 @@ contract ProposalCategory is Governed {
         majorityVoteLength = allCategory[_categoryId].memberRoleMajorityVote.length;
     }
 
-    /// @dev Gets Closing time array length when giving main category id
-    function getClosingTimeLength(uint _categoryId) public view returns(uint index, uint closingTimeLength) {
-        index = _categoryId;
-        closingTimeLength = allCategory[_categoryId].closingTime.length;
-    }
-
     /// @dev Gets role sequence length by category id
     function getRoleSequencLength(uint _categoryId) public view returns(uint roleLength) {
         roleLength = allCategory[_categoryId].memberRoleSequence.length;
@@ -340,6 +334,11 @@ contract ProposalCategory is Governed {
     /// @dev Gets Total number of categories added till now
     function getCategoryLength() public view returns(uint) {
         return allCategory.length;
+    }
+
+    /// @dev Gets Total number of sub categories added till now
+    function getSubCategoryLength() public view returns(uint) {
+        return allSubCategory.length;
     }
 
     /// @dev Gets Cateory description hash when giving category id
