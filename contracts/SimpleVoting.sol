@@ -309,12 +309,6 @@ contract SimpleVoting is Upgradeable {
         voteId = addressProposalVote[_memberAddress][_proposalId];
     }
 
-    /// @dev Check if the member has voted against a proposal. Returns true if vote id exists
-    function checkVoteIdAgainstMember(address _memberAddress, uint _proposalId) public view returns(bool result) {
-        if (addressProposalVote[_memberAddress][_proposalId] != 0)
-            result = true;
-    }
-
     /// @dev Gets voter address
     function getVoterAddress(uint _voteId) public view returns(address _voterAddress) {
         return (allVotes[_voteId].voter);
@@ -330,12 +324,6 @@ contract SimpleVoting is Upgradeable {
     /// @dev Gets Total number of votes of specific role against proposal
     function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) public view returns(uint length) {
         return proposalRoleVote[_proposalId][_roleId].length;
-    }
-
-    /// @dev Gets Vote id from the array that contains all role specific votes against proposal
-    /// @param _index To get vote id at particular index from array
-    function getVoteIdAgainstProposalRole(uint _proposalId, uint _roleId, uint _index) public view returns(uint) {
-        return (proposalRoleVote[_proposalId][_roleId][_index]);
     }
 
     /// @dev Gets vote value against Vote id

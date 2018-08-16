@@ -36,7 +36,7 @@ contract('Master', function([owner,taker]) {
     assert.equal(tp, sampleAddress, "Token Proxy not set");
   });
 
-  it("Should now]t allow non-gbm address to change gbt address", async function() {
+  it("Should not allow non-gbm address to change gbt address", async function() {
     this.timeout(100000);
     await catchRevert(ms.changeGBTSAddress(sampleAddress));
   });
