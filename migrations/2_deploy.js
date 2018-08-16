@@ -8,6 +8,7 @@ var Pool = artifacts.require("Pool");
 var ProposalCategory = artifacts.require("ProposalCategory");
 var SimpleVoting = artifacts.require("SimpleVoting");
 var EventCaller = artifacts.require("EventCaller");
+var GovernCheckerContract = artifacts.require("GovernCheckerContract");
 var ProposalCategoryAdder = artifacts.require("ProposalCategoryAdder");
 
 module.exports = function(deployer) {
@@ -21,5 +22,6 @@ module.exports = function(deployer) {
     deployer.deploy(SimpleVoting);
     deployer.deploy(MemberRoles);
     deployer.deploy(Master);
+    deployer.deploy(GovernCheckerContract);
     deployer.deploy(ProposalCategoryAdder);
 };

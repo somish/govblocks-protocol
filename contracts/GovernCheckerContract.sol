@@ -21,7 +21,7 @@ contract GBM {
 }
 
 
-contract GovernChecker {
+contract GovernCheckerContract {
 
 	mapping (bytes32 => address[]) public authorized;	//Mapping to store authorized address of every dApp
 
