@@ -251,6 +251,6 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
     await pl.claimReward(ab);
     await pl.claimReward(member);
     let rep2 = await gd.getMemberReputation(owner);
-    assert.isAtLeast(rep2.toNumber(), rep1.toNumber(), 'Incorrect Reward');
+    assert.isAbove(rep2.toNumber(), rep1.toNumber(), 'Incorrect Reward');
   });
 });

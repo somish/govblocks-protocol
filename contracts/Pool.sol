@@ -51,6 +51,7 @@ contract Pool is Upgradeable {
         dAppToken = GBTStandardToken(master.dAppToken());
     }
 
+    /// @dev transfers its assets to latest addresses
     function transferAssets() public {
         address newPool = master.getLatestAddress("PL");
         if(address(this) != newPool) {

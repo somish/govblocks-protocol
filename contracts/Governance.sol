@@ -62,6 +62,7 @@ contract Governance is Upgradeable {
         eventCaller = EventCaller(master.getEventCallerAddress());
     }
 
+    /// @dev checks if the msg.sender is allowed to create a proposal under certain category
     function allowedToCreateProposal(uint category) public view returns(bool check) {
         uint[] memory mrAllowed = proposalCategory.getMRAllowed(category);
         if (mrAllowed[0] == 0)
@@ -162,6 +163,7 @@ contract Governance is Upgradeable {
         );
     }
 
+    /// @dev checks if the msg.sender has enough tokens locked for creating a proposal or solution
     function validateStake(uint _subCat, address _token) public view returns(bool) {
         uint minStake;
         uint tokenholdingTime;
@@ -203,7 +205,7 @@ contract Governance is Upgradeable {
         governanceDat.setProposalCategory(_proposalId, _categoryId, tokenAddress);
     }
 
-    /// @dev Proposal is open for voting.
+    /// @dev Opens proposal for voting
     function openProposalForVoting(
         uint _proposalId
     ) 

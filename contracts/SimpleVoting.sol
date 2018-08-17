@@ -84,6 +84,7 @@ contract SimpleVoting is Upgradeable {
         governChecker = GovernChecker(master.getGovernCheckerAddress());
     }
 
+    /// @dev validates that the voter has enough tokens locked for voting
     function validateStake(uint32 _proposalId) public view returns(bool) {
         address token;
         uint subCatThenMinStake;
@@ -99,6 +100,8 @@ contract SimpleVoting is Upgradeable {
             return true;
     }
 
+    /// @dev validates that the voter has enough tokens locked for voting and returns vote value
+    ///     Seperate function from validateStake to save gas.
     function validateStakeAndReturnVoteValue(uint32 _proposalId) public view returns(uint voteValue) {
         address token;
         uint subCatThenMinStake;
@@ -379,10 +382,12 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
+    /// @dev ads an authorized address to goovernChecker
     function addAuthorized(address _newVotingAddress) public self {
         governChecker.addAuthorized(master.dAppName(), _newVotingAddress);
     }
 
+    /// @dev ads a voting type
     function addVotingType(address _newVotingAddress, bytes2 _name) public self {
         governChecker.addAuthorized(master.dAppName(), _newVotingAddress);
         master.addNewContract(_name, _newVotingAddress);
@@ -425,8 +430,8 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
-    /// @dev Gives rewards to respective members after final decision
-    function giveRewardAfterFinalDecision(uint _proposalId) internal {
+    /// @dev Does category specific tasks
+    function finalActions(uint _proposalId) internal {
        uint subCategory = governanceDat.getProposalCategory(_proposalId); 
         if (subCategory == 10) {
             upgrade();
@@ -468,12 +473,11 @@ contract SimpleVoting is Upgradeable {
                         eventCaller.callActionSuccess(_proposalId);
                     }
                     eventCaller.callProposalAccepted(_proposalId);
-                    giveRewardAfterFinalDecision(_proposalId);
+                    finalActions(_proposalId);
                 }
             } else {
                 governance.updateProposalDetails(_proposalId, currentVotingId, max, max);
                 governanceDat.changeProposalStatus(_proposalId, 4);
-                giveRewardAfterFinalDecision(_proposalId);
             }
         } else {
             governance.updateProposalDetails(
@@ -512,6 +516,7 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
+    /// @dev transfers authority and funds to new addresses
     function upgrade() internal {
         address newSV = master.getLatestAddress("GS");
         if (newSV != address(this)) {

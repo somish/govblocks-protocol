@@ -67,6 +67,7 @@ contract Master is Ownable {
             check = true;
     }
 
+    /// @dev returns gbm address
     function gbmAddress() public view returns(address) {
         return address(gbm);
     }
@@ -99,6 +100,7 @@ contract Master is Ownable {
         changeAllAddress();
     }
 
+    /// @dev sets dAppTokenProxy address
     function setDAppTokenProxy(address _dAppTokenProxy) public {
         require(isAuth());
         dAppTokenProxy = _dAppTokenProxy;

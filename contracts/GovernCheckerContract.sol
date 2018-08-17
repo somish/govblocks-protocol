@@ -64,6 +64,8 @@ contract GovernCheckerContract {
 			authorized[_dAppName].push(_authorizedAddress);
 	}
 
+	/// @dev checks if an address is authprized and returns its authorized number.
+	///		returns 0 if not authorized.
 	function authorizedAddressNumber(bytes32 _dAppName, address _authorizedAddress)
 		public 
 		view 

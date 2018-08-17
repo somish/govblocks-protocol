@@ -25,10 +25,11 @@ contract GovernChecker {
 
 contract Governed {
 
-    GovernChecker internal governChecker;
+    GovernChecker internal governChecker; // Instance of governCheckerContract
 
-    bytes32 internal dappName;
+    bytes32 internal dappName; // Name of the dApp, needs to be set by contracts inheriting this contract
 
+    /// @dev modifier that allows only the authorized addresses to execute the function
     modifier onlyAuthorizedToGovern() {
         if(address(governChecker) != address(0))
             require(governChecker.authorizedAddressNumber(dappName, msg.sender) > 0);
@@ -39,11 +40,13 @@ contract Governed {
         setGovernChecker();
     }
 
+    /// @dev checks if an address is authorized to govern
     function isAuthorizedToGovern(address _toCheck) public view returns(bool) {
         if(address(governChecker) == address(0) || governChecker.authorizedAddressNumber(dappName, _toCheck) > 0)
             return true;
     }
 
+    /// @dev sets the address of governChecker based on the network being used.
     function setGovernChecker() public {
         if (getCodeSize(0xB89a0D1c826D7C8Db49bDA9C7dBBA91b7C1dF6a1) > 0)        //kovan testnet
             governChecker = GovernChecker(0xB89a0D1c826D7C8Db49bDA9C7dBBA91b7C1dF6a1);
@@ -57,12 +60,14 @@ contract Governed {
             governChecker = GovernChecker(0x962d110554E0b20E18E5c3680018b49A58EF0bBB);
     }
 
+    /// @dev returns the code size at an address, used to confirm that a contract exisits at an address.
     function getCodeSize(address _addr) internal view returns(uint _size) {
         assembly {
             _size := extcodesize(_addr)
         }
     }
 
+    /// @dev returns the address of governChecker
     function getGovernCheckerAddress() public view returns(address) {
         return address(governChecker);
     }

@@ -58,8 +58,6 @@ contract GovernanceData is Upgradeable {
 
     event Reward(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
     
-    // event Penalty(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
-
     event ProposalStatus(uint256 indexed proposalId, uint256 proposalStatus, uint256 dateAdd);
     
     event ProposalVersion(
@@ -188,18 +186,6 @@ contract GovernanceData is Upgradeable {
         emit Reward(_to, _proposalId, _description, _amount);
     }
 
-    // /// @dev Calls penalty event
-    // /// @param _to Address to whom penalty is charged
-    // /// @param _proposalId Proposal id
-    // /// @param _description Tells the cause of penalty against Proposal, Solution or Vote.
-    // /// @param _amount Penalty amount
-    // function callPenaltyEvent(address _to, uint256 _proposalId, string _description, uint256 _amount) 
-    //     public 
-    //     onlyInternal 
-    // {
-    //     emit Penalty(_to, _proposalId, _description, _amount);
-    // }
-
     /// @dev Calls proposal status event
     /// @param _proposalId Proposal id
     /// @param _proposalStatus Proposal status
@@ -262,8 +248,6 @@ contract GovernanceData is Upgradeable {
     uint public bonusReputation;
     uint public addProposalOwnerPoints;
     uint public addSolutionOwnerPoints;
-    // uint public subProposalOwnerPoints;
-    // uint public subSolutionOwnerPoints;
 
     ProposalStruct[] internal allProposal;
     VotingTypeDetails[] internal allVotingTypeDetails;
@@ -286,8 +270,6 @@ contract GovernanceData is Upgradeable {
         setGlobalParameters();
         addMemberReputationPoints();
         setVotingTypeDetails("Simple Voting", address(0));
-        //setVotingTypeDetails("Rank Based Voting", null_address);
-        //setVotingTypeDetails("Feature Weighted Voting", null_address);
         constructorCheck = true;
     }
 

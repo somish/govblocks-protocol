@@ -19,10 +19,9 @@ import "./ProposalCategory.sol";
 
 contract ProposalCategoryAdder {
 
-    ProposalCategory internal proposalCategory;
-
+    /// @dev ads the default govBlocks sub categories to dApps
     function addSubC(address _to) public {
-        proposalCategory = ProposalCategory(_to);
+        ProposalCategory proposalCategory = ProposalCategory(_to);
         uint[] memory stakeInecntive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
         stakeInecntive[0] = 0;
