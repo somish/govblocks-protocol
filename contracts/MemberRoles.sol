@@ -46,11 +46,9 @@ contract MemberRoles is Upgradeable {
         require(!constructorCheck);
         uint rolelength = getTotalMemberRoles();
         memberRole.push("");
-        authorizedAddressAgainstRole[rolelength] = address(0);
         emit MemberRole(rolelength, "", "", false);
         rolelength++;
         memberRole.push("Advisory Board");
-        authorizedAddressAgainstRole[rolelength] = master.owner();
         emit MemberRole(
             rolelength, 
             "Advisory Board", 
@@ -59,7 +57,6 @@ contract MemberRoles is Upgradeable {
         );
         rolelength++;
         memberRole.push("Token Holder");
-        authorizedAddressAgainstRole[rolelength] = address(0);
         emit MemberRole(
             rolelength, 
             "Token Holder", 
