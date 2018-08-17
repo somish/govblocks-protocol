@@ -62,7 +62,7 @@ contract TokenProxy {
     /**
      * @dev Records data of all the tokens unlocked
      */
-    event Unlocked(
+    event Unlock(
         address indexed _of,
         bytes32 indexed _reason,
         uint256 _amount
@@ -202,7 +202,7 @@ contract TokenProxy {
             if (lockedTokens > 0) {
                 unlockableTokens += lockedTokens;
                 locked[_of][lockReason[_of][i]].claimed = true;
-                emit Unlocked(_of, lockReason[_of][i], lockedTokens);
+                emit Unlock(_of, lockReason[_of][i], lockedTokens);
             }
         }  
         if(unlockableTokens > 0) {

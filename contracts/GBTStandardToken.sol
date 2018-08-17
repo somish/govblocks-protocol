@@ -15,11 +15,11 @@
 
 pragma solidity 0.4.24;
 
-import "./LockableToken.sol";
+import "./imports/lockable-token/ERC1132.sol";
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 
-contract GBTStandardToken is LockableToken, MintableToken, DetailedERC20 {
+contract GBTStandardToken is ERC1132, MintableToken, DetailedERC20 {
     uint public tokenPrice;
 
     /// @dev constructor
