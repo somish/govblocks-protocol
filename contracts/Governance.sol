@@ -65,12 +65,11 @@ contract Governance is Upgradeable {
     function allowedToCreateProposal(uint category) public view returns(bool check) {
         uint[] memory mrAllowed = proposalCategory.getMRAllowed(category);
         if (mrAllowed[0] == 0)
-            check = true;
+            return true;
         else {
             for(uint i = 0; i<mrAllowed.length; i++) {
                 if (memberRole.checkRoleIdByAddress(msg.sender, mrAllowed[i])) {
-                    check = true;
-                    break;
+                    return true;
                 }
             }
         }

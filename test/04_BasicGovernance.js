@@ -6,16 +6,19 @@ const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const encode = require('../helpers/encoder.js').encode;
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Pool = artifacts.require('Pool');
+const ProposalCategory = artifacts.require('ProposalCategory');
+const sampleAddress = 0x0000000000000000000000000000000000000001;
 
 let gv;
 let gd;
 let mr;
 let sv;
 let pl;
+let pc;
 let mrLength;
 let gbt;
 
-contract('Proposal, solution and voting', function([owner]) {
+contract('Proposal, solution and voting', function([owner, ab, member]) {
 
   before(function() {
     Governance.deployed().then(function(instance) {
@@ -35,7 +38,10 @@ contract('Proposal, solution and voting', function([owner]) {
       return Pool.deployed();
     }).then(function(instance) {
       pl = instance;
-    });
+      return ProposalCategory.deployed()
+    }).then(function(instance) {
+      pc = instance
+    })
   });
   
   it('Should create a proposal with solution to add new member role', async function() {
@@ -126,10 +132,124 @@ contract('Proposal, solution and voting', function([owner]) {
     assert.equal(reward[0].toNumber(), 0, 'Incorrect Reward');
   });
 
+  it("Should add another person to AB", async function() {
+    this.timeout(100000);
+    await mr.updateMemberRole(ab, 1, true, 54565656456);
+    assert.equal(await mr.checkRoleIdByAddress(ab, 1), true, 'user not added to AB');
+    await mr.updateMemberRole(member, 3, true, 54565656456);
+    assert.equal(await mr.checkRoleIdByAddress(member, 3), true, 'user not added to member');
+  });
+
+  it("Should add a new category with multiple layers of voting", async function() {
+    this.timeout(100000);
+    let c1 = await pc.getCategoryLength();
+    await pc.addNewCategory('New Category', [1,3], [1,1], [1,3], [48548564156864,645564561546]);
+    let c2 = await pc.getCategoryLength();
+    assert.isAbove(c2.toNumber(), c1.toNumber(), 'category not added');
+  });
+
+  it('Should add a new proposal sub category', async function() {
+    this.timeout(100000);
+    let c1 = await pc.getSubCategoryLength();
+    let cat = await pc.getCategoryLength();
+    await pc.addNewSubCategory('New Sub Category', 'New Sub Category', cat.toNumber() - 1, sampleAddress, '0x4164', [1, 1, 1], [40, 40, 20]);
+    let c2 = await pc.getSubCategoryLength();
+    assert.isAbove(c2.toNumber(), c1.toNumber(), 'Sub category not added');
+  });
+
+  it('Should create a proposal with solution', async function() {
+    this.timeout(100000);
+    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    let c1 = await pc.getSubCategoryLength();
+    let c = c1.toNumber() - 1;
+    await gv.createProposalwithSolution('Add new member', 'Add new member', 'Addnewmember', 0, c, 'Add new member', '0x5465');
+    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
+    assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
+  });
+
+  it('Should transfer and lock gbt', async function() {
+    let amount = 5000000000;
+    await gbt.transfer(ab, amount);
+    await gbt.transfer(member, amount);
+    await gbt.transfer(pl.address, amount);
+    await gbt.lock('GOV', amount, 5468545613353456, {from: ab});
+    await gbt.lock('GOV', amount, 5468545613353456, {from: member});
+  })
+
+  it('Should submit another solution', async function() {
+    this.timeout(100000);
+    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    let s1 = await gd.getTotalSolutions(p1.toNumber() - 1);
+    await sv.addSolution(p1.toNumber() - 1, ab, 'Addnewmember', '0x41', {from: ab});
+    let s2 = await gd.getTotalSolutions(p1.toNumber() - 1);
+    assert.equal(s1.toNumber() + 1, s2.toNumber(), 'Solution not created');
+  });
+
+  it('Should vote in favour of the second solution', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber() - 1;
+    await sv.proposalVoting(p, [2]);
+    let vid = await sv.getVoteIdAgainstMember(owner,p);
+    assert.isAtLeast(vid.toNumber(), 1, "Vote not added");
+  });
+
+  it('Should not close the proposal before time', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber() - 1;
+    await catchRevert(sv.closeProposalVote(p));
+  });
+
+  it('Should vote in favour of the second solution', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber() - 1;
+    await sv.proposalVoting(p, [2], {from: ab});
+    let vid = await sv.getVoteIdAgainstMember(ab,p);
+    assert.isAtLeast(vid.toNumber(), 1, "Vote not added");
+  });
+
+  it('Should close the proposal once all members have voted', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber() - 1;
+    await sv.closeProposalVote(p);
+    let iv = await gd.getProposalIntermediateVerdict(p);
+    assert.equal(iv.toNumber(), 2, "Incorrect intermediate Verdict");
+  });
+
+  it('Should not allow to pick different solution than ab', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber() - 1;
+    await catchRevert(sv.proposalVoting(p, [1], {from: member}));
+  });
+
+  it('Should allow to vote for rejection', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber() - 1;
+    await sv.proposalVoting(p, [0], {from: member});
+    let vid = await sv.getVoteIdAgainstMember(member,p);
+    assert.isAtLeast(vid.toNumber(), 1, "Vote not added");
+  });
+
+  it('Should close the proposal once all members have voted', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber() - 1;
+    await sv.closeProposalVote(p);
+    let iv = await gd.getProposalFinalVerdict(p);
+    assert.equal(iv.toNumber(), 0, "Incorrect final Verdict");
+  });
+
   it('Should claim pending reward/reputation', async function() {
     this.timeout(100000);
     let rep1 = await gd.getMemberReputation(owner);
     await pl.claimReward(owner);
+    await pl.claimReward(ab);
+    await pl.claimReward(member);
     let rep2 = await gd.getMemberReputation(owner);
     assert.isAtLeast(rep2.toNumber(), rep1.toNumber(), 'Incorrect Reward');
   });
