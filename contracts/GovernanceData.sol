@@ -253,7 +253,6 @@ contract GovernanceData is Upgradeable {
     mapping(uint => bool) public proposalPaused;
     
     uint public quorumPercentage;
-    uint public pendingProposalStart;
     bool public constructorCheck;
     bool public punishVoters;
     bool public dAppTokenSupportsLocking;
@@ -721,11 +720,6 @@ contract GovernanceData is Upgradeable {
     /// @dev Sets Total calculated vote value from all the votes that has been casted against of winning solution
     function setProposalTotalVoteValue(uint _proposalId, uint _voteValue) public onlyInternal {
         allProposalData[_proposalId].totalVoteValue = _voteValue;
-    }
-
-    /// @dev Changes status from pending proposal to start proposal
-    function changePendingProposalStart(uint _value) public onlyInternal {
-        pendingProposalStart = _value;
     }
 
     /// @dev Adds new proposal

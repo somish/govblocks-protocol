@@ -49,10 +49,6 @@ contract('Governance', function([owner,taker]) {
     let g2 = await gv.getSolutionIdAgainstAddressProposal(owner,0);
     let g3 = await gv.getAllVoteIdsLengthByProposal(0);
     let g4 = await gv.master();
-    try {await gv.changePendingProposalStart();}
-    catch(exceptions) {
-        console.log("need to be run after master is initialized");
-    }
     //TODO verify the data returned
   });
 });

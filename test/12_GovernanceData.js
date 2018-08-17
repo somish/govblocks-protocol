@@ -54,7 +54,6 @@ contract('Governance Data', function([owner, taker]) {
     this.timeout(100000);
     let g1 = await gd.constructorCheck();
     let pl = await gd.getProposalLength();
-    let g2 = await gd.pendingProposalStart();
     let g3 = await gd.getVotingTypeDetailsById(0);
     let g4 = await gd.callProposalVersionEvent(0, 0, "yo", 0);
     let g5 = await gd.getProposalDetailsById2(0);
@@ -62,7 +61,6 @@ contract('Governance Data', function([owner, taker]) {
     let g7 = await gd.getProposalDetailsById6(0);
     let g9 = await gd.getTotalProposalIncentive();
     let g10 = await gd.getProposalVersion(0);
-    await gd.changePendingProposalStart.call(1);
     let g12 = await gd.getStatusOfProposals();
     let g13 = await gd.getStatusOfProposalsForMember([0]);
     let g14 = await gd.getAllSolutionIdsByAddress(owner);

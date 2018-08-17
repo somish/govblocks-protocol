@@ -376,7 +376,6 @@ contract SimpleVoting is Upgradeable {
                 governanceDat.changeProposalStatus(_proposalId, 7);
             else
                 governanceDat.changeProposalStatus(_proposalId, 6);
-            governance.changePendingProposalStart();
         }
     }
 
@@ -475,7 +474,6 @@ contract SimpleVoting is Upgradeable {
                 governance.updateProposalDetails(_proposalId, currentVotingId, max, max);
                 governanceDat.changeProposalStatus(_proposalId, 4);
                 giveRewardAfterFinalDecision(_proposalId);
-                governance.changePendingProposalStart();
             }
         } else {
             governance.updateProposalDetails(
@@ -485,7 +483,6 @@ contract SimpleVoting is Upgradeable {
                 governanceDat.getProposalIntermediateVerdict(_proposalId)
             );
             governanceDat.changeProposalStatus(_proposalId, 5);
-            governance.changePendingProposalStart();
         }
     }
 

@@ -152,7 +152,7 @@ contract TokenProxy {
         public
         returns (bool)
     {
-        require(tokensLockedAtTime(msg.sender, _reason, block.timestamp) > 0);
+        require(tokensLocked(msg.sender, _reason) > 0);
         locked[msg.sender][_reason].validity += _time;
         emit Lock(msg.sender, _reason, locked[msg.sender][_reason].amount, locked[msg.sender][_reason].validity);
         return true;
@@ -167,7 +167,7 @@ contract TokenProxy {
         public
         returns (bool)
     {
-        require(tokensLockedAtTime(msg.sender, _reason, block.timestamp) > 0);
+        require(tokensLocked(msg.sender, _reason) > 0);
         originalToken.transferFrom(msg.sender, address(this), _amount);
         locked[msg.sender][_reason].amount += _amount;
         emit Lock(msg.sender, _reason, locked[msg.sender][_reason].amount, locked[msg.sender][_reason].validity);

@@ -218,20 +218,6 @@ contract Governance is Upgradeable {
         callCloseEvent(_proposalId);
     }
 
-    /// @dev Changes pending proposal start variable
-    function changePendingProposalStart() public onlyInternal {
-        uint pendingPS = governanceDat.pendingProposalStart();
-        for (uint j = pendingPS; j < governanceDat.getProposalLength(); j++) {
-            if (governanceDat.getProposalStatus(j) > 3)
-                pendingPS = SafeMath.add(pendingPS, 1);
-            else
-                break;
-        }
-        if (j != pendingPS) {
-            governanceDat.changePendingProposalStart(j);
-        }
-    }
-
     /// @dev Updates proposal's major details (Called from close proposal vote)
     /// @param _proposalId Proposal id
     /// @param _currVotingStatus It is the index to fetch the role id from voting sequence array. 
