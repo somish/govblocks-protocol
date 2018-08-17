@@ -7,6 +7,8 @@ const lockedAmount = 200;
 const lockPeriod = 1000;
 let blockNumber = web3.eth.blockNumber;
 const lockTimestamp = web3.eth.getBlock(blockNumber).timestamp;
+let tp;
+let gbts;
 
 const increaseTime = function(duration) {
   web3.currentProvider.sendAsync({
@@ -26,10 +28,7 @@ const increaseTime = function(duration) {
   });
 };
 
-let tp;
-let gbts;
-
-contract('TokenProxy', function([owner, receiver, spender]) {
+contract('TokenProxy', function([owner]) {
   before(function(){
     GBTStandardToken.deployed().then(function(instance){
       gbts = instance;
@@ -118,5 +117,4 @@ contract('TokenProxy', function([owner, receiver, spender]) {
       balance.toNumber() + lockValidityExtended[0].toNumber()
     );
   });
-
 });

@@ -29,8 +29,8 @@ const increaseTime = function(duration) {
   });
 };
 
-
 contract('GBTStandardToken', function([owner, receiver, spender]) {
+
   before(function() {
     GBTStandardToken.deployed().then(function(instance) {
       gbts = instance;
