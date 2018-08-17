@@ -82,7 +82,7 @@ contract MemberRoles is Upgradeable {
 
     modifier checkRoleAuthority(uint _memberRoleId) {
         master = Master(masterAddress);
-        require(msg.sender == authorizedAddressAgainstRole[_memberRoleId] || master.isOwner(msg.sender));
+        require(msg.sender == authorizedAddressAgainstRole[_memberRoleId] || master.isInternal(msg.sender));
         _;
     }
 
