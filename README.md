@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/somish/govblocks-protocol.svg?branch=Locking)](https://travis-ci.com/somish/govblocks-protocol) [![Coverage Status](https://coveralls.io/repos/github/somish/govblocks-protocol/badge.svg?branch=Locking)](https://coveralls.io/github/somish/govblocks-protocol?branch=Locking)
+[![Build Status](https://travis-ci.org/somish/govblocks-protocol.svg?branch=Locking)](https://travis-ci.org/somish/govblocks-protocol) [![Coverage Status](https://coveralls.io/repos/github/somish/govblocks-protocol/badge.svg?branch=Locking)](https://coveralls.io/github/somish/govblocks-protocol?branch=Locking)
 
 # GovBlocks
 GovBlocks is a multi-factorial governance framework for blockchain applications. 
