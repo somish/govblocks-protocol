@@ -15,7 +15,7 @@
 
 pragma solidity 0.4.24;
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./imports/openzeppelin-solidity/contracts/token/ERC20/BasicToken.sol";
+import "./imports/openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "./Governed.sol";
 
 contract MemberRoles is Governed {
@@ -23,7 +23,7 @@ contract MemberRoles is Governed {
     using SafeMath for uint;
 
     bytes32[] internal memberRole;
-    BasicToken public dAppToken;
+    StandardToken public dAppToken;
     bool internal constructorCheck;
     uint constant UINT_MAX = uint256(0) - uint256(1);
 
@@ -49,7 +49,7 @@ contract MemberRoles is Governed {
     function memberRolesInitiate(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
         require(!constructorCheck);
         dappName = _dAppName;
-        dAppToken = BasicToken(_dAppToken);
+        dAppToken = StandardToken(_dAppToken);
         memberRole.push("");
         emit MemberRole(0, "Everyone", "Professionals that are a part of the GBT network", false);
         memberRole.push("Advisory Board");

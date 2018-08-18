@@ -49,7 +49,7 @@ contract GovBlocksMaster is Ownable {
         gbtAddress = _gbtAddress;
         eventCaller = _eventCaller;
         Governed govern = new Governed();
-        governChecker = GovernChecker(govern.getGovernCheckerAddress());
+        governChecker = GovernChecker(govern.governChecker());
         masterByteCode = "0x496e6974616c697a65";
         if(address(governChecker) != address(0))
             governChecker.updateGBMAdress(address(this));

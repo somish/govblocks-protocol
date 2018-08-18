@@ -79,7 +79,7 @@ contract Master is Ownable {
         address gbt = gbm.gbtAddress();
         if(versionDates.length < 2) {
             govern = new Governed();
-            GovernChecker governChecker = GovernChecker(govern.getGovernCheckerAddress());
+            GovernChecker governChecker = GovernChecker(govern.governChecker());
             if(getCodeSize(address(governChecker)) > 0 ){
                 if(governChecker.authorizedAddressNumber(dAppName, _contractAddresses[3]) == 0)
                     governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
@@ -207,7 +207,7 @@ contract Master is Ownable {
     }
 
     function getGovernCheckerAddress() public view returns(address) {
-        return govern.getGovernCheckerAddress();
+        return govern.governChecker();
     }
 
     /// @dev Save the initials of all the contracts
