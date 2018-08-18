@@ -28,14 +28,11 @@ import "./Governed.sol";
 
 contract SimpleVoting is Upgradeable {
     using SafeMath for uint;
-    GBTStandardToken internal gbt;
     GovernanceData internal governanceDat;
     MemberRoles internal memberRole;
     Governance internal governance;
     ProposalCategory internal proposalCategory;
-    address internal govAddress;
     bool public constructorCheck;
-    GBTStandardToken internal basicToken;
     Pool internal pool;
     EventCaller internal eventCaller;
     GovernChecker internal governChecker;
@@ -75,11 +72,8 @@ contract SimpleVoting is Upgradeable {
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
-        govAddress = master.getLatestAddress("GV");
-        governance = Governance(govAddress);
+        governance = Governance(master.getLatestAddress("GV"));
         pool = Pool(master.getLatestAddress("PL"));
-        gbt = GBTStandardToken(master.getLatestAddress("GS"));
-        basicToken = GBTStandardToken(master.dAppToken());
         eventCaller = EventCaller(master.getEventCallerAddress());
         governChecker = GovernChecker(master.getGovernCheckerAddress());
     }
@@ -200,14 +194,14 @@ contract SimpleVoting is Upgradeable {
     function claimVoteReward(address _memberAddress) public returns(uint pendingGBTReward, uint pendingDAppReward) {
         uint lastIndex = 0;
         uint i;
-        uint totalVotes = getTotalNumberOfVotesByAddress(_memberAddress);
+        uint totalVotes = allVotesByMember[_memberAddress].length;
         uint voteId;
         uint proposalId;
         uint _lastRewardVoteId = lastRewardVoteId[_memberAddress];
         uint tempGBTReward;
         uint tempDAppReward;
         for (i = _lastRewardVoteId; i < totalVotes; i++) {
-            voteId = getVoteIdOfNthVoteOfMember(_memberAddress, i);
+            voteId = allVotesByMember[_memberAddress][i];
             proposalId = allVotes[voteId].proposalId;
             (tempGBTReward, tempDAppReward, lastIndex) = calculateVoteReward(_memberAddress, i, proposalId);
             pendingGBTReward += tempGBTReward;
@@ -220,14 +214,14 @@ contract SimpleVoting is Upgradeable {
 
     function getPendingReward(address _memberAddress) public view returns(uint pendingGBTReward, uint pendingDAppReward) {
         uint i;
-        uint totalVotes = getTotalNumberOfVotesByAddress(_memberAddress);
+        uint totalVotes = allVotesByMember[_memberAddress].length;
         uint voteId;
         uint proposalId;
         uint _lastRewardVoteId = lastRewardVoteId[_memberAddress];
         uint tempGBTReward;
         uint tempDAppReward;
         for (i = _lastRewardVoteId; i < totalVotes; i++) {
-            voteId = getVoteIdOfNthVoteOfMember(_memberAddress, i);
+            voteId = allVotesByMember[_memberAddress][i];
             proposalId = allVotes[voteId].proposalId;
             (tempGBTReward, tempDAppReward) = calculatePendingVoteReward(_memberAddress, i, proposalId);
             pendingGBTReward += tempGBTReward;
@@ -341,20 +335,22 @@ contract SimpleVoting is Upgradeable {
 
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
     function closeProposalVote(uint _proposalId) public {
-        uint256 totalVoteValue = 0;
         uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
         uint currentVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
-        uint64 max = 0;
-        uint64 i;
-
         uint _mrSequenceId = proposalCategory.getRoleSequencAtIndex(category, currentVotingId);
+        uint64 max;
+        uint totalVoteValue;
+        uint i;
+        uint voteId;
+        uint voteValue;
+        
 
         require(checkForClosing(_proposalId, _mrSequenceId, category, currentVotingId) == 1);
-        uint voteLen = getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId);
+        uint voteLen = proposalRoleVote[_proposalId][_mrSequenceId].length;
         uint[] memory finalVoteValue = new uint[](governanceDat.getTotalSolutions(_proposalId));
         for (i = 0; i < voteLen; i++) {
-            uint voteId = proposalRoleVote[_proposalId][_mrSequenceId][i];
-            uint voteValue = allVotes[voteId].voteValue;
+            voteId = proposalRoleVote[_proposalId][_mrSequenceId][i];
+            voteValue = allVotes[voteId].voteValue;
             totalVoteValue = totalVoteValue + voteValue;
             finalVoteValue[allVotes[voteId].solutionChosen] = finalVoteValue[allVotes[voteId].solutionChosen] + voteValue;
         }
@@ -364,7 +360,7 @@ contract SimpleVoting is Upgradeable {
 
         for (i = 0; i < finalVoteValue.length; i++) {
             if (finalVoteValue[max] < finalVoteValue[i]) {
-                max = i;
+                max = uint64(i);
             }
         }
 
@@ -539,7 +535,7 @@ contract SimpleVoting is Upgradeable {
         uint category;
         uint calcReward;
 
-        (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, category, ) = 
+        (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, category) = 
             getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
 
         if (finalVredict > 0 && solutionChosen == finalVredict && totalReward != 0) {
@@ -568,7 +564,7 @@ contract SimpleVoting is Upgradeable {
         uint category;
         uint calcReward;
 
-        (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, category, ) = 
+        (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, category) = 
             getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
 
         if (proposalStatus < 2 && lastIndex == 0)
@@ -615,22 +611,20 @@ contract SimpleVoting is Upgradeable {
             uint finalVerdict, 
             uint voteValue, 
             uint totalReward, 
-            uint category, 
-            uint totalVoteValueProposal
+            uint category
         ) 
     {
-        uint proposalId;
-        uint voteId = getVoteIdOfNthVoteOfMember(_memberAddress, _voteNo);
-        (, , voteValue, proposalId) = getVoteDetailById(voteId);
-        solutionChosen = getSolutionByVoteIdAndIndex(voteId, 0);
+        uint voteId = allVotesByMember[_memberAddress][_voteNo];
+        uint proposalId = allVotes[voteId].proposalId;
+        voteValue = allVotes[voteId].voteValue;
+        solutionChosen = allVotes[voteId].solutionChosen;
         proposalStatus = governanceDat.getProposalStatus(proposalId);
         finalVerdict = governanceDat.getProposalFinalVerdict(proposalId);
         totalReward = governanceDat.getProposalIncentive(proposalId);
         category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(proposalId));
-        totalVoteValueProposal = governanceDat.getProposalTotalVoteValue(proposalId);
     }
 
-    ///@dev calculates log2
+    ///@dev calculates log2. Taken from stackoverflow.
     function log(uint x) public pure returns (uint y) {
         assembly {
             let arg := x

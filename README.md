@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/somish/govblocks-protocol.svg?branch=Locking)](https://travis-ci.com/somish/govblocks-protocol) [![Coverage Status](https://coveralls.io/repos/github/somish/govblocks-protocol/badge.svg?branch=Locking)](https://coveralls.io/github/somish/govblocks-protocol?branch=Locking)
+
 # GovBlocks
 GovBlocks is a multi-factorial governance framework for blockchain applications. 
 
@@ -28,11 +30,11 @@ We need to compile the contracts before deploying. We'll be using truffle for th
 ```
 truffle compile
 ```
-To deploy the smart contracts, you need to set your mnemonic seed in truffle config (You can use remix or mist as well for deploying). To deploy the contracts with truffle on kovan testnet, run
+Now, You should start a private network on port 7545 using Ganache or something similar. Then, you can deploy your GovBlocks dApp using the migrate script.
 ```
-truffle migrate --network kovan
+truffle deploy
 ```
-Your GBTStandardToken and GovBlockMaster contract is live now, you can use these contract to setup the GovBlocks platform and create register dApps using the GUI provided by GovBlocks platform.
+You can use public networks as well but you will first have to do the initialization manually as the contracts will pick up the official addresses otherwise. We recommend using the GovBlocks UI if you wish to test on a public network.
 
 
 ## Modularity
@@ -46,12 +48,11 @@ Contract:
 
 Some important functions : 
 1) addNewVersion : It is used to add new version of all the contracts.
-2) switchToRecentVersion : It switches to new verison, updates all the dependency addresses in respective contracts.
 3) configureGlobalParameters : It is used to configure global parameters
 
 
 ### Governance
-Governance module is used for doing the core governance like submitting proposals.
+Governance is used for doing the core governance like submitting proposals.
 Contracts:
 * [Governance.sol]
 * [GovernanceData.sol]
@@ -63,7 +64,7 @@ Some important functions :
 
 
 ### MemberRoles
-MemberRoles module of manages all the member roles. Every member role can have different authorizations
+MemberRoles module of manages all the member roles. Every member role can have different authorizations. It is an independent module and can be used by other dApps to implement feature rich Member Roles!
 Contract:
 * [MemberRoles.sol]
 
@@ -79,11 +80,11 @@ Contract:
 
 Some important functions : 
 1) buyPoolGBT : It is used to buy GBT using Ethereum.
-2) closeProposalOraclise : Closes Proposal voting using oraclize once the time is over.
+2) claimReward : It is used to claim reward earned by participating on the platform. 
 
 
 ### ProposalCategory
-ProposalCategory module is used to manage the proposal categories and sub categories. It contains all the category and sub category data.
+ProposalCategory module is used to manage the proposal categories and sub categories. It contains all the category and sub category data. It is an independent module and can be used by other dApps to implement feature rich category and sub categories!
 Contract:
 * [ProposalCategory.sol]
 
@@ -95,7 +96,7 @@ Some important functions :
 
 
 ### SimpleVoting
-SimpleVoting is a simple VotingType which works when only one solution can be selected for voting. It also helps distribute reward when a proposal is closed.
+SimpleVoting is a simple VotingType which works when only one solution can be selected for voting. It also helps distribute reward when a proposal is closed. Multiple Voting Types are in works, stay tuned!
 Contract:
 * [SimpleVoting.sol]
 
@@ -108,7 +109,7 @@ Some important functions :
 
 ### Todos
 
- - Write Tests
+ - Write more test cases
 
 
    [master.sol]: <https://github.com/somish/govblocks-protocol/blob/master/contracts/Master.sol>
@@ -118,4 +119,3 @@ Some important functions :
    [Pool.sol]: <https://github.com/somish/govblocks-protocol/blob/master/contracts/Pool.sol>
    [ProposalCategory.sol]: <https://github.com/somish/govblocks-protocol/blob/master/contracts/ProposalCategory.sol>
    [SimpleVoting.sol]: <https://github.com/somish/govblocks-protocol/blob/master/contracts/SimpleVoting.sol>
-  

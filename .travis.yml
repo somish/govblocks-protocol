@@ -1,0 +1,25 @@
+dist: trusty
+sudo: required
+language: node_js
+
+node_js:
+  - "8"
+
+install:
+  - npm install -g truffle
+  - npm install -g ganache-cli
+  - npm install -g coveralls
+  - npm install solidity-coverage
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - env: 'TASK=coverage'
+  
+jobs:
+  include:
+    - stage: compile and deploy
+      script: ganache-cli -e 10000000 -p 7545 -g 1 > /dev/null & truffle deploy
+    - stage: test and coverage
+      env: 'TASK=coverage'
+      script: npm run coverage && cat coverage/lcov.info | coveralls
