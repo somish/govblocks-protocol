@@ -48,8 +48,8 @@ contract Governed {
 
     /// @dev sets the address of governChecker based on the network being used.
     function setGovernChecker() public {
-        if (getCodeSize(0xeb3e94bb71872A56011336308F75bcf2ac5C3442) > 0)        //kovan testnet
-            governChecker = GovernChecker(0xeb3e94bb71872A56011336308F75bcf2ac5C3442);
+        if (getCodeSize(0xF0AF942909632711694B02357B03fe967e18e32c) > 0)        //kovan testnet
+            governChecker = GovernChecker(0xF0AF942909632711694B02357B03fe967e18e32c);
         else if (getCodeSize(0xdF6c6a73BCf71E8CAa6A2c131bCf98f10eBb5162) > 0)   //RSK testnet
             governChecker = GovernChecker(0xdF6c6a73BCf71E8CAa6A2c131bCf98f10eBb5162);
         else if (getCodeSize(0x67995F25f04d61614d05607044c276727DEA9Cf0) > 0)   //Rinkeyby testnet
