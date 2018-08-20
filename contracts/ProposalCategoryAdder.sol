@@ -24,67 +24,11 @@ contract ProposalCategoryAdder {
         ProposalCategory proposalCategory = ProposalCategory(_to);
         uint[] memory stakeInecntive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
-        stakeInecntive[0] = 0;
-        stakeInecntive[1] = 604800;
-        stakeInecntive[2] = 0;
         rewardPerc[0] = 10;
         rewardPerc[1] = 20;
         rewardPerc[2] = 70;
-        proposalCategory.addInitialSubC(
-            "Add new member role",
-            "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
-            1,
-            address(0),
-            "MR",
-            stakeInecntive,
-            rewardPerc
-        );
-        proposalCategory.addInitialSubC(
-            "Update member role",
-            "QmbsXSZ3rNPd8mDizVBV33GVg1ThveUD5YnM338wisEJyd",
-            1,
-            address(0),
-            "MR",
-            stakeInecntive,
-            rewardPerc
-        );
         stakeInecntive[0] = 1 ** 18;
-        proposalCategory.addInitialSubC(
-            "Add new category",
-            "QmNazQ3hQ5mssf8KAYkjxwVjwZvM9XjZgrJ1kf3QUmprCB",
-            2,
-            address(0),
-            "PC",
-            stakeInecntive,
-            rewardPerc
-        );
-        proposalCategory.addInitialSubC(
-            "Edit category",
-            "QmYWSuy3aZFK1Yavpq5Pm89rg6esyZ8rn5CNf6PdgJCpR6",
-            2,
-            address(0),
-            "PC",
-            stakeInecntive,
-            rewardPerc
-        );
-        proposalCategory.addInitialSubC(
-            "Add new sub category",
-            "QmeyPccQzMTNxSavJp4dL1J88zzb4xNESn5wLTPzqMFFJX",
-            2,
-            address(0),
-            "PC",
-            stakeInecntive,
-            rewardPerc
-        );
-        proposalCategory.addInitialSubC(
-            "Edit sub category",
-            "QmVeSBUghB71WHhnT8tXajSctnfz1fYx6fWXc9wXHJ8r2p",
-            2,
-            address(0),
-            "PC",
-            stakeInecntive,
-            rewardPerc
-        );
+        stakeInecntive[1] = 604800;
         stakeInecntive[2] = 1 ** 18;
         proposalCategory.addInitialSubC(
             "Configure parameters",
@@ -137,6 +81,42 @@ contract ProposalCategoryAdder {
             "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
             5,
             address(0),
+            "SV",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Add new authorized address",
+            "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
+            5,
+            address(0),
+            "SV",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Toggle Proposal",
+            "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
+            6,
+            address(0),
+            "GD",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Change dApp Token Proxy",
+            "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+            3,
+            address(0),
+            "MS",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "dApp Token locking support",
+            "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+            3,
+            address(0),
             "MS",
             stakeInecntive,
             rewardPerc
@@ -144,7 +124,7 @@ contract ProposalCategoryAdder {
         proposalCategory.addInitialSubC(
             "Others, not specified",
             "", 
-            4, 
+            7, 
             address(0), 
             "EX",
             stakeInecntive,

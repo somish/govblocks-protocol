@@ -305,14 +305,13 @@ contract GovernanceData is Upgradeable {
         lastRewardDetails[_memberAddress].lastRewardSolutionProposalId = _proposalId;
     }
 
-    function setProposalPaused(uint _proposalId, bool _paused) public onlyInternal {
-        proposalPaused[_proposalId] = _paused;
-    }
-
-    function resumeProposal(uint _proposalId) public onlyInternal {
-        require(proposalPaused[_proposalId]);
-        proposalPaused[_proposalId] = false;
-        allProposal[_proposalId].dateUpd = now;
+    function toggleProposalPause(uint _proposalId) public onlyInternal {
+        if(!proposalPaused[_proposalId])
+            proposalPaused[_proposalId] = true;
+        else {
+            proposalPaused[_proposalId] = false;
+            allProposal[_proposalId].dateUpd = now;
+        }
     }
 
     /// @dev Get all Last Id's till which the reward has been distributed against member

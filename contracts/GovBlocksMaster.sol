@@ -36,8 +36,8 @@ contract GovBlocksMaster is Ownable {
     mapping(address => string) internal govBlocksUser;
     bytes internal masterByteCode;
     bytes32[] internal allGovBlocksUsers;
-    bytes32 internal byteCodeHash;
-    bytes32 internal contractsAbiHash;
+    string internal byteCodeHash;
+    string internal contractsAbiHash;
 
     /// @dev Initializes GovBlocks master
     /// @param _gbtAddress GBT standard token address
@@ -142,7 +142,7 @@ contract GovBlocksMaster is Ownable {
     /// @dev Sets byte code and abi hash that will help in generating new set of contracts for every dApp
     /// @param _byteCodeHash Byte code hash of all contracts    
     /// @param _abiHash Abi hash of all contracts
-    function setByteCodeAndAbi(bytes32 _byteCodeHash, bytes32 _abiHash) external onlyOwner {
+    function setByteCodeAndAbi(string _byteCodeHash, string _abiHash) external onlyOwner {
         byteCodeHash = _byteCodeHash;
         contractsAbiHash = _abiHash;
     }
@@ -163,9 +163,7 @@ contract GovBlocksMaster is Ownable {
     }
 
     /// @dev Gets byte code and abi hash
-    /// @param byteCode Byte code hash 
-    /// @param abiHash Application binary interface hash
-    function getByteCodeAndAbi() public view returns(bytes32 byteCode, bytes32 abiHash) {
+    function getByteCodeAndAbi() public view returns(string, string) {
         return (byteCodeHash, contractsAbiHash);
     }
     
@@ -182,8 +180,8 @@ contract GovBlocksMaster is Ownable {
         returns(
             bytes32 gbUserName, 
             address masterContractAddress, 
-            bytes32 allContractsbyteCodeHash, 
-            bytes32 allCcontractsAbiHash, 
+            string allContractsbyteCodeHash, 
+            string allCcontractsAbiHash, 
             uint versionNo
         ) 
     {
@@ -219,8 +217,8 @@ contract GovBlocksMaster is Ownable {
             bytes32 gbUserName, 
             address masterContractAddress, 
             address dappTokenAddress, 
-            bytes32 allContractsbyteCodeHash, 
-            bytes32 allCcontractsAbiHash, 
+            string allContractsbyteCodeHash, 
+            string allCcontractsAbiHash, 
             uint versionNo
         ) 
     {

@@ -52,10 +52,7 @@ contract ProposalCategory is Governed {
     function changeMasterAddress() public pure {
     }
 
-    /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
-    function proposalCategoryInitiate(bytes32 _dAppName) public {
-        require(!constructorCheck);
-        dappName = _dAppName;
+    constructor() public {
         uint[] memory rs = new uint[](1);
         uint[] memory al = new uint[](1);
         uint[] memory mv = new uint[](1);
@@ -72,7 +69,14 @@ contract ProposalCategory is Governed {
         allCategory.push(Category("Parameters", rs, mv, al, ct));
         allCategory.push(Category("Transfer Assets", rs, mv, al, ct));
         allCategory.push(Category("New contracts", rs, mv, al, ct));
+        allCategory.push(Category("Proposals", rs, mv, al, ct));
         allCategory.push(Category("Others", rs, mv, al, ct));
+    }
+
+    /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
+    function proposalCategoryInitiate(bytes32 _dAppName) public {
+        require(!constructorCheck);
+        dappName = _dAppName;
 
         addInitialSubCategories();
 
@@ -391,7 +395,7 @@ contract ProposalCategory is Governed {
         uint[] _stakeAndIncentive, 
         uint8[] _rewardPercentage
     ) 
-        external 
+        public 
     {
         if (allSubCategory.length < 15) {
             allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
@@ -443,9 +447,63 @@ contract ProposalCategory is Governed {
                 rewardPerc[2]
             )
         );
+        addInitialSubC(
+            "Add new member role",
+            "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
+            1,
+            address(0),
+            "MR",
+            stakeInecntive,
+            rewardPerc
+        );
+        addInitialSubC(
+            "Update member role",
+            "QmbsXSZ3rNPd8mDizVBV33GVg1ThveUD5YnM338wisEJyd",
+            1,
+            address(0),
+            "MR",
+            stakeInecntive,
+            rewardPerc
+        );
+        addInitialSubC(
+            "Add new category",
+            "QmNazQ3hQ5mssf8KAYkjxwVjwZvM9XjZgrJ1kf3QUmprCB",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+        addInitialSubC(
+            "Edit category",
+            "QmYWSuy3aZFK1Yavpq5Pm89rg6esyZ8rn5CNf6PdgJCpR6",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+        addInitialSubC(
+            "Add new sub category",
+            "QmeyPccQzMTNxSavJp4dL1J88zzb4xNESn5wLTPzqMFFJX",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+        addInitialSubC(
+            "Edit sub category",
+            "QmVeSBUghB71WHhnT8tXajSctnfz1fYx6fWXc9wXHJ8r2p",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
         if (getCodeSize(0x14cBB966262F027730D0a100e3788D7BC50f9bE8) > 0)        //kovan testnet
             ProposalCategoryAdder proposalCategoryAdder = ProposalCategoryAdder(0x14cBB966262F027730D0a100e3788D7BC50f9bE8);
-        if(address(proposalCategoryAdder) != 0)
+        if (address(proposalCategoryAdder) != 0)
             proposalCategoryAdder.addSubC(address(this));
     }
 }
