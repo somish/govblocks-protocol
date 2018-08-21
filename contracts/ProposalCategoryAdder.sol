@@ -69,7 +69,7 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC(
             "Add new contract",
-            "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
+            "QmWP3P58YcmveHeXqgsBCRmDewTYV1QqeQqBmRkDujrDLR",
             5,
             address(0),
             "MS",
@@ -78,7 +78,7 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC(
             "Add new voting type",
-            "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
+            "QmeWbgsSkeHUL9PWwugnvbnuvSr711CDpmkksB5dEyMFWj",
             5,
             address(0),
             "SV",
@@ -87,7 +87,7 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC(
             "Add new authorized address",
-            "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
+            "QmRczxM2yN11th3MB8159rm1qAnk4VSrYYmFQCEXXRUf9Z",
             5,
             address(0),
             "SV",
@@ -95,8 +95,8 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Toggle Proposal",
-            "QmaPH84hSyoAz1pvzrbfAXdzVFaDyqmKKmCzcmk8LZHgjr",
+            "Toggle Proposal Pause",
+            "QmS5SrwX6J8Cfhp3LAb6N54KYDc55hpnLdFgG6eCPkGvQx",
             6,
             address(0),
             "GD",
@@ -105,7 +105,7 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC(
             "Change dApp Token Proxy",
-            "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+            "QmWqSFWYbmQYS9wqs7cvHXdDDGXJ8wtUv9h2w3nxbjDKUb",
             3,
             address(0),
             "MS",
@@ -114,10 +114,10 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC(
             "dApp Token locking support",
-            "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
+            "QmWfqjytQ4Qx3p4BJMbAUUMC6yQHcMqc4eMj5RaY4MbJQe",
             3,
             address(0),
-            "MS",
+            "GD",
             stakeInecntive,
             rewardPerc
         );

@@ -467,7 +467,7 @@ contract ProposalCategory is Governed {
         );
         addInitialSubC(
             "Add new category",
-            "QmNazQ3hQ5mssf8KAYkjxwVjwZvM9XjZgrJ1kf3QUmprCB",
+            "QmQ9EzwyUsLdkyayJsFU6iig1zPD6FdqLQ3ZF1jETL1tT2",
             2,
             address(0),
             "PC",
@@ -476,7 +476,7 @@ contract ProposalCategory is Governed {
         );
         addInitialSubC(
             "Edit category",
-            "QmYWSuy3aZFK1Yavpq5Pm89rg6esyZ8rn5CNf6PdgJCpR6",
+            "QmY31mwTHmgd7SL2shQeX9xuhnrNXpNNhTXb3ZyyXJJTWL",
             2,
             address(0),
             "PC",
@@ -485,7 +485,7 @@ contract ProposalCategory is Governed {
         );
         addInitialSubC(
             "Add new sub category",
-            "QmeyPccQzMTNxSavJp4dL1J88zzb4xNESn5wLTPzqMFFJX",
+            "QmXX2XxNjZeoEN2iiMdgWY3Xpo1XpGs9opD7SJnuotXyBu",
             2,
             address(0),
             "PC",
@@ -494,15 +494,15 @@ contract ProposalCategory is Governed {
         );
         addInitialSubC(
             "Edit sub category",
-            "QmVeSBUghB71WHhnT8tXajSctnfz1fYx6fWXc9wXHJ8r2p",
+            "Qmd1yPsk9cfDN447AQVHMEnxTxx693VhnAXFeo3Q3JefHJ",
             2,
             address(0),
             "PC",
             stakeInecntive,
             rewardPerc
         );
-        if (getCodeSize(0x14cBB966262F027730D0a100e3788D7BC50f9bE8) > 0)        //kovan testnet
-            ProposalCategoryAdder proposalCategoryAdder = ProposalCategoryAdder(0x14cBB966262F027730D0a100e3788D7BC50f9bE8);
+        if (getCodeSize(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a) > 0)        //kovan testnet
+            ProposalCategoryAdder proposalCategoryAdder = ProposalCategoryAdder(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a);
         if (address(proposalCategoryAdder) != 0)
             proposalCategoryAdder.addSubC(address(this));
     }
