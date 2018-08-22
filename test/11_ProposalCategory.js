@@ -18,7 +18,7 @@ contract('Proposal Category', function([owner, taker]) {
   it('Should check getters', async function() {
     this.timeout(100000);
     let g1 = await pc.allSubCategory(0);
-    let g2 = await pc.allCategory(0);
+    let g2 = await pc.getCategoryDetails(0);
     let g3 = await pc.updateDependencyAddresses();
     let g4 = await pc.changeMasterAddress();
     let g5 = await pc.getContractName(0);

@@ -41,7 +41,7 @@ contract ProposalCategory is Governed {
     }
 
     SubCategory[] public allSubCategory;
-    Category[] public allCategory;
+    Category[] internal allCategory;
     mapping(uint => uint[]) internal allSubIdByCategory;
 
     ///@dev just to follow the interface
@@ -208,6 +208,17 @@ contract ProposalCategory is Governed {
         allSubCategory[_subCategoryId].rewardPercVote = _rewardPercentage[2];
 
     }
+
+    /// @dev gets category details
+    function getCategoryDetails(uint _id) public view returns(string, uint[], uint[], uint[], uint[]) {
+        return(
+            allCategory[_id].name,
+            allCategory[_id].memberRoleSequence,
+            allCategory[_id].memberRoleMajorityVote,
+            allCategory[_id].allowedToCreateProposal,
+            allCategory[_id].closingTime
+        );
+    } 
 
     /// @dev Get Sub category name 
     function getSubCategoryName(uint _subCategoryId) public view returns(uint, string) {
