@@ -55,19 +55,21 @@ contract ProposalCategory is Governed {
     constructor() public {
         uint[] memory rs = new uint[](1);
         uint[] memory al = new uint[](1);
+        uint[] memory alab = new uint[](1);
         uint[] memory mv = new uint[](1);
         uint[] memory ct = new uint[](1);
         
         rs[0] = 1;
         mv[0] = 50;
         al[0] = 0;
+        alab[0] = 1;
         ct[0] = 1800;
         
         allCategory.push(Category("Uncategorized", rs, mv, al, ct));
         allCategory.push(Category("Member role", rs, mv, al, ct));
         allCategory.push(Category("Categories", rs, mv, al, ct));
         allCategory.push(Category("Parameters", rs, mv, al, ct));
-        allCategory.push(Category("Transfer Assets", rs, mv, al, ct));
+        allCategory.push(Category("Transfer Assets", rs, mv, alab, ct));
         allCategory.push(Category("New contracts", rs, mv, al, ct));
         allCategory.push(Category("Proposals", rs, mv, al, ct));
         allCategory.push(Category("Others", rs, mv, al, ct));

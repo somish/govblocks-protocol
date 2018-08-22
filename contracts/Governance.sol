@@ -91,7 +91,6 @@ contract Governance is Upgradeable {
     {
         uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
 
-        
         require (allowedToCreateProposal(category));
         address votingAddress = governanceDat.getVotingTypeAddress(_votingTypeId);
         uint _proposalId = governanceDat.getProposalLength();
@@ -178,22 +177,21 @@ contract Governance is Upgradeable {
     }
 
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
-    /// @param _dappIncentive It is the company's incentive to distribute to end members
     function categorizeProposal(
         uint _proposalId, 
-        uint _categoryId, 
-        uint _dappIncentive
+        uint _categoryId
     ) 
         public 
         checkProposalValidity(_proposalId) 
     {
+        uint dappIncentive = proposalCategory.getCatIncentive(_categoryId);
         require(memberRole.checkRoleIdByAddress(msg.sender, 2) || msg.sender == governanceDat.getProposalOwner(_proposalId));
-        require(_dappIncentive <= govBlocksToken.balanceOf(poolAddress));
+        require(dappIncentive <= govBlocksToken.balanceOf(poolAddress));
         
         uint category = proposalCategory.getCategoryIdBySubId(_categoryId);
         
         require(allowedToCreateProposal(category));
-        governanceDat.setProposalIncentive(_proposalId, _dappIncentive);
+        governanceDat.setProposalIncentive(_proposalId, dappIncentive);
         address tokenAddress;
         if (proposalCategory.isCategoryExternal(category))
             tokenAddress = address(govBlocksToken);
@@ -376,29 +374,29 @@ contract Governance is Upgradeable {
         eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
     }
 
-    /// @dev Edits the details of an existing proposal and creates new version
-    /// @param _proposalId Proposal id that details needs to be updated
-    /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
-    function updateProposalDetails1(
-        uint _proposalId, 
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash
-    ) 
-        internal 
-    {
-        governanceDat.storeProposalVersion(_proposalId, _proposalDescHash);
-        governanceDat.setProposalDateUpd(_proposalId);
-        governanceDat.changeProposalStatus(_proposalId, 1);
-        governanceDat.callProposalEvent(
-            governanceDat.getProposalOwner(_proposalId), 
-            _proposalId, 
-            now, 
-            _proposalTitle, 
-            _proposalSD, 
-            _proposalDescHash
-        );
-    }
+    // /// @dev Edits the details of an existing proposal and creates new version
+    // /// @param _proposalId Proposal id that details needs to be updated
+    // /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
+    // function updateProposalDetails1(
+    //     uint _proposalId, 
+    //     string _proposalTitle, 
+    //     string _proposalSD, 
+    //     string _proposalDescHash
+    // ) 
+    //     internal 
+    // {
+    //     governanceDat.storeProposalVersion(_proposalId, _proposalDescHash);
+    //     governanceDat.setProposalDateUpd(_proposalId);
+    //     governanceDat.changeProposalStatus(_proposalId, 1);
+    //     governanceDat.callProposalEvent(
+    //         governanceDat.getProposalOwner(_proposalId), 
+    //         _proposalId, 
+    //         now, 
+    //         _proposalTitle, 
+    //         _proposalSD, 
+    //         _proposalDescHash
+    //     );
+    // }
 
     /// @dev Calculate reward for proposal creation against member
     /// @param _memberAddress Address of member who claimed the reward

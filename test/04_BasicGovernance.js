@@ -91,7 +91,7 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
     p = p.toNumber() - 1;
-    await gv.categorizeProposal(p, 1, 0);
+    await gv.categorizeProposal(p, 1);
     await gv.openProposalForVoting(p);
     await catchRevert(gv.openProposalForVoting(p));
   });

@@ -85,11 +85,13 @@ contract('Master', function([owner, notOwner]) {
     this.timeout(100000);
     await ms.addNewVersion(add);
     await ms.addNewVersion(add);
+    await catchRevert(ms.addNewVersion(add, {from: notOwner}));
     const g6 = await ms.getLatestAddress('MS');
     const g7 = await ms.getEventCallerAddress();
     await ms.changeMasterAddress(ms.address);
     assert.equal(g6, ms.address, 'Master address incorrect');
     assert.equal(g7, ec.address, 'EventCaller address incorrect');
+    await ms.changeMasterAddress.call(owner);
     await catchRevert(ms.initMaster(owner, '0x41'));
     await catchRevert(ms.changeMasterAddress(owner, {from: notOwner}));
     await catchRevert(ms.changeGBMAddress(owner, {from: notOwner}));
@@ -130,6 +132,8 @@ contract('Master', function([owner, notOwner]) {
     await ms.configureGlobalParameters('BS', 58);
     qp = await gd.bonusStake();
     assert(qp.toNumber(), 58, 'Global parameter not changed');
+
+    await catchRevert(ms.configureGlobalParameters('BS', 58, {from: notOwner}));
   });
 
   it('Should add new contract', async function() {

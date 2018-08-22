@@ -27,9 +27,9 @@ contract ProposalCategoryAdder {
         rewardPerc[0] = 10;
         rewardPerc[1] = 20;
         rewardPerc[2] = 70;
-        stakeInecntive[0] = 1 ** 18;
+        stakeInecntive[0] = 10 ** 5;
         stakeInecntive[1] = 604800;
-        stakeInecntive[2] = 1 ** 18;
+        stakeInecntive[2] = 10 ** 5;
         proposalCategory.addInitialSubC(
             "Configure parameters",
             "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
@@ -39,7 +39,6 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
-        stakeInecntive[2] = 0;
         proposalCategory.addInitialSubC(
             "Transfer Ether",
             "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
@@ -58,6 +57,7 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
+        stakeInecntive[2] = 0;
         proposalCategory.addInitialSubC(
             "Add new version",
             "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w",
