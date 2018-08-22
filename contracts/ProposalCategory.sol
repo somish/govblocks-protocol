@@ -264,9 +264,9 @@ contract ProposalCategory is Governed {
         return allSubCategory[_subCategoryId].categoryId;
     }
 
-    function isCategoryExternal(uint _category) public view returns(bool) {
+    function isCategoryExternal(uint _category) public view returns(bool ext) {
         if(allCategory[_category].allowedToCreateProposal[0] == 0)
-            return true;
+            ext = true;
     }
 
     function getRequiredStake(uint _subCategoryId) public view returns(uint, uint) {
@@ -410,7 +410,7 @@ contract ProposalCategory is Governed {
     ) 
         public 
     {
-        if (allSubCategory.length < 15) {
+        if (allSubCategory.length < 19) {
             allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
             allSubCategory.push(SubCategory(
                     _subCategoryName, 

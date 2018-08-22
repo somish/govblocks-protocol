@@ -6,12 +6,15 @@ const Pool = artifacts.require('Pool');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const Master = artifacts.require('Master');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
+const MemberRoles = artifacts.require('MemberRoles');
+const amount = 50000000000000;
 let gbt;
 let sv;
 let pl;
 let gd;
 let gv;
 let ms;
+let mr;
 
 contract('Governance', ([owner, notOwner]) => {
   before(() => {
@@ -32,15 +35,16 @@ contract('Governance', ([owner, notOwner]) => {
       return Master.deployed();
     }).then((instance) => {
       ms = instance;
+      return MemberRoles.deployed();
+    }).then((instance) => {
+      mr = instance;
     });
   });
 
   it('Should create an uncategorized proposal', async function() {
     this.timeout(100000);
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    const amount = 50000000000000;
     await gbt.lock('GOV', amount, 5468545613353456);
-    await gbt.transfer(pl.address, amount);
     await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 0);
     p2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
@@ -51,6 +55,12 @@ contract('Governance', ([owner, notOwner]) => {
     p = await gd.getAllProposalIdsLengthByAddress(owner);
     p = p.toNumber() - 1;
     await catchRevert(gv.openProposalForVoting(p));
+    await catchRevert(gv.categorizeProposal(p, 9));
+    await gbt.transfer(pl.address, amount);
+    await catchRevert(gv.categorizeProposal(p, 9, {from: notOwner}));
+    await mr.updateMemberRole(notOwner, 1, true, 356800000054);
+    await catchRevert(gv.categorizeProposal(p, 9, {from: notOwner}));
+    await mr.updateMemberRole(notOwner, 1, false, 356800000054);
     await gv.categorizeProposal(p, 9);
     const category = await gd.getProposalCategory(p);
     assert.equal(category.toNumber(), 9, 'Category not set properly');

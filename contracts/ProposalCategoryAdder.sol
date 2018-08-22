@@ -24,9 +24,9 @@ contract ProposalCategoryAdder {
         ProposalCategory proposalCategory = ProposalCategory(_to);
         uint[] memory stakeInecntive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
-        rewardPerc[0] = 10;
-        rewardPerc[1] = 20;
-        rewardPerc[2] = 70;
+        rewardPerc[0] = 30;
+        rewardPerc[1] = 30;
+        rewardPerc[2] = 40;
         stakeInecntive[0] = 10 ** 5;
         stakeInecntive[1] = 604800;
         stakeInecntive[2] = 10 ** 5;
