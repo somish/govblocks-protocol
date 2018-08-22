@@ -50,7 +50,7 @@ contract('MemberRoles', ([owner, member, other]) => {
     const mrs22 = await mr.getAllAddressByRoleId(1);
     const val = await mr.getValidity(member, 1);
     assert.equal(val.toNumber(), 5, 'Validity not updated');
-    await mr.updateMemberRole(member, 1, true, 356);
+    await mr.updateMemberRole(member, 1, true, 1);
     assert.equal(await mr.checkRoleIdByAddress(member, 1), false, 'user incorrectly added to AB');
     await mr.updateMemberRole(member, 1, true, 356000000000854);
     assert.equal(await mr.checkRoleIdByAddress(member, 1), true, 'user not added to AB');

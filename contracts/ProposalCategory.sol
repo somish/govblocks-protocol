@@ -410,7 +410,7 @@ contract ProposalCategory is Governed {
     ) 
         public 
     {
-        if (allSubCategory.length < 19) {
+        if (allSubCategory.length < 18) {
             allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
             allSubCategory.push(SubCategory(
                     _subCategoryName, 

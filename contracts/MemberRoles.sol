@@ -139,7 +139,7 @@ contract MemberRoles is Governed {
         checkRoleAuthority(_roleId)
     {
         if (_typeOf) {
-            if(memberRoleData[_roleId].validity[_memberAddress] < now) {
+            if(memberRoleData[_roleId].validity[_memberAddress] <= _validity) {
                 if(!memberRoleData[_roleId].memberActive[_memberAddress]) {
                     memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
                     memberRoleData[_roleId].memberActive[_memberAddress] = true;
