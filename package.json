@@ -3,13 +3,22 @@
   "version": "1.0.0",
   "description": "GovBlocks Smart Contracts",
   "main": "truffle-config.js",
-  "dependencies": {
-    "truffle": "^4.1.13"
+  "scripts": {
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "pretty": "prettier --write --single-quote --tab-width 2 \"**/*.js\"",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "**/*.{js,json}": [
+      "prettier --single-quote --write --tab-width 2",
+      "git add"
+    ]
   },
   "devDependencies": {
     "ganache-cli": "^6.1.6",
     "solidity-coverage": "^0.5.5",
-    "truffle-hdwallet-provider": "^0.0.5"
+    "truffle-hdwallet-provider": "^0.0.6",
+    "truffle": "^4.1.13"
   },
   "repository": {
     "type": "git",
