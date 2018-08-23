@@ -7,7 +7,8 @@ const SimpleVoting = artifacts.require('SimpleVoting');
 const Master = artifacts.require('Master');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const MemberRoles = artifacts.require('MemberRoles');
-const amount = 50000000000000;
+const amount = 500000000000000;
+
 let gbt;
 let sv;
 let pl;
@@ -15,6 +16,9 @@ let gd;
 let gv;
 let ms;
 let mr;
+
+const BigNumber = web3.BigNumber;
+require('chai').use(require('chai-bignumber')(BigNumber)).should();
 
 contract('Governance', ([owner, notOwner]) => {
   before(() => {
@@ -44,7 +48,7 @@ contract('Governance', ([owner, notOwner]) => {
   it('Should create an uncategorized proposal', async function() {
     this.timeout(100000);
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await gbt.lock('GOV', amount, 5468545613353456);
+    await gbt.lock('GOV', amount, 54685456133563456);
     await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 0);
     p2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
@@ -53,7 +57,7 @@ contract('Governance', ([owner, notOwner]) => {
   it('Should categorize the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber();
     await catchRevert(gv.openProposalForVoting(p));
     await catchRevert(gv.categorizeProposal(p, 9));
     await gbt.transfer(pl.address, amount);
@@ -70,12 +74,12 @@ contract('Governance', ([owner, notOwner]) => {
     this.timeout(100000);
     const actionHash = encode('addNewMemberRole(bytes32,string,address,bool)', '0x41647669736f727920426f617265000000000000000000000000000000000000', 'New member role', owner, false);
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await catchRevert(gv.submitProposalWithSolution(p1.toNumber() - 1, 'Addnewmember', actionHash, {from: notOwner}));
-    await gv.submitProposalWithSolution(p1.toNumber() - 1, 'Addnewmember', actionHash);
-    await catchRevert(gv.submitProposalWithSolution(p1.toNumber() - 1, 'Addnewmember', actionHash));
+    await catchRevert(gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash, {from: notOwner}));
+    await gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash);
+    await catchRevert(gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash));
     let remainingTime = await gv.getMaxCategoryTokenHoldTime(1);
     await assert.isAtLeast(remainingTime.toNumber(), 1, 'Remaining time not set');
-    remainingTime = await gv.getRemainingClosingTime(p1.toNumber() - 1, 0);
+    remainingTime = await gv.getRemainingClosingTime(p1.toNumber(), 0);
     await assert.isAtLeast(remainingTime.toNumber(), 1, 'Remaining time not set');
     const g2 = await gv.getSolutionIdAgainstAddressProposal(owner, 0);
     assert.equal(g2[0].toNumber(), 0);
@@ -86,7 +90,7 @@ contract('Governance', ([owner, notOwner]) => {
   it('Should vote in favour of the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber();
     const g3 = await gv.getAllVoteIdsLengthByProposal(p);
     await sv.proposalVoting(p, [1]);
     const g4 = await gv.getAllVoteIdsLengthByProposal(p);
@@ -96,7 +100,7 @@ contract('Governance', ([owner, notOwner]) => {
   it('Should close the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber();
     await sv.closeProposalVote(p);
     await catchRevert(sv.closeProposalVote(p));
   });
@@ -109,23 +113,32 @@ contract('Governance', ([owner, notOwner]) => {
 
   it('Should create proposals with dApp token', async () => {
     await gd.setDAppTokenSupportsLocking(true);
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    const prop1 = await gd.getAllProposalIdsLengthByAddress(owner);
     await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 9);
     await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 0);
-    await gv.categorizeProposal(p1.toNumber(), 9);
-    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
-    assert.equal(p1.toNumber() + 2, p2.toNumber(), 'Proposal not created');
-    const pr = await pl.getPendingReward(owner);
-    await pl.claimReward(owner);
-    const g1 = await gv.getMemberDetails(owner);
-    assert.isAbove(g1[0].toNumber(), 1);
+    const prop2 = await gd.getAllProposalIdsLengthByAddress(owner);
+    await gv.categorizeProposal(prop2.toNumber(), 9);
+    assert.equal(prop2.toNumber(), prop1.toNumber() + 2, 'Proposals not created');
   });
 
   it('Should not allow unauthorized people to create proposals', async () => {
     await catchRevert(gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 10, {from: notOwner}));
     await catchRevert(gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 8, {from: notOwner}));
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await catchRevert(gv.categorizeProposal(p1.toNumber() - 1, 4, {from: notOwner}));
-    await gv.categorizeProposal(p1.toNumber() - 1, 4);
+    await catchRevert(gv.categorizeProposal(p1.toNumber(), 4, {from: notOwner}));
+    await gv.categorizeProposal(p1.toNumber(), 4);
+  });
+
+  it('Should claim rewards', async () => {
+    const b1 = await gbt.balanceOf(owner);
+    const g1 = await gv.getMemberDetails(owner);
+    await pl.claimReward(owner);
+    const b2 = await gbt.balanceOf(owner);
+    const g2 = await gv.getMemberDetails(owner);
+    b2.should.be.bignumber.above(b1);
+    g2[0].should.be.bignumber.above(g1[0]);
+    const pr2 = await pl.getPendingReward(owner);
+    pr2[0].should.be.bignumber.eq(0);
+    pr2[1].should.be.bignumber.eq(0);
   });
 });

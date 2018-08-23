@@ -237,6 +237,7 @@ contract GovernanceData is Upgradeable {
     mapping(address => uint) internal allMemberReputationByAddress;
     mapping(address => LastReward) internal lastRewardDetails;
     mapping(uint => bool) public proposalPaused;
+    mapping(address => mapping(uint => bool)) internal rewardClaimed;
     
     uint public quorumPercentage;
     bool public constructorCheck;
@@ -270,6 +271,7 @@ contract GovernanceData is Upgradeable {
         setGlobalParameters();
         addMemberReputationPoints();
         setVotingTypeDetails("Simple Voting", address(0));
+        allProposal.push(ProposalStruct(address(0), now, master.getLatestAddress("SV")));
         constructorCheck = true;
     }
 
@@ -523,14 +525,13 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById3(uint _proposalId) 
+    function getProposalDetailsById3(uint _proposalId, address _memberAddress) 
         public 
         view 
-        returns(uint proposalIndex, uint propStatus, uint propCategory, uint8 propStatusId, uint64 finalVerdict) 
+        returns(bool, uint, uint8, uint64) 
     {
         return (
-            _proposalId, 
-            getProposalStatus(_proposalId), 
+            rewardClaimed[_memberAddress][_proposalId], 
             allProposalData[_proposalId].category, 
             allProposalData[_proposalId].propStatus, 
             allProposalData[_proposalId].finalVerdict
@@ -619,6 +620,14 @@ contract GovernanceData is Upgradeable {
         return allProposalData[_proposalId].category;
     }
 
+    function setRewardClaimed(uint _proposalId, address _memberAddress) public onlyInternal {
+        rewardClaimed[_memberAddress][_proposalId] = true;
+    }
+
+    function getRewardClaimed(uint _proposalId, address _memberAddress) public view returns(bool) {
+        return (rewardClaimed[_memberAddress][_proposalId]);
+    }
+
     /// @dev Get member's reputation points and it's likely to be updated with time.
     function getMemberReputation(address _memberAddress) public view returns(uint memberPoints) {
         if (allMemberReputationByAddress[_memberAddress] == 0)
@@ -704,8 +713,7 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Adds new proposal
-    function addNewProposal(
-        uint _proposalId, 
+    function addNewProposal( 
         address _memberAddress, 
         uint _categoryId, 
         address _votingTypeAddress,
@@ -714,9 +722,10 @@ contract GovernanceData is Upgradeable {
         public 
         onlyInternal 
     {
+        allProposalData[allProposal.length].category = _categoryId;
+        allProposalData[allProposal.length].stakeToken = _stakeToken;
+        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ''));
         allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress));
-        allProposalData[_proposalId].category = _categoryId;
-        allProposalData[_proposalId].stakeToken = _stakeToken;
     }
 
     /// @dev Creates new proposal
@@ -724,6 +733,7 @@ contract GovernanceData is Upgradeable {
         public 
         onlyInternal 
     {
+        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ''));
         allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress));
     }
 

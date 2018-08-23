@@ -82,16 +82,15 @@ contract Pool is Upgradeable {
         }
     }
 
+    event Debu(uint a);
     function getPendingReward(address _memberAddress) public view returns (uint pendingGBTReward, uint pendingDAppReward) {
         uint lastRewardProposalId;
         uint lastRewardSolutionProposalId;
         uint tempGBTReward;
         uint tempDAppRward;
-
         (lastRewardProposalId, lastRewardSolutionProposalId) = governanceDat.getAllidsOfLastReward(msg.sender);
         (pendingGBTReward, pendingDAppReward) = getPendingProposalReward(_memberAddress, lastRewardProposalId); 
         (tempGBTReward, tempDAppRward) = getPendingSolutionReward(_memberAddress, lastRewardSolutionProposalId);
-
         pendingGBTReward += tempGBTReward;
         pendingDAppReward += tempDAppRward;
 
@@ -113,23 +112,20 @@ contract Pool is Upgradeable {
         uint finalVredict;
         uint8 proposalStatus;
         uint calcReward;
-        uint category;
-
+        uint subCat;
+        bool rewardClaimed;
         for (uint i = _lastRewardProposalId; i < allProposalLength; i++) {
             if (_memberAddress == governanceDat.getProposalOwner(i)) {
-                (, , category, proposalStatus, finalVredict) = governanceDat.getProposalDetailsById3(i);
+                (rewardClaimed, subCat, proposalStatus, finalVredict) = governanceDat.getProposalDetailsById3(i, _memberAddress);
                 if (
                     proposalStatus > 2 && 
                     finalVredict > 0 && 
-                    governanceDat.getProposalIncentive(i) != 0
+                    governanceDat.getProposalIncentive(i) != 0 &&
+                    !rewardClaimed
                 ) 
                 {
-                    category = proposalCategory.getCategoryIdBySubId(category);
-                    calcReward = 
-                        proposalCategory.getRewardPercProposal(category) 
-                        * governanceDat.getProposalIncentive(i)
-                        / 100;
-                    if (proposalCategory.isCategoryExternal(category))    
+                    calcReward = (proposalCategory.getRewardPercProposal(subCat).mul(governanceDat.getProposalIncentive(i))).div(100); 
+                    if (proposalCategory.isSubCategoryExternal(subCat))    
                         pendingGBTReward += calcReward;
                     else
                         pendingDAppReward += calcReward;                
@@ -150,14 +146,14 @@ contract Pool is Upgradeable {
         uint solutionId;
         uint proposalId;
         uint totalReward;
-        uint category;
+        uint subCategory;
 
         for (i = _lastRewardSolutionProposalId; i < allProposalLength; i++) {
-            (proposalId, solutionId, , finalVerdict, totalReward, category) = 
+            (proposalId, solutionId, , finalVerdict, totalReward, subCategory) = 
                 gov.getSolutionIdAgainstAddressProposal(_memberAddress, i);
-            if (finalVerdict > 0 && finalVerdict == solutionId && proposalId == i) {
-                calcReward = (proposalCategory.getRewardPercSolution(category) * totalReward) / 100;
-                if (proposalCategory.isCategoryExternal(category))    
+            if (finalVerdict > 0 && finalVerdict == solutionId && proposalId == i && !governanceDat.getRewardClaimed(i,_memberAddress)) {
+                calcReward = (proposalCategory.getRewardPercSolution(subCategory) * totalReward) / 100;
+                if (proposalCategory.isSubCategoryExternal(subCategory))    
                     pendingGBTReward += calcReward;
                 else
                     pendingDAppReward += calcReward;                

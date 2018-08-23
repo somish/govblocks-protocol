@@ -9,6 +9,8 @@ const Pool = artifacts.require('Pool');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const EventCaller = artifacts.require('EventCaller');
+const GBTStandardToken = artifacts.require('GBTStandardToken');
+let gbt;
 let gbm;
 let ec;
 let gd;
@@ -54,6 +56,9 @@ contract('Master', function([owner, notOwner]) {
       add.push(sv.address);
       add.push(gv.address);
       add.push(pl.address);
+      return GBTStandardToken.deployed();
+    }).then(function(instance) {
+      gbt = instance;
     });
   });
 
@@ -83,7 +88,6 @@ contract('Master', function([owner, notOwner]) {
 
   it('Should add new version', async function() {
     this.timeout(100000);
-    await ms.addNewVersion(add);
     await ms.addNewVersion(add);
     await catchRevert(ms.addNewVersion(add, {from: notOwner}));
     const g6 = await ms.getLatestAddress('MS');
@@ -134,6 +138,18 @@ contract('Master', function([owner, notOwner]) {
     assert(qp.toNumber(), 58, 'Global parameter not changed');
 
     await catchRevert(ms.configureGlobalParameters('BS', 58, {from: notOwner}));
+  });
+
+  it('Should transfer assets to new pool', async function() {
+    add.pop();
+    add.push(gv.address);
+    const b = await gbt.balanceOf(pl.address);
+    await gbt.transfer(pl.address, 1);
+    const b1 = await gbt.balanceOf(gv.address);
+    await ms.addNewVersion(add);
+    await pl.transferAssets();
+    const b2 = await gbt.balanceOf(gv.address);
+    assert.equal(b.toNumber() + 1, b2.toNumber() - b1.toNumber());
   });
 
   it('Should add new contract', async function() {

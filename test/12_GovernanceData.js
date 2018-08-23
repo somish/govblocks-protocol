@@ -40,7 +40,7 @@ contract('Governance Data', function([owner, taker]) {
   it('Should vote in favour of the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.proposalVoting(p, [1]);
     await catchRevert(sv.proposalVoting(p, [1]));
   });
@@ -48,7 +48,7 @@ contract('Governance Data', function([owner, taker]) {
   it('Should close the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.closeProposalVote(p);
     await catchRevert(sv.closeProposalVote(p));
   });
@@ -60,7 +60,7 @@ contract('Governance Data', function([owner, taker]) {
     let g3 = await gd.getVotingTypeDetailsById(0);
     let g4 = await gd.callProposalVersionEvent(0, 0, 'yo', 0);
     let g5 = await gd.getProposalDetailsById2(0);
-    let g6 = await gd.getProposalDetailsById3(0);
+    let g6 = await gd.getProposalDetailsById3(0, owner);
     let g7 = await gd.getProposalDetailsById6(0);
     let g9 = await gd.getTotalProposalIncentive();
     let g10 = await gd.getProposalVersion(0);

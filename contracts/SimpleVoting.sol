@@ -233,7 +233,7 @@ contract SimpleVoting is Upgradeable {
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
     function alreadyAdded(uint _proposalId, address _memberAddress) public view returns(bool) {
-        for (uint i = 0; i < governanceDat.getTotalSolutions(_proposalId); i++) {
+        for (uint i = 1; i < governanceDat.getTotalSolutions(_proposalId); i++) {
             if (governanceDat.getSolutionAddedByProposalId(_proposalId, i) == _memberAddress)
                 return true;
         }

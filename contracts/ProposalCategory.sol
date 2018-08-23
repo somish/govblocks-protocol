@@ -269,6 +269,11 @@ contract ProposalCategory is Governed {
             ext = true;
     }
 
+    function isSubCategoryExternal(uint _category) public view returns(bool ext) {
+        if(allCategory[allSubCategory[_category].categoryId].allowedToCreateProposal[0] == 0)
+            ext = true;
+    }
+
     function getRequiredStake(uint _subCategoryId) public view returns(uint, uint) {
         return (
             allSubCategory[_subCategoryId].minStake, 

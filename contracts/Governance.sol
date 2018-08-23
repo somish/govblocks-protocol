@@ -65,12 +65,14 @@ contract Governance is Upgradeable {
     /// @dev checks if the msg.sender is allowed to create a proposal under certain category
     function allowedToCreateProposal(uint category) public view returns(bool check) {
         uint[] memory mrAllowed = proposalCategory.getMRAllowed(category);
-        if (mrAllowed[0] == 0)
-            return true;
-        else {
+        if (mrAllowed[0] == 0) {
+        	check = true;
+            return check;
+        } else {
             for(uint i = 0; i<mrAllowed.length; i++) {
                 if (memberRole.checkRoleIdByAddress(msg.sender, mrAllowed[i])) {
-                    return true;
+                    check = true;
+                    break;
                 }
             }
         }
@@ -94,7 +96,6 @@ contract Governance is Upgradeable {
         require (allowedToCreateProposal(category));
         address votingAddress = governanceDat.getVotingTypeAddress(_votingTypeId);
         uint _proposalId = governanceDat.getProposalLength();
-        governanceDat.setSolutionAdded(_proposalId, address(0), "address(0)");
         governanceDat.callProposalEvent(
             msg.sender, 
             _proposalId, 
@@ -112,7 +113,7 @@ contract Governance is Upgradeable {
             else
                 token = dAppToken;
             require (validateStake(_categoryId, token));
-            governanceDat.addNewProposal(_proposalId, msg.sender, _categoryId, votingAddress, token);            
+            governanceDat.addNewProposal(msg.sender, _categoryId, votingAddress, token);            
             uint incentive = proposalCategory.getCatIncentive(_categoryId);
             governanceDat.setProposalIncentive(_proposalId, incentive); 
         } else
@@ -335,18 +336,19 @@ contract Governance is Upgradeable {
             uint proposalStatus, 
             uint finalVerdict, 
             uint totalReward, 
-            uint category
+            uint subCategory
         ) 
     {
         uint length = governanceDat.getTotalSolutions(_proposalId);
-        for (uint i = 0; i < length; i++) {
+        proposalId = _proposalId;
+        for (uint i = 1; i < length; i++) {
             if (_memberAddress == governanceDat.getSolutionAddedByProposalId(_proposalId, i)) {
+            	proposalId = _proposalId;
                 solutionId = i;
-                proposalId = _proposalId;
                 proposalStatus = governanceDat.getProposalStatus(_proposalId);
                 finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
                 totalReward = governanceDat.getProposalIncentive(_proposalId);
-                category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId));
+                subCategory = governanceDat.getProposalCategory(_proposalId);
                 break;
             }
         }
@@ -405,7 +407,7 @@ contract Governance is Upgradeable {
         address _memberAddress, 
         uint _lastRewardProposalId
     ) 
-        internal  
+        internal
         returns(uint pendingGBTReward, uint pendingDAppReward)
     {
         uint allProposalLength = governanceDat.getProposalLength();
@@ -413,33 +415,29 @@ contract Governance is Upgradeable {
         uint finalVredict;
         uint proposalStatus;
         uint calcReward;
-        uint category;
-        uint addProposalOwnerPoints = governanceDat.addProposalOwnerPoints();
+        uint subCategory;
+        bool rewardClaimed;
+        uint i;
 
-        for (uint i = _lastRewardProposalId; i < allProposalLength; i++) {
+        for (i = _lastRewardProposalId; i < allProposalLength; i++) {
             if (_memberAddress == governanceDat.getProposalOwner(i)) {
-                (, , category, proposalStatus, finalVredict) = governanceDat.getProposalDetailsById3(i);
-                if (proposalStatus < 2 && lastIndex == 0)
+                (rewardClaimed, subCategory, proposalStatus, finalVredict) = governanceDat.getProposalDetailsById3(i, _memberAddress);
+                if (proposalStatus <= 2 && lastIndex == 0) 
                     lastIndex = i;
-                else if (proposalStatus > 2 && 
-                    finalVredict > 0
-                ) {
-                    category = proposalCategory.getCategoryIdBySubId(category);
-                    calcReward = proposalCategory.getRewardPercProposal(category) 
-                        * governanceDat.getProposalIncentive(i)
-                        / 100;
-                    if (proposalCategory.isCategoryExternal(category))    
+                if (proposalStatus > 2 && finalVredict > 0 && !rewardClaimed) {
+                    calcReward = (proposalCategory.getRewardPercProposal(subCategory).mul(governanceDat.getProposalIncentive(i))).div(100);
+                    if (proposalCategory.isSubCategoryExternal(subCategory))    
                         pendingGBTReward += calcReward;
                     else
                         pendingDAppReward += calcReward;
 
-                    calculateProposalReward1(_memberAddress, i, calcReward, addProposalOwnerPoints);
+                    calculateProposalReward1(_memberAddress, i, calcReward);
                 }
             }
         }
 
         if (lastIndex == 0)
-            lastIndex = i;
+            lastIndex = i - 1;
         governanceDat.setLastRewardIdOfCreatedProposals(_memberAddress, lastIndex);
     }
 
@@ -447,8 +445,7 @@ contract Governance is Upgradeable {
     function calculateProposalReward1(
         address _memberAddress, 
         uint i, 
-        uint calcReward, 
-        uint addProposalOwnerPoints
+        uint calcReward
     ) 
         internal
     {
@@ -460,7 +457,7 @@ contract Governance is Upgradeable {
                 calcReward
             );
         }
-        
+        uint addProposalOwnerPoints = governanceDat.addProposalOwnerPoints();
         governanceDat.setMemberReputation(
             "Reputation credit-proposal owner", 
             i, 
@@ -480,7 +477,7 @@ contract Governance is Upgradeable {
         address _memberAddress, 
         uint _lastRewardSolutionProposalId
     ) 
-        internal  
+        public
         returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
         uint allProposalLength = governanceDat.getProposalLength();
@@ -491,38 +488,33 @@ contract Governance is Upgradeable {
         uint finalVerdict;
         uint solutionId;
         uint totalReward;
-        uint category;
-        uint addSolutionOwnerPoints = governanceDat.addSolutionOwnerPoints();
+        uint subCategory;
+        
         for (i = _lastRewardSolutionProposalId; i < allProposalLength; i++) {
-            (, solutionId, proposalStatus, finalVerdict, totalReward, category) = 
+            (i, solutionId, proposalStatus, finalVerdict, totalReward, subCategory) = 
                 getSolutionIdAgainstAddressProposal(_memberAddress, i);
-            if (proposalStatus < 2 && lastIndex == 0)
+            if (proposalStatus <= 2 && lastIndex == 0)
                 lastIndex = i;
-            if (finalVerdict > 0 && finalVerdict == solutionId) {
-                calcReward = (proposalCategory.getRewardPercSolution(category) * totalReward) / 100;
-                if (proposalCategory.isCategoryExternal(category))    
+            if (finalVerdict > 0 && finalVerdict == solutionId && !governanceDat.getRewardClaimed(i,_memberAddress)) {
+                governanceDat.setRewardClaimed(i,_memberAddress);
+                calcReward = (proposalCategory.getRewardPercSolution(subCategory) * totalReward) / 100;
+                if (proposalCategory.isSubCategoryExternal(subCategory))    
                     pendingGBTReward += calcReward;
                 else
                     pendingDAppReward += calcReward;
-                calculateSolutionReward1(
-                        _memberAddress, 
-                        i, 
-                        calcReward, 
-                        addSolutionOwnerPoints                            
-                    );
+                calculateSolutionReward1(_memberAddress, i, calcReward);
             }
         }
 
         if (lastIndex == 0)
-            lastIndex = i;
+            lastIndex = i - 1;
     }
 
     /// @dev Saving solution reward and member reputation details
     function calculateSolutionReward1(
         address _memberAddress, 
         uint i, 
-        uint calcReward, 
-        uint addSolutionOwnerPoints
+        uint calcReward
     ) 
         internal  
     {
@@ -535,6 +527,7 @@ contract Governance is Upgradeable {
                 calcReward
             );
         }
+        uint addSolutionOwnerPoints = governanceDat.addSolutionOwnerPoints();
         governanceDat.setMemberReputation(
                 "Reputation credit-solution owner", 
                 i, 

@@ -59,7 +59,7 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
   it('Should vote in favour of the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.proposalVoting(p, [1]);
     await catchRevert(sv.proposalVoting(p, [1]));
   });
@@ -67,7 +67,7 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
   it('Should close the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.closeProposalVote(p);
     await catchRevert(sv.closeProposalVote(p));
   });
@@ -90,7 +90,7 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
   it('Should categorize the proposal and then open it for voting', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await gv.categorizeProposal(p, 1);
     await gv.openProposalForVoting(p);
     await catchRevert(gv.openProposalForVoting(p));
@@ -100,14 +100,14 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
     this.timeout(100000);
     let actionHash = encode('addNewMemberRole(bytes32,string,address,bool)', '0x41647669736f727920426f617265000000000000000000000000000000000000', 'New member role', owner, false);
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await sv.addSolution(p1.toNumber() - 1, owner, 'Addnewmember', actionHash);
-    await catchRevert(sv.addSolution(p1.toNumber() - 1, owner, 'Addnewmember', actionHash));
+    await sv.addSolution(p1.toNumber() , owner, 'Addnewmember', actionHash);
+    await catchRevert(sv.addSolution(p1.toNumber() , owner, 'Addnewmember', actionHash));
   });
 
   it('Should vote in favour of the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.proposalVoting(p, [1]);
     await catchRevert(sv.proposalVoting(p, [1]));
   });
@@ -115,7 +115,7 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
   it('Should close the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.closeProposalVote(p);
     await catchRevert(sv.closeProposalVote(p));
   });
@@ -179,16 +179,16 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
   it('Should submit another solution', async function() {
     this.timeout(100000);
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    let s1 = await gd.getTotalSolutions(p1.toNumber() - 1);
-    await sv.addSolution(p1.toNumber() - 1, ab, 'Addnewmember', '0x41', {from: ab});
-    let s2 = await gd.getTotalSolutions(p1.toNumber() - 1);
+    let s1 = await gd.getTotalSolutions(p1.toNumber() );
+    await sv.addSolution(p1.toNumber() , ab, 'Addnewmember', '0x41', {from: ab});
+    let s2 = await gd.getTotalSolutions(p1.toNumber() );
     assert.equal(s1.toNumber() + 1, s2.toNumber(), 'Solution not created');
   });
 
   it('Should vote in favour of the second solution', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.proposalVoting(p, [2]);
     let vid = await sv.getVoteIdAgainstMember(owner,p);
     assert.isAtLeast(vid.toNumber(), 1, "Vote not added");
@@ -197,14 +197,14 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
   it('Should not close the proposal before time', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await catchRevert(sv.closeProposalVote(p));
   });
 
   it('Should vote in favour of the second solution', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.proposalVoting(p, [2], {from: ab});
     let vid = await sv.getVoteIdAgainstMember(ab,p);
     assert.isAtLeast(vid.toNumber(), 1, "Vote not added");
@@ -213,7 +213,7 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
   it('Should close the proposal once all members have voted', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.closeProposalVote(p);
     let iv = await gd.getProposalIntermediateVerdict(p);
     assert.equal(iv.toNumber(), 2, "Incorrect intermediate Verdict");
@@ -222,14 +222,14 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
   it('Should not allow to pick different solution than ab', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await catchRevert(sv.proposalVoting(p, [1], {from: member}));
   });
 
   it('Should allow to vote for rejection', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.proposalVoting(p, [0], {from: member});
     let vid = await sv.getVoteIdAgainstMember(member,p);
     assert.isAtLeast(vid.toNumber(), 1, "Vote not added");
@@ -238,7 +238,7 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
   it('Should close the proposal once all members have voted', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
+    p = p.toNumber() ;
     await sv.closeProposalVote(p);
     let iv = await gd.getProposalFinalVerdict(p);
     assert.equal(iv.toNumber(), 0, "Incorrect final Verdict");
