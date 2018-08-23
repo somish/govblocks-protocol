@@ -5,7 +5,7 @@ let mr;
 // addMemberRole tested already
 contract('MemberRoles', ([owner, member, other]) => {
   before(() => {
-    MemberRoles.deployed().then((instance) => {
+    MemberRoles.deployed().then(instance => {
       mr = instance;
     });
   });
@@ -16,18 +16,34 @@ contract('MemberRoles', ([owner, member, other]) => {
     const ab = await mr.getMemberRoleNameById.call(1);
     const th = await mr.getMemberRoleNameById(2);
 
-    assert.equal(ab[1], '0x41647669736f727920426f617264000000000000000000000000000000000000', 'Advisory Board not created');
-    assert.equal(th[1], '0x546f6b656e20486f6c6465720000000000000000000000000000000000000000', 'Token Holder not created');
+    assert.equal(
+      ab[1],
+      '0x41647669736f727920426f617264000000000000000000000000000000000000',
+      'Advisory Board not created'
+    );
+    assert.equal(
+      th[1],
+      '0x546f6b656e20486f6c6465720000000000000000000000000000000000000000',
+      'Token Holder not created'
+    );
     const roles = await mr.getRoleIdByAddress(owner);
 
-    assert.equal(await mr.checkRoleIdByAddress(owner, 1), true, 'Owner not added to AB');
+    assert.equal(
+      await mr.checkRoleIdByAddress(owner, 1),
+      true,
+      'Owner not added to AB'
+    );
     assert.equal(roles[0].toNumber(), 1, 'Owner not added to AB');
   });
 
   it('should add a member to a role', async function() {
     this.timeout(100000);
     await mr.updateMemberRole(member, 1, true, 356800000054);
-    assert.equal(await mr.checkRoleIdByAddress(member, 1), true, 'user not added to AB');
+    assert.equal(
+      await mr.checkRoleIdByAddress(member, 1),
+      true,
+      'user not added to AB'
+    );
   });
 
   it('Should check getters', async function() {
@@ -51,19 +67,37 @@ contract('MemberRoles', ([owner, member, other]) => {
     const val = await mr.getValidity(member, 1);
     assert.equal(val.toNumber(), 5, 'Validity not updated');
     await mr.updateMemberRole(member, 1, true, 1);
-    assert.equal(await mr.checkRoleIdByAddress(member, 1), false, 'user incorrectly added to AB');
+    assert.equal(
+      await mr.checkRoleIdByAddress(member, 1),
+      false,
+      'user incorrectly added to AB'
+    );
     await mr.updateMemberRole(member, 1, true, 356000000000854);
-    assert.equal(await mr.checkRoleIdByAddress(member, 1), true, 'user not added to AB');
+    assert.equal(
+      await mr.checkRoleIdByAddress(member, 1),
+      true,
+      'user not added to AB'
+    );
     await mr.updateMemberRole(member, 1, false, 0);
-    assert.equal(await mr.checkRoleIdByAddress(member, 1), false, 'user not removed from AB');
+    assert.equal(
+      await mr.checkRoleIdByAddress(member, 1),
+      false,
+      'user not removed from AB'
+    );
     catchRevert(mr.updateMemberRole(member, 1, false, 0));
   });
 
   it('Should change can add member', async function() {
     this.timeout(100000);
     await mr.changeCanAddMember(1, member);
-    await catchRevert(mr.updateMemberRole(member, 1, true, 356854, {from: other}));
-    assert.equal(await mr.getAuthrizedMemberAgainstRole(1), member, 'Authorized address not changed');
+    await catchRevert(
+      mr.updateMemberRole(member, 1, true, 356854, { from: other })
+    );
+    assert.equal(
+      await mr.getAuthrizedMemberAgainstRole(1),
+      member,
+      'Authorized address not changed'
+    );
   });
 
   it('Should get proper Roles', async () => {

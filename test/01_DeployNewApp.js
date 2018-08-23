@@ -25,7 +25,6 @@ const json = require('./../build/contracts/Master.json');
 const bytecode = json.bytecode;
 
 describe('Deploy new dApp', () => {
-
   it('should create a new dApp', async function() {
     this.timeout(100000);
     gbm = await GovBlocksMaster.new();

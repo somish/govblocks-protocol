@@ -10,29 +10,46 @@ let sv;
 let gbt;
 
 contract('Governance Data', function([owner, taker]) {
-
   before(function() {
-    Governance.deployed().then(function(instance) {
-      gv = instance;
-      return GovernanceData.deployed();
-    }).then(function(instance) {
-      gd = instance;
-      return SimpleVoting.deployed();
-    }).then(function(instance) {
-      sv = instance;
-      return GBTStandardToken.deployed();
-    }).then(function(instance) {
-      gbt = instance;
-    });
+    Governance.deployed()
+      .then(function(instance) {
+        gv = instance;
+        return GovernanceData.deployed();
+      })
+      .then(function(instance) {
+        gd = instance;
+        return SimpleVoting.deployed();
+      })
+      .then(function(instance) {
+        sv = instance;
+        return GBTStandardToken.deployed();
+      })
+      .then(function(instance) {
+        gbt = instance;
+      });
   });
 
   it('Should create a proposal with solution', async function() {
     this.timeout(100000);
-    let actionHash = encode('addNewMemberRole(bytes32,string,address,bool)', '0x41647669736f727920426f617265000000000000000000000000000000000000', 'New member role', owner, false);
+    let actionHash = encode(
+      'addNewMemberRole(bytes32,string,address,bool)',
+      '0x41647669736f727920426f617265000000000000000000000000000000000000',
+      'New member role',
+      owner,
+      false
+    );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     let amount = 50000000000000000000;
     await gbt.lock('GOV', amount, 5468545613353456);
-    await gv.createProposalwithSolution('Add new member', 'Add new member', 'Addnewmember', 0, 1, 'Add new member', actionHash);
+    await gv.createProposalwithSolution(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      1,
+      'Add new member',
+      actionHash
+    );
     p2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
@@ -40,7 +57,7 @@ contract('Governance Data', function([owner, taker]) {
   it('Should vote in favour of the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() ;
+    p = p.toNumber();
     await sv.proposalVoting(p, [1]);
     await catchRevert(sv.proposalVoting(p, [1]));
   });
@@ -48,7 +65,7 @@ contract('Governance Data', function([owner, taker]) {
   it('Should close the proposal', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() ;
+    p = p.toNumber();
     await sv.closeProposalVote(p);
     await catchRevert(sv.closeProposalVote(p));
   });
@@ -87,9 +104,13 @@ contract('Governance Data', function([owner, taker]) {
   it('Should set dApp supports locking', async function() {
     this.timeout(100000);
     await gd.setDAppTokenSupportsLocking(true);
-    assert.equal(await gd.dAppTokenSupportsLocking(), true, 'dAppTokenSupportsLocking not changed correctly');
+    assert.equal(
+      await gd.dAppTokenSupportsLocking(),
+      true,
+      'dAppTokenSupportsLocking not changed correctly'
+    );
   });
-  
+
   it('Should pause unpause proposal', async function() {
     this.timeout(100000);
     await gd.toggleProposalPause(0);

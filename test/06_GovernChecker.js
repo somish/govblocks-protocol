@@ -2,7 +2,6 @@ const GovernCheckerContract = artifacts.require('GovernCheckerContract');
 let gc;
 
 contract('GovernCheckerContract', function([first, second]) {
-
   before(function() {
     GovernCheckerContract.deployed().then(function(instance) {
       gc = instance;
@@ -12,8 +11,15 @@ contract('GovernCheckerContract', function([first, second]) {
   it('should initalize authorized', async function() {
     this.timeout(100000);
     await gc.initializeAuthorized('0x41', first);
-    let authorizedAddressNumber = await gc.authorizedAddressNumber('0x41', first);
-    assert.isAtLeast(authorizedAddressNumber.toNumber(), 1, 'authorized not initialized properly');
+    let authorizedAddressNumber = await gc.authorizedAddressNumber(
+      '0x41',
+      first
+    );
+    assert.isAtLeast(
+      authorizedAddressNumber.toNumber(),
+      1,
+      'authorized not initialized properly'
+    );
   });
 
   it('should add authorized', async function() {
@@ -26,13 +32,24 @@ contract('GovernCheckerContract', function([first, second]) {
   it('should update authorized', async function() {
     this.timeout(100000);
     await gc.updateAuthorized('0x41', gc.address);
-    let authorizedAddressNumber = await gc.authorizedAddressNumber('0x41', first);
-    assert.equal(authorizedAddressNumber.toNumber(), 0, 'authorized not removed properly');
+    let authorizedAddressNumber = await gc.authorizedAddressNumber(
+      '0x41',
+      first
+    );
+    assert.equal(
+      authorizedAddressNumber.toNumber(),
+      0,
+      'authorized not removed properly'
+    );
   });
 
   it('should add gbm', async function() {
     this.timeout(100000);
     await gc.updateGBMAdress(first);
-    assert.equal(await gc.GetGovBlockMasterAddress(), first, 'gbm not added properly');
+    assert.equal(
+      await gc.GetGovBlockMasterAddress(),
+      first,
+      'gbm not added properly'
+    );
   });
 });

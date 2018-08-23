@@ -18,38 +18,53 @@ let ms;
 let mr;
 
 const BigNumber = web3.BigNumber;
-require('chai').use(require('chai-bignumber')(BigNumber)).should();
+require('chai')
+  .use(require('chai-bignumber')(BigNumber))
+  .should();
 
 contract('Governance', ([owner, notOwner]) => {
   before(() => {
-    Governance.deployed().then((instance) => {
-      gv = instance;
-      return GovernanceData.deployed();
-    }).then((instance) => {
-      gd = instance;
-      return Pool.deployed();
-    }).then((instance) => {
-      pl = instance;
-      return SimpleVoting.deployed();
-    }).then((instance) => {
-      sv = instance;
-      return GBTStandardToken.deployed();
-    }).then((instance) => {
-      gbt = instance;
-      return Master.deployed();
-    }).then((instance) => {
-      ms = instance;
-      return MemberRoles.deployed();
-    }).then((instance) => {
-      mr = instance;
-    });
+    Governance.deployed()
+      .then(instance => {
+        gv = instance;
+        return GovernanceData.deployed();
+      })
+      .then(instance => {
+        gd = instance;
+        return Pool.deployed();
+      })
+      .then(instance => {
+        pl = instance;
+        return SimpleVoting.deployed();
+      })
+      .then(instance => {
+        sv = instance;
+        return GBTStandardToken.deployed();
+      })
+      .then(instance => {
+        gbt = instance;
+        return Master.deployed();
+      })
+      .then(instance => {
+        ms = instance;
+        return MemberRoles.deployed();
+      })
+      .then(instance => {
+        mr = instance;
+      });
   });
 
   it('Should create an uncategorized proposal', async function() {
     this.timeout(100000);
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     await gbt.lock('GOV', amount, 54685456133563456);
-    await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 0);
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      0
+    );
     p2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
@@ -61,9 +76,9 @@ contract('Governance', ([owner, notOwner]) => {
     await catchRevert(gv.openProposalForVoting(p));
     await catchRevert(gv.categorizeProposal(p, 9));
     await gbt.transfer(pl.address, amount);
-    await catchRevert(gv.categorizeProposal(p, 9, {from: notOwner}));
+    await catchRevert(gv.categorizeProposal(p, 9, { from: notOwner }));
     await mr.updateMemberRole(notOwner, 1, true, 356800000054);
-    await catchRevert(gv.categorizeProposal(p, 9, {from: notOwner}));
+    await catchRevert(gv.categorizeProposal(p, 9, { from: notOwner }));
     await mr.updateMemberRole(notOwner, 1, false, 356800000054);
     await gv.categorizeProposal(p, 9);
     const category = await gd.getProposalCategory(p);
@@ -72,15 +87,39 @@ contract('Governance', ([owner, notOwner]) => {
 
   it('Should submit proposal with solution', async function() {
     this.timeout(100000);
-    const actionHash = encode('addNewMemberRole(bytes32,string,address,bool)', '0x41647669736f727920426f617265000000000000000000000000000000000000', 'New member role', owner, false);
+    const actionHash = encode(
+      'addNewMemberRole(bytes32,string,address,bool)',
+      '0x41647669736f727920426f617265000000000000000000000000000000000000',
+      'New member role',
+      owner,
+      false
+    );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await catchRevert(gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash, {from: notOwner}));
-    await gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash);
-    await catchRevert(gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash));
+    await catchRevert(
+      gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash, {
+        from: notOwner
+      })
+    );
+    await gv.submitProposalWithSolution(
+      p1.toNumber(),
+      'Addnewmember',
+      actionHash
+    );
+    await catchRevert(
+      gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash)
+    );
     let remainingTime = await gv.getMaxCategoryTokenHoldTime(1);
-    await assert.isAtLeast(remainingTime.toNumber(), 1, 'Remaining time not set');
+    await assert.isAtLeast(
+      remainingTime.toNumber(),
+      1,
+      'Remaining time not set'
+    );
     remainingTime = await gv.getRemainingClosingTime(p1.toNumber(), 0);
-    await assert.isAtLeast(remainingTime.toNumber(), 1, 'Remaining time not set');
+    await assert.isAtLeast(
+      remainingTime.toNumber(),
+      1,
+      'Remaining time not set'
+    );
     const g2 = await gv.getSolutionIdAgainstAddressProposal(owner, 0);
     assert.equal(g2[0].toNumber(), 0);
     const pr = await pl.getPendingReward(owner);
@@ -114,21 +153,60 @@ contract('Governance', ([owner, notOwner]) => {
   it('Should create proposals with dApp token', async () => {
     await gd.setDAppTokenSupportsLocking(true);
     const prop1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 9);
-    await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 0, {from: notOwner});
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      9
+    );
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      0,
+      { from: notOwner }
+    );
     const prop2 = await gd.getAllProposalIdsLengthByAddress(owner);
-    assert.equal(prop2.toNumber(), prop1.toNumber() + 1, 'Proposals not created');
+    assert.equal(
+      prop2.toNumber(),
+      prop1.toNumber() + 1,
+      'Proposals not created'
+    );
   });
 
   it('Should not allow unauthorized people to create proposals', async () => {
-    await catchRevert(gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 10, {from: notOwner}));
-    await catchRevert(gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 9, {from: notOwner}));
+    await catchRevert(
+      gv.createProposal(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        0,
+        10,
+        { from: notOwner }
+      )
+    );
+    await catchRevert(
+      gv.createProposal(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        0,
+        9,
+        { from: notOwner }
+      )
+    );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await catchRevert(gv.categorizeProposal(p1.toNumber() + 1, 9, {from: notOwner}));
-    await catchRevert(gv.categorizeProposal(p1.toNumber() + 1, 10, {from: notOwner}));
+    await catchRevert(
+      gv.categorizeProposal(p1.toNumber() + 1, 9, { from: notOwner })
+    );
+    await catchRevert(
+      gv.categorizeProposal(p1.toNumber() + 1, 10, { from: notOwner })
+    );
     await gbt.transfer(notOwner, amount);
-    await gbt.lock('GOV', amount, 54685456133563456, {from: notOwner});
-    await gv.categorizeProposal(p1.toNumber() + 1, 10, {from: notOwner});
+    await gbt.lock('GOV', amount, 54685456133563456, { from: notOwner });
+    await gv.categorizeProposal(p1.toNumber() + 1, 10, { from: notOwner });
   });
 
   it('Should claim rewards', async () => {

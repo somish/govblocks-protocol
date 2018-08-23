@@ -1,26 +1,36 @@
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const EventCaller = artifacts.require('EventCaller');
 let ec;
-const sampleBytes32 = '0x41647669736f727920426f617264000000000000000000000000000000000000';
+const sampleBytes32 =
+  '0x41647669736f727920426f617264000000000000000000000000000000000000';
 const sampleAddress = '0x0000000000000000000000000000000000000001';
 
 // addGovBlocksUser, setMasterByteCode already tested earlier
 contract('GovBlocksMaster', function([owner]) {
-
   before(function() {
-    GovBlocksMaster.deployed().then(function(instance) {
-      gbm = instance;
-      return EventCaller.deployed();
-    }).then(function(instance) {
-      ec = instance;
-    });
+    GovBlocksMaster.deployed()
+      .then(function(instance) {
+        gbm = instance;
+        return EventCaller.deployed();
+      })
+      .then(function(instance) {
+        ec = instance;
+      });
   });
-  
+
   it('should be initialized', async function() {
     this.timeout(100000);
     assert.equal(await gbm.owner(), owner, 'owner was not set properly');
-    assert.notEqual(await gbm.eventCaller(), sampleAddress, 'eventCaller was not set properly');
-    assert.notEqual(await gbm.gbtAddress(), sampleAddress, 'gbtAddress was not set properly');
+    assert.notEqual(
+      await gbm.eventCaller(),
+      sampleAddress,
+      'eventCaller was not set properly'
+    );
+    assert.notEqual(
+      await gbm.gbtAddress(),
+      sampleAddress,
+      'gbtAddress was not set properly'
+    );
     assert.equal(await gbm.initialized(), true, 'initialized bool not set');
   });
 
@@ -28,7 +38,11 @@ contract('GovBlocksMaster', function([owner]) {
     this.timeout(100000);
     let masterAddress = await gbm.getDappMasterAddress('0x41');
     await gbm.changeDappMasterAddress('0x41', sampleAddress);
-    assert.equal(await gbm.getDappMasterAddress('0x41'), sampleAddress, 'dApp Master not changed');
+    assert.equal(
+      await gbm.getDappMasterAddress('0x41'),
+      sampleAddress,
+      'dApp Master not changed'
+    );
     await gbm.changeDappMasterAddress('0x41', masterAddress);
   });
 
@@ -36,7 +50,11 @@ contract('GovBlocksMaster', function([owner]) {
     this.timeout(100000);
     let desc = await gbm.getDappDescHash('0x41');
     await gbm.changeDappDescHash('0x41', 'some random string');
-    assert.equal(await gbm.getDappDescHash('0x41'), 'some random string', 'dApp desc not changed');
+    assert.equal(
+      await gbm.getDappDescHash('0x41'),
+      'some random string',
+      'dApp desc not changed'
+    );
     await gbm.changeDappDescHash('0x41', desc);
   });
 
@@ -44,7 +62,11 @@ contract('GovBlocksMaster', function([owner]) {
     this.timeout(100000);
     let tokenAddress = await gbm.getDappTokenAddress('0x41');
     await gbm.changeDappTokenAddress('0x41', sampleAddress);
-    assert.equal(await gbm.getDappTokenAddress('0x41'), sampleAddress, 'dApp token not changed');
+    assert.equal(
+      await gbm.getDappTokenAddress('0x41'),
+      sampleAddress,
+      'dApp token not changed'
+    );
     await gbm.changeDappTokenAddress('0x41', tokenAddress);
   });
 
@@ -55,7 +77,7 @@ contract('GovBlocksMaster', function([owner]) {
     assert.equal(await gbm.gbtAddress(), sampleAddress, 'gbt not changed');
     await gbm.updateGBTAddress(tokenAddress);
   });
-  
+
   it('should change gbm address', async function() {
     this.timeout(100000);
     await gbm.updateGBMAddress(gbm.address);
@@ -80,10 +102,14 @@ contract('GovBlocksMaster', function([owner]) {
     this.timeout(100000);
     let ecAddress = await gbm.eventCaller();
     await gbm.setEventCallerAddress(sampleAddress);
-    assert.equal(await gbm.eventCaller(), sampleAddress, 'event caller not changed');
+    assert.equal(
+      await gbm.eventCaller(),
+      sampleAddress,
+      'event caller not changed'
+    );
     await gbm.setEventCallerAddress(ecAddress);
   });
-  
+
   it('should check getters', async function() {
     this.timeout(100000);
     // TODO check all the data returned by getters

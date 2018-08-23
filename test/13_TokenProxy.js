@@ -1,6 +1,6 @@
-const TokenProxy = artifacts.require("TokenProxy");
-const GBTStandardToken = artifacts.require("GBTStandardToken");
-const catchRevert = require("../helpers/exceptions.js").catchRevert;
+const TokenProxy = artifacts.require('TokenProxy');
+const GBTStandardToken = artifacts.require('GBTStandardToken');
+const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const lockReason = 'GOV';
 const lockReason2 = 'CLAIM';
 const lockedAmount = 200;
@@ -11,45 +11,68 @@ let tp;
 let gbts;
 
 const increaseTime = function(duration) {
-  web3.currentProvider.sendAsync({
-    jsonrpc: '2.0',
-    method: 'evm_increaseTime',
-    params: [duration],
-    id: lockTimestamp,
-  }, (err, resp) => {
-    if (!err) {
-      web3.currentProvider.send({
-        jsonrpc: '2.0',
-        method: 'evm_mine',
-        params: [],
-        id: lockTimestamp + 1,
-      });
+  web3.currentProvider.sendAsync(
+    {
+      jsonrpc: '2.0',
+      method: 'evm_increaseTime',
+      params: [duration],
+      id: lockTimestamp
+    },
+    (err, resp) => {
+      if (!err) {
+        web3.currentProvider.send({
+          jsonrpc: '2.0',
+          method: 'evm_mine',
+          params: [],
+          id: lockTimestamp + 1
+        });
+      }
     }
-  });
+  );
 };
 
 contract('TokenProxy', function([owner]) {
-  before(function(){
-    GBTStandardToken.deployed().then(function(instance){
+  before(function() {
+    GBTStandardToken.deployed().then(function(instance) {
       gbts = instance;
     });
   });
 
-  it("should proxy correct data", async function () {
+  it('should proxy correct data', async function() {
     this.timeout(100000);
     tp = await TokenProxy.new(gbts.address);
     let tpd = await tp.totalSupply();
     let gbtd = await gbts.totalSupply();
-    assert.equal(tpd.toNumber(), tpd.toNumber(), "Not proxying Total Supply correctly");
+    assert.equal(
+      tpd.toNumber(),
+      tpd.toNumber(),
+      'Not proxying Total Supply correctly'
+    );
     tpd = await tp.balanceOf(owner);
     gbtd = await gbts.balanceOf(owner);
-    await gbts.approve(tp.address, gbtd.toNumber())
-    assert.equal(tpd.toNumber(), tpd.toNumber(), "Not proxying balanceOf correctly");
-    assert.equal(await tp.name(), await gbts.name(), "Not proxying name correctly");
-    assert.equal(await tp.symbol(), await gbts.symbol(), "Not proxying symbol correctly");
+    await gbts.approve(tp.address, gbtd.toNumber());
+    assert.equal(
+      tpd.toNumber(),
+      tpd.toNumber(),
+      'Not proxying balanceOf correctly'
+    );
+    assert.equal(
+      await tp.name(),
+      await gbts.name(),
+      'Not proxying name correctly'
+    );
+    assert.equal(
+      await tp.symbol(),
+      await gbts.symbol(),
+      'Not proxying symbol correctly'
+    );
     tpd = await tp.decimals();
     gbtd = await gbts.decimals();
-    assert.equal(tpd.toNumber(), tpd.toNumber(), "Not proxying Total decimals correctly");
+    assert.equal(
+      tpd.toNumber(),
+      tpd.toNumber(),
+      'Not proxying Total decimals correctly'
+    );
   });
 
   it('reduces locked tokens from transferable balance', async () => {
@@ -102,7 +125,7 @@ contract('TokenProxy', function([owner]) {
   it('can unLockTokens', async () => {
     const lockValidityExtended = await tp.locked(owner, lockReason);
     const balance = await tp.balanceOf(owner);
-    await increaseTime((lockValidityExtended[1].toNumber() + 60) - lockTimestamp);
+    await increaseTime(lockValidityExtended[1].toNumber() + 60 - lockTimestamp);
     unlockableToken = await tp.getUnlockableTokens(owner);
     assert.equal(
       unlockableToken.toNumber(),

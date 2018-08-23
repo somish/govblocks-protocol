@@ -1,5 +1,5 @@
 const GBTStandardToken = artifacts.require('GBTStandardToken');
-const {assertRevert} = require('../helpers/assertRevert');
+const { assertRevert } = require('../helpers/assertRevert');
 let gbts;
 const supply = 100000000000000000000;
 const lockReason = 'GOV';
@@ -12,31 +12,33 @@ const approveAmount = 10;
 const nullAddress = 0x0000000000000000000000000000000000000000;
 
 const increaseTime = function(duration) {
-  web3.currentProvider.sendAsync({
-    jsonrpc: '2.0',
-    method: 'evm_increaseTime',
-    params: [duration],
-    id: lockTimestamp,
-  }, (err, resp) => {
-    if (!err) {
-      web3.currentProvider.send({
-        jsonrpc: '2.0',
-        method: 'evm_mine',
-        params: [],
-        id: lockTimestamp + 1,
-      });
+  web3.currentProvider.sendAsync(
+    {
+      jsonrpc: '2.0',
+      method: 'evm_increaseTime',
+      params: [duration],
+      id: lockTimestamp
+    },
+    (err, resp) => {
+      if (!err) {
+        web3.currentProvider.send({
+          jsonrpc: '2.0',
+          method: 'evm_mine',
+          params: [],
+          id: lockTimestamp + 1
+        });
+      }
     }
-  });
+  );
 };
 
 contract('GBTStandardToken', function([owner, receiver, spender]) {
-
   before(function() {
     GBTStandardToken.deployed().then(function(instance) {
       gbts = instance;
     });
   });
-  
+
   it('has the right balance for the contract owner', async () => {
     const balance = await gbts.balanceOf(owner);
     const totalBalance = await gbts.totalBalanceOf(owner);
@@ -50,10 +52,14 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
     this.timeout(100000);
     let b1 = await gbts.balanceOf.call(owner);
     await gbts.buyToken({
-      value: 100000000000000000,
+      value: 100000000000000000
     });
     let b2 = await gbts.balanceOf.call(owner);
-    assert.equal(b2.toNumber(), b1.toNumber() + 100000000000000000000, 'GBT was not mint properly');
+    assert.equal(
+      b2.toNumber(),
+      b1.toNumber() + 100000000000000000000,
+      'GBT was not mint properly'
+    );
   });
 
   it('reduces locked tokens from transferable balance', async () => {
@@ -74,10 +80,8 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
     );
     assert.equal(0, actualLockedAmount.toNumber());
     const transferAmount = 1;
-    const {
-      logs,
-    } = await gbts.transfer(receiver, transferAmount, {
-      from: owner,
+    const { logs } = await gbts.transfer(receiver, transferAmount, {
+      from: owner
     });
     const newSenderBalance = await gbts.balanceOf(owner);
     const newReceiverBalance = await gbts.balanceOf(receiver);
@@ -121,16 +125,18 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
   it('cannot transfer tokens to null address', async function() {
     await assertRevert(
       gbts.transfer(nullAddress, 100, {
-        from: owner,
+        from: owner
       })
     );
   });
 
   it('cannot transfer tokens greater than transferable balance', async () => {
     const balance = await gbts.balanceOf(owner);
-    await assertRevert(gbts.transfer(receiver, balance + 1, {
-      from: owner,
-    }));
+    await assertRevert(
+      gbts.transfer(receiver, balance + 1, {
+        from: owner
+      })
+    );
   });
 
   it('can approve transfer to a spender', async () => {
@@ -142,7 +148,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
     it('cannot transfer tokens from an address greater than allowance', async () => {
       await assertRevert(
         gbts.transferFrom(owner, receiver, 2, {
-          from: spender,
+          from: spender
         })
       );
     });
@@ -151,7 +157,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
   it('cannot transfer tokens from an address to null address', async () => {
     await assertRevert(
       gbts.transferFrom(owner, nullAddress, 100, {
-        from: owner,
+        from: owner
       })
     );
   });
@@ -161,7 +167,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
     await gbts.approve(spender, balance);
     await assertRevert(
       gbts.transferFrom(owner, receiver, balance.toNumber() + 1, {
-        from: spender,
+        from: spender
       })
     );
   });
@@ -170,15 +176,9 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
     const balance = await gbts.balanceOf(owner);
     await gbts.approve(spender, balance.toNumber());
     const amount = balance.toNumber() / 2;
-    const {
-      logs,
-    } = await gbts.transferFrom(
-      owner,
-      receiver,
-      amount, {
-        from: spender,
-      }
-    );
+    const { logs } = await gbts.transferFrom(owner, receiver, amount, {
+      from: spender
+    });
     assert.equal(logs.length, 1);
     assert.equal(logs[0].event, 'Transfer');
     assert.equal(logs[0].args.from, owner);
@@ -189,7 +189,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
   it('can unLockTokens', async () => {
     const lockValidityExtended = await gbts.locked(owner, lockReason);
     const balance = await gbts.balanceOf(owner);
-    await increaseTime((lockValidityExtended[1].toNumber() + 60) - lockTimestamp);
+    await increaseTime(lockValidityExtended[1].toNumber() + 60 - lockTimestamp);
     unlockableToken = await gbts.getUnlockableTokens(owner);
     assert.equal(
       unlockableToken.toNumber(),

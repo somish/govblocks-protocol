@@ -5,14 +5,15 @@ let sv;
 
 // proposalVoting, adddSolution, claimReward, closeProposal tested already
 contract('Simple Voting', function([owner]) {
-
   before(function() {
-    SimpleVoting.deployed().then(function(instance) {
-      sv = instance;
-      return GovernanceData.deployed();
-    }).then(function(instance) {
-      gd = instance;
-    });
+    SimpleVoting.deployed()
+      .then(function(instance) {
+        sv = instance;
+        return GovernanceData.deployed();
+      })
+      .then(function(instance) {
+        gd = instance;
+      });
   });
 
   it('Should check getters', async function() {
@@ -30,7 +31,7 @@ contract('Simple Voting', function([owner]) {
     assert.equal(g2, true, 'Not initialized');
     // TODO verify the data returned
   });
-  
+
   it('Should not allow self function to be called by others', async function() {
     this.timeout(100000);
     await catchRevert(sv.addAuthorized(owner));

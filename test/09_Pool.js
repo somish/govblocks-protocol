@@ -8,14 +8,15 @@ let ms;
 
 // getPendingReward and claim reward tested already
 contract('Pool', function([owner, taker]) {
-
   before(function() {
-    Pool.deployed().then(function(instance) {
-      pl = instance;
-      return Master.deployed();
-    }).then(function(instance) {
-      ms = instance;
-    });
+    Pool.deployed()
+      .then(function(instance) {
+        pl = instance;
+        return Master.deployed();
+      })
+      .then(function(instance) {
+        ms = instance;
+      });
   });
 
   it('Should buy gbt from ether', async function() {
@@ -25,7 +26,7 @@ contract('Pool', function([owner, taker]) {
     let b1 = await web3.eth.getBalance(pl.address);
     // will throw once owner's permission are taken away
     await pl.buyPoolGBT(1000000000000);
-    await catchRevert(pl.buyPoolGBT(1000000000000, {from: taker}));
+    await catchRevert(pl.buyPoolGBT(1000000000000, { from: taker }));
     let b2 = await web3.eth.getBalance(pl.address);
     assert.isBelow(b2.toNumber(), b1.toNumber(), 'Balance not reduced');
   });
