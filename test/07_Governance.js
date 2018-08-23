@@ -115,23 +115,26 @@ contract('Governance', ([owner, notOwner]) => {
     await gd.setDAppTokenSupportsLocking(true);
     const prop1 = await gd.getAllProposalIdsLengthByAddress(owner);
     await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 9);
-    await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 0);
+    await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 0, {from: notOwner});
     const prop2 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await gv.categorizeProposal(prop2.toNumber(), 9);
-    assert.equal(prop2.toNumber(), prop1.toNumber() + 2, 'Proposals not created');
+    assert.equal(prop2.toNumber(), prop1.toNumber() + 1, 'Proposals not created');
   });
 
   it('Should not allow unauthorized people to create proposals', async () => {
     await catchRevert(gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 10, {from: notOwner}));
-    await catchRevert(gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 8, {from: notOwner}));
+    await catchRevert(gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 0, 9, {from: notOwner}));
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await catchRevert(gv.categorizeProposal(p1.toNumber(), 4, {from: notOwner}));
-    await gv.categorizeProposal(p1.toNumber(), 4);
+    await catchRevert(gv.categorizeProposal(p1.toNumber() + 1, 9, {from: notOwner}));
+    await catchRevert(gv.categorizeProposal(p1.toNumber() + 1, 10, {from: notOwner}));
+    await gbt.transfer(notOwner, amount);
+    await gbt.lock('GOV', amount, 54685456133563456, {from: notOwner});
+    await gv.categorizeProposal(p1.toNumber() + 1, 10, {from: notOwner});
   });
 
   it('Should claim rewards', async () => {
     const b1 = await gbt.balanceOf(owner);
     const g1 = await gv.getMemberDetails(owner);
+    const pr = await pl.getPendingReward(owner);
     await pl.claimReward(owner);
     const b2 = await gbt.balanceOf(owner);
     const g2 = await gv.getMemberDetails(owner);

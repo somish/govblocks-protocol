@@ -242,7 +242,7 @@ contract Governance is Upgradeable {
     /// @dev Calculates member reward to be claimed
     /// @param _memberAddress Member address
     /// @return rewardToClaim Rewards to be claimed
-    function calculateMemberReward(address _memberAddress) public returns(uint pendingGBTReward, uint pendingDAppReward) {
+    function calculateMemberReward(address _memberAddress) public onlyInternal returns(uint pendingGBTReward, uint pendingDAppReward) {
         uint lastRewardProposalId;
         uint lastRewardSolutionProposalId;
         (lastRewardProposalId, lastRewardSolutionProposalId) = 
