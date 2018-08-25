@@ -168,10 +168,17 @@ contract('Governance', ([owner, notOwner]) => {
       0,
       { from: notOwner }
     );
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      0
+    );
     const prop2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(
       prop2.toNumber(),
-      prop1.toNumber() + 1,
+      prop1.toNumber() + 2,
       'Proposals not created'
     );
   });
@@ -206,13 +213,13 @@ contract('Governance', ([owner, notOwner]) => {
     );
     await gbt.transfer(notOwner, amount);
     await gbt.lock('GOV', amount, 54685456133563456, { from: notOwner });
-    await gv.categorizeProposal(p1.toNumber() + 1, 10, { from: notOwner });
+    await gv.categorizeProposal(p1.toNumber(), 10, { from: notOwner });
+    await gv.categorizeProposal(p1.toNumber(), 4);
   });
 
   it('Should claim rewards', async () => {
     const b1 = await gbt.balanceOf(owner);
     const g1 = await gv.getMemberDetails(owner);
-    const pr = await pl.getPendingReward(owner);
     await pl.claimReward(owner);
     const b2 = await gbt.balanceOf(owner);
     const g2 = await gv.getMemberDetails(owner);

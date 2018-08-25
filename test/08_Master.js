@@ -162,14 +162,17 @@ contract('Master', function([owner, notOwner]) {
 
   it('Should transfer assets to new pool', async function() {
     add.pop();
-    add.push(gv.address);
+    const newPool = await Pool.new();
+    add.push(newPool.address);
     const b = await gbt.balanceOf(pl.address);
-    await gbt.transfer(pl.address, 1);
-    const b1 = await gbt.balanceOf(gv.address);
+    const b1 = await gbt.balanceOf(newPool.address);
     await ms.addNewVersion(add);
     await pl.transferAssets();
-    const b2 = await gbt.balanceOf(gv.address);
-    assert.equal(b.toNumber() + 1, b2.toNumber() - b1.toNumber());
+    await gbt.transfer(pl.address, 10);
+    await pl.send(10);
+    await pl.transferAssets();
+    const b2 = await gbt.balanceOf(newPool.address);
+    assert.equal(b.toNumber() + 10, b2.toNumber() - b1.toNumber());
   });
 
   it('Should add new contract', async function() {

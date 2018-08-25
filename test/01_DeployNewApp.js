@@ -5,10 +5,10 @@ const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Governance = artifacts.require('Governance');
 const GovernanceData = artifacts.require('GovernanceData');
 const Pool = artifacts.require('Pool');
+const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const ProposalCategory = artifacts.require('ProposalCategory');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const EventCaller = artifacts.require('EventCaller');
-const ProposalCategoryAdder = artifacts.require('ProposalCategoryAdder');
 let gbts;
 let gbm;
 let ec;
@@ -20,11 +20,10 @@ let gv;
 let pl;
 let add = [];
 let ms;
-let pca;
 const json = require('./../build/contracts/Master.json');
 const bytecode = json.bytecode;
 
-describe('Deploy new dApp', () => {
+contract('Deploy new dApp', ([owner, notOwner]) => {
   it('should create a new dApp', async function() {
     this.timeout(100000);
     gbm = await GovBlocksMaster.new();
@@ -50,6 +49,7 @@ describe('Deploy new dApp', () => {
     add.push(pl.address);
     const mad = await gbm.getDappMasterAddress('0x42');
     ms = await Master.at(mad);
+    await catchRevert(ms.addNewVersion(add, { from: notOwner }));
     await ms.addNewVersion(add);
     const cv = await ms.getCurrentVersion();
     assert.equal(cv.toNumber(), 1, 'dApp version not created');

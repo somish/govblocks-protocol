@@ -55,9 +55,12 @@ contract Pool is Upgradeable {
     function transferAssets() public {
         address newPool = master.getLatestAddress("PL");
         if(address(this) != newPool) {
-           gbt.transfer(newPool, gbt.balanceOf(address(this)));
-           if (!newPool.send(address(this).balance))
-                newPool = address(this); //just to stub the warning
+            uint gbtBal = gbt.balanceOf(address(this));
+            uint ethBal = address(this).balance;
+            if (gbtBal > 0)
+                gbt.transfer(newPool, gbtBal);
+            if (ethBal > 0)
+                newPool.transfer(ethBal);
         }
     }
 

@@ -2,7 +2,7 @@ const GovernCheckerContract = artifacts.require('GovernCheckerContract');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 let gc;
 
-contract('GovernCheckerContract', function([first, second, third]) {
+contract('GovernCheckerContract', function([first, second, third, foruth]) {
   before(function() {
     GovernCheckerContract.deployed().then(function(instance) {
       gc = instance;
@@ -30,6 +30,7 @@ contract('GovernCheckerContract', function([first, second, third]) {
     await gc.addAuthorized('0x41', second);
     let authAddress = await gc.authorized('0x41', 1);
     assert.equal(authAddress, second, 'authorized not added properly');
+    await gc.addAuthorized('0x41', second);
   });
 
   it('should update authorized', async function() {
