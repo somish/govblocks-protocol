@@ -151,8 +151,15 @@ contract('Governance', ([owner, notOwner]) => {
   });
 
   it('Should create proposals with dApp token', async () => {
-    await gd.setDAppTokenSupportsLocking(true);
     const prop1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      9
+    );
+    await gd.setDAppTokenSupportsLocking(true);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -178,7 +185,7 @@ contract('Governance', ([owner, notOwner]) => {
     const prop2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(
       prop2.toNumber(),
-      prop1.toNumber() + 2,
+      prop1.toNumber() + 3,
       'Proposals not created'
     );
   });

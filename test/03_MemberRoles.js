@@ -106,4 +106,9 @@ contract('MemberRoles', ([owner, member, other]) => {
     const mrs2 = await mr.getRoleIdByAddress(other);
     assert.equal(await mr.checkRoleIdByAddress(owner, 0), true);
   });
+
+  it('Should check if a user holds dApp token', async () => {
+    assert.equal(await mr.checkRoleIdByAddress(owner, 2), true);
+    assert.equal(await mr.checkRoleIdByAddress(other, 2), false);
+  });
 });
