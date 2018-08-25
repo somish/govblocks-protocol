@@ -23,6 +23,7 @@ import "./GovernanceData.sol";
 import "./ProposalCategory.sol";
 import "./VotingType.sol";
 
+
 contract Pool is Upgradeable {
     using SafeMath for uint;
 
@@ -32,7 +33,7 @@ contract Pool is Upgradeable {
     GovernanceData internal governanceDat;
     ProposalCategory internal proposalCategory;
 
-    function () public payable {}
+    function () public payable {} //solhint-disable-line
 
     modifier onlySV {
         require(
@@ -54,7 +55,7 @@ contract Pool is Upgradeable {
     /// @dev transfers its assets to latest addresses
     function transferAssets() public {
         address newPool = master.getLatestAddress("PL");
-        if(address(this) != newPool) {
+        if (address(this) != newPool) {
             uint gbtBal = gbt.balanceOf(address(this));
             uint ethBal = address(this).balance;
             if (gbtBal > 0)
@@ -85,8 +86,9 @@ contract Pool is Upgradeable {
         }
     }
 
-    event Debu(uint a);
-    function getPendingReward(address _memberAddress) public view returns (uint pendingGBTReward, uint pendingDAppReward) {
+    function getPendingReward(address _memberAddress) 
+        public view returns (uint pendingGBTReward, uint pendingDAppReward) 
+    {
         uint lastRewardProposalId;
         uint lastRewardSolutionProposalId;
         uint tempGBTReward;
@@ -98,7 +100,7 @@ contract Pool is Upgradeable {
         pendingDAppReward += tempDAppRward;
 
         uint votingTypes = governanceDat.getVotingTypeLength();
-        for(uint i = 0; i < votingTypes; i++) {
+        for (uint i = 0; i < votingTypes; i++) {
             VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
             (tempGBTReward, tempDAppRward) = votingType.getPendingReward(_memberAddress);
             pendingGBTReward += tempGBTReward;
@@ -119,15 +121,15 @@ contract Pool is Upgradeable {
         bool rewardClaimed;
         for (uint i = _lastRewardProposalId; i < allProposalLength; i++) {
             if (_memberAddress == governanceDat.getProposalOwner(i)) {
-                (rewardClaimed, subCat, proposalStatus, finalVredict) = governanceDat.getProposalDetailsById3(i, _memberAddress);
+                (rewardClaimed, subCat, proposalStatus, finalVredict) = 
+                    governanceDat.getProposalDetailsById3(i, _memberAddress);
                 if (
                     proposalStatus > 2 && 
                     finalVredict > 0 && 
                     governanceDat.getProposalIncentive(i) != 0 &&
                     !rewardClaimed
-                ) 
-                {
-                    calcReward = (proposalCategory.getRewardPercProposal(subCat).mul(governanceDat.getProposalIncentive(i))).div(100); 
+                ) {
+                    calcReward = (proposalCategory.getRewardPercProposal(subCat).mul(governanceDat.getProposalIncentive(i))).div(100);  //solhint-disable-line
                     if (proposalCategory.isSubCategoryExternal(subCat))    
                         pendingGBTReward += calcReward;
                     else
@@ -154,7 +156,9 @@ contract Pool is Upgradeable {
         for (i = _lastRewardSolutionProposalId; i < allProposalLength; i++) {
             (proposalId, solutionId, , finalVerdict, totalReward, subCategory) = 
                 gov.getSolutionIdAgainstAddressProposal(_memberAddress, i);
-            if (finalVerdict > 0 && finalVerdict == solutionId && proposalId == i && !governanceDat.getRewardClaimed(i,_memberAddress)) {
+            if (finalVerdict > 0 && finalVerdict == solutionId && proposalId == i 
+                && !governanceDat.getRewardClaimed(i, _memberAddress)
+            ) {
                 calcReward = (proposalCategory.getRewardPercSolution(subCategory) * totalReward) / 100;
                 if (proposalCategory.isSubCategoryExternal(subCategory))    
                     pendingGBTReward += calcReward;

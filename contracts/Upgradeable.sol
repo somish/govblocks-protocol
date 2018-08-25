@@ -17,7 +17,8 @@ pragma solidity 0.4.24;
 
 import "./Master.sol";
 
-contract Upgradeable{
+
+contract Upgradeable {
 
     Master public master;
 
@@ -26,9 +27,9 @@ contract Upgradeable{
         _;
     }
 
-	function updateDependencyAddresses() public; //To be implemented by every contract depending on its needs
+    function updateDependencyAddresses() public; //To be implemented by every contract depending on its needs
 
-	function changeMasterAddress() public {
+    function changeMasterAddress() public {
         if (address(master) == address(0))
             master = Master(msg.sender);
         else

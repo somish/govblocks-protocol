@@ -81,7 +81,7 @@ contract('Governance', ([owner, notOwner]) => {
     await catchRevert(gv.categorizeProposal(p, 9, { from: notOwner }));
     await mr.updateMemberRole(notOwner, 1, false, 356800000054);
     await gv.categorizeProposal(p, 9);
-    const category = await gd.getProposalCategory(p);
+    const category = await gd.getProposalSubCategory(p);
     assert.equal(category.toNumber(), 9, 'Category not set properly');
   });
 
@@ -227,7 +227,7 @@ contract('Governance', ([owner, notOwner]) => {
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     await gv.categorizeProposal(p1.toNumber(), 9, { from: notOwner });
     await gv.categorizeProposal(p1.toNumber(), 4);
-    const category = await gd.getProposalCategory(p1.toNumber());
+    const category = await gd.getProposalSubCategory(p1.toNumber());
     assert.equal(category.toNumber(), 4, 'Category not set properly');
   });
 

@@ -53,7 +53,7 @@ contract('GovernCheckerContract', function([first, second, third, foruth]) {
     await gc.updateGBMAdress(first);
     await catchRevert(gc.initializeAuthorized('0x42', first));
     assert.equal(
-      await gc.GetGovBlockMasterAddress(),
+      await gc.getGovBlockMasterAddress(),
       first,
       'gbm not added properly'
     );

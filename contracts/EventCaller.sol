@@ -15,6 +15,7 @@
 
 pragma solidity 0.4.24;
 
+
 contract EventCaller {
 
     /// @dev VoteCast event is called whenever a vote is cast that can potentially close the proposal. 
@@ -34,7 +35,7 @@ contract EventCaller {
     /// @dev CloseProposalOnTime event is called whenever a proposal is created or updated to close it on time. 
     ///      closeProposalAddress is used to call closeProposal(proposalId) if proposal is ready to be closed.
     event CloseProposalOnTime (
-    	uint256 proposalId,
+        uint256 proposalId,
         address closeProposalAddress,
         uint256 time
     );
@@ -42,7 +43,7 @@ contract EventCaller {
     /// @dev ActionSuccess event is called whenever an onchain action is executed. 
     ///      closeProposalAddress is used to know which action.
     event ActionSuccess (
-    	uint256 proposalId,
+        uint256 proposalId,
         address closeProposalAddress
     );
 
@@ -76,6 +77,6 @@ contract EventCaller {
     /// @dev calls ActionSuccess event
     /// @param _proposalId Proposal ID for which the action is executed
     function callActionSuccess (uint256 _proposalId) external {
-    	emit ActionSuccess(_proposalId, msg.sender);
+        emit ActionSuccess(_proposalId, msg.sender);
     }
 }

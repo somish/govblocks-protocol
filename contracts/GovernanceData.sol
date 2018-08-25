@@ -22,7 +22,7 @@ import "./Governance.sol";
 import "./VotingType.sol";
 
 
-contract GovernanceData is Upgradeable {
+contract GovernanceData is Upgradeable { //solhint-disable-line
 
     event Proposal(
         address indexed proposalOwner, 
@@ -210,7 +210,7 @@ contract GovernanceData is Upgradeable {
         uint64 finalVerdict;
         uint64 currentVerdict;
         uint currVotingStatus;
-        uint category;
+        uint subCategory;
         uint versionNumber;
         uint totalVoteValue;
         uint commonIncentive;
@@ -238,7 +238,7 @@ contract GovernanceData is Upgradeable {
     mapping(address => LastReward) internal lastRewardDetails;
     mapping(uint => bool) public proposalPaused;
     mapping(address => mapping(uint => bool)) internal rewardClaimed;
-    
+
     uint public quorumPercentage;
     bool public constructorCheck;
     bool public punishVoters;
@@ -271,7 +271,7 @@ contract GovernanceData is Upgradeable {
         setGlobalParameters();
         addMemberReputationPoints();
         setVotingTypeDetails("Simple Voting", address(0));
-        allProposal.push(ProposalStruct(address(0), now, master.getLatestAddress("SV")));
+        allProposal.push(ProposalStruct(address(0), now, master.getLatestAddress("SV"))); //solhint-disable-line
         constructorCheck = true;
     }
 
@@ -308,11 +308,11 @@ contract GovernanceData is Upgradeable {
     }
 
     function toggleProposalPause(uint _proposalId) public onlyInternal {
-        if(!proposalPaused[_proposalId])
+        if (!proposalPaused[_proposalId])
             proposalPaused[_proposalId] = true;
         else {
             proposalPaused[_proposalId] = false;
-            allProposal[_proposalId].dateUpd = now;
+            allProposal[_proposalId].dateUpd = now; //solhint-disable-line
         }
     }
 
@@ -415,8 +415,8 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Sets proposal category
-    function setProposalCategory(uint _proposalId, uint _categoryId, address _stakeToken) public onlyInternal {
-        allProposalData[_proposalId].category = _categoryId;
+    function setProposalSubCategory(uint _proposalId, uint _subCategoryId, address _stakeToken) public onlyInternal {
+        allProposalData[_proposalId].subCategory = _subCategoryId;
         allProposalData[_proposalId].stakeToken = _stakeToken;
     }
 
@@ -427,8 +427,8 @@ contract GovernanceData is Upgradeable {
 
     /// @dev Changes the status of a given proposal.
     function changeProposalStatus(uint _id, uint8 _status) public onlyInternal {
-        require(allProposalData[_id].category != 0);
-        emit ProposalStatus(_id, _status, now);
+        require(allProposalData[_id].subCategory != 0);
+        emit ProposalStatus(_id, _status, now); //solhint-disable-line
         updateProposalStatus(_id, _status);
     }
 
@@ -475,13 +475,13 @@ contract GovernanceData is Upgradeable {
     ///     Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _proposalId, string _proposalDescHash) public onlyInternal {
         uint versionNo = allProposalData[_proposalId].versionNumber + 1;
-        emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now);
+        emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now); //solhint-disable-line
         setProposalVersion(_proposalId, versionNo);
     }
 
     /// @dev Sets proposal's date when the proposal last modified
     function setProposalDateUpd(uint _proposalId) public onlyInternal {
-        allProposal[_proposalId].dateUpd = now;
+        allProposal[_proposalId].dateUpd = now; //solhint-disable-line
     }
 
     /// @dev Fetch details of proposal when giving proposal id
@@ -505,7 +505,7 @@ contract GovernanceData is Upgradeable {
         view 
         returns(
             uint id,
-            uint category, 
+            uint subCategory, 
             uint currentVotingId, 
             uint64 intermediateVerdict, 
             uint64 finalVerdict, 
@@ -515,7 +515,7 @@ contract GovernanceData is Upgradeable {
     {
         return (
             _proposalId, 
-            allProposalData[_proposalId].category, 
+            allProposalData[_proposalId].subCategory, 
             allProposalData[_proposalId].currVotingStatus, 
             allProposalData[_proposalId].currentVerdict, 
             allProposalData[_proposalId].finalVerdict, 
@@ -532,7 +532,7 @@ contract GovernanceData is Upgradeable {
     {
         return (
             rewardClaimed[_memberAddress][_proposalId], 
-            allProposalData[_proposalId].category, 
+            allProposalData[_proposalId].subCategory, 
             allProposalData[_proposalId].propStatus, 
             allProposalData[_proposalId].finalVerdict
         );
@@ -601,7 +601,7 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets proposal current voting status i.e. Who is next in voting sequence
-    function getProposalCurrentVotingId(uint _proposalId) public view returns(uint _currVotingStatus) {
+    function getProposalCurrentVotingId(uint _proposalId) public view returns(uint) {
         return (allProposalData[_proposalId].currVotingStatus);
     }
 
@@ -611,13 +611,13 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Get Current Status of proposal when given proposal Id
-    function getProposalStatus(uint _proposalId) public view returns(uint propStatus) {
+    function getProposalStatus(uint _proposalId) public view returns(uint) {
         return allProposalData[_proposalId].propStatus;
     }
 
     /// @dev Gets proposal sub category when given proposal id
-    function getProposalCategory(uint _proposalId) public view returns(uint) {
-        return allProposalData[_proposalId].category;
+    function getProposalSubCategory(uint _proposalId) public view returns(uint) {
+        return allProposalData[_proposalId].subCategory;
     }
 
     function setRewardClaimed(uint _proposalId, address _memberAddress) public onlyInternal {
@@ -640,7 +640,8 @@ contract GovernanceData is Upgradeable {
     function getMemberReputationSV(address _memberAddress, uint32 _proposalId) 
         public 
         view 
-        returns (uint, uint, uint, uint, uint, address, uint) {
+        returns (uint, uint, uint, uint, uint, address, uint) 
+    {
         return(
             stakeWeight, 
             bonusStake, 
@@ -648,19 +649,19 @@ contract GovernanceData is Upgradeable {
             bonusReputation, 
             allMemberReputationByAddress[_memberAddress],
             allProposalData[_proposalId].stakeToken, 
-            allProposalData[_proposalId].category
+            allProposalData[_proposalId].subCategory
         );
     }
 
     /// @dev fetches details for simplevoting and also verifies that the voter has not casted a vote already
     function getProposalDetailsForSV(uint _proposalId) 
-        external
+        public
         view
         returns(uint, uint, uint64) 
     {
         require(allProposalData[_proposalId].propStatus == 2);
         return(
-            allProposalData[_proposalId].category,
+            allProposalData[_proposalId].subCategory,
             allProposalData[_proposalId].currVotingStatus,
             allProposalData[_proposalId].currentVerdict
         );
@@ -668,7 +669,7 @@ contract GovernanceData is Upgradeable {
 
     /// @dev gets total number of votes by a voter
     function getTotalNumberOfVotesByAddress(address _voter) public view returns(uint totalVotes) {
-        for(uint i=0; i<allVotingTypeDetails.length; i++) {
+        for (uint i = 0; i < allVotingTypeDetails.length; i++) {
             VotingType vt = VotingType(allVotingTypeDetails[i].votingTypeAddress);
             totalVotes += vt.getTotalNumberOfVotesByAddress(_voter);
         }
@@ -686,7 +687,7 @@ contract GovernanceData is Upgradeable {
 
     /// @dev Gets stakeToken and sub cat proposal
     function getTokenAndSubCat(uint _proposalId) public view returns(address, uint) {
-        return (allProposalData[_proposalId].stakeToken, allProposalData[_proposalId].category);
+        return (allProposalData[_proposalId].stakeToken, allProposalData[_proposalId].subCategory);
     }
 
     /// @dev Gets Total number of proposal created till now in dApp
@@ -715,17 +716,17 @@ contract GovernanceData is Upgradeable {
     /// @dev Adds new proposal
     function addNewProposal( 
         address _memberAddress, 
-        uint _categoryId, 
+        uint _subCategoryId, 
         address _votingTypeAddress,
         address _stakeToken
     ) 
         public 
         onlyInternal 
     {
-        allProposalData[allProposal.length].category = _categoryId;
+        allProposalData[allProposal.length].subCategory = _subCategoryId;
         allProposalData[allProposal.length].stakeToken = _stakeToken;
-        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ''));
-        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress));
+        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
+        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress)); //solhint-disable-line
     }
 
     /// @dev Creates new proposal
@@ -733,8 +734,8 @@ contract GovernanceData is Upgradeable {
         public 
         onlyInternal 
     {
-        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ''));
-        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress));
+        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
+        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress)); //solhint-disable-line
     }
 
     /// @dev Gets final solution index won after majority voting.
@@ -882,7 +883,7 @@ contract GovernanceData is Upgradeable {
     /// @dev Updates status of an existing proposal
     function updateProposalStatus(uint _id, uint8 _status) internal {
         allProposalData[_id].propStatus = _status;
-        allProposal[_id].dateUpd = now;
+        allProposal[_id].dateUpd = now; //solhint-disable-line
     }
 
     /// @dev Sets version number of proposal i.e. Version number increases everytime the proposal is modified

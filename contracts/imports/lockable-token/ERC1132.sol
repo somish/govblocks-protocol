@@ -174,7 +174,7 @@ contract ERC1132 is StandardToken {
                 emit Unlock(_of, lockReason[_of][i], lockedTokens);
             }
         }  
-        if(unlockableTokens > 0) {
+        if (unlockableTokens > 0) {
             balances[address(this)] = balances[address(this)].sub(unlockableTokens); 
             balances[_of] = balances[_of].add(unlockableTokens);
         } 

@@ -16,8 +16,10 @@ pragma solidity 0.4.24;
 import "./Governed.sol";
 import "./ProposalCategoryAdder.sol";
 
+
 contract ProposalCategory is Governed {
     bool public constructorCheck;
+
     struct Category {
         string name;
         uint[] memberRoleSequence;
@@ -27,7 +29,7 @@ contract ProposalCategory is Governed {
     }
 
     struct SubCategory {
-        string categoryName;
+        string subCategoryName;
         string actionHash;
         uint categoryId;
         address contractAddress;
@@ -43,14 +45,6 @@ contract ProposalCategory is Governed {
     SubCategory[] public allSubCategory;
     Category[] internal allCategory;
     mapping(uint => uint[]) internal allSubIdByCategory;
-
-    ///@dev just to follow the interface
-    function updateDependencyAddresses() public pure {
-    }
-
-    /// @dev just to adhere to GovBlockss' Upgradeable interface
-    function changeMasterAddress() public pure {
-    }
 
     constructor() public {
         uint[] memory rs = new uint[](1);
@@ -73,16 +67,6 @@ contract ProposalCategory is Governed {
         allCategory.push(Category("New contracts", rs, mv, al, ct));
         allCategory.push(Category("Proposals", rs, mv, al, ct));
         allCategory.push(Category("Others", rs, mv, al, ct));
-    }
-
-    /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
-    function proposalCategoryInitiate(bytes32 _dAppName) public {
-        require(!constructorCheck);
-        dappName = _dAppName;
-
-        addInitialSubCategories();
-
-        constructorCheck = true;
     }
 
     /// @dev Adds new category
@@ -198,7 +182,7 @@ contract ProposalCategory is Governed {
         external 
         onlyAuthorizedToGovern 
     {
-        allSubCategory[_subCategoryId].categoryName = _subCategoryName;
+        allSubCategory[_subCategoryId].subCategoryName = _subCategoryName;
         allSubCategory[_subCategoryId].actionHash = _actionHash;
         allSubCategory[_subCategoryId].contractAddress = _address;
         allSubCategory[_subCategoryId].contractName = _contractName;
@@ -224,7 +208,7 @@ contract ProposalCategory is Governed {
 
     /// @dev Get Sub category name 
     function getSubCategoryName(uint _subCategoryId) public view returns(uint, string) {
-        return (_subCategoryId, allSubCategory[_subCategoryId].categoryName);
+        return (_subCategoryId, allSubCategory[_subCategoryId].subCategoryName);
     }
 
     /// @dev Get contractName
@@ -265,12 +249,12 @@ contract ProposalCategory is Governed {
     }
 
     function isCategoryExternal(uint _category) public view returns(bool ext) {
-        if(allCategory[_category].allowedToCreateProposal[0] == 0)
+        if (allCategory[_category].allowedToCreateProposal[0] == 0)
             ext = true;
     }
 
-    function isSubCategoryExternal(uint _category) public view returns(bool ext) {
-        if(allCategory[allSubCategory[_category].categoryId].allowedToCreateProposal[0] == 0)
+    function isSubCategoryExternal(uint _subCategory) public view returns(bool ext) {
+        if (allCategory[allSubCategory[_subCategory].categoryId].allowedToCreateProposal[0] == 0)
             ext = true;
     }
 
@@ -343,14 +327,8 @@ contract ProposalCategory is Governed {
     }
 
     /// @dev Gets Default incentive to be distributed against sub category.
-    function getCatIncentive(uint _subCategoryId) public view returns(uint incentive) {
-        incentive = allSubCategory[_subCategoryId].defaultIncentive;
-    }
-
-    /// @dev Gets Default incentive to be distributed against sub category.
-    function getCategoryIncentive(uint _subCategoryId) public view returns(uint category, uint incentive) {
-        category = _subCategoryId;
-        incentive = allSubCategory[_subCategoryId].defaultIncentive;
+    function getSubCatIncentive(uint _subCategoryId) public view returns(uint) {
+        return allSubCategory[_subCategoryId].defaultIncentive;
     }
 
     /// @dev Gets Total number of categories added till now
@@ -384,25 +362,10 @@ contract ProposalCategory is Governed {
         );
     }
 
-    function getMRSequenceBySubCat(uint _subCategoryId, uint _currVotingIndex) external view returns (uint) {
+    function getMRSequenceBySubCat(uint _subCategoryId, uint _currVotingIndex) public view returns (uint) {
         uint category = allSubCategory[_subCategoryId].categoryId;
         return allCategory[category].memberRoleSequence[_currVotingIndex];
     }
-
-    // /// @dev Gets Category and SubCategory name from Proposal ID.
-    // function getCatAndSubNameByPropId(uint _proposalId) 
-    //     public 
-    //     view 
-    //     returns(string categoryName, string subCategoryName) 
-    // {
-    //     categoryName = allCategory[getCategoryIdBySubId(governanceDat.getProposalCategory(_proposalId))].name;
-    //     subCategoryName = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryName;
-    // }
-
-    // /// @dev Gets Category ID from Proposal ID.
-    // function getCatIdByPropId(uint _proposalId) public view returns(uint catId) {
-    //     catId = allSubCategory[governanceDat.getProposalCategory(_proposalId)].categoryId;
-    // }
 
     function addInitialSubC(
         string _subCategoryName, 
@@ -434,14 +397,32 @@ contract ProposalCategory is Governed {
         }     
     }
 
+    /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
+    function proposalCategoryInitiate(bytes32 _dAppName) public {
+        require(!constructorCheck);
+        dappName = _dAppName;
+
+        addInitialSubCategories();
+
+        constructorCheck = true;
+    }
+
+    ///@dev just to follow the interface
+    function updateDependencyAddresses() public pure { //solhint-disable-line
+    }
+
+    /// @dev just to adhere to GovBlockss' Upgradeable interface
+    function changeMasterAddress() public pure { //solhint-disable-line
+    }
+
     function getCodeSize(address _addr) internal view returns(uint _size) {
-        assembly {
+        assembly { //solhint-disable-line
             _size := extcodesize(_addr)
         }
     }
 
     /// @dev adds second half of the inital categories
-    function addInitialSubCategories() internal {
+    function addInitialSubCategories() internal { //solhint-disable-line
         uint[] memory stakeInecntive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
         stakeInecntive[0] = 0;
@@ -520,7 +501,8 @@ contract ProposalCategory is Governed {
             rewardPerc
         );
         if (getCodeSize(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a) > 0)        //kovan testnet
-            ProposalCategoryAdder proposalCategoryAdder = ProposalCategoryAdder(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a);
+            ProposalCategoryAdder proposalCategoryAdder = 
+                ProposalCategoryAdder(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a);
         if (address(proposalCategoryAdder) != 0)
             proposalCategoryAdder.addSubC(address(this));
     }

@@ -38,23 +38,23 @@ contract Master is Ownable {
     address public dAppToken;
     
     function initMaster(address _ownerAddress, bytes32 _gbUserName) public {
-        require (address(gbm) == address(0));
+        require(address(gbm) == address(0));
         contractsActive[address(this)] = true;
         gbm = GovBlocksMaster(msg.sender);
         dAppName = _gbUserName;
         owner = _ownerAddress;
-        versionDates.push(now);
+        versionDates.push(now); //solhint-disable-line
         addContractNames();
     }
 
     /// @dev Checks if the address is authorized to make changes.
     ///     owner allowed for debugging only, will be removed before launch.
     function isAuth() public view returns(bool check) {
-        if(versionDates.length < 2) {
-            if(owner == msg.sender)
+        if (versionDates.length < 2) {
+            if (owner == msg.sender)
                 check = true;
         } else {
-            if(getLatestAddress("SV") == msg.sender || owner == msg.sender)
+            if (getLatestAddress("SV") == msg.sender || owner == msg.sender)
                 check = true;
         }
     }
@@ -77,11 +77,11 @@ contract Master is Ownable {
     function addNewVersion(address[] _contractAddresses) public {
         require(isAuth());
         address gbt = gbm.gbtAddress();
-        if(versionDates.length < 2) {
+        if (versionDates.length < 2) {
             govern = new Governed();
             GovernChecker governChecker = GovernChecker(govern.governChecker());
-            if(getCodeSize(address(governChecker)) > 0 ){
-                if(governChecker.authorizedAddressNumber(dAppName, _contractAddresses[3]) == 0)
+            if (getCodeSize(address(governChecker)) > 0) {
+                if (governChecker.authorizedAddressNumber(dAppName, _contractAddresses[3]) == 0)
                     governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
             }
             dAppToken = gbm.getDappTokenAddress(dAppName);
@@ -94,7 +94,7 @@ contract Master is Ownable {
 
         allContractVersions[versionDates.length]["GS"] = gbt;
 
-        versionDates.push(now);
+        versionDates.push(now); //solhint-disable-line
 
         changeMasterAddress(address(this));
         changeAllAddress();
@@ -117,7 +117,7 @@ contract Master is Ownable {
 
     /// @dev Changes Master contract address
     function changeMasterAddress(address _masterAddress) public {
-        if(_masterAddress != address(this)){
+        if (_masterAddress != address(this)) {
             require(isAuth());
         }
         allContractVersions[versionDates.length - 1]["MS"] = _masterAddress;
@@ -172,6 +172,7 @@ contract Master is Ownable {
     /// @dev Configures global parameters i.e. Voting or Reputation parameters
     /// @param _typeOf Passing intials of the parameter name which value needs to be updated
     /// @param _value New value that needs to be updated    
+    // solhint-disable-next-line
     function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public {
         require(isAuth());
         GovernanceData governanceDat = GovernanceData(getLatestAddress("GD"));
@@ -223,7 +224,7 @@ contract Master is Ownable {
     }
 
     function getCodeSize(address _addr) internal view returns(uint _size) {
-        assembly {
+        assembly { //solhint-disable-line
             _size := extcodesize(_addr)
         }
     }
@@ -231,7 +232,7 @@ contract Master is Ownable {
     /// @dev Sets the older versions of contract addresses as inactive and the latest one as active.
     function changeAllAddress() internal {
         uint i;
-        if(versionDates.length < 3) {
+        if (versionDates.length < 3) {
             for (i = 1; i < allContractNames.length - 1; i++) {
                 contractsActive[allContractVersions[versionDates.length - 1][allContractNames[i]]] = true;
                 up = Upgradeable(allContractVersions[versionDates.length - 1][allContractNames[i]]);

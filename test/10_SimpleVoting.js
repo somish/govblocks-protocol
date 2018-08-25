@@ -2,6 +2,7 @@ const SimpleVoting = artifacts.require('SimpleVoting');
 const GovernanceData = artifacts.require('GovernanceData');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 let sv;
+const nullAddress = 0x0000000000000000000000000000000000000000;
 
 // proposalVoting, adddSolution, claimReward, closeProposal tested already
 contract('Simple Voting', function([owner]) {
@@ -28,6 +29,8 @@ contract('Simple Voting', function([owner]) {
     let g8 = await sv.getAllVoteIdsByProposalRole(0, 1);
     let g9 = await sv.getVoteValue(0);
     let g10 = await sv.allVotesTotal();
+    let g11 = await sv.getSolutionByVoteIdAndIndex(0, 0);
+    let g12 = await sv.getVoteDetailById(0);
     assert.equal(g2, true, 'Not initialized');
     // TODO verify the data returned
   });

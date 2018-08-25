@@ -39,23 +39,6 @@ contract GovBlocksMaster is Ownable {
     string internal byteCodeHash;
     string internal contractsAbiHash;
 
-    /// @dev Initializes GovBlocks master
-    /// @param _gbtAddress GBT standard token address
-    function govBlocksMasterInit(address _gbtAddress, address _eventCaller) public {
-        require(!initialized);
-
-        require (owner != address(0));
-        
-        gbtAddress = _gbtAddress;
-        eventCaller = _eventCaller;
-        Governed govern = new Governed();
-        governChecker = GovernChecker(govern.governChecker());
-        masterByteCode = "0x496e6974616c697a65";
-        if(address(governChecker) != address(0))
-            governChecker.updateGBMAdress(address(this));
-        initialized = true;
-    }
-
     /// @dev Updates GBt standard token address
     /// @param _gbtContractAddress New GBT standard token contract address
     function updateGBTAddress(address _gbtContractAddress) external onlyOwner {
@@ -63,12 +46,14 @@ contract GovBlocksMaster is Ownable {
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             Master master = Master(masterAddress);
+            /* solhint-disable */
             if (master.getCurrentVersion() > 0) {
                 //Master can re enter but we don't expect to use this function ever on the public network
                 if (address(master).call(bytes4(keccak256("changeGBTSAddress(address)")), _gbtContractAddress)) {
                     //just to silence the compiler warning
                 }
-            }      
+            } 
+            /* solhint-enable */     
         }
     }
 
@@ -78,14 +63,16 @@ contract GovBlocksMaster is Ownable {
         for (uint i = 0; i < allGovBlocksUsers.length; i++) {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             Master master = Master(masterAddress);
+            /* solhint-disable */
             if (master.getCurrentVersion() > 0) {
                 //Master can re enter but we don't expect to use this function ever on the public network
-                if(address(master).call(bytes4(keccak256("changeGBMAddress(address)")), _newGBMAddress)) {
+                if (address(master).call(bytes4(keccak256("changeGBMAddress(address)")), _newGBMAddress)) {
                     //just to silence the compiler warning
                 }
-            }      
+            }   
+            /* solhint-enable */   
         }
-        if(address(governChecker) != address(0))
+        if (address(governChecker) != address(0))
             governChecker.updateGBMAdress(_newGBMAddress);
     }
 
@@ -108,7 +95,7 @@ contract GovBlocksMaster is Ownable {
     /// @param _gbUserName dApp name
     /// @param _newMasterAddress dApp new master address
     function changeDappMasterAddress(bytes32 _gbUserName, address _newMasterAddress) external {
-        if(address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
+        if (address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
             require(governChecker.authorizedAddressNumber(_gbUserName, msg.sender) > 0 || owner == msg.sender);
         else
             require(owner == msg.sender);
@@ -120,7 +107,7 @@ contract GovBlocksMaster is Ownable {
     /// @param _gbUserName dApp name
     /// @param _descHash dApp new desc hash
     function changeDappDescHash(bytes32 _gbUserName, string _descHash) external {
-        if(address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
+        if (address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
             require(governChecker.authorizedAddressNumber(_gbUserName, msg.sender) > 0 || owner == msg.sender);
         else
             require(owner == msg.sender);
@@ -131,7 +118,7 @@ contract GovBlocksMaster is Ownable {
     /// @param _gbUserName  dApp name
     /// @param _dappTokenAddress dApp new token address
     function changeDappTokenAddress(bytes32 _gbUserName, address _dappTokenAddress) external {
-        if(address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
+        if (address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
             require(governChecker.authorizedAddressNumber(_gbUserName, msg.sender) > 0 || owner == msg.sender);
         else
             require(owner == msg.sender);
@@ -160,6 +147,22 @@ contract GovBlocksMaster is Ownable {
     /// @dev Sets global event caller address
     function setEventCallerAddress(address _eventCaller) external onlyOwner {
         eventCaller = _eventCaller;
+    }
+
+    /// @dev Initializes GovBlocks master
+    /// @param _gbtAddress GBT standard token address
+    function govBlocksMasterInit(address _gbtAddress, address _eventCaller) public {
+        require(!initialized);
+        require(owner != address(0));
+        
+        gbtAddress = _gbtAddress;
+        eventCaller = _eventCaller;
+        Governed govern = new Governed();
+        governChecker = GovernChecker(govern.governChecker());
+        masterByteCode = "0x496e6974616c697a65";
+        if (address(governChecker) != address(0))
+            governChecker.updateGBMAdress(address(this));
+        initialized = true;
     }
 
     /// @dev Gets byte code and abi hash
@@ -295,9 +298,11 @@ contract GovBlocksMaster is Ownable {
 
     /// @dev Deploys a new Master
     function deployMaster(bytes32 _gbUserName, bytes _masterByteCode) internal returns(address deployedAddress) {
+        /* solhint-disable */
         assembly {
           deployedAddress := create(0, add(_masterByteCode, 0x20), mload(_masterByteCode))  // deploys contract
         }
+        /* solhint-enable */
         Master master = Master(deployedAddress);
         master.initMaster(msg.sender, _gbUserName);
     }

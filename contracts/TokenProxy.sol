@@ -5,42 +5,40 @@ import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 contract TokenProxy {
-	using SafeMath for uint256;
+    using SafeMath for uint256;
 
-	GBTStandardToken public originalToken;
+    GBTStandardToken public originalToken;
 
-	constructor(address _originalToken) public {
+    constructor(address _originalToken) public {
         originalToken = GBTStandardToken(_originalToken);
     }
 
-
     function totalSupply() public view returns(uint) {
-    	return originalToken.totalSupply();
+        return originalToken.totalSupply();
     }
 
     function balanceOf(address _of) public view returns(uint) {
-    	return originalToken.balanceOf(_of);
+        return originalToken.balanceOf(_of);
     }
 
     function name() public view returns(string) {
-    	return originalToken.name();
+        return originalToken.name();
     }
 
     function symbol() public view returns(string) {
-    	return originalToken.symbol();
+        return originalToken.symbol();
     }
 
     function decimals() public view returns(uint8) {
-    	return originalToken.decimals();
+        return originalToken.decimals();
     }
-
 
     /**
      * @dev Reasons why a user's tokens have been locked
      */
     mapping(address => bytes32[]) public lockReason;
 
-    struct lockToken {
+    struct LockedToken {
         uint256 amount;
         uint256 validity;
         bool claimed;
@@ -50,7 +48,7 @@ contract TokenProxy {
      * @dev Holds number & validity of tokens locked for a given reason for
      *      a given member address
      */
-    mapping(address => mapping(bytes32 => lockToken)) public locked;
+    mapping(address => mapping(bytes32 => LockedToken)) public locked;
 
     event Lock(
         address indexed _of,
@@ -88,7 +86,7 @@ contract TokenProxy {
         originalToken.transferFrom(msg.sender, address(this), _amount);
         if (locked[msg.sender][_reason].amount == 0)
             lockReason[msg.sender].push(_reason);
-        locked[msg.sender][_reason] = lockToken(_amount, validUntil, false);
+        locked[msg.sender][_reason] = LockedToken(_amount, validUntil, false);
         emit Lock(msg.sender, _reason, _amount, validUntil);
         return true;
     }
@@ -205,7 +203,7 @@ contract TokenProxy {
                 emit Unlock(_of, lockReason[_of][i], lockedTokens);
             }
         }  
-        if(unlockableTokens > 0) {
+        if (unlockableTokens > 0) {
             originalToken.transfer(_of, unlockableTokens);
         } 
     }

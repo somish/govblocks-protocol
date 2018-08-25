@@ -6,7 +6,7 @@
   "scripts": {
     "coverage": "./node_modules/.bin/solidity-coverage",
     "pretty": "prettier --write --single-quote --tab-width 2 \"**/*.js\"",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged && solhint \"contracts/*.sol\""
   },
   "lint-staged": {
     "**/*.{js,json}": [
@@ -23,6 +23,7 @@
     "jest": "^23.5.0",
     "lint-staged": "^7.2.2",
     "prettier": "^1.14.2",
+    "solhint": "^1.2.1",
     "solidity-coverage": "^0.5.5",
     "truffle": "^4.1.13",
     "truffle-hdwallet-provider": "^0.0.5"

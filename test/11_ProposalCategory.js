@@ -41,8 +41,6 @@ contract('Proposal Category', function([owner, taker]) {
     assert.equal(g10.toNumber(), 1);
     const g11 = await pc.getRoleMajorityVotelength(0);
     assert.equal(g11[1].toNumber(), 1);
-    const g12 = await pc.getCategoryIncentive(0);
-    assert.equal(g12[1].toNumber(), 0);
     const g14 = await pc.getMinStake(9);
     assert.isAbove(g14.toNumber(), 1);
     const g15 = await pc.getRoleMajorityVoteAtIndex(4, 0);

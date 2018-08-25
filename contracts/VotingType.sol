@@ -19,14 +19,12 @@
 
 pragma solidity 0.4.24;
 
+
 contract VotingType {
     string public votingTypeName;
-
-    function addSolution(uint32 _proposalId, address _memberAddress, string _solutionHash, bytes _action) public;
-
     function proposalVoting(uint32 _proposalId, uint64[] _solutionChosen) external;
 
-    function closeProposalVote(uint _proposalId) public;
+    function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) public view returns(uint length);
 
     function getTotalNumberOfVotesByAddress(address _memberAddress) public view returns(uint);
 
@@ -34,7 +32,9 @@ contract VotingType {
 
     function getPendingReward(address _memberAddress) public view returns(uint, uint);
 
-    function giveRewardAfterFinalDecision(uint _proposalId) internal;
+    function closeProposalVote(uint _proposalId) public;
 
-    function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) public view returns(uint length);
+    function addSolution(uint32 _proposalId, address _memberAddress, string _solutionHash, bytes _action) public;
+
+    function giveRewardAfterFinalDecision(uint _proposalId) internal;
 }

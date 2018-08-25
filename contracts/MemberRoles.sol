@@ -18,6 +18,7 @@ import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "./Governed.sol";
 
+
 contract MemberRoles is Governed {
     event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription, bool limitedValidity);
     using SafeMath for uint;
@@ -25,7 +26,7 @@ contract MemberRoles is Governed {
     bytes32[] internal memberRole;
     StandardToken public dAppToken;
     bool internal constructorCheck;
-    uint constant UINT_MAX = uint256(0) - uint256(1);
+    uint constant internal UINT_MAX = uint256(0) - uint256(1);
 
     struct MemberRoleDetails {
         uint memberCounter;
@@ -39,10 +40,10 @@ contract MemberRoles is Governed {
     mapping(uint => MemberRoleDetails) internal memberRoleData;
 
     modifier checkRoleAuthority(uint _memberRoleId) {
-        if(authorizedAddressAgainstRole[_memberRoleId] != address(0))
+        if (authorizedAddressAgainstRole[_memberRoleId] != address(0))
             require(msg.sender == authorizedAddressAgainstRole[_memberRoleId]);
         else
-            require (isAuthorizedToGovern(msg.sender));
+            require(isAuthorizedToGovern(msg.sender));
         _;
     }
 
@@ -56,14 +57,14 @@ contract MemberRoles is Governed {
         emit MemberRole(
             1,
             "Advisory Board",
-            "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.",
+            "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.", //solhint-disable-line
             false
         );
         memberRole.push("Token Holder");
         emit MemberRole(
             2,
             "Token Holder",
-            "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.",
+            "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.", //solhint-disable-line
             false
         );
         memberRoleData[1].memberCounter = 1;
@@ -74,11 +75,11 @@ contract MemberRoles is Governed {
     }
 
     /// @dev To Initiate default settings whenever the contract is regenerated!
-    function updateDependencyAddresses() public pure {
+    function updateDependencyAddresses() public pure { //solhint-disable-line
     }
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
-    function changeMasterAddress() public pure {
+    function changeMasterAddress() public pure { //solhint-disable-line
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.
@@ -88,13 +89,13 @@ contract MemberRoles is Governed {
         assignedRoles = new uint[](length);
         for (uint i = 0; i < getTotalMemberRoles(); i++) {
             if (memberRoleData[i].memberActive[_memberAddress]
-                && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now)
+                && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now) //solhint-disable-line
             ) {
                 assignedRoles[j] = i;
                 j++;
             }
         }
-        if(dAppToken.balanceOf(_memberAddress) > 0) {
+        if (dAppToken.balanceOf(_memberAddress) > 0) {
             assignedRoles[j] = 2;
         }
 
@@ -109,17 +110,17 @@ contract MemberRoles is Governed {
     /// @param _memberAddress Address of member
     /// @param _roleId Checks member's authenticity with the roleId.
     /// i.e. Returns true if this roleId is assigned to member
-    function checkRoleIdByAddress(address _memberAddress, uint _roleId) external view returns(bool) {
+    function checkRoleIdByAddress(address _memberAddress, uint _roleId) public view returns(bool) {
         if (_roleId == 0)
             return true;
         if (_roleId == 2) {
-            if(dAppToken.balanceOf(_memberAddress) > 0)
+            if (dAppToken.balanceOf(_memberAddress) > 0)
                 return true;
             else
                 return false;
         }
         if (memberRoleData[_roleId].memberActive[_memberAddress]
-            && (!memberRoleData[_roleId].limitedValidity || memberRoleData[_roleId].validity[_memberAddress] > now))
+            && (!memberRoleData[_roleId].limitedValidity || memberRoleData[_roleId].validity[_memberAddress] > now)) //solhint-disable-line
             return true;
         else
             return false;
@@ -139,8 +140,8 @@ contract MemberRoles is Governed {
         checkRoleAuthority(_roleId)
     {
         if (_typeOf) {
-            if(memberRoleData[_roleId].validity[_memberAddress] <= _validity) {
-                if(!memberRoleData[_roleId].memberActive[_memberAddress]) {
+            if (memberRoleData[_roleId].validity[_memberAddress] <= _validity) {
+                if (!memberRoleData[_roleId].memberActive[_memberAddress]) {
                     memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
                     memberRoleData[_roleId].memberActive[_memberAddress] = true;
                     memberRoleData[_roleId].memberAddress.push(_memberAddress);
@@ -180,7 +181,12 @@ contract MemberRoles is Governed {
     /// @param _newRoleName New role name
     /// @param _roleDescription New description hash
     /// @param _canAddMembers Authorized member against every role id
-    function addNewMemberRole(bytes32 _newRoleName, string _roleDescription, address _canAddMembers, bool _limitedValidity)
+    function addNewMemberRole(
+        bytes32 _newRoleName, 
+        string _roleDescription, 
+        address _canAddMembers, 
+        bool _limitedValidity
+    )
         public
         onlyAuthorizedToGovern
     {
@@ -203,14 +209,15 @@ contract MemberRoles is Governed {
         for (i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
             if (memberRoleData[_memberRoleId].memberActive[member]
-                && (!memberRoleData[_memberRoleId].limitedValidity || memberRoleData[_memberRoleId].validity[member] > now)
+                && (!memberRoleData[_memberRoleId].limitedValidity 
+                    || memberRoleData[_memberRoleId].validity[member] > now) //solhint-disable-line
             ) {
                 tempAllMemberAddress[j] = member;
                 j++;
             }
         }
         allMemberAddress = new address[](j);
-        for(i = 0; i < j; i++) {
+        for (i = 0; i < j; i++) {
             allMemberAddress[i] = tempAllMemberAddress[i];
         }
         return (_memberRoleId, allMemberAddress);
@@ -270,10 +277,10 @@ contract MemberRoles is Governed {
         uint length = getTotalMemberRoles();
         for (uint i = 0; i < length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress]
-                && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now))
+                && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now)) //solhint-disable-line
                 count++;       
         }
-        if(dAppToken.balanceOf(_memberAddress) > 0)
+        if (dAppToken.balanceOf(_memberAddress) > 0)
             count++;
         return count;
     }

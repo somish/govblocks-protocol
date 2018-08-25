@@ -19,11 +19,12 @@ import "./imports/lockable-token/ERC1132.sol";
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 
+
 contract GBTStandardToken is ERC1132, MintableToken, DetailedERC20 {
     uint public tokenPrice;
 
     /// @dev constructor
-    constructor() DetailedERC20("GovBlocks Standard Token", "GBT", 18) public {
+    constructor() public DetailedERC20("GovBlocks Standard Token", "GBT", 18) {
         owner = msg.sender;
         totalSupply_ = 10 ** 20;
         balances[address(msg.sender)] = totalSupply_;
@@ -38,9 +39,4 @@ contract GBTStandardToken is ERC1132, MintableToken, DetailedERC20 {
         emit Mint(msg.sender, actualAmount);
         emit Transfer(address(0), msg.sender, actualAmount);
     } 
-
-    /*/// @dev function to change Token price
-    function changeTokenPrice(uint _price) public onlyOwner {
-        tokenPrice = _price;
-    }*/
 }
