@@ -206,21 +206,35 @@ contract('Governance', ([owner, notOwner]) => {
     );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     await catchRevert(
-      gv.categorizeProposal(p1.toNumber() + 1, 9, { from: notOwner })
+      gv.categorizeProposal(p1.toNumber(), 9, { from: notOwner })
     );
     await catchRevert(
-      gv.categorizeProposal(p1.toNumber() + 1, 10, { from: notOwner })
+      gv.categorizeProposal(p1.toNumber(), 10, { from: notOwner })
     );
+  });
+
+  it('Should allow authorized people to categorize multiple times', async () => {
+    await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     await gbt.transfer(notOwner, amount);
     await gbt.lock('GOV', amount, 54685456133563456, { from: notOwner });
-    await gv.categorizeProposal(p1.toNumber(), 10, { from: notOwner });
+    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    await gv.categorizeProposal(p1.toNumber(), 9, { from: notOwner });
     await gv.categorizeProposal(p1.toNumber(), 4);
+    const category = await gd.getProposalCategory(p1.toNumber());
+    assert.equal(category.toNumber(), 4, 'Category not set properly');
   });
 
   it('Should claim rewards', async () => {
     const b1 = await gbt.balanceOf(owner);
     const g1 = await gv.getMemberDetails(owner);
+    let pr = await pl.getPendingReward(owner);
+    assert.equal(pr[0].toNumber(), 0);
+    assert.isAtLeast(pr[1].toNumber(), 100000);
+    pr = await pl.getPendingReward(notOwner);
+    assert.equal(pr[0].toNumber(), 0);
+    assert.isAtLeast(pr[1].toNumber(), 0);
     await pl.claimReward(owner);
+    await pl.claimReward(notOwner);
     const b2 = await gbt.balanceOf(owner);
     const g2 = await gv.getMemberDetails(owner);
     b2.should.be.bignumber.above(b1);
