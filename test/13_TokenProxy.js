@@ -190,7 +190,7 @@ contract('TokenProxy', function([owner, receiver, spender]) {
     );
   });
 
-  it('should not allow to transfer and lock more than allowed', async () => {
+  it('should not allow to transfer with lock more than allowed', async () => {
     const spenderBalance = (await tp.balanceOf(spender)).toNumber();
     await catchRevert(
       tp.transferWithLock(receiver, '0x4142', spenderBalance + 1, lockPeriod, {
@@ -199,8 +199,8 @@ contract('TokenProxy', function([owner, receiver, spender]) {
     );
   });
 
-  it('should allow transfer with lock againa fter claiming', async () => {
+  it('should allow transfer with lock again after claiming', async () => {
     await tp.unlock(receiver);
-    await tp.transferWithLock(receiver, lockReason3, 1, 0);
+    await tp.transferWithLock(receiver, lockReason3, 1, 1);
   });
 });
