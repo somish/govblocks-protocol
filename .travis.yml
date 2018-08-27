@@ -17,5 +17,5 @@ jobs:
       script: truffle compile
     - stage: test and coverage
       env: 'TASK=coverage'
-      install: npm install -g truffle ganache-cli coveralls solidity-coverage
+      install: npm install -g truffle ganache-cli coveralls solidity-coverage ethereumjs-abi
       script: npm run coverage && cat coverage/lcov.info | coveralls
