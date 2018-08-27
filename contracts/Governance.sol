@@ -487,16 +487,16 @@ contract Governance is Upgradeable {
                 getSolutionIdAgainstAddressProposal(_memberAddress, i);
             if (proposalStatus <= 2 && lastIndex == 0)
                 lastIndex = i;
-            if (finalVerdict > 0 && finalVerdict == solutionId) {
-                if (!governanceDat.getRewardClaimed(i, _memberAddress)) {
-                    governanceDat.setRewardClaimed(i, _memberAddress);
-                    calcReward = (proposalCategory.getRewardPercSolution(subCategory) * totalReward) / 100;
-                    if (proposalCategory.isSubCategoryExternal(subCategory))    
-                        pendingGBTReward += calcReward;
-                    else
-                        pendingDAppReward += calcReward;
-                    calculateSolutionReward1(_memberAddress, i, calcReward);
-                }
+            if (finalVerdict > 0 && finalVerdict == solutionId 
+                && !governanceDat.getRewardClaimed(i, _memberAddress)
+            ) {
+                governanceDat.setRewardClaimed(i, _memberAddress);
+                calcReward = (proposalCategory.getRewardPercSolution(subCategory) * totalReward) / 100;
+                if (proposalCategory.isSubCategoryExternal(subCategory))    
+                    pendingGBTReward += calcReward;
+                else
+                    pendingDAppReward += calcReward;
+                calculateSolutionReward1(_memberAddress, i, calcReward);
             }
         }
 

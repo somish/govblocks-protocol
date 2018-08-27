@@ -130,15 +130,23 @@ contract('TokenProxy', function([owner, receiver, spender]) {
   it('can unLockTokens', async () => {
     const lockValidityExtended = await tp.locked(owner, lockReason);
     const balance = await tp.balanceOf(owner);
+    const tokensLocked = await tp.tokensLockedAtTime(owner, lockReason, 0);
+    const tokensLockedLater = await tp.tokensLockedAtTime(
+      owner,
+      lockReason,
+      lockValidityExtended[1].toNumber() + 60
+    );
     await increaseTime(lockValidityExtended[1].toNumber() + 60 - lockTimestamp);
     unlockableToken = await tp.getUnlockableTokens(owner);
+    tokensLocked.should.be.bignumber.equal(unlockableToken);
     assert.equal(
       unlockableToken.toNumber(),
       lockValidityExtended[0].toNumber()
     );
     await tp.unlock(owner);
     unlockableToken = await tp.getUnlockableTokens(owner);
-    assert.equal(unlockableToken.toNumber(), 0);
+    assert.equal(unlockableToken.toNumber(), tokensLockedLater.toNumber());
+    await tp.unlock(owner);
     const newBalance = await tp.balanceOf(owner);
     newBalance.should.be.bignumber.above(balance);
   });
