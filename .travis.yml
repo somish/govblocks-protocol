@@ -18,4 +18,5 @@ jobs:
     - stage: test and coverage
       env: 'TASK=coverage'
       install: npm install -g truffle ganache-cli coveralls solidity-coverage
+      before_script: ganache-cli -e 10000000 -p 7545 --gasPrice 0x01 --gasLimit 0xfffffffffff> /dev/null &
       script: npm run coverage && cat coverage/lcov.info | coveralls

@@ -8,6 +8,13 @@ module.exports = {
       host: '127.0.0.1',
       port: 7545,
       network_id: '5777'
+    },
+    coverage: {
+      host: 'localhost',
+      network_id: '*',
+      port: 7545,
+      gas: 0xfffffffffff,
+      gasPrice: 0x01
     }
     // ropsten: {
     //   gasPrice : 1,
@@ -36,5 +43,8 @@ module.exports = {
       enabled: true,
       runs: 200
     }
+  },
+  mocha: {
+    enableTimeouts: false
   }
 };

@@ -5,6 +5,7 @@
   "main": "truffle-config.js",
   "scripts": {
     "coverage": "./node_modules/.bin/solidity-coverage",
+    "cov": ".\\node_modules\\.bin\\solidity-coverage",
     "pretty": "prettier --write --single-quote --tab-width 2 \"**/*.js\"",
     "precommit": "lint-staged && solhint \"contracts/*.sol\""
   },
