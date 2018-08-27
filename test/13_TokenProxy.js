@@ -200,8 +200,11 @@ contract('TokenProxy', function([owner, receiver, spender]) {
   });
 
   it('should allow transfer with lock again after claiming', async () => {
+    await increaseTime(60);
     await tp.unlock(receiver);
+    assert.equal((await tp.tokensLocked(receiver, lockReason3)).toNumber(), 0);
     await gbts.increaseApproval(tp.address, 10);
     await tp.transferWithLock(receiver, lockReason3, 1, 1);
+    assert.equal((await tp.tokensLocked(receiver, lockReason3)).toNumber(), 1);
   });
 });
