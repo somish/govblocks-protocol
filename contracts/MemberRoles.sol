@@ -106,6 +106,10 @@ contract MemberRoles is Governed {
         return memberRoleData[_roleId].validity[_memberAddress];
     }
 
+    function getRoleValidity(uint _roleId) public view returns (bool) {
+        return memberRoleData[_roleId].limitedValidity;
+    }
+
     /// @dev Returns true if the given role id is assigned to a member.
     /// @param _memberAddress Address of member
     /// @param _roleId Checks member's authenticity with the roleId.
@@ -231,7 +235,7 @@ contract MemberRoles is Governed {
     }
 
     /// @dev Return Member address at specific index against Role id.
-    function getAllMemberAddressById(uint _memberRoleId, uint _index) public view returns(address) {
+    function getMemberAddressById(uint _memberRoleId, uint _index) public view returns(address) {
         return memberRoleData[_memberRoleId].memberAddress[_index];
     }
 
