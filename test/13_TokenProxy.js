@@ -5,10 +5,15 @@ const lockReason = 'GOV';
 const lockReason2 = 'CLAIM';
 const lockedAmount = 200;
 const lockPeriod = 1000;
+const lockReason3 = 'VESTED';
 let blockNumber = web3.eth.blockNumber;
 const lockTimestamp = web3.eth.getBlock(blockNumber).timestamp;
 let tp;
 let gbts;
+const BigNumber = web3.BigNumber;
+require('chai')
+  .use(require('chai-bignumber')(BigNumber))
+  .should();
 
 const increaseTime = function(duration) {
   web3.currentProvider.sendAsync(
@@ -31,7 +36,7 @@ const increaseTime = function(duration) {
   );
 };
 
-contract('TokenProxy', function([owner]) {
+contract('TokenProxy', function([owner, receiver, spender]) {
   before(function() {
     GBTStandardToken.deployed().then(function(instance) {
       gbts = instance;
@@ -135,9 +140,59 @@ contract('TokenProxy', function([owner]) {
     unlockableToken = await tp.getUnlockableTokens(owner);
     assert.equal(unlockableToken.toNumber(), 0);
     const newBalance = await tp.balanceOf(owner);
-    assert.equal(
-      newBalance.toNumber(),
-      balance.toNumber() + lockValidityExtended[0].toNumber()
+    newBalance.should.be.bignumber.above(balance);
+  });
+
+  it('should allow to lock token again', async () => {
+    tp.lock('0x41', 1, 0);
+    await tp.unlock(owner);
+    tp.lock('0x41', 1, 0);
+  });
+
+  it('can transferWithLock', async () => {
+    const ownerBalance = (await tp.balanceOf(owner)).toNumber();
+    const receiverBalance = (await tp.balanceOf(receiver)).toNumber();
+    await gbts.increaseApproval(tp.address, ownerBalance);
+    await tp.transferWithLock(receiver, lockReason3, 5, 1);
+    await catchRevert(
+      tp.transferWithLock(receiver, lockReason3, ownerBalance, lockPeriod)
     );
+    const locked = await tp.locked(receiver, lockReason3);
+    assert.equal((await tp.balanceOf(receiver)).toNumber(), receiverBalance);
+    assert.equal(locked[0].toNumber(), 5);
+  });
+
+  it('should not allow 0 lock amount', async () => {
+    await catchRevert(tp.lock('0x414141', 0, lockTimestamp));
+    await catchRevert(tp.transferWithLock(receiver, '0x414141', 0, lockPeriod));
+  });
+
+  it('should show 0 lock amount for unknown reasons', async () => {
+    const actualLockedAmount = await tp.tokensLocked(owner, '0x4141');
+    assert.equal(actualLockedAmount.toNumber(), 0);
+  });
+
+  it('should not allow to increase lock amount by more than balance', async () => {
+    await catchRevert(
+      tp.increaseLockAmount(
+        lockReason,
+        (await tp.balanceOf(spender)).toNumber() + 1,
+        { from: spender }
+      )
+    );
+  });
+
+  it('should not allow to transfer and lock more than allowed', async () => {
+    const spenderBalance = (await tp.balanceOf(spender)).toNumber();
+    await catchRevert(
+      tp.transferWithLock(receiver, '0x4142', spenderBalance + 1, lockPeriod, {
+        from: spender
+      })
+    );
+  });
+
+  it('should allow transfer with lock againa fter claiming', async () => {
+    await tp.unlock(receiver);
+    await tp.transferWithLock(receiver, lockReason3, 1, 0);
   });
 });

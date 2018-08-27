@@ -1,42 +1,25 @@
 pragma solidity 0.4.24;
 
-import "./GBTStandardToken.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./../openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import './ERC1132.sol';
 
 
-contract TokenProxy is ERC1132 {
-    using SafeMath for uint256;
-    /**
-     * @dev Error messages for require statements
-     */
-    string internal constant ALREADY_LOCKED = "Tokens already locked";
-    string internal constant NOT_LOCKED = "No tokens locked";
-    string internal constant AMOUNT_ZERO = "Amount can not be 0";
+contract LockableToken is ERC1132, StandardToken {
+	/**
+	 * @dev Error messages for require statements
+	 */
+	string constant alreadyLocked = 'Tokens already locked';
+	string constant notLocked = 'No tokens locked';
+	string constant amountZero = 'Amount can not be 0';
+	string constant transferFailed = 'Transfer Failed';
 
-    GBTStandardToken public originalToken;
-
-    constructor(address _originalToken) public {
-        originalToken = GBTStandardToken(_originalToken);
-    }
-
-    function totalSupply() public view returns(uint) {
-        return originalToken.totalSupply();
-    }
-
-    function balanceOf(address _of) public view returns(uint) {
-        return originalToken.balanceOf(_of);
-    }
-
-    function name() public view returns(string) {
-        return originalToken.name();
-    }
-
-    function symbol() public view returns(string) {
-        return originalToken.symbol();
-    }
-
-    function decimals() public view returns(uint8) {
-        return originalToken.decimals();
+	/**
+	 * @dev constructor to mint initial tokens
+     * This will need to be updated to use _mint once openzepplin updates their npm package.
+	 */
+	constructor(uint256 _supply) public {
+        totalSupply_ = _supply;
+        balances[msg.sender] = _supply;
     }
 
     /**
@@ -50,17 +33,17 @@ contract TokenProxy is ERC1132 {
         public
         returns (bool)
     {
-        uint256 validUntil = block.timestamp.add(_time); //solhint-disable-line
+        uint256 validUntil = block.timestamp.add(_time);
 
         // If tokens are already locked, then functions extendLock or
         // increaseLockAmount should be used to make any changes
-        require(tokensLocked(msg.sender, _reason) == 0, ALREADY_LOCKED);
-        require(_amount != 0, AMOUNT_ZERO);
+        require(tokensLocked(msg.sender, _reason) == 0, alreadyLocked);
+        require(_amount != 0, amountZero);
 
         if (locked[msg.sender][_reason].amount == 0)
             lockReason[msg.sender].push(_reason);
 
-        originalToken.transferFrom(msg.sender, address(this), _amount);
+        transfer(address(this), _amount);
 
         locked[msg.sender][_reason] = lockToken(_amount, validUntil, false);
 
@@ -80,15 +63,15 @@ contract TokenProxy is ERC1132 {
         public
         returns (bool)
     {
-        uint256 validUntil = block.timestamp.add(_time); //solhint-disable-line
+        uint256 validUntil = block.timestamp.add(_time);
 
-        require(tokensLocked(_to, _reason) == 0, ALREADY_LOCKED);
-        require(_amount != 0, AMOUNT_ZERO);
+        require(tokensLocked(_to, _reason) == 0, alreadyLocked);
+        require(_amount != 0, amountZero);
 
         if (locked[_to][_reason].amount == 0)
             lockReason[_to].push(_reason);
 
-        originalToken.transferFrom(msg.sender, address(this), _amount);
+        transfer(address(this), _amount);
 
         locked[_to][_reason] = lockToken(_amount, validUntil, false);
         
@@ -138,7 +121,7 @@ contract TokenProxy is ERC1132 {
         view
         returns (uint256 amount)
     {
-        amount = balanceOf(_of);
+    	amount = balanceOf(_of);
 
         for (uint256 i = 0; i < lockReason[_of].length; i++) {
             amount = amount.add(tokensLocked(_of, lockReason[_of][i]));
@@ -154,7 +137,7 @@ contract TokenProxy is ERC1132 {
         public
         returns (bool)
     {
-        require(tokensLocked(msg.sender, _reason) > 0, NOT_LOCKED);
+        require(tokensLocked(msg.sender, _reason) > 0, notLocked);
 
         locked[msg.sender][_reason].validity = locked[msg.sender][_reason].validity.add(_time);
 
@@ -171,8 +154,8 @@ contract TokenProxy is ERC1132 {
         public
         returns (bool)
     {
-        require(tokensLocked(msg.sender, _reason) > 0, NOT_LOCKED);
-        originalToken.transferFrom(msg.sender, address(this), _amount);
+        require(tokensLocked(msg.sender, _reason) > 0, notLocked);
+        transfer(address(this), _amount);
 
         locked[msg.sender][_reason].amount = locked[msg.sender][_reason].amount.add(_amount);
 
@@ -190,7 +173,7 @@ contract TokenProxy is ERC1132 {
         view
         returns (uint256 amount)
     {
-        if (locked[_of][_reason].validity <= now && !locked[_of][_reason].claimed) //solhint-disable-line
+        if (locked[_of][_reason].validity <= now && !locked[_of][_reason].claimed)
             amount = locked[_of][_reason].amount;
     }
 
@@ -213,8 +196,8 @@ contract TokenProxy is ERC1132 {
             }
         }  
 
-        if (unlockableTokens > 0)
-            originalToken.transfer(_of, unlockableTokens);
+        if(unlockableTokens > 0)
+        	this.transfer(_of, unlockableTokens);
     }
 
     /**
