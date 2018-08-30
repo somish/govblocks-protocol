@@ -96,7 +96,16 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Toggle Proposal Pause",
+            "Pause Proposal",
+            "QmS5SrwX6J8Cfhp3LAb6N54KYDc55hpnLdFgG6eCPkGvQx",
+            6,
+            address(0),
+            "GD",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Unpause Proposal",
             "QmS5SrwX6J8Cfhp3LAb6N54KYDc55hpnLdFgG6eCPkGvQx",
             6,
             address(0),

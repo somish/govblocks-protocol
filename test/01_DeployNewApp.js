@@ -50,7 +50,8 @@ contract('Deploy new dApp', ([owner, notOwner]) => {
     const mad = await gbm.getDappMasterAddress('0x42');
     ms = await Master.at(mad);
     await catchRevert(ms.addNewVersion(add, { from: notOwner }));
-    await ms.addNewVersion(add);
+    const receipt = await ms.addNewVersion(add);
+    //console.log('GasUsed: ', receipt.receipt.gasUsed);
     const cv = await ms.getCurrentVersion();
     assert.equal(cv.toNumber(), 1, 'dApp version not created');
   });

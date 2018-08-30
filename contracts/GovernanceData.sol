@@ -307,10 +307,10 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         lastRewardDetails[_memberAddress].lastRewardSolutionProposalId = _proposalId;
     }
 
-    function toggleProposalPause(uint _proposalId) public onlyInternal {
-        if (!proposalPaused[_proposalId])
+    function toggleProposalPause(bool pause, uint _proposalId) public onlyInternal {
+        if (pause && !proposalPaused[_proposalId])
             proposalPaused[_proposalId] = true;
-        else {
+        else if (!pause && proposalPaused[_proposalId]) {
             proposalPaused[_proposalId] = false;
             allProposal[_proposalId].dateUpd = now; //solhint-disable-line
         }
