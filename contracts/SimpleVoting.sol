@@ -213,7 +213,8 @@ contract SimpleVoting is Upgradeable {
                     calculateVoteReward(_memberAddress, i, proposalId, lastIndex);
                 pendingGBTReward += tempGBTReward;
                 pendingDAppReward += tempDAppReward;
-                rewardClaimed[voteId] = true;
+                if (lastIndex != i)
+                    rewardClaimed[voteId] = true;
             }
         }
         if (lastIndex == 0)
@@ -259,10 +260,6 @@ contract SimpleVoting is Upgradeable {
 
     function getAllVoteIdsByAddress(address _memberAddress) public view returns(uint[]) {
         return allVotesByMember[_memberAddress];
-    }
-
-    function getVoteIdOfNthVoteOfMember(address _memberAddress, uint _vote) public view returns(uint) {
-        return allVotesByMember[_memberAddress][_vote];
     }
 
     function getTotalNumberOfVotesByAddress(address _memberAddress) public view returns(uint) {
@@ -581,7 +578,7 @@ contract SimpleVoting is Upgradeable {
         (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
             getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
 
-        if (proposalStatus < 2 && lastIndex == 0)
+        if (proposalStatus <= 2 && lastIndex == 0)
             lastIndex = _voteNo;
         if (finalVredict > 0 && solutionChosen == finalVredict) {
             calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 

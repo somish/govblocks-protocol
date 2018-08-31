@@ -97,7 +97,7 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC(
             "Pause Proposal",
-            "QmS5SrwX6J8Cfhp3LAb6N54KYDc55hpnLdFgG6eCPkGvQx",
+            "QmPh5j3aAPhC6VZ8snjwLWPtR7Ps3os8zdYERTtp5W6RAp",
             6,
             address(0),
             "GD",
@@ -106,7 +106,7 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC(
             "Resume Proposal",
-            "QmS5SrwX6J8Cfhp3LAb6N54KYDc55hpnLdFgG6eCPkGvQx",
+            "QmSDojLprBLDrPqF7HAaDCdi2Hy129LBwzfRMKhkt2begC",
             6,
             address(0),
             "GD",

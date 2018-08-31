@@ -17,6 +17,10 @@ contract('Simple Voting', function([owner]) {
       });
   });
 
+  it('Should be initialized', async function() {
+    await catchRevert(sv.simpleVotingInitiate());
+  });
+
   it('Should check getters', async function() {
     this.timeout(100000);
     let g1 = await sv.votingTypeName();
@@ -31,6 +35,7 @@ contract('Simple Voting', function([owner]) {
     let g10 = await sv.allVotesTotal();
     let g11 = await sv.getSolutionByVoteIdAndIndex(0, 0);
     let g12 = await sv.getVoteDetailById(0);
+    await catchRevert(sv.getSolutionByVoteIdAndIndex(0, 1));
     assert.equal(g2, true, 'Not initialized');
     // TODO verify the data returned
   });

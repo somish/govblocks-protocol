@@ -16,6 +16,9 @@ contract TokenProxy is ERC1132 {
     GBTStandardToken public originalToken;
 
     constructor(address _originalToken) public {
+
+        require(_originalToken != address(0));
+        
         originalToken = GBTStandardToken(_originalToken);
     }
 
@@ -59,7 +62,7 @@ contract TokenProxy is ERC1132 {
 
         if (locked[msg.sender][_reason].amount == 0)
             lockReason[msg.sender].push(_reason);
-
+        
         originalToken.transferFrom(msg.sender, address(this), _amount);
 
         locked[msg.sender][_reason] = lockToken(_amount, validUntil, false);
@@ -84,6 +87,7 @@ contract TokenProxy is ERC1132 {
 
         require(tokensLocked(_to, _reason) == 0, ALREADY_LOCKED);
         require(_amount != 0, AMOUNT_ZERO);
+        require(_to != address(0));
 
         if (locked[_to][_reason].amount == 0)
             lockReason[_to].push(_reason);

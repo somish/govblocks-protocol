@@ -655,7 +655,7 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         );
     }
 
-    /// @dev fetches details for simplevoting and also verifies that the voter has not casted a vote already
+    /// @dev fetches details for simplevoting and also verifies that proposal is open for voting
     function getProposalDetailsForSV(uint _proposalId) 
         public
         view

@@ -6,6 +6,7 @@ const Pool = artifacts.require('Pool');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const Master = artifacts.require('Master');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
+const ProposalCategory = artifacts.require('ProposalCategory');
 const MemberRoles = artifacts.require('MemberRoles');
 const amount = 500000000000000;
 
@@ -16,13 +17,15 @@ let gd;
 let gv;
 let ms;
 let mr;
+let pc;
+let propId;
 
 const BigNumber = web3.BigNumber;
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-contract('Governance', ([owner, notOwner]) => {
+contract('Governance', ([owner, notOwner, noStake]) => {
   before(() => {
     Governance.deployed()
       .then(instance => {
@@ -51,6 +54,10 @@ contract('Governance', ([owner, notOwner]) => {
       })
       .then(instance => {
         mr = instance;
+        return ProposalCategory.deployed();
+      })
+      .then(instance => {
+        pc = instance;
       });
   });
 
@@ -159,6 +166,7 @@ contract('Governance', ([owner, notOwner]) => {
       0,
       9
     );
+    propId = (await gd.getProposalLength()).toNumber() - 1;
     await gd.setDAppTokenSupportsLocking(true);
     await gv.createProposal(
       'Add new member',
@@ -188,6 +196,50 @@ contract('Governance', ([owner, notOwner]) => {
       prop1.toNumber() + 3,
       'Proposals not created'
     );
+  });
+
+  it('Should not allow unauthorized people to submit solutions', async () => {
+    const initSol = await gd.getTotalSolutions(propId);
+    await catchRevert(
+      sv.addSolution(propId, noStake, '0x0', '0x0', { from: noStake })
+    );
+    await catchRevert(
+      sv.addSolution(propId, noStake, '0x0', '0x0', { from: notOwner })
+    );
+    const finalSol = await gd.getTotalSolutions(propId);
+    assert.equal(initSol.toNumber(), finalSol.toNumber());
+  });
+
+  it('Should allow authorized people to submit solution', async () => {
+    const initSol = await gd.getTotalSolutions(propId);
+    await sv.addSolution(propId, owner, '0x0', '0x0');
+    const finalSol = await gd.getTotalSolutions(propId);
+    assert.equal(finalSol.toNumber(), initSol.toNumber() + 1);
+  });
+
+  it('Should not allow voting before proposal is open for voting', async () => {
+    await catchRevert(sv.proposalVoting(propId, [1]));
+  });
+
+  it('Should open proposal for voting', async () => {
+    await gv.openProposalForVoting(propId);
+    const pStatus = await gd.getProposalStatus(propId);
+    assert.equal(pStatus.toNumber(), 2);
+  });
+
+  it('Should not allow unauthorized people to vote', async () => {
+    await catchRevert(sv.proposalVoting(propId, [1], { from: noStake }));
+    await mr.updateMemberRole(noStake, 1, true, 356800000054);
+    await catchRevert(sv.proposalVoting(propId, [1], { from: noStake }));
+    await mr.updateMemberRole(noStake, 1, false, 356800000054);
+  });
+
+  it('Should not allow voting for non existent solution', async () => {
+    await catchRevert(sv.proposalVoting(propId, [5]));
+  });
+
+  it('Should allow voting', async () => {
+    await sv.proposalVoting(propId, [1]);
   });
 
   it('Should not allow unauthorized people to create proposals', async () => {
@@ -236,10 +288,10 @@ contract('Governance', ([owner, notOwner]) => {
     const g1 = await gv.getMemberDetails(owner);
     let pr = await pl.getPendingReward(owner);
     assert.equal(pr[0].toNumber(), 0);
-    assert.isAtLeast(pr[1].toNumber(), 100000);
+    assert.equal(pr[1].toNumber(), 100000);
     pr = await pl.getPendingReward(notOwner);
     assert.equal(pr[0].toNumber(), 0);
-    assert.isAtLeast(pr[1].toNumber(), 0);
+    assert.equal(pr[1].toNumber(), 0);
     await pl.claimReward(owner);
     await pl.claimReward(notOwner);
     const b2 = await gbt.balanceOf(owner);
@@ -249,5 +301,21 @@ contract('Governance', ([owner, notOwner]) => {
     const pr2 = await pl.getPendingReward(owner);
     pr2[0].should.be.bignumber.eq(0);
     pr2[1].should.be.bignumber.eq(0);
+  });
+
+  it('Should close proposal', async () => {
+    await mr.updateMemberRole(notOwner, 1, false, 356800000054);
+    await sv.closeProposalVote(propId);
+    await catchRevert(sv.closeProposalVote(propId));
+  });
+
+  it('Should allow claiming reward for preious proposals', async () => {
+    const b1 = await gbt.balanceOf(owner);
+    const pr = await pl.getPendingReward(owner);
+    assert.equal(pr[0].toNumber(), 0);
+    assert.equal(pr[1].toNumber(), 100000);
+    await pl.claimReward(owner);
+    const b2 = await gbt.balanceOf(owner);
+    b2.should.be.bignumber.above(b1);
   });
 });
