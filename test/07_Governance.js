@@ -342,15 +342,31 @@ contract('Governance', ([owner, notOwner, noStake]) => {
   it('Should add a new category with token holder as voters', async function() {
     this.timeout(100000);
     let c1 = await pc.getCategoryLength();
+    await pc.addNewCategory(
+      'New Category',
+      [1, 2],
+      [50, 50],
+      [0],
+      [1000, 1000]
+    );
     await pc.addNewCategory('New Category', [2], [50], [0], [1000]);
     let c2 = await pc.getCategoryLength();
-    assert.equal(c2.toNumber(), c1.toNumber() + 1, 'category not added');
+    assert.equal(c2.toNumber(), c1.toNumber() + 2, 'category not added');
   });
 
   it('Should add a new proposal sub category', async function() {
     this.timeout(100000);
     let c1 = await pc.getSubCategoryLength();
     let cat = await pc.getCategoryLength();
+    await pc.addNewSubCategory(
+      'New Sub Category',
+      'New Sub Category',
+      cat.toNumber() - 2,
+      sampleAddress,
+      '0x4164',
+      [0, 0, 100000],
+      [40, 40, 20]
+    );
     await pc.addNewSubCategory(
       'New Sub Category',
       'New Sub Category',
@@ -361,7 +377,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       [40, 40, 20]
     );
     let c2 = await pc.getSubCategoryLength();
-    assert.equal(c2.toNumber(), c1.toNumber() + 1, 'Sub category not added');
+    assert.equal(c2.toNumber(), c1.toNumber() + 2, 'Sub category not added');
   });
 
   it('Should create proposal with solution for token holders', async function() {
@@ -388,6 +404,15 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       'Add new member',
       '0x5465'
     );
+    await gv.createProposalwithSolution(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      c.toNumber() - 2,
+      'Add new member',
+      '0x5465'
+    );
   });
 
   it('Should not allow non token holders to vote', async function() {
@@ -410,11 +435,28 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     await catchRevert(sv.proposalVoting(propId, [1]));
   });
 
+  it('Should let first layer vote in Multi-Layer voting', async function() {
+    await sv.proposalVoting(propId + 2, [1]);
+    await catchRevert(sv.proposalVoting(propId + 2, [1]));
+  });
+
   it('Should close proposal when time is reached', async function() {
-    await increaseTime(2000);
+    await increaseTime(1000);
     await sv.closeProposalVote(propId);
     await sv.closeProposalVote(propId + 1);
+    await sv.closeProposalVote(propId + 2);
     await catchRevert(sv.closeProposalVote(propId));
+  });
+
+  it('Should let second layer vote in Multi-Layer voting', async function() {
+    await sv.proposalVoting(propId + 2, [0], { from: noStake });
+    await catchRevert(sv.proposalVoting(propId + 2, [1], { from: noStake }));
+  });
+
+  it('Should close second layer voting when time is reached', async function() {
+    await catchRevert(sv.closeProposalVote(propId + 2));
+    await increaseTime(1000);
+    await sv.closeProposalVote(propId + 2);
   });
 
   it('Should give reward to all voters if punishVoters is false', async function() {
