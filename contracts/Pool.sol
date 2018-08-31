@@ -89,13 +89,11 @@ contract Pool is Upgradeable {
     function getPendingReward(address _memberAddress) 
         public view returns (uint pendingGBTReward, uint pendingDAppReward) 
     {
-        uint lastRewardProposalId;
-        uint lastRewardSolutionProposalId;
         uint tempGBTReward;
         uint tempDAppRward;
-        (lastRewardProposalId, lastRewardSolutionProposalId) = governanceDat.getAllidsOfLastReward(msg.sender);
+        uint lastRewardProposalId = governanceDat.lastRewardDetails(_memberAddress);
         (pendingGBTReward, pendingDAppReward) = getPendingProposalReward(_memberAddress, lastRewardProposalId); 
-        (tempGBTReward, tempDAppRward) = getPendingSolutionReward(_memberAddress, lastRewardSolutionProposalId);
+        (tempGBTReward, tempDAppRward) = getPendingSolutionReward(_memberAddress, lastRewardProposalId);
         pendingGBTReward += tempGBTReward;
         pendingDAppReward += tempDAppRward;
 

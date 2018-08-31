@@ -186,17 +186,6 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         emit Reward(_to, _proposalId, _description, _amount);
     }
 
-    /// @dev Calls proposal status event
-    /// @param _proposalId Proposal id
-    /// @param _proposalStatus Proposal status
-    /// @param _dateAdd Date when proposal was added
-    function callProposalStatusEvent(uint256 _proposalId, uint _proposalStatus, uint _dateAdd) 
-        public 
-        onlyInternal 
-    {
-        emit ProposalStatus(_proposalId, _proposalStatus, _dateAdd);
-    }
-
     using SafeMath for uint;
 
     struct ProposalStruct {
@@ -222,11 +211,6 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         address votingTypeAddress;
     }
 
-    struct LastReward {
-        uint lastRewardProposalId;
-        uint lastRewardSolutionProposalId;
-    }
-
     struct SolutionStruct {
         address owner;
         bytes action;
@@ -235,7 +219,7 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(address => uint) internal allMemberReputationByAddress;
-    mapping(address => LastReward) internal lastRewardDetails;
+    mapping(address => uint) public lastRewardDetails;
     mapping(uint => bool) public proposalPaused;
     mapping(address => mapping(uint => bool)) internal rewardClaimed;
 
@@ -291,12 +275,6 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         addSolutionOwnerPoints = _addSolutionOwnerPoints;
     }
 
-    /// @dev Sets the Last proposal id till which the reward has been distributed
-    ///     for Proposal Owner (Proposal creation and acceptance Reward)
-    function setLastRewardIdOfCreatedProposals(address _memberAddress, uint _proposalId) public onlyInternal {
-        lastRewardDetails[_memberAddress].lastRewardProposalId = _proposalId;
-    }
-
     function setDAppTokenSupportsLocking(bool _value) public onlyInternal {
         dAppTokenSupportsLocking = _value;
     }
@@ -304,7 +282,7 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
     /// @dev Sets the last proposal id till which the reward has been distributed for Solution Owner 
     ///     (For providing correct solution Reward)
     function setLastRewardIdOfSolutionProposals(address _memberAddress, uint _proposalId) public onlyInternal {
-        lastRewardDetails[_memberAddress].lastRewardSolutionProposalId = _proposalId;
+        lastRewardDetails[_memberAddress] = _proposalId;
     }
 
     /// @dev pauses or resumes a proposal
@@ -316,21 +294,6 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
             proposalPaused[_proposalId] = false;
             allProposal[_proposalId].dateUpd = now; //solhint-disable-line
         }
-    }
-
-    /// @dev Get all Last Id's till which the reward has been distributed against member
-    function getAllidsOfLastReward(address _memberAddress) 
-        public 
-        view 
-        returns(
-            uint lastRewardIdOfCreatedProposal, 
-            uint lastRewardidOfSolution        
-        ) 
-    {
-        return (
-            lastRewardDetails[_memberAddress].lastRewardProposalId, 
-            lastRewardDetails[_memberAddress].lastRewardSolutionProposalId
-        );
     }
 
     /// @dev Gets Total number of voting types has been added till now.

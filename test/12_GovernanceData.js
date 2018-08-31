@@ -84,6 +84,10 @@ contract('Governance Data', function([owner, taker]) {
     let g12 = await gd.getStatusOfProposals();
     let g13 = await gd.getStatusOfProposalsForMember([0]);
     let g14 = await gd.getAllSolutionIdsByAddress(owner);
+    let g15 = await gd.getLatestVotingAddress();
+    await gd.storeProposalVersion(0, 'x');
+    await catchRevert(gd.governanceDataInitiate());
+    await gd.callReputationEvent(owner, 0, 'x', 1, '0x0');
     assert.equal(g1, true, 'Not initialized');
     // TODO verify the data returned
   });

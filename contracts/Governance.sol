@@ -255,15 +255,12 @@ contract Governance is Upgradeable {
         onlyInternal 
         returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
-        uint lastRewardProposalId;
-        uint lastRewardSolutionProposalId;
-        (lastRewardProposalId, lastRewardSolutionProposalId) = 
-            governanceDat.getAllidsOfLastReward(_memberAddress);
+        uint lastRewardProposalId = governanceDat.lastRewardDetails(_memberAddress);
 
         (pendingGBTReward, pendingDAppReward) = calculateProposalReward(_memberAddress, lastRewardProposalId); 
         uint tempGBTReward;
         uint tempDAppRward;
-        (tempGBTReward, tempDAppRward) = calculateSolutionReward(_memberAddress, lastRewardSolutionProposalId);
+        (tempGBTReward, tempDAppRward) = calculateSolutionReward(_memberAddress, lastRewardProposalId);
         pendingGBTReward += tempGBTReward;
         pendingDAppReward += tempDAppRward;
         uint votingTypes = governanceDat.getVotingTypeLength();
@@ -430,7 +427,7 @@ contract Governance is Upgradeable {
 
         if (lastIndex == 0)
             lastIndex = i - 1;
-        governanceDat.setLastRewardIdOfCreatedProposals(_memberAddress, lastIndex);
+        governanceDat.setLastRewardIdOfSolutionProposals(_memberAddress, lastIndex);
     }
 
     /// @dev Saving reward and member reputation details 
