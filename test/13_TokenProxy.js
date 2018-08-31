@@ -10,6 +10,7 @@ let blockNumber = web3.eth.blockNumber;
 const lockTimestamp = web3.eth.getBlock(blockNumber).timestamp;
 let tp;
 let gbts;
+const nullAddress = 0x0000000000000000000000000000000000000000;
 const BigNumber = web3.BigNumber;
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
@@ -206,5 +207,10 @@ contract('TokenProxy', function([owner, receiver, spender]) {
     await gbts.increaseApproval(tp.address, 10);
     await tp.transferWithLock(receiver, lockReason3, 1, 1);
     assert.equal((await tp.tokensLocked(receiver, lockReason3)).toNumber(), 1);
+  });
+
+  it('should not allow 0 address', async () => {
+    await catchRevert(TokenProxy.new(nullAddress));
+    await catchRevert(tp.transferWithLock(nullAddress, lockReason3, 1, 1));
   });
 });

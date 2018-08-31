@@ -186,7 +186,7 @@ contract SimpleVoting is Upgradeable {
         tokenHoldingTimeThenBalance += now; //solhint-disable-line
         tokenHoldingTimeThenBalance = tokenInstance.tokensLockedAtTime(msg.sender, "GOV", tokenHoldingTimeThenBalance);
 
-        require(tokenHoldingTimeThenBalance > subCatThenMinStake);
+        require(tokenHoldingTimeThenBalance >= subCatThenMinStake);
     
         tokenHoldingTimeThenBalance = SafeMath.div(tokenHoldingTimeThenBalance, tokenInstance.decimals());
         stakeWeight = SafeMath.mul(SafeMath.add(log(tokenHoldingTimeThenBalance), bonusStake), stakeWeight);
@@ -197,29 +197,29 @@ contract SimpleVoting is Upgradeable {
     function claimVoteReward(address _memberAddress) 
         public onlyInternal returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
-        uint lastIndex = 0;
+        uint lastIndex;
         uint i;
         uint totalVotes = allVotesByMember[_memberAddress].length;
         uint voteId;
         uint proposalId;
-        uint _lastRewardVoteId = lastRewardVoteId[_memberAddress];
+        uint _lastRewardVoteId = lastRewardVoteId[_memberAddress] + 1;
         uint tempGBTReward;
         uint tempDAppReward;
-        for (i = _lastRewardVoteId; i < totalVotes; i++) {
-            voteId = allVotesByMember[_memberAddress][i];
+        for (i = _lastRewardVoteId; i <= totalVotes; i++) {
+            voteId = allVotesByMember[_memberAddress][i - 1];
             if (!rewardClaimed[voteId]) {
                 proposalId = allVotes[voteId].proposalId;
                 (tempGBTReward, tempDAppReward, lastIndex) = 
                     calculateVoteReward(_memberAddress, i, proposalId, lastIndex);
                 pendingGBTReward += tempGBTReward;
                 pendingDAppReward += tempDAppReward;
-                if (lastIndex != i)
+                if (tempGBTReward > 0 || tempDAppReward > 0)
                     rewardClaimed[voteId] = true;
             }
         }
         if (lastIndex == 0)
             lastIndex = i;
-        lastRewardVoteId[_memberAddress] = lastIndex;
+        lastRewardVoteId[_memberAddress] = lastIndex - 1;
     }
 
     function getPendingReward(address _memberAddress) 
@@ -507,10 +507,10 @@ contract SimpleVoting is Upgradeable {
             for (uint i = 0; i < proposalRoleVote[_proposalId][_mrSequenceId].length; i++) {
                 uint voteId = proposalRoleVote[_proposalId][_mrSequenceId][i];
                 address voterAddress = allVotes[voteId].voter;
-                totalTokens = totalTokens + tokenInstance.balanceOf(voterAddress);
+                totalTokens = totalTokens.add(tokenInstance.balanceOf(voterAddress));
             }
 
-            thresHoldValue = totalTokens * 100 / tokenInstance.totalSupply();
+            thresHoldValue = totalTokens.mul(100) / tokenInstance.totalSupply();
             if (thresHoldValue > governanceDat.quorumPercentage())
                 return true;
         } else if (_mrSequenceId == 0) {
@@ -576,7 +576,7 @@ contract SimpleVoting is Upgradeable {
         uint calcReward;
 
         (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
-            getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
+            getVoteDetailsToCalculateReward(_memberAddress, _voteNo - 1);
 
         if (proposalStatus <= 2 && lastIndex == 0)
             lastIndex = _voteNo;
