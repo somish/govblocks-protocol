@@ -307,6 +307,8 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         lastRewardDetails[_memberAddress].lastRewardSolutionProposalId = _proposalId;
     }
 
+    /// @dev pauses or resumes a proposal
+    /// @param pause true = pause proposal, false = resume
     function toggleProposalPause(bool pause, uint _proposalId) public onlyInternal {
         if (pause && !proposalPaused[_proposalId])
             proposalPaused[_proposalId] = true;

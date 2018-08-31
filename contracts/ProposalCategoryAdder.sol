@@ -105,7 +105,7 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Unpause Proposal",
+            "Resume Proposal",
             "QmS5SrwX6J8Cfhp3LAb6N54KYDc55hpnLdFgG6eCPkGvQx",
             6,
             address(0),
