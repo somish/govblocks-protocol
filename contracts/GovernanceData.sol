@@ -740,7 +740,7 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
                 _pendingProposals++;
             } else if (proposalStatus == 3) {
                 _acceptedProposals++;
-            } else if (proposalStatus >= 4) {
+            } else {
                 _rejectedProposals++;
             }
         }
