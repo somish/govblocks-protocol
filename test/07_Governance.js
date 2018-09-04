@@ -300,6 +300,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
   it('Should close the proposal', async function() {
     this.timeout(100000);
     await mr.updateMemberRole(notOwner, 1, false, 356800000054);
+    await catchRevert(sv.initialVote(pid, notOwner));
     await sv.closeProposalVote(pid);
     await catchRevert(sv.closeProposalVote(pid));
   });
@@ -441,7 +442,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
   });
 
   it('Should close proposal when time is reached', async function() {
-    await increaseTime(1000);
+    await increaseTime(2000);
     await sv.closeProposalVote(propId);
     await sv.closeProposalVote(propId + 1);
     await sv.closeProposalVote(propId + 2);
@@ -455,7 +456,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
 
   it('Should close second layer voting when time is reached', async function() {
     await catchRevert(sv.closeProposalVote(propId + 2));
-    await increaseTime(1000);
+    await increaseTime(2000);
     await sv.closeProposalVote(propId + 2);
   });
 

@@ -82,7 +82,6 @@ contract('Governance Data', function([owner, taker]) {
     let g9 = await gd.getTotalProposalIncentive();
     let g10 = await gd.getProposalVersion(0);
     let g12 = await gd.getStatusOfProposals();
-    let g13 = await gd.getStatusOfProposalsForMember([0]);
     let g14 = await gd.getAllSolutionIdsByAddress(owner);
     let g15 = await gd.getLatestVotingAddress();
     await gd.storeProposalVersion(0, 'x');

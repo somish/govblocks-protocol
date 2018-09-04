@@ -392,7 +392,6 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
 
     /// @dev Changes the status of a given proposal.
     function changeProposalStatus(uint _id, uint8 _status) public onlyInternal {
-        require(allProposalData[_id].subCategory != 0);
         emit ProposalStatus(_id, _status, now); //solhint-disable-line
         updateProposalStatus(_id, _status);
     }
@@ -743,41 +742,6 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
                 _acceptedProposals++;
             } else if (proposalStatus >= 4) {
                 _rejectedProposals++;
-            }
-        }
-    }
-
-    /// @dev Gets statuses of all the proposal that are created by specific member
-    /// @param _proposalsIds All proposal Ids array is passed
-    /// @return proposalLength Total number of proposals
-    /// @return draftProposals Proposals in draft or still getting updated
-    /// @return pendingProposals Proposals still open for voting are pending ones
-    /// @return acceptedProposals If a decision has been made then the proposal is in accep state
-    /// @return rejectedProposals All the proposals rejected by majority voting
-    function getStatusOfProposalsForMember(uint[] _proposalsIds) 
-        public 
-        view 
-        returns(
-            uint proposalLength, 
-            uint draftProposals, 
-            uint pendingProposals, 
-            uint acceptedProposals, 
-            uint rejectedProposals
-        ) 
-    {
-        uint proposalStatus;
-        proposalLength = getProposalLength();
-
-        for (uint i = 0; i < _proposalsIds.length; i++) {
-            proposalStatus = getProposalStatus(_proposalsIds[i]);
-            if (proposalStatus < 2) {
-                draftProposals++;
-            } else if (proposalStatus == 2) {
-                pendingProposals++;
-            } else if (proposalStatus == 3) {
-                acceptedProposals++;
-            } else if (proposalStatus >= 4) {
-                rejectedProposals++;
             }
         }
     }

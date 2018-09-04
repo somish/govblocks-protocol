@@ -377,10 +377,34 @@ contract('Proposal, solution and voting', function([
     assert.isAtLeast(vid.toNumber(), 2, 'Vote not added');
   });
 
+  it('Should get proper proposal status', async function() {
+    this.timeout(100000);
+    p = await gd.getProposalLength();
+    p = p.toNumber();
+    await gv.createProposalwithSolution(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      5,
+      'Add new member',
+      '0x0'
+    );
+    await sv.proposalVoting(p, [0]);
+    await sv.proposalVoting(p, [0], { from: ab });
+    await sv.closeProposalVote(p);
+    const ps = await gd.getStatusOfProposals();
+    assert.equal(ps[0].toNumber(), 6);
+    assert.equal(ps[1].toNumber(), 1);
+    assert.equal(ps[2].toNumber(), 1);
+    assert.equal(ps[3].toNumber(), 3);
+    assert.equal(ps[4].toNumber(), 1);
+  });
+
   it('Should close the proposal once all members have voted', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
+    p = p.toNumber() - 1;
     await sv.closeProposalVote(p);
     let iv = await gd.getProposalFinalVerdict(p);
     assert.equal(iv.toNumber(), 2, 'Incorrect final Verdict');
