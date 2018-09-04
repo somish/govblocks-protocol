@@ -24,6 +24,8 @@ contract VotingType {
     string public votingTypeName;
     function proposalVoting(uint32 _proposalId, uint64[] _solutionChosen) external;
 
+    function initialVote(uint32 _proposalId, address _voter) external;
+
     function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) public view returns(uint length);
 
     function getTotalNumberOfVotesByAddress(address _memberAddress) public view returns(uint);

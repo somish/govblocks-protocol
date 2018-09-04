@@ -18,7 +18,12 @@ let pc;
 let mrLength;
 let gbt;
 
-contract('Proposal, solution and voting', function([owner, ab, member]) {
+contract('Proposal, solution and voting', function([
+  owner,
+  ab,
+  member,
+  nonMember
+]) {
   before(function() {
     Governance.deployed()
       .then(function(instance) {
@@ -82,6 +87,55 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
     p = p.toNumber();
     await sv.proposalVoting(p, [1]);
     await catchRevert(sv.proposalVoting(p, [1]));
+  });
+
+  it('Should not let initialVote to be used after first vote', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber();
+    await catchRevert(sv.initialVote(p, owner));
+  });
+
+  it('Should close the proposal', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber();
+    await sv.closeProposalVote(p);
+    await catchRevert(sv.closeProposalVote(p));
+  });
+
+  it('Should have added new member role', async function() {
+    this.timeout(100000);
+    mrLength2 = await mr.getTotalMemberRoles();
+    assert.equal(
+      mrLength.toNumber() + 1,
+      mrLength2.toNumber(),
+      'Member Role Not Added'
+    );
+  });
+
+  it('Should create a proposal with vote to add new member role', async function() {
+    this.timeout(100000);
+    let actionHash = encode(
+      'addNewMemberRole(bytes32,string,address,bool)',
+      '0x41647669736f727920426f617265000000000000000000000000000000000000',
+      'New member role',
+      owner,
+      false
+    );
+    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    mrLength = await mr.getTotalMemberRoles();
+    await gv.createProposalwithVote(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      1,
+      'Add new member',
+      actionHash
+    );
+    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
+    assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
   it('Should close the proposal', async function() {
@@ -290,6 +344,14 @@ contract('Proposal, solution and voting', function([owner, ab, member]) {
     await sv.closeProposalVote(p);
     let iv = await gd.getProposalIntermediateVerdict(p);
     assert.equal(iv.toNumber(), 2, 'Incorrect intermediate Verdict');
+  });
+
+  it('Should not let initialVote to be used after first layer', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber();
+    await catchRevert(sv.initialVote(p, nonMember));
+    await catchRevert(sv.initialVote(p, member));
   });
 
   it('Should not allow to pick different solution than ab', async function() {

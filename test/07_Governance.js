@@ -292,7 +292,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
   it('Should vote in favour of the proposal', async function() {
     this.timeout(100000);
     const g3 = await gv.getAllVoteIdsLengthByProposal(pid);
-    await sv.proposalVoting(pid, [1]);
+    await sv.initialVote(pid, owner);
     const g4 = await gv.getAllVoteIdsLengthByProposal(pid);
     assert.equal(g4.toNumber(), g3.toNumber() + 1);
   });

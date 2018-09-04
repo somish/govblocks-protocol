@@ -74,6 +74,33 @@ contract Governance is Upgradeable {
         );
     }
 
+    /// @dev Creates a new proposal with solution and votes for the solution
+    /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
+    /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
+    /// @param _subCategoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
+    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
+    function createProposalwithVote(
+        string _proposalTitle, 
+        string _proposalSD, 
+        string _proposalDescHash, 
+        uint _votingTypeId, 
+        uint _subCategoryId, 
+        string _solutionHash, 
+        bytes _action
+    ) 
+        external
+    {
+        uint _proposalId = governanceDat.getProposalLength();
+        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _subCategoryId);
+        proposalSubmission(
+            _proposalId, 
+            _solutionHash, 
+            _action
+        );
+        VotingType votingType = VotingType(governanceDat.getProposalVotingAddress(_proposalId));
+        votingType.initialVote(uint32(_proposalId), msg.sender);
+    }
+
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public {
         dAppToken = master.dAppToken();

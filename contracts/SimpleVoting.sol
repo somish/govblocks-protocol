@@ -113,7 +113,7 @@ contract SimpleVoting is Upgradeable {
         else
             require(_solutionChosen[0] == intermediateVerdict || _solutionChosen[0] == 0);
 
-        currentVotingIdThenVoteValue = validateStakeAndReturnVoteValue(_proposalId);
+        currentVotingIdThenVoteValue = validateStakeAndReturnVoteValue(_proposalId, msg.sender);
         //currentVotingIdThenVoteValue is now VoteValue
 
         proposalRoleVote[_proposalId][categoryThenMRSequence].push(allVotes.length);
@@ -124,6 +124,41 @@ contract SimpleVoting is Upgradeable {
 
         if (proposalRoleVote[_proposalId][categoryThenMRSequence].length
             == memberRole.getAllMemberLength(categoryThenMRSequence) 
+            && categoryThenMRSequence != 2
+            && categoryThenMRSequence != 0
+        ) {
+            eventCaller.callVoteCast(_proposalId);
+        }
+    }
+
+    function initialVote(uint32 _proposalId, address _voter) external onlyInternal {
+        uint categoryThenMRSequence;
+        uint intermediateVerdict;
+        uint currentVotingIdThenVoteValue;
+
+        (categoryThenMRSequence, currentVotingIdThenVoteValue, intermediateVerdict) 
+            = governanceDat.getProposalDetailsForSV(_proposalId);
+
+        require(currentVotingIdThenVoteValue == 0);
+        
+        categoryThenMRSequence = 
+            proposalCategory.getMRSequenceBySubCat(categoryThenMRSequence, currentVotingIdThenVoteValue);
+        //categoryThenMRSequence is now MemberRoleSequence
+
+        require(memberRole.checkRoleIdByAddress(_voter, categoryThenMRSequence));
+
+        currentVotingIdThenVoteValue = validateStakeAndReturnVoteValue(_proposalId, _voter);
+        //currentVotingIdThenVoteValue is now VoteValue
+
+        proposalRoleVote[_proposalId][categoryThenMRSequence].push(allVotes.length);
+        allVotesByMember[_voter].push(allVotes.length);
+        addressProposalVote[_voter][_proposalId] = allVotes.length;
+        governanceDat.callVoteEvent(_voter, _proposalId, now, allVotes.length); //solhint-disable-line
+        allVotes.push(ProposalVote(_voter, 1, _proposalId, currentVotingIdThenVoteValue));
+
+        require(proposalRoleVote[_proposalId][categoryThenMRSequence].length == 1);
+
+        if (memberRole.getAllMemberLength(categoryThenMRSequence) == 1
             && categoryThenMRSequence != 2
             && categoryThenMRSequence != 0
         ) {
@@ -170,7 +205,9 @@ contract SimpleVoting is Upgradeable {
 
     /// @dev validates that the voter has enough tokens locked for voting and returns vote value
     ///     Seperate function from validateStake to save gas.
-    function validateStakeAndReturnVoteValue(uint32 _proposalId) public view returns(uint voteValue) {
+    function validateStakeAndReturnVoteValue(uint32 _proposalId, address _voter) 
+        public view returns(uint voteValue) 
+    {
         address token;
         uint subCatThenMinStake;
         uint tokenHoldingTimeThenBalance;
@@ -180,11 +217,11 @@ contract SimpleVoting is Upgradeable {
         uint bonusReputation;
         uint memberReputation;
         (stakeWeight, bonusStake, reputationWeight, bonusReputation, memberReputation, token, subCatThenMinStake) 
-            = governanceDat.getMemberReputationSV(msg.sender, _proposalId);
+            = governanceDat.getMemberReputationSV(_voter, _proposalId);
         (subCatThenMinStake, tokenHoldingTimeThenBalance) = proposalCategory.getRequiredStake(subCatThenMinStake);
         GBTStandardToken tokenInstance = GBTStandardToken(token);
         tokenHoldingTimeThenBalance += now; //solhint-disable-line
-        tokenHoldingTimeThenBalance = tokenInstance.tokensLockedAtTime(msg.sender, "GOV", tokenHoldingTimeThenBalance);
+        tokenHoldingTimeThenBalance = tokenInstance.tokensLockedAtTime(_voter, "GOV", tokenHoldingTimeThenBalance);
 
         require(tokenHoldingTimeThenBalance >= subCatThenMinStake);
     
