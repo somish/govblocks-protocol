@@ -32,7 +32,7 @@ contract('Deploy new dApp', ([owner, notOwner]) => {
     await gbm.govBlocksMasterInit(gbts.address, ec.address);
     await gbm.setMasterByteCode(bytecode);
     await gbm.addGovBlocksUser('0x42', gbts.address, 'descHash');
-    gd = await GovernanceData.new();
+    gd = await GovernanceData.new(false);
     mr = await MemberRoles.new();
     pc = await ProposalCategory.new();
     sv = await SimpleVoting.new();

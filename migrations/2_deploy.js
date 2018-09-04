@@ -15,7 +15,7 @@ module.exports = function(deployer) {
   deployer.deploy(GBTStandardToken);
   deployer.deploy(EventCaller);
   deployer.deploy(GovBlocksMaster);
-  deployer.deploy(GovernanceData);
+  deployer.deploy(GovernanceData, false);
   deployer.deploy(Governance);
   deployer.deploy(Pool);
   deployer.deploy(ProposalCategory);

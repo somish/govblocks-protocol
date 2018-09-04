@@ -24,6 +24,10 @@ import "./VotingType.sol";
 
 contract GovernanceData is Upgradeable { //solhint-disable-line
 
+    constructor (bool _dAppTokenSupportsLocking) public {
+        dAppTokenSupportsLocking = _dAppTokenSupportsLocking;
+    }
+
     event Proposal(
         address indexed proposalOwner, 
         uint256 indexed proposalId, 

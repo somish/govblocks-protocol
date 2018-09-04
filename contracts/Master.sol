@@ -85,7 +85,8 @@ contract Master is Ownable {
                     governChecker.initializeAuthorized(dAppName, _contractAddresses[3]);
             }
             dAppToken = gbm.getDappTokenAddress(dAppName);
-            dAppTokenProxy = gbt;
+            if (dAppTokenProxy == address(0))
+                dAppTokenProxy = gbt; //fallback
         }
 
         for (uint i = 0; i < allContractNames.length - 2; i++) {
