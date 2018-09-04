@@ -38,6 +38,11 @@ truffle deploy
 ```
 You can use public networks as well but you will have to do the initialization manually as the contracts will pick up the official addresses otherwise. We recommend using the GovBlocks UI if you wish to test on a public network.
 
+If you want, you can run the test cases using
+```
+truffle test
+```
+
 
 ## Contributing
 You can contribute to this project by forking it, commiting the changes to your fork and then creating a pull request.
