@@ -457,7 +457,7 @@ contract ProposalCategory is Governed {
         );
         addInitialSubC(
             "Update member role",
-            "QmbsXSZ3rNPd8mDizVBV33GVg1ThveUD5YnM338wisEJyd",
+            "QmZAjwUTsMdhhTHAL87RHFch7nq8op6MnEUXiud8SjecT9",
             1,
             address(0),
             "MR",
