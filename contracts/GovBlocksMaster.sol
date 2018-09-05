@@ -28,6 +28,7 @@ contract GovBlocksMaster is Ownable {
     struct GBDapps {
         address masterAddress;
         address tokenAddress;
+        address proxyAddress;
         string dappDescHash;
     }
 
@@ -80,13 +81,19 @@ contract GovBlocksMaster is Ownable {
     /// @param _gbUserName dApp name
     /// @param _dappTokenAddress dApp token address
     /// @param _dappDescriptionHash dApp description hash having dApp or token logo information
-    function addGovBlocksUser(bytes32 _gbUserName, address _dappTokenAddress, string _dappDescriptionHash) external {
+    function addGovBlocksUser(
+        bytes32 _gbUserName, 
+        address _dappTokenAddress, 
+        address _tokenProxy, 
+        string _dappDescriptionHash
+    ) external {
         require(govBlocksDapps[_gbUserName].masterAddress == address(0));
         address _newMasterAddress = deployMaster(_gbUserName, masterByteCode);
         allGovBlocksUsers.push(_gbUserName);
         govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
         govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
+        govBlocksDapps[_gbUserName].proxyAddress = _tokenProxy;
         govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
     }
@@ -289,6 +296,11 @@ contract GovBlocksMaster is Ownable {
     /// @dev Gets dApp token address of dApp (username=govBlocksUser)
     function getDappTokenAddress(bytes32 _gbUserName) public view returns(address tokenAddres) {
         return (govBlocksDapps[_gbUserName].tokenAddress);
+    }
+
+    /// @dev Gets dApp token address of dApp (username=govBlocksUser)
+    function getDappTokenProxyAddress(bytes32 _gbUserName) public view returns(address tokenAddres) {
+        return (govBlocksDapps[_gbUserName].proxyAddress);
     }
 
     /// @dev Gets dApp username by address

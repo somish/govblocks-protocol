@@ -8,6 +8,7 @@ const Master = artifacts.require('Master');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const MemberRoles = artifacts.require('MemberRoles');
+const TokenProxy = artifacts.require('TokenProxy');
 const amount = 500000000000000;
 const sampleAddress = 0x0000000000000000000000000000000000000001;
 
@@ -18,6 +19,7 @@ let gd;
 let gv;
 let ms;
 let mr;
+let tp;
 let pc;
 let propId;
 let pid;
@@ -77,6 +79,10 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       })
       .then(instance => {
         mr = instance;
+        return TokenProxy.deployed();
+      })
+      .then(instance => {
+        tp = instance;
         return ProposalCategory.deployed();
       })
       .then(instance => {

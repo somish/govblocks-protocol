@@ -1,16 +1,17 @@
-var MemberRoles = artifacts.require('MemberRoles');
-var GovBlocksMaster = artifacts.require('GovBlocksMaster');
-var Master = artifacts.require('Master');
-var GBTStandardToken = artifacts.require('GBTStandardToken');
-var Governance = artifacts.require('Governance');
-var GovernanceData = artifacts.require('GovernanceData');
-var Pool = artifacts.require('Pool');
-var ProposalCategory = artifacts.require('ProposalCategory');
-var SimpleVoting = artifacts.require('SimpleVoting');
-var EventCaller = artifacts.require('EventCaller');
-var ProposalCategoryAdder = artifacts.require('ProposalCategoryAdder');
+const MemberRoles = artifacts.require('MemberRoles');
+const GovBlocksMaster = artifacts.require('GovBlocksMaster');
+const Master = artifacts.require('Master');
+const GBTStandardToken = artifacts.require('GBTStandardToken');
+const Governance = artifacts.require('Governance');
+const GovernanceData = artifacts.require('GovernanceData');
+const Pool = artifacts.require('Pool');
+const ProposalCategory = artifacts.require('ProposalCategory');
+const SimpleVoting = artifacts.require('SimpleVoting');
+const EventCaller = artifacts.require('EventCaller');
+const ProposalCategoryAdder = artifacts.require('ProposalCategoryAdder');
+const TokenProxy = artifacts.require('TokenProxy');
 const json = require('./../build/contracts/Master.json');
-var bytecode = json['bytecode'];
+const bytecode = json['bytecode'];
 
 module.exports = deployer => {
   let gbt;
@@ -23,6 +24,7 @@ module.exports = deployer => {
   let gv;
   let pl;
   let ms;
+  let tp;
   let owner;
   deployer
     .then(() => GBTStandardToken.deployed())
@@ -36,13 +38,17 @@ module.exports = deployer => {
     })
     .then(function(instance) {
       gbm = instance;
+      return TokenProxy.deployed();
+    })
+    .then(function(instance) {
+      tp = instance;
       return gbm.govBlocksMasterInit(gbt.address, ec.address);
     })
     .then(function() {
       return gbm.setMasterByteCode(bytecode);
     })
     .then(function() {
-      return gbm.addGovBlocksUser('0x41', GBTStandardToken.address, 'descHash');
+      return gbm.addGovBlocksUser('0x41', gbt.address, gbt.address, 'descHash');
     })
     .then(function() {
       return GovernanceData.deployed();

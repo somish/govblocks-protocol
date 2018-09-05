@@ -1,15 +1,16 @@
-var MemberRoles = artifacts.require('MemberRoles');
-var GovBlocksMaster = artifacts.require('GovBlocksMaster');
-var Master = artifacts.require('Master');
-var GBTStandardToken = artifacts.require('GBTStandardToken');
-var Governance = artifacts.require('Governance');
-var GovernanceData = artifacts.require('GovernanceData');
-var Pool = artifacts.require('Pool');
-var ProposalCategory = artifacts.require('ProposalCategory');
-var SimpleVoting = artifacts.require('SimpleVoting');
-var EventCaller = artifacts.require('EventCaller');
-var GovernCheckerContract = artifacts.require('GovernCheckerContract');
-var ProposalCategoryAdder = artifacts.require('ProposalCategoryAdder');
+const MemberRoles = artifacts.require('MemberRoles');
+const GovBlocksMaster = artifacts.require('GovBlocksMaster');
+const Master = artifacts.require('Master');
+const GBTStandardToken = artifacts.require('GBTStandardToken');
+const Governance = artifacts.require('Governance');
+const GovernanceData = artifacts.require('GovernanceData');
+const Pool = artifacts.require('Pool');
+const ProposalCategory = artifacts.require('ProposalCategory');
+const SimpleVoting = artifacts.require('SimpleVoting');
+const EventCaller = artifacts.require('EventCaller');
+const GovernCheckerContract = artifacts.require('GovernCheckerContract');
+const ProposalCategoryAdder = artifacts.require('ProposalCategoryAdder');
+const TokenProxy = artifacts.require('TokenProxy');
 
 module.exports = function(deployer) {
   deployer.deploy(GBTStandardToken);
@@ -24,4 +25,5 @@ module.exports = function(deployer) {
   deployer.deploy(Master);
   deployer.deploy(GovernCheckerContract);
   deployer.deploy(ProposalCategoryAdder);
+  deployer.deploy(TokenProxy, GBTStandardToken.address);
 };
