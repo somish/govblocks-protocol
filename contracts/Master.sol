@@ -101,6 +101,7 @@ contract Master is Ownable {
     }
 
     /// @dev sets dAppTokenProxy address
+    /// @param _dAppTokenProxy token proxy address
     function setDAppTokenProxy(address _dAppTokenProxy) public {
         require(isAuth());
         dAppTokenProxy = _dAppTokenProxy;
