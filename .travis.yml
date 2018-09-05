@@ -1,0 +1,22 @@
+dist: trusty
+sudo: required
+language: node_js
+
+node_js:
+  - "10"
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - env: 'TASK=coverage'
+  
+jobs:
+  include:
+    - stage: compile
+      install: npm install -g truffle
+      script: truffle compile
+    - stage: test and coverage
+      env: 'TASK=coverage'
+      install: npm install -g truffle ganache-cli coveralls
+      before_script: npm install solidity-coverage ethereumjs-abi
+      script: npm run coverage && cat coverage/lcov.info | coveralls

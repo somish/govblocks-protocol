@@ -17,18 +17,26 @@
  * @title votingType interface for All Types of voting.
  */
 
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
+
 
 contract VotingType {
     string public votingTypeName;
+    function proposalVoting(uint32 _proposalId, uint64[] _solutionChosen) external;
 
-    function addSolution(uint _proposalId, address _memberAddress, uint _solutionStake, string _solutionHash, uint _dateAdd, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) public;
+    function initialVote(uint32 _proposalId, address _voter) external;
 
-    function initiateAddSolution(uint _proposalId, uint _solutionStake, string _solutionHash, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash, bytes _action) public;
+    function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) public view returns(uint length);
 
-    function proposalVoting(uint64 _proposalId, uint64[] _solutionChosen, uint _voteStake, uint _validityUpto, uint8 _v, bytes32 _r, bytes32 _s, bytes32 _lockTokenTxHash) external;
+    function getTotalNumberOfVotesByAddress(address _memberAddress) public view returns(uint);
+
+    function claimVoteReward(address _memberAddress) public returns(uint, uint);
+
+    function getPendingReward(address _memberAddress) public view returns(uint, uint);
 
     function closeProposalVote(uint _proposalId) public;
+
+    function addSolution(uint32 _proposalId, address _memberAddress, string _solutionHash, bytes _action) public;
 
     function giveRewardAfterFinalDecision(uint _proposalId) internal;
 }

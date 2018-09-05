@@ -1,26 +1,45 @@
 {
   "name": "govblocks-protocol",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "GovBlocks Smart Contracts",
   "main": "truffle-config.js",
-  "dependencies": {
-    "solc": "^0.4.24",
-    "truffle": "^4.1.13",
-    "truffle-hdwallet-provider": "^0.0.5"
+  "scripts": {
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "cov": ".\\node_modules\\.bin\\solidity-coverage",
+    "pretty": "prettier --write --single-quote --tab-width 2 \"**/*.js\"",
+    "precommit": "lint-staged && solhint \"contracts/*.sol\""
+  },
+  "lint-staged": {
+    "**/*.{js,json}": [
+      "prettier --single-quote --write --tab-width 2",
+      "git add"
+    ]
   },
   "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-bignumber": "^2.0.2",
+    "ethereumjs-abi": "^0.6.5",
+    "ethereumjs-wallet": "^0.6.2",
     "ganache-cli": "^6.1.6",
-    "mocha": "^5.2.0",
-    "solidity-coverage": "^0.5.5"
+    "husky": "^0.14.3",
+    "jest": "^23.5.0",
+    "lint-staged": "^7.2.2",
+    "prettier": "^1.14.2",
+    "solhint": "^1.2.1",
+    "solidity-coverage": "^0.5.5",
+    "truffle": "^4.1.13",
+    "truffle-hdwallet-provider": "^0.0.5"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/somish/govblocks-protocol.git"
   },
-  "author": "Mudit Gupta <guptamudit@ymail.com>",
+  "contributors": [
+    "Mudit Gupta <guptamudit@ymail.com>"
+  ],
   "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/somish/govblocks-protocol/issues"
   },
-  "homepage": "https://github.com/somish/govblocks-protocol#readme"
+  "homepage": "https://www.govblocks.io"
 }

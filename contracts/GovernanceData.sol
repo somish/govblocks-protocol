@@ -13,15 +13,20 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity ^0.4.24;
-import "./SafeMath.sol";
+pragma solidity 0.4.24;
+import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Master.sol";
 import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./Governance.sol";
+import "./VotingType.sol";
 
 
-contract GovernanceData is Upgradeable {
+contract GovernanceData is Upgradeable { //solhint-disable-line
+
+    constructor (bool _dAppTokenSupportsLocking) public {
+        dAppTokenSupportsLocking = _dAppTokenSupportsLocking;
+    }
 
     event Proposal(
         address indexed proposalOwner, 
@@ -37,15 +42,14 @@ contract GovernanceData is Upgradeable {
         address indexed solutionOwner, 
         uint256 indexed solutionId, 
         string solutionDescHash, 
-        uint256 dateAdd, 
-        uint256 solutionStake
+        uint256 dateAdd
     );
 
     event Reputation(
         address indexed from, 
         uint256 indexed proposalId, 
         string description, 
-        uint32 reputationPoints,
+        uint256 reputationPoints,
         bytes4 typeOf
     );
 
@@ -53,14 +57,11 @@ contract GovernanceData is Upgradeable {
         address indexed from, 
         uint256 indexed proposalId, 
         uint256 dateAdd, 
-        uint256 voteStakeGBT, 
         uint256 voteId
     );
 
     event Reward(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
     
-    event Penalty(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
-
     event ProposalStatus(uint256 indexed proposalId, uint256 proposalStatus, uint256 dateAdd);
     
     event ProposalVersion(
@@ -69,16 +70,13 @@ contract GovernanceData is Upgradeable {
         string proposalDescHash, 
         uint256 dateAdd
     );
-    
-    event ProposalStake(address indexed proposalOwner, uint256 indexed proposalId, uint dateUp, uint256 proposalStake);
-    
+        
     event ProposalWithSolution(
         address indexed proposalOwner, 
         uint256 indexed proposalId, 
         string proposalDescHash, 
         string solutionDescHash, 
-        uint256 dateAdd, 
-        uint stake
+        uint256 dateAdd
     );
 
     /// @dev Calls proposal with solution event 
@@ -87,31 +85,17 @@ contract GovernanceData is Upgradeable {
     /// @param proposalDescHash Description hash of proposal having short and long description for proposal
     /// @param solutionDescHash Description hash of Solution 
     /// @param dateAdd Date when proposal was created
-    /// @param stake GBT stake at the time of proposal creation
     function callProposalWithSolutionEvent(
         address proposalOwner, 
         uint256 proposalId, 
         string proposalDescHash, 
         string solutionDescHash, 
-        uint256 dateAdd, 
-        uint stake
+        uint256 dateAdd
     )
         public
         onlyInternal 
     {
-        emit ProposalWithSolution(proposalOwner, proposalId, proposalDescHash, solutionDescHash, dateAdd, stake);
-    }
-
-    /// @dev Calls proposal with stake event
-    /// @param _proposalOwner Address of the member who has created the proposal
-    /// @param _proposalId Id of proposal
-    /// @param _dateUp Date when the proposal description was updated
-    /// @param _proposalStake Proposal stake in GBT
-    function callProposalStakeEvent(address _proposalOwner, uint _proposalId, uint _dateUp, uint _proposalStake) 
-        public
-        onlyInternal
-    {
-        emit ProposalStake(_proposalOwner, _proposalId, _dateUp, _proposalStake);
+        emit ProposalWithSolution(proposalOwner, proposalId, proposalDescHash, solutionDescHash, dateAdd);
     }
 
     /// @dev Calls proposal version event
@@ -131,19 +115,17 @@ contract GovernanceData is Upgradeable {
     /// @param solutionOwner Member Address who has provided a solution
     /// @param solutionDescHash Solution description hash
     /// @param dateAdd Date the solution was added
-    /// @param solutionStake Stake of the solution provider
     function callSolutionEvent(
         uint256 proposalId, 
         address solutionOwner, 
         uint solutionId, 
         string solutionDescHash, 
-        uint256 dateAdd, 
-        uint256 solutionStake
+        uint256 dateAdd
     ) 
         public
         onlyInternal 
     {
-        emit Solution(proposalId, solutionOwner, solutionId, solutionDescHash, dateAdd, solutionStake);
+        emit Solution(proposalId, solutionOwner, solutionId, solutionDescHash, dateAdd);
     }
 
     /// @dev Calls proposal event
@@ -175,7 +157,7 @@ contract GovernanceData is Upgradeable {
         address _from, 
         uint256 _proposalId, 
         string _description, 
-        uint32 _reputationPoints, 
+        uint _reputationPoints, 
         bytes4 _typeOf
     )
         public
@@ -189,12 +171,11 @@ contract GovernanceData is Upgradeable {
     /// @param _voteId Id of vote
     /// @param _proposalId Id of proposal
     /// @param _dateAdd Date when the vote was casted
-    /// @param _voteStakeGBT Stake in GBT against Vote
-    function callVoteEvent(address _from, uint _proposalId, uint _dateAdd, uint _voteStakeGBT, uint256 _voteId) 
+    function callVoteEvent(address _from, uint _proposalId, uint _dateAdd, uint256 _voteId) 
         public
         onlyInternal 
     {
-        emit Vote(_from, _proposalId, _dateAdd, _voteStakeGBT, _voteId);
+        emit Vote(_from, _proposalId, _dateAdd, _voteId);
     }
 
     /// @dev Calls reward event
@@ -209,29 +190,6 @@ contract GovernanceData is Upgradeable {
         emit Reward(_to, _proposalId, _description, _amount);
     }
 
-    /// @dev Calls penalty event
-    /// @param _to Address to whom penalty is charged
-    /// @param _proposalId Proposal id
-    /// @param _description Tells the cause of penalty against Proposal, Solution or Vote.
-    /// @param _amount Penalty amount
-    function callPenaltyEvent(address _to, uint256 _proposalId, string _description, uint256 _amount) 
-        public 
-        onlyInternal 
-    {
-        emit Penalty(_to, _proposalId, _description, _amount);
-    }
-
-    /// @dev Calls proposal status event
-    /// @param _proposalId Proposal id
-    /// @param _proposalStatus Proposal status
-    /// @param _dateAdd Date when proposal was added
-    function callProposalStatusEvent(uint256 _proposalId, uint _proposalStatus, uint _dateAdd) 
-        public 
-        onlyInternal 
-    {
-        emit ProposalStatus(_proposalId, _proposalStatus, _dateAdd);
-    }
-
     using SafeMath for uint;
 
     struct ProposalStruct {
@@ -241,38 +199,20 @@ contract GovernanceData is Upgradeable {
     }
 
     struct ProposalData {
-        uint8 currVotingStatus;
         uint8 propStatus;
-        uint8 category;
-        uint8 finalVerdict;
-        uint8 currentVerdict;
-        uint8 versionNumber;
+        uint64 finalVerdict;
+        uint64 currentVerdict;
+        uint currVotingStatus;
+        uint subCategory;
+        uint versionNumber;
         uint totalVoteValue;
-        uint totalreward;
         uint commonIncentive;
+        address stakeToken;
     }
 
     struct VotingTypeDetails {
         bytes32 votingTypeName;
         address votingTypeAddress;
-    }
-
-    struct ProposalVote {
-        address voter;
-        uint64[] solutionChosen;
-        uint208 voteValue;
-        uint32 proposalId;
-    }
-
-    struct LastReward {
-        uint lastRewardProposalId;
-        uint lastRewardSolutionProposalId;
-        uint lastRewardVoteId;
-    }
-
-    struct Deposit {
-        uint amount;
-        uint8 returned;
     }
 
     struct SolutionStruct {
@@ -282,96 +222,30 @@ contract GovernanceData is Upgradeable {
 
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
-    mapping(address => uint32) internal allMemberReputationByAddress;
-    mapping(address => mapping(uint => uint)) internal addressProposalVote;
-    mapping(uint => mapping(uint => uint[])) internal proposalRoleVote;
-    //mapping(address => uint[]) internal allProposalByMember;
-    mapping(address => uint[]) internal allVotesByMember;
-    mapping(address => mapping(uint => mapping(bytes4 => Deposit))) internal allMemberDepositTokens;
-    mapping(address => LastReward) internal lastRewardDetails;
+    mapping(address => uint) internal allMemberReputationByAddress;
+    mapping(address => uint) public lastRewardDetails;
+    mapping(uint => bool) public proposalPaused;
+    mapping(address => mapping(uint => bool)) internal rewardClaimed;
 
     uint public quorumPercentage;
-    uint public pendingProposalStart;
-    uint public gbtStakeValue;
-    uint public membershipScalingFactor;
-    uint public scalingWeight;
     bool public constructorCheck;
     bool public punishVoters;
-    uint public depositPercProposal;
-    uint public depositPercSolution;
-    uint public depositPercVote;
-    uint public tokenHoldingTime;
-    uint32 internal addProposalOwnerPoints;
-    uint32 internal addSolutionOwnerPoints;
-    uint32 internal addMemberPoints;
-    uint32 internal subProposalOwnerPoints;
-    uint32 internal subSolutionOwnerPoints;
-    uint32 internal subMemberPoints;
+    bool public dAppTokenSupportsLocking;
+    uint public stakeWeight;
+    uint public bonusStake;
+    uint public reputationWeight;
+    uint public bonusReputation;
+    uint public addProposalOwnerPoints;
+    uint public addSolutionOwnerPoints;
 
     ProposalStruct[] internal allProposal;
-    ProposalVote[] internal allVotes;
     VotingTypeDetails[] internal allVotingTypeDetails;
 
-    Master internal master;
     GBTStandardToken internal gbt;
     Governance internal gov;
-    address internal masterAddress;
-
-    modifier onlyInternal {
-        require(master.isInternal(msg.sender));
-        _;
-    }
-
-    modifier onlyOwner {
-        require(master.isOwner(msg.sender));
-        _;
-    }
-
-    modifier onlyMaster {
-        require(msg.sender == masterAddress);
-        _;
-    }
-
-    /// @dev Changes master's contract address
-    /// @param _masterContractAddress New master contract address
-    function changeMasterAddress(address _masterContractAddress) public {
-        if (masterAddress == address(0))
-            masterAddress = _masterContractAddress;
-        else {
-            master = Master(masterAddress);
-            require(master.isInternal(msg.sender));
-            masterAddress = _masterContractAddress;
-            master = Master(_masterContractAddress);
-        }
-    }
-
-    /// @dev Changes GovBlocks standard token address
-    /// @param _gbtAddress New GovBlocks token address
-    function changeGBTSAddress(address _gbtAddress) public onlyMaster {
-        gbt = GBTStandardToken(_gbtAddress);
-    }
-    /*
-    /// @dev Changes Global objects of the contracts || Uses latest version
-    /// @param contractName Contract name 
-    /// @param contractAddress Contract addresses
-    function changeAddress(bytes4 contractName, address contractAddress) onlyInternal
-    {
-        if(contractName == 'GV'){
-          GOV = Governance(contractAddress);
-        } 
-        else if(contractName == 'SV'){
-          editVotingTypeDetails(0,contractAddress);
-        } 
-        else  if(contractName == 'RB'){
-          editVotingTypeDetails(1,contractAddress);
-        } 
-        else if(contractName == 'FW'){
-          editVotingTypeDetails(2,contractAddress);
-        }
-    }*/
     
     /// @dev updates all dependency addresses to latest ones from Master
-    function updateDependencyAddresses() public onlyInternal {
+    function updateDependencyAddresses() public {
         if (!constructorCheck)
             governanceDataInitiate();
         gov = Governance(master.getLatestAddress("GV"));
@@ -385,9 +259,7 @@ contract GovernanceData is Upgradeable {
         setGlobalParameters();
         addMemberReputationPoints();
         setVotingTypeDetails("Simple Voting", address(0));
-        //setVotingTypeDetails("Rank Based Voting", null_address);
-        //setVotingTypeDetails("Feature Weighted Voting", null_address);
-        allVotes.push(ProposalVote(address(0), new uint64[](0), 0, 0));
+        allProposal.push(ProposalStruct(address(0), now, master.getLatestAddress("SV"))); //solhint-disable-line
         constructorCheck = true;
     }
 
@@ -396,223 +268,36 @@ contract GovernanceData is Upgradeable {
     ///     after proposal acceptance
     /// @param _addSolutionOwnerPoints Points that needs to be added in Solution Owner reputation 
     ///     for providing correct solution against proposal
-    /// @param _addMemberPoints Points that needs to be added in Other members reputation 
-    ///     for casting vote in favour of correct solution
-    /// @param _subProposalOwnerPoints Points that needs to be subtracted 
-    ///     from Proposal owner reputation in case proposal gets rejected
-    /// @param _subSolutionOwnerPoints  Points that needs to be subtracted 
-    ///     from Solution Owner reputation for providing wrong solution against proposal
-    /// @param _subMemberPoints Points that needs to be subtracted 
-    ///     from Other members reputation for casting vote against correct solution
     function changeMemberReputationPoints(
-        uint32 _addProposalOwnerPoints, 
-        uint32 _addSolutionOwnerPoints, 
-        uint32 _addMemberPoints, 
-        uint32 _subProposalOwnerPoints, 
-        uint32 _subSolutionOwnerPoints, 
-        uint32 _subMemberPoints
+        uint _addProposalOwnerPoints, 
+        uint _addSolutionOwnerPoints
     ) 
         public 
-        onlyOwner 
+        onlyInternal 
     {
         addProposalOwnerPoints = _addProposalOwnerPoints;
         addSolutionOwnerPoints = _addSolutionOwnerPoints;
-        addMemberPoints = _addMemberPoints;
-        subProposalOwnerPoints = _subProposalOwnerPoints;
-        subSolutionOwnerPoints = _subSolutionOwnerPoints;
-        subMemberPoints = _subMemberPoints;
     }
 
-    /// @dev Sets the Last proposal id till which the reward has been distributed
-    ///     for Proposal Owner (Proposal creation and acceptance Reward)
-    function setLastRewardIdOfCreatedProposals(address _memberAddress, uint _proposalId) public onlyInternal {
-        lastRewardDetails[_memberAddress].lastRewardProposalId = _proposalId;
+    function setDAppTokenSupportsLocking(bool _value) public onlyInternal {
+        dAppTokenSupportsLocking = _value;
     }
 
     /// @dev Sets the last proposal id till which the reward has been distributed for Solution Owner 
     ///     (For providing correct solution Reward)
     function setLastRewardIdOfSolutionProposals(address _memberAddress, uint _proposalId) public onlyInternal {
-        lastRewardDetails[_memberAddress].lastRewardSolutionProposalId = _proposalId;
+        lastRewardDetails[_memberAddress] = _proposalId;
     }
 
-    /// @dev Sets the last Vote id till which the reward has been distributed for Vote owners 
-    ///     (For voting in favour of correct solution Reward)
-    function setLastRewardIdOfVotes(address _memberAddress, uint _voteId) public onlyInternal {
-        lastRewardDetails[_memberAddress].lastRewardVoteId = _voteId;
-    }
-
-    /// @dev Gets last Proposal id till the reward has been distributed (Proposal creation and acceptance)
-    function getLastRewardIdOfCreatedProposals(address _memberAddress) public view returns(uint) {
-        return lastRewardDetails[_memberAddress].lastRewardProposalId;
-    }
-
-    /// @dev Gets the last proposal id till the reward has been distributed for being Solution Owner
-    function getLastRewardIdOfSolutionProposals(address _memberAddress) public view returns(uint) {
-        return lastRewardDetails[_memberAddress].lastRewardSolutionProposalId;
-    }
-
-    /// @dev Gets the last vote id till which the reward has been distributed against member
-    function getLastRewardIdOfVotes(address _memberAddress) public view returns(uint) {
-        return lastRewardDetails[_memberAddress].lastRewardVoteId;
-    }
-
-    /// @dev Get all Last Id's till which the reward has been distributed against member
-    function getAllidsOfLastReward(address _memberAddress) 
-        public 
-        view 
-        returns(
-            uint lastRewardIdOfCreatedProposal, 
-            uint lastRewardidOfSolution, 
-            uint lastRewardIdOfVote
-        ) 
-    {
-        return (
-            lastRewardDetails[_memberAddress].lastRewardProposalId, 
-            lastRewardDetails[_memberAddress].lastRewardSolutionProposalId, 
-            lastRewardDetails[_memberAddress].lastRewardVoteId
-        );
-    }
-
-    /// @dev Sets the amount being deposited by a member against proposal
-    /// @param _typeOf TypeOf is "P" in case of proposal creation, 
-    ///     "S" in case of providing solution, "V" in case of casting vote i.e. Stating the stage of proposal
-    /// @param _depositAmount Amount to deposit
-    function setDepositTokens(address _memberAddress, uint _proposalId, bytes4 _typeOf, uint _depositAmount) 
-        public 
-        onlyInternal 
-    {
-        allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].amount = _depositAmount;
-    }
-
-    /// @dev Gets the amount being deposited against proposal by a member at different stages of proposal  
-    /// @param _typeOf typeOf is P for Proposal, S for Solution and V for Voting stage of proposal
-    function getDepositedTokens(address _memberAddress, uint _proposalId, bytes4 _typeOf) 
-        public 
-        view 
-        returns(uint) 
-    {
-        return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].amount;
-    }
-
-    /// @dev Checks if the reward has been distributed for particular proposal at specific stage 
-    ///     i.e. returned flag is 0 if reward is not yet distributed
-    function getReturnedTokensFlag(address _memberAddress, uint _proposalId, bytes4 _typeOf) 
-        public 
-        view 
-        returns(uint8) 
-    {
-        return allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned;
-    }
-
-    /// @dev Sets returned tokens to be 1 in case the member has claimed the reward and we distributed that 
-    function setReturnedTokensFlag(address _memberAddress, uint _proposalId, bytes4 _typeOf, uint8 _returnedIndex)
-        public 
-        onlyInternal 
-    {
-        allMemberDepositTokens[_memberAddress][_proposalId][_typeOf].returned = _returnedIndex;
-    }
-
-    /// @dev Add vote details such as Solution id to which he has voted and vote value
-    function addVote(
-        address _memberAddress, 
-        uint64[] _solutionChosen, 
-        uint _voteStake, 
-        uint _voteValue, 
-        uint32 _proposalId, 
-        uint128 _roleId
-    ) 
-        external 
-        onlyInternal
-    {
-        proposalRoleVote[_proposalId][_roleId].push(allVotes.length);
-        allVotesByMember[_memberAddress].push(allVotes.length);
-        addressProposalVote[_memberAddress][_proposalId] = allVotes.length;
-        emit Vote(_memberAddress, _proposalId, now, _voteStake, allVotes.length);
-        allVotes.push(ProposalVote(_memberAddress, _solutionChosen, uint208(_voteValue), _proposalId));
-        allProposalData[_proposalId].totalVoteValue = allProposalData[_proposalId].totalVoteValue 
-            + _voteValue;
-    }
-
-    function getAllVoteIdsByAddress(address _memberAddress) public view returns(uint[]) {
-        return allVotesByMember[_memberAddress];
-    }
-
-    function getVoteIdOfNthVoteOfMember(address _memberAddress, uint _vote) public view returns(uint) {
-        return allVotesByMember[_memberAddress][_vote];
-    }
-
-    function getTotalNumberOfVotesByAddress(address _memberAddress) public view returns(uint) {
-        return allVotesByMember[_memberAddress].length;
-    }
-
-    // function setVoteValue(uint _voteId, uint _voteValue) onlyInternal {
-    //     allVotes[_voteId].voteValue = _voteValue;
-    // }
-    /// @dev Gets vote details by id such as Vote value, Address of the voter and Solution id for which he has voted.
-    function getVoteDetailById(uint _voteid) 
-        public 
-        view 
-        returns(
-            address voter, 
-            uint64[] solutionChosen, 
-            uint208 voteValue,
-            uint32 proposalId
-        ) 
-    {
-        return (
-            allVotes[_voteid].voter, 
-            allVotes[_voteid].solutionChosen, 
-            allVotes[_voteid].voteValue, 
-            allVotes[_voteid].proposalId
-        );
-    }
-
-    /// @dev Gets Vote id Against proposal when passing proposal id and member addresse
-    function getVoteIdAgainstMember(address _memberAddress, uint _proposalId) 
-        public 
-        view 
-        returns(uint voteId) 
-    {
-        voteId = addressProposalVote[_memberAddress][_proposalId];
-    }
-
-    /// @dev Check if the member has voted against a proposal. Returns true if vote id exists
-    function checkVoteIdAgainstMember(address _memberAddress, uint _proposalId) public view returns(bool result) {
-        if (addressProposalVote[_memberAddress][_proposalId] != 0)
-            result = true;
-    }
-
-    /// @dev Gets voter address
-    function getVoterAddress(uint _voteId) public view returns(address _voterAddress) {
-        return (allVotes[_voteId].voter);
-    }
-
-    /// @dev Gets All the Role specific vote ids against proposal 
-    /// @param _roleId Role id which number of votes to be fetched.
-    /// @return totalVotes Total votes casted by this particular role id.
-    function getAllVoteIdsByProposalRole(uint _proposalId, uint _roleId) public view returns(uint[] totalVotes) {
-        return proposalRoleVote[_proposalId][_roleId];
-    }
-
-    /// @dev Gets Total number of votes of specific role against proposal
-    function getAllVoteIdsLengthByProposalRole(uint _proposalId, uint _roleId) external view returns(uint length) {
-        return proposalRoleVote[_proposalId][_roleId].length;
-    }
-
-    /// @dev Gets Vote id from the array that contains all role specific votes against proposal
-    /// @param _index To get vote id at particular index from array
-    function getVoteIdAgainstProposalRole(uint _proposalId, uint _roleId, uint _index) public view returns(uint) {
-        return (proposalRoleVote[_proposalId][_roleId][_index]);
-    }
-
-    /// @dev Gets vote value against Vote id
-    function getVoteValue(uint _voteId) public view returns(uint) {
-        return (allVotes[_voteId].voteValue);
-    }
-
-    /// @dev Gets total number of votes 
-    function allVotesTotal() public view returns(uint) {
-        return allVotes.length;
+    /// @dev pauses or resumes a proposal
+    /// @param pause true = pause proposal, false = resume
+    function toggleProposalPause(bool pause, uint _proposalId) public onlyInternal {
+        if (pause && !proposalPaused[_proposalId])
+            proposalPaused[_proposalId] = true;
+        else if (!pause && proposalPaused[_proposalId]) {
+            proposalPaused[_proposalId] = false;
+            allProposal[_proposalId].dateUpd = now; //solhint-disable-line
+        }
     }
 
     /// @dev Gets Total number of voting types has been added till now.
@@ -622,7 +307,7 @@ contract GovernanceData is Upgradeable {
 
     /// @dev Gets voting type details by passing voting id
     function getVotingTypeDetailsById(uint _votingTypeId) 
-        public 
+        public
         view 
         returns(uint votingTypeId, bytes32 vtName, address vtAddress) 
     {
@@ -643,22 +328,6 @@ contract GovernanceData is Upgradeable {
         allProposalSolutions[_proposalId].push(SolutionStruct(_memberAddress, _action));
     }
 
-    /// @dev Returns the solution index that was being voted
-    function getSolutionByVoteId(uint _voteId) public view returns(uint64[] solutionChosen) {
-        return (allVotes[_voteId].solutionChosen);
-    }
-
-    /// @dev Gets Solution id against which vote had been casted
-    /// @param _solutionChosenId To get solution id at particular index 
-    ///     from solutionChosen array i.e. 0 is passed In case of Simple Voting Type.
-    function getSolutionByVoteIdAndIndex(uint _voteId, uint _solutionChosenId) 
-        public 
-        view 
-        returns(uint solution) 
-    {
-        return (allVotes[_voteId].solutionChosen[_solutionChosenId]);
-    }
-
     /// @dev Gets The Address of Solution owner By solution sequence index 
     ///     As a proposal might have n number of solutions.
     function getSolutionAddedByProposalId(uint _proposalId, uint _index) 
@@ -674,23 +343,28 @@ contract GovernanceData is Upgradeable {
         return allProposalSolutions[_proposalId][_index].action;
     }
 
-    /// @dev Changes stake value that helps in calculation of reward distribution
-    function changeGBTStakeValue(uint _gbtStakeValue) public onlyMaster {
-        gbtStakeValue = _gbtStakeValue;
+    /// @dev Changes stakeWeight that helps in calculation of reward distribution
+    function changeStakeWeight(uint _stakeWeight) public onlyInternal {
+        stakeWeight = _stakeWeight;
     }
 
-    /// @dev Changes member scaling factor that helps in calculation of reward distribution
-    function changeMembershipScalingFator(uint _membershipScalingFactor) public onlyMaster {
-        membershipScalingFactor = _membershipScalingFactor;
+    /// @dev Changes bonusStake that helps in calculation of reward distribution
+    function changeBonusStake(uint _bonusStake) public onlyInternal {
+        bonusStake = _bonusStake;
     }
 
-    /// @dev Changes scaling weight that helps in calculation of reward distribution
-    function changeScalingWeight(uint _scalingWeight) public onlyMaster {
-        scalingWeight = _scalingWeight;
+    /// @dev Changes reputationWeight that helps in calculation of reward distribution
+    function changeReputationWeight(uint _reputationWeight) public onlyInternal {
+        reputationWeight = _reputationWeight;
+    }
+
+    /// @dev Changes bonusReputation that helps in calculation of reward distribution
+    function changeBonusReputation(uint _bonusReputation) public onlyInternal {
+        bonusReputation = _bonusReputation;
     }
 
     /// @dev Changes quoram percentage. Value required to pass proposal.
-    function changeQuorumPercentage(uint _quorumPercentage) public onlyMaster {
+    function changeQuorumPercentage(uint _quorumPercentage) public onlyInternal {
         quorumPercentage = _quorumPercentage;
     }
 
@@ -698,57 +372,21 @@ contract GovernanceData is Upgradeable {
         punishVoters = _punish;
     }
 
-    /// @dev Gets reputation points to proceed with updating the member reputation level
-    function getMemberReputationPoints() 
-        public 
-        view 
-        returns(uint32, uint32, uint32, uint32, uint32, uint32) 
-    {
-        return (
-            addProposalOwnerPoints, 
-            addSolutionOwnerPoints, 
-            addMemberPoints, 
-            subProposalOwnerPoints, 
-            subSolutionOwnerPoints, 
-            subMemberPoints
-        );
-    }
-
     /// @dev Changes Proposal owner reputation points that needs to be added at proposal acceptance
-    function changeProposalOwnerAdd(uint32 _repPoints) public onlyMaster {
+    function changeProposalOwnerAdd(uint _repPoints) public onlyInternal {
         addProposalOwnerPoints = _repPoints;
     }
 
     /// @dev Changes Solution owner reputation points that needs to be added if solution has won. 
     ///     (Upvoted with many votes)
-    function changeSolutionOwnerAdd(uint32 _repPoints) public onlyMaster {
+    function changeSolutionOwnerAdd(uint _repPoints) public onlyInternal {
         addSolutionOwnerPoints = _repPoints;
     }
 
-    /// @dev Change proposal owner reputation points that needs to be subtracted if proposal gets rejected. 
-    function changeProposalOwnerSub(uint32 _repPoints) public onlyMaster {
-        subProposalOwnerPoints = _repPoints;
-    }
-
-    /// @dev Changes solution owner reputation points that needs to be subtracted 
-    ///     if solution is downvoted with many votes   
-    function changeSolutionOwnerSub(uint32 _repPoints) public onlyMaster {
-        subSolutionOwnerPoints = _repPoints;
-    }
-
-    /// @dev Change member points that needs to be added when voting in favour of final solution
-    function changeMemberAdd(uint32 _repPoints) public onlyMaster {
-        addMemberPoints = _repPoints;
-    }
-
-    /// @dev Change member points that needs to be subtracted when voted against final solution
-    function changeMemberSub(uint32 _repPoints) public onlyMaster {
-        subMemberPoints = _repPoints;
-    }
-
     /// @dev Sets proposal category
-    function setProposalCategory(uint _proposalId, uint8 _categoryId) public onlyInternal {
-        allProposalData[_proposalId].category = _categoryId;
+    function setProposalSubCategory(uint _proposalId, uint _subCategoryId, address _stakeToken) public onlyInternal {
+        allProposalData[_proposalId].subCategory = _subCategoryId;
+        allProposalData[_proposalId].stakeToken = _stakeToken;
     }
 
     /// @dev Sets proposal incentive/reward that needs to be distributed at the end of proposal closing
@@ -758,25 +396,24 @@ contract GovernanceData is Upgradeable {
 
     /// @dev Changes the status of a given proposal.
     function changeProposalStatus(uint _id, uint8 _status) public onlyInternal {
-        require(allProposalData[_id].category != 0);
-        emit ProposalStatus(_id, _status, now);
+        emit ProposalStatus(_id, _status, now); //solhint-disable-line
         updateProposalStatus(_id, _status);
     }
 
     /// @dev Sets proposal current voting id i.e. Which Role id is next in row to vote against proposal
     /// @param _currVotingStatus It is the index to fetch the role id from voting sequence array. 
-    function setProposalCurrentVotingId(uint _proposalId, uint8 _currVotingStatus) public onlyInternal {
+    function setProposalCurrentVotingId(uint _proposalId, uint _currVotingStatus) public onlyInternal {
         allProposalData[_proposalId].currVotingStatus = _currVotingStatus;
     }
 
     /// @dev Updates proposal's intermediateVerdict after every voting layer is passed.
-    function setProposalIntermediateVerdict(uint _proposalId, uint8 _intermediateVerdict) public onlyInternal {
+    function setProposalIntermediateVerdict(uint _proposalId, uint64 _intermediateVerdict) public onlyInternal {
         allProposalData[_proposalId].currentVerdict = _intermediateVerdict;
     }
 
     /// @dev Sets proposal's final verdict once the final voting layer is crossed 
     ///     and voting is final closed for proposal
-    function setProposalFinalVerdict(uint _proposalId, uint8 _finalVerdict) public onlyInternal {
+    function setProposalFinalVerdict(uint _proposalId, uint64 _finalVerdict) public onlyInternal {
         allProposalData[_proposalId].finalVerdict = _finalVerdict;
     }
 
@@ -791,8 +428,8 @@ contract GovernanceData is Upgradeable {
         string _description, 
         uint _proposalId, 
         address _memberAddress, 
-        uint32 _repPoints, 
-        uint32 _repPointsEventLog,
+        uint _repPoints, 
+        uint _repPointsEventLog,
         bytes4 _typeOf
     ) 
         public 
@@ -805,21 +442,21 @@ contract GovernanceData is Upgradeable {
     /// @dev Stores the information of version number of a given proposal. 
     ///     Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _proposalId, string _proposalDescHash) public onlyInternal {
-        uint8 versionNo = allProposalData[_proposalId].versionNumber + 1;
-        emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now);
+        uint versionNo = allProposalData[_proposalId].versionNumber + 1;
+        emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now); //solhint-disable-line
         setProposalVersion(_proposalId, versionNo);
     }
 
     /// @dev Sets proposal's date when the proposal last modified
     function setProposalDateUpd(uint _proposalId) public onlyInternal {
-        allProposal[_proposalId].dateUpd = now;
+        allProposal[_proposalId].dateUpd = now; //solhint-disable-line
     }
 
     /// @dev Fetch details of proposal when giving proposal id
     function getProposalDetailsById1(uint _proposalId) 
         public 
         view 
-        returns(uint id, address owner, uint dateUpd, uint8 versionNum, uint8 propStatus) 
+        returns(uint id, address owner, uint dateUpd, uint versionNum, uint8 propStatus) 
     {
         return (
             _proposalId, 
@@ -836,17 +473,17 @@ contract GovernanceData is Upgradeable {
         view 
         returns(
             uint id,
-            uint8 category, 
-            uint8 currentVotingId, 
-            uint8 intermediateVerdict, 
-            uint8 finalVerdict, 
+            uint subCategory, 
+            uint currentVotingId, 
+            uint64 intermediateVerdict, 
+            uint64 finalVerdict, 
             address votingTypeAddress, 
             uint totalSolutions
         ) 
     {
         return (
             _proposalId, 
-            allProposalData[_proposalId].category, 
+            allProposalData[_proposalId].subCategory, 
             allProposalData[_proposalId].currVotingStatus, 
             allProposalData[_proposalId].currentVerdict, 
             allProposalData[_proposalId].finalVerdict, 
@@ -856,42 +493,17 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById3(uint _proposalId) 
+    function getProposalDetailsById3(uint _proposalId, address _memberAddress) 
         public 
         view 
-        returns(uint proposalIndex, uint propStatus, uint8 propCategory, uint8 propStatusId, uint8 finalVerdict) 
+        returns(bool, uint, uint8, uint64) 
     {
         return (
-            _proposalId, 
-            getProposalStatus(_proposalId), 
-            allProposalData[_proposalId].category, 
+            rewardClaimed[_memberAddress][_proposalId], 
+            allProposalData[_proposalId].subCategory, 
             allProposalData[_proposalId].propStatus, 
             allProposalData[_proposalId].finalVerdict
         );
-    }
-
-    /// @dev fetches details for simplevoting and also verifies that the voter has not casted a vote already
-    function getProposalDetailsForSV(address _voter, uint _proposalId) 
-        external
-        view
-        returns(uint8, uint8, uint8) 
-    {
-        require(addressProposalVote[_voter][_proposalId] == 0);
-        require(allProposalData[_proposalId].propStatus == 2);
-        return(
-            allProposalData[_proposalId].category,
-            allProposalData[_proposalId].currVotingStatus,
-            allProposalData[_proposalId].currentVerdict
-        );
-    }
-
-    /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById4(uint _proposalId) 
-        public 
-        view 
-        returns(uint totalTokenToDistribute, uint totalVoteValue) 
-    {
-        return (allProposalData[_proposalId].totalreward, allProposalData[_proposalId].totalVoteValue);
     }
 
     /// @dev Gets proposal details of given proposal id
@@ -957,14 +569,8 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets proposal current voting status i.e. Who is next in voting sequence
-    function getProposalCurrentVotingId(uint _proposalId) public view returns(uint8 _currVotingStatus) {
+    function getProposalCurrentVotingId(uint _proposalId) public view returns(uint) {
         return (allProposalData[_proposalId].currVotingStatus);
-    }
-
-    /// @dev Get Total Amount that has been collected at the end of voting to distribute further 
-    ///     i.e. Total token to distribute
-    function getProposalTotalReward(uint _proposalId) public view returns(uint) {
-        return allProposalData[_proposalId].totalreward;
     }
 
     /// @dev Get Total number of Solutions being proposed against proposal.
@@ -973,22 +579,25 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Get Current Status of proposal when given proposal Id
-    function getProposalStatus(uint _proposalId) public view returns(uint propStatus) {
+    function getProposalStatus(uint _proposalId) public view returns(uint) {
         return allProposalData[_proposalId].propStatus;
     }
 
-    /// @dev Gets proposal voting type when given proposal id
-    function getProposalVotingType(uint _proposalId) public view returns(address) {
-        return (allProposal[_proposalId].votingTypeAddress);
+    /// @dev Gets proposal sub category when given proposal id
+    function getProposalSubCategory(uint _proposalId) public view returns(uint) {
+        return allProposalData[_proposalId].subCategory;
     }
 
-    /// @dev Gets proposal category when given proposal id
-    function getProposalCategory(uint _proposalId) public view returns(uint8 categoryId) {
-        return allProposalData[_proposalId].category;
+    function setRewardClaimed(uint _proposalId, address _memberAddress) public onlyInternal {
+        rewardClaimed[_memberAddress][_proposalId] = true;
+    }
+
+    function getRewardClaimed(uint _proposalId, address _memberAddress) public view returns(bool) {
+        return (rewardClaimed[_memberAddress][_proposalId]);
     }
 
     /// @dev Get member's reputation points and it's likely to be updated with time.
-    function getMemberReputation(address _memberAddress) public view returns(uint32 memberPoints) {
+    function getMemberReputation(address _memberAddress) public view returns(uint memberPoints) {
         if (allMemberReputationByAddress[_memberAddress] == 0)
             memberPoints = 1;
         else
@@ -996,13 +605,42 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Get member's reputation points and scalind data for sv.
-    function getMemberReputationSV(address _memberAddress) public view returns(uint, uint, uint) {
-        uint memberPoints;
-        if (allMemberReputationByAddress[_memberAddress] == 0)
-            memberPoints = 1;
-        else
-            memberPoints = allMemberReputationByAddress[_memberAddress];
-        return(scalingWeight, membershipScalingFactor, memberPoints);
+    function getMemberReputationSV(address _memberAddress, uint32 _proposalId) 
+        public 
+        view 
+        returns (uint, uint, uint, uint, uint, address, uint) 
+    {
+        return(
+            stakeWeight, 
+            bonusStake, 
+            reputationWeight, 
+            bonusReputation, 
+            allMemberReputationByAddress[_memberAddress],
+            allProposalData[_proposalId].stakeToken, 
+            allProposalData[_proposalId].subCategory
+        );
+    }
+
+    /// @dev fetches details for simplevoting and also verifies that proposal is open for voting
+    function getProposalDetailsForSV(uint _proposalId) 
+        public
+        view
+        returns(uint, uint, uint64) 
+    {
+        require(allProposalData[_proposalId].propStatus == 2);
+        return(
+            allProposalData[_proposalId].subCategory,
+            allProposalData[_proposalId].currVotingStatus,
+            allProposalData[_proposalId].currentVerdict
+        );
+    }
+
+    /// @dev gets total number of votes by a voter
+    function getTotalNumberOfVotesByAddress(address _voter) public view returns(uint totalVotes) {
+        for (uint i = 0; i < allVotingTypeDetails.length; i++) {
+            VotingType vt = VotingType(allVotingTypeDetails[i].votingTypeAddress);
+            totalVotes += vt.getTotalNumberOfVotesByAddress(_voter);
+        }
     }
 
     /// @dev Gets Total vote value from all the votes that has been casted against of winning solution
@@ -1010,11 +648,29 @@ contract GovernanceData is Upgradeable {
         voteValue = allProposalData[_proposalId].totalVoteValue;
     }
 
+    /// @dev Gets stakeToken proposal
+    function getStakeToken(uint _proposalId) public view returns(address) {
+        return allProposalData[_proposalId].stakeToken;
+    }
+
+    /// @dev Gets stakeToken and sub cat proposal
+    function getTokenAndSubCat(uint _proposalId) public view returns(address, uint) {
+        return (allProposalData[_proposalId].stakeToken, allProposalData[_proposalId].subCategory);
+    }
+
     /// @dev Gets Total number of proposal created till now in dApp
     function getProposalLength() public view returns(uint) {
         return (allProposal.length);
     }
 
+    function getLatestVotingAddress() public view returns(address) {
+        return allVotingTypeDetails[allVotingTypeDetails.length - 1].votingTypeAddress;
+    }
+
+    function getProposalVotingAddress(uint _proposalId) public view returns(address) {
+        return allProposal[_proposalId].votingTypeAddress;
+    }
+    
     /// @dev Get Latest updated version of proposal.
     function getProposalVersion(uint _proposalId) public view returns(uint) {
         return allProposalData[_proposalId].versionNumber;
@@ -1025,38 +681,29 @@ contract GovernanceData is Upgradeable {
         allProposalData[_proposalId].totalVoteValue = _voteValue;
     }
 
-    /// @dev Get Total Amount that has been collected at the end of voting to distribute further 
-    ///     i.e. Total token to distribute
-    function setProposalTotalReward(uint _proposalId, uint _totalreward) public onlyInternal {
-        allProposalData[_proposalId].totalreward = _totalreward;
-    }
-
-    /// @dev Changes status from pending proposal to start proposal
-    function changePendingProposalStart(uint _value) public onlyInternal {
-        pendingProposalStart = _value;
-    }
-
     /// @dev Adds new proposal
-    function addNewProposal(
-        uint _proposalId, 
+    function addNewProposal( 
         address _memberAddress, 
-        uint8 _categoryId, 
-        address _votingTypeAddress, 
-        uint _dateAdd
+        uint _subCategoryId, 
+        address _votingTypeAddress,
+        address _stakeToken
     ) 
         public 
         onlyInternal 
     {
-        allProposal.push(ProposalStruct(_memberAddress, _dateAdd, _votingTypeAddress));
-        allProposalData[_proposalId].category = _categoryId;
+        allProposalData[allProposal.length].subCategory = _subCategoryId;
+        allProposalData[allProposal.length].stakeToken = _stakeToken;
+        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
+        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress)); //solhint-disable-line
     }
 
     /// @dev Creates new proposal
-    function createProposal1(address _memberAddress, address _votingTypeAddress, uint _dateAdd) 
+    function createProposal1(address _memberAddress, address _votingTypeAddress) 
         public 
         onlyInternal 
     {
-        allProposal.push(ProposalStruct(_memberAddress, _dateAdd, _votingTypeAddress));
+        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
+        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress)); //solhint-disable-line
     }
 
     /// @dev Gets final solution index won after majority voting.
@@ -1065,28 +712,8 @@ contract GovernanceData is Upgradeable {
     }
 
     /// @dev Gets Intermidiate solution is while voting is still in progress by other voting layers
-    function getProposalIntermediateVerdict(uint _proposalId) public view returns(uint8) {
+    function getProposalIntermediateVerdict(uint _proposalId) public view returns(uint64) {
         return allProposalData[_proposalId].currentVerdict;
-    }
-
-    /// @dev Change token holding time i.e. When user submits stake, 
-    ///     Few tokens gets deposited and rest is locked for a period of time.
-    function changeTokenHoldingTime(uint _time) public onlyOwner {
-        tokenHoldingTime = _time;
-    }
-
-    /// @dev Get total deposit tokens against member and proposal Id with type of (proposal/solution/vote); 
-    function getDepositTokensByAddressProposal(address _memberAddress, uint _proposalId) 
-        public 
-        view 
-        returns(uint, uint , uint , uint) 
-    {
-        return (
-            _proposalId, 
-            getDepositedTokens(_memberAddress, _proposalId, "P"), 
-            getDepositedTokens(_memberAddress, _proposalId, "S"), 
-            getDepositedTokens(_memberAddress, _proposalId, "V")
-        );
     }
 
     /// @dev Gets statuses of proposals
@@ -1117,43 +744,8 @@ contract GovernanceData is Upgradeable {
                 _pendingProposals++;
             } else if (proposalStatus == 3) {
                 _acceptedProposals++;
-            } else if (proposalStatus >= 4) {
+            } else {
                 _rejectedProposals++;
-            }
-        }
-    }
-
-    /// @dev Gets statuses of all the proposal that are created by specific member
-    /// @param _proposalsIds All proposal Ids array is passed
-    /// @return proposalLength Total number of proposals
-    /// @return draftProposals Proposals in draft or still getting updated
-    /// @return pendingProposals Proposals still open for voting are pending ones
-    /// @return acceptedProposals If a decision has been made then the proposal is in accep state
-    /// @return rejectedProposals All the proposals rejected by majority voting
-    function getStatusOfProposalsForMember(uint[] _proposalsIds) 
-        public 
-        view 
-        returns(
-            uint proposalLength, 
-            uint draftProposals, 
-            uint pendingProposals, 
-            uint acceptedProposals, 
-            uint rejectedProposals
-        ) 
-    {
-        uint proposalStatus;
-        proposalLength = getProposalLength();
-
-        for (uint i = 0; i < _proposalsIds.length; i++) {
-            proposalStatus = getProposalStatus(_proposalsIds[i]);
-            if (proposalStatus < 2) {
-                draftProposals++;
-            } else if (proposalStatus == 2) {
-                pendingProposals++;
-            } else if (proposalStatus == 3) {
-                acceptedProposals++;
-            } else if (proposalStatus >= 4) {
-                rejectedProposals++;
             }
         }
     }
@@ -1169,22 +761,6 @@ contract GovernanceData is Upgradeable {
                 if (_memberAddress == getSolutionAddedByProposalId(i, j))
                     totalSolutionProposalCount++;
             }
-        }
-    }
-
-    /// @dev Get Total tokens deposited by member till date against all proposal.
-    /// @return depositForCreatingProposal tokens deposited for crating proposals so far
-    /// @return depositForProposingSolution Total amount that has been deposited for proposing solutions
-    /// @return depositForCastingVote Total amount that has been deposited when casting vote against proposals
-    function getAllDepositTokensByAddress(address _memberAddress) 
-        public 
-        view 
-        returns(uint depositForCreatingProposal, uint depositForProposingSolution, uint depositForCastingVote) 
-    {
-        for (uint i = 0; i < allProposal.length; i++) {
-            depositForCreatingProposal = depositForCreatingProposal + getDepositedTokens(_memberAddress, i, "P");
-            depositForProposingSolution = depositForProposingSolution + getDepositedTokens(_memberAddress, i, "S");
-            depositForCastingVote = depositForCastingVote + getDepositedTokens(_memberAddress, i, "V");
         }
     }
 
@@ -1212,47 +788,39 @@ contract GovernanceData is Upgradeable {
         }
     }
 
-    /// @dev Adds points to add or subtract in member reputation when proposal/Solution/vote gets denied or accepted
-    function addMemberReputationPoints() internal {
-        addProposalOwnerPoints = 5;
-        addSolutionOwnerPoints = 5;
-        addMemberPoints = 1;
-        subProposalOwnerPoints = 1;
-        subSolutionOwnerPoints = 1;
-        subMemberPoints = 1;
-    }
-
-    /// @dev Sets global parameters that will help in distributing reward
-    function setGlobalParameters() internal {
-        pendingProposalStart = 0;
-        quorumPercentage = 25;
-        gbtStakeValue = 0;
-        membershipScalingFactor = 1;
-        scalingWeight = 1;
-        depositPercProposal = 30;
-        depositPercSolution = 30;
-        depositPercVote = 40;
-        tokenHoldingTime = 259200; // In seconds
-    }
-
     /// @dev Sets Voting type details such as Voting type name and address
-    function setVotingTypeDetails(bytes32 _votingTypeName, address _votingTypeAddress) internal {
+    function setVotingTypeDetails(bytes32 _votingTypeName, address _votingTypeAddress) public onlyInternal {
         allVotingTypeDetails.push(VotingTypeDetails(_votingTypeName, _votingTypeAddress));
     }
 
     /// @dev Edits Voting type address when given voting type name
-    function editVotingTypeDetails(uint _votingTypeId, address _votingTypeAddress) internal {
+    function editVotingTypeDetails(uint _votingTypeId, address _votingTypeAddress) public onlyInternal {
         allVotingTypeDetails[_votingTypeId].votingTypeAddress = _votingTypeAddress;
+    }
+
+    /// @dev Adds points to add or subtract in member reputation when proposal/Solution/vote gets denied or accepted
+    function addMemberReputationPoints() internal {
+        addProposalOwnerPoints = 5;
+        addSolutionOwnerPoints = 5;
+    }
+
+    /// @dev Sets global parameters that will help in distributing reward
+    function setGlobalParameters() internal {
+        quorumPercentage = 25;
+        stakeWeight = 1;
+        bonusStake = 2;
+        reputationWeight = 1;
+        bonusReputation = 2;
     }
 
     /// @dev Updates status of an existing proposal
     function updateProposalStatus(uint _id, uint8 _status) internal {
         allProposalData[_id].propStatus = _status;
-        allProposal[_id].dateUpd = now;
+        allProposal[_id].dateUpd = now; //solhint-disable-line
     }
 
     /// @dev Sets version number of proposal i.e. Version number increases everytime the proposal is modified
-    function setProposalVersion(uint _proposalId, uint8 _versionNum) internal {
+    function setProposalVersion(uint _proposalId, uint _versionNum) internal {
         allProposalData[_proposalId].versionNumber = _versionNum;
     }
 
