@@ -10,9 +10,9 @@ const SimpleVoting = artifacts.require('SimpleVoting');
 const EventCaller = artifacts.require('EventCaller');
 const GovernCheckerContract = artifacts.require('GovernCheckerContract');
 const ProposalCategoryAdder = artifacts.require('ProposalCategoryAdder');
-const TokenProxy = artifacts.require('TokenProxy');
 
 module.exports = function(deployer) {
+  deployer.deploy(EventCaller);
   deployer.deploy(GBTStandardToken);
   deployer.deploy(EventCaller);
   deployer.deploy(GovBlocksMaster);
@@ -25,5 +25,4 @@ module.exports = function(deployer) {
   deployer.deploy(Master);
   deployer.deploy(GovernCheckerContract);
   deployer.deploy(ProposalCategoryAdder);
-  deployer.deploy(TokenProxy, GBTStandardToken.address);
 };

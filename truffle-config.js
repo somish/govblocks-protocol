@@ -9,27 +9,6 @@ module.exports = {
       port: 7545,
       network_id: '5777'
     }
-    // ropsten: {
-    //   gasPrice : 1,
-    //   provider: function() {
-    //     return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/");
-    //   },
-    //   network_id: 3
-    // },
-    // rinkeby: {
-    //   gasPrice : 1,
-    //   provider: function() {
-    //     return new HDWalletProvider(mnemonic, "https://rinkeby.infura.io/");
-    //   },
-    //   network_id: 4
-    // },
-    // kovan: {
-    //   gasPrice : 1,
-    //   provider: function() {
-    //     return new HDWalletProvider(mnemonic, "https://kovan.infura.io/");
-    //   },
-    //   network_id: 42
-    // }
   },
   solc: {
     optimizer: {

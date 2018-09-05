@@ -79,7 +79,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       })
       .then(instance => {
         mr = instance;
-        return TokenProxy.deployed();
+        return TokenProxy.new(gbt.address);
       })
       .then(instance => {
         tp = instance;

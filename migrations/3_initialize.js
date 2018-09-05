@@ -9,7 +9,6 @@ const ProposalCategory = artifacts.require('ProposalCategory');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const EventCaller = artifacts.require('EventCaller');
 const ProposalCategoryAdder = artifacts.require('ProposalCategoryAdder');
-const TokenProxy = artifacts.require('TokenProxy');
 const json = require('./../build/contracts/Master.json');
 const bytecode = json['bytecode'];
 
@@ -24,7 +23,6 @@ module.exports = deployer => {
   let gv;
   let pl;
   let ms;
-  let tp;
   let owner;
   deployer
     .then(() => GBTStandardToken.deployed())
@@ -38,10 +36,6 @@ module.exports = deployer => {
     })
     .then(function(instance) {
       gbm = instance;
-      return TokenProxy.deployed();
-    })
-    .then(function(instance) {
-      tp = instance;
       return gbm.govBlocksMasterInit(gbt.address, ec.address);
     })
     .then(function() {
