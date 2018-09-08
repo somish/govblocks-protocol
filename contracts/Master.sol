@@ -99,6 +99,14 @@ contract Master is Ownable {
         changeAllAddress();
     }
 
+    /// @dev upgrades a single contract
+    function upgradeContract(bytes2 _contractsName, address _contractsAddress) public {
+        require(isAuth());
+        allContractVersions[versionDates.length - 1][_contractsName] = _contractsAddress;
+        changeMasterAddress(address(this));
+        changeAllAddress();
+    }
+
     /// @dev sets dAppTokenProxy address
     /// @param _dAppTokenProxy token proxy address
     function setDAppTokenProxy(address _dAppTokenProxy) public {

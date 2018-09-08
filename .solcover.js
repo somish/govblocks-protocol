@@ -1,4 +1,3 @@
 module.exports = {
-  skipFiles: ['imports', 'mocks'],
-  deepSkip: true
+  skipFiles: ['imports']
 };

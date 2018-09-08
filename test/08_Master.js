@@ -139,6 +139,18 @@ contract('Master', function([owner, notOwner]) {
     assert.equal(b.toNumber() + 10, b2.toNumber() - b1.toNumber());
   });
 
+  it('Should upgrade contract', async function() {
+    this.timeout(100000);
+    const poo = await Pool.new();
+    await ms.upgradeContract('PL', poo.address);
+    assert(
+      await ms.getLatestAddress('PL'),
+      poo.address,
+      'contract not upgraded'
+    );
+    await catchRevert(ms.upgradeContract('PL', owner, { from: notOwner }));
+  });
+
   it('Should add new contract', async function() {
     this.timeout(100000);
     // Will throw once owner's permissions are removed. will need to create proposal then.
