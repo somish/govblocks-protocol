@@ -78,7 +78,7 @@ contract SimpleVoting is Upgradeable {
         require(!alreadyAdded(_proposalId, _memberAddress));
         governanceDat.setSolutionAdded(_proposalId, _memberAddress, _action);
         uint solutionId = governanceDat.getTotalSolutions(_proposalId);
-        governanceDat.callSolutionEvent(_proposalId, msg.sender, solutionId - 1, _solutionHash, now); //solhint-disable-line
+        governanceDat.callSolutionEvent(_proposalId, _memberAddress, solutionId - 1, _solutionHash, now); //solhint-disable-line
 
     }
 
