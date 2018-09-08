@@ -96,6 +96,15 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
+            "Upgrade a contract",
+            "QmYQXdESKMXNnWDquvH88CckH6AepjtGSUxnkyJ8D7YKpq",
+            5,
+            address(0),
+            "MS",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
             "Pause Proposal",
             "QmPh5j3aAPhC6VZ8snjwLWPtR7Ps3os8zdYERTtp5W6RAp",
             6,
