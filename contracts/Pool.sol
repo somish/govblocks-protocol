@@ -32,7 +32,8 @@ contract Pool is Upgradeable {
     Governance internal gov;
     GovernanceData internal governanceDat;
     ProposalCategory internal proposalCategory;
-
+    bool internal locked;
+    
     function () public payable {} //solhint-disable-line
 
     modifier onlySV {
@@ -41,6 +42,13 @@ contract Pool is Upgradeable {
             || master.isInternal(msg.sender) 
         );
         _;
+    }
+
+    modifier noReentrancy() {
+        require(!locked, "Reentrant call.");
+        locked = true;
+        _;
+        locked = false;
     }
 
     /// @dev just to adhere to the interface
@@ -74,7 +82,7 @@ contract Pool is Upgradeable {
     }
 
     /// @dev user can calim the tokens rewarded them till now
-    function claimReward(address _claimer) public {
+    function claimReward(address _claimer) public noReentrancy {
         uint pendingGBTReward;
         uint pendingDAppReward;
         (pendingGBTReward, pendingDAppReward) = gov.calculateMemberReward(_claimer);
