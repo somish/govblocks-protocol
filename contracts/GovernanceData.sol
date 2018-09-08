@@ -289,6 +289,28 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         lastRewardDetails[_memberAddress] = _proposalId;
     }
 
+    /// @dev Configures global parameters i.e. Voting or Reputation parameters
+    /// @param _typeOf Passing intials of the parameter name which value needs to be updated
+    /// @param _value New value that needs to be updated    
+    // solhint-disable-next-line
+    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public onlyInternal {                    
+        if (_typeOf == "APO") {
+            changeProposalOwnerAdd(_value);
+        } else if (_typeOf == "AOO") {
+            changeSolutionOwnerAdd(_value);
+        } else if (_typeOf == "RW") {
+            changeReputationWeight(_value);
+        } else if (_typeOf == "SW") {
+            changeStakeWeight(_value);
+        } else if (_typeOf == "BR") {
+            changeBonusReputation(_value);
+        } else if (_typeOf == "BS") {
+            changeBonusStake(_value);
+        } else if (_typeOf == "QP") {
+            changeQuorumPercentage(_value);
+        }
+    }
+
     /// @dev pauses or resumes a proposal
     /// @param pause true = pause proposal, false = resume
     function toggleProposalPause(bool pause, uint _proposalId) public onlyInternal {

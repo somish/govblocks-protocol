@@ -36,7 +36,7 @@ contract ProposalCategoryAdder {
             "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
             3,
             address(0),
-            "MS",
+            "GD",
             stakeInecntive,
             rewardPerc
         );

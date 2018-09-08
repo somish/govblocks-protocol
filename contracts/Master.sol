@@ -16,7 +16,6 @@
 pragma solidity 0.4.24;
 
 import "./Upgradeable.sol";
-import "./GBTStandardToken.sol";
 import "./GovBlocksMaster.sol";
 import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./GovernanceData.sol";
@@ -89,7 +88,7 @@ contract Master is Ownable {
         }
 
         for (uint i = 0; i < allContractNames.length - 2; i++) {
-            allContractVersions[versionDates.length][allContractNames[i+1]] = _contractAddresses[i];
+            allContractVersions[versionDates.length][allContractNames[i+2]] = _contractAddresses[i];
         }
 
         allContractVersions[versionDates.length]["GS"] = gbt;
@@ -122,7 +121,7 @@ contract Master is Ownable {
             require(isAuth());
         }
         allContractVersions[versionDates.length - 1]["MS"] = _masterAddress;
-        for (uint i = 1; i < allContractNames.length - 1; i++) {
+        for (uint i = 2; i < allContractNames.length; i++) {
             up = Upgradeable(allContractVersions[versionDates.length - 1][allContractNames[i]]);
             up.changeMasterAddress();
         }
@@ -170,36 +169,10 @@ contract Master is Ownable {
             allContractVersions[versionDates.length - 1][_contractName];
     }
 
-    /// @dev Configures global parameters i.e. Voting or Reputation parameters
-    /// @param _typeOf Passing intials of the parameter name which value needs to be updated
-    /// @param _value New value that needs to be updated    
-    // solhint-disable-next-line
-    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public {
-        require(isAuth());
-        GovernanceData governanceDat = GovernanceData(getLatestAddress("GD"));
-                    
-        if (_typeOf == "APO") {
-            governanceDat.changeProposalOwnerAdd(_value);
-        } else if (_typeOf == "AOO") {
-            governanceDat.changeSolutionOwnerAdd(_value);
-        } else if (_typeOf == "RW") {
-            governanceDat.changeReputationWeight(_value);
-        } else if (_typeOf == "SW") {
-            governanceDat.changeStakeWeight(_value);
-        } else if (_typeOf == "BR") {
-            governanceDat.changeBonusReputation(_value);
-        } else if (_typeOf == "BS") {
-            governanceDat.changeBonusStake(_value);
-        } else if (_typeOf == "QP") {
-            governanceDat.changeQuorumPercentage(_value);
-        }
-    }
-
     /// @dev adds a new contract type to master
     function addNewContract(bytes2 _contractName, address _contractAddress) public {
         require(isAuth());
-        allContractNames.push(allContractNames[allContractNames.length - 1]);
-        allContractNames[allContractNames.length - 2] = _contractName;
+        allContractNames.push(_contractName);
         contractsActive[_contractAddress] = true;
         allContractVersions[versionDates.length - 1][_contractName] = _contractAddress;
     }
@@ -215,13 +188,13 @@ contract Master is Ownable {
     /// @dev Save the initials of all the contracts
     function addContractNames() internal {
         allContractNames.push("MS");
+        allContractNames.push("GS");
         allContractNames.push("GD");
         allContractNames.push("MR");
         allContractNames.push("PC");
         allContractNames.push("SV");
         allContractNames.push("GV");
         allContractNames.push("PL");
-        allContractNames.push("GS");
     }
 
     function getCodeSize(address _addr) internal view returns(uint _size) {
@@ -234,13 +207,13 @@ contract Master is Ownable {
     function changeAllAddress() internal {
         uint i;
         if (versionDates.length < 3) {
-            for (i = 1; i < allContractNames.length - 1; i++) {
+            for (i = 2; i < allContractNames.length; i++) {
                 contractsActive[allContractVersions[versionDates.length - 1][allContractNames[i]]] = true;
                 up = Upgradeable(allContractVersions[versionDates.length - 1][allContractNames[i]]);
                 up.updateDependencyAddresses();
             }
         } else {
-            for (i = 1; i < allContractNames.length - 1; i++) {
+            for (i = 2; i < allContractNames.length; i++) {
                 contractsActive[allContractVersions[versionDates.length - 2][allContractNames[i]]] = false;
                 contractsActive[allContractVersions[versionDates.length - 1][allContractNames[i]]] = true;
                 up = Upgradeable(allContractVersions[versionDates.length - 1][allContractNames[i]]);

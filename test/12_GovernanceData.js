@@ -9,7 +9,7 @@ let gd;
 let sv;
 let gbt;
 
-contract('Governance Data', function([owner, taker]) {
+contract('Governance Data', function([owner, notOwner]) {
   before(function() {
     Governance.deployed()
       .then(function(instance) {
@@ -89,6 +89,42 @@ contract('Governance Data', function([owner, taker]) {
     await gd.callReputationEvent(owner, 0, 'x', 1, '0x0');
     assert.equal(g1, true, 'Not initialized');
     // TODO verify the data returned
+  });
+
+  it('Should configure Global Parameters', async function() {
+    this.timeout(100000);
+    // Will throw once owner's permissions are removed. will need to create proposal then.
+    await gd.configureGlobalParameters('QP', 58);
+    let qp = await gd.quorumPercentage();
+    assert(qp.toNumber(), 58, 'Global parameter not changed');
+
+    await gd.configureGlobalParameters('APO', 58);
+    qp = await gd.addProposalOwnerPoints();
+    assert(qp.toNumber(), 58, 'Global parameter not changed');
+
+    await gd.configureGlobalParameters('AOO', 58);
+    qp = await gd.addSolutionOwnerPoints();
+    assert(qp.toNumber(), 58, 'Global parameter not changed');
+
+    await gd.configureGlobalParameters('RW', 58);
+    qp = await gd.reputationWeight();
+    assert(qp.toNumber(), 58, 'Global parameter not changed');
+
+    await gd.configureGlobalParameters('SW', 58);
+    qp = await gd.stakeWeight();
+    assert(qp.toNumber(), 58, 'Global parameter not changed');
+
+    await gd.configureGlobalParameters('BR', 58);
+    qp = await gd.bonusReputation();
+    assert(qp.toNumber(), 58, 'Global parameter not changed');
+
+    await gd.configureGlobalParameters('BS', 58);
+    qp = await gd.bonusStake();
+    assert(qp.toNumber(), 58, 'Global parameter not changed');
+
+    await catchRevert(
+      gd.configureGlobalParameters('BS', 58, { from: notOwner })
+    );
   });
 
   it('Should change member rep points', async function() {

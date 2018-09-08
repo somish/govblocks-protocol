@@ -124,42 +124,6 @@ contract('Master', function([owner, notOwner]) {
     await catchRevert(ms.changeGBTSAddress(sampleAddress));
   });
 
-  it('Should configure Global Parameters', async function() {
-    this.timeout(100000);
-    // Will throw once owner's permissions are removed. will need to create proposal then.
-    await ms.configureGlobalParameters('QP', 58);
-    let qp = await gd.quorumPercentage();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await ms.configureGlobalParameters('APO', 58);
-    qp = await gd.addProposalOwnerPoints();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await ms.configureGlobalParameters('AOO', 58);
-    qp = await gd.addSolutionOwnerPoints();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await ms.configureGlobalParameters('RW', 58);
-    qp = await gd.reputationWeight();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await ms.configureGlobalParameters('SW', 58);
-    qp = await gd.stakeWeight();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await ms.configureGlobalParameters('BR', 58);
-    qp = await gd.bonusReputation();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await ms.configureGlobalParameters('BS', 58);
-    qp = await gd.bonusStake();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await catchRevert(
-      ms.configureGlobalParameters('BS', 58, { from: notOwner })
-    );
-  });
-
   it('Should transfer assets to new pool', async function() {
     add.pop();
     const newPool = await Pool.new();
