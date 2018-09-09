@@ -1,5 +1,6 @@
 const GBTStandardToken = artifacts.require('GBTStandardToken');
-const { assertRevert } = require('../helpers/assertRevert');
+const catchRevert = require('../helpers/exceptions.js').catchRevert;
+const increaseTime = require('../helpers/increaseTime.js').increaseTime;
 let gbts;
 const supply = 100000000000000000000;
 const lockReason = 'GOV';
@@ -10,27 +11,6 @@ let blockNumber = web3.eth.blockNumber;
 const lockTimestamp = web3.eth.getBlock(blockNumber).timestamp;
 const approveAmount = 10;
 const nullAddress = 0x0000000000000000000000000000000000000000;
-
-const increaseTime = function(duration) {
-  web3.currentProvider.sendAsync(
-    {
-      jsonrpc: '2.0',
-      method: 'evm_increaseTime',
-      params: [duration],
-      id: lockTimestamp
-    },
-    (err, resp) => {
-      if (!err) {
-        web3.currentProvider.send({
-          jsonrpc: '2.0',
-          method: 'evm_mine',
-          params: [],
-          id: lockTimestamp + 1
-        });
-      }
-    }
-  );
-};
 
 contract('GBTStandardToken', function([owner, receiver, spender]) {
   before(function() {
@@ -96,7 +76,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
 
   it('reverts locking more tokens via lock function', async () => {
     const balance = await gbts.balanceOf(owner);
-    await assertRevert(gbts.lock(lockReason, balance, lockPeriod));
+    await catchRevert(gbts.lock(lockReason, balance, lockPeriod));
   });
 
   it('can extend lock period for an existing lock', async () => {
@@ -108,8 +88,8 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
       lockValidityExtended[1].toNumber(),
       lockValidityOrig[1].toNumber() + lockPeriod
     );
-    await assertRevert(gbts.extendLock(lockReason2, lockPeriod));
-    await assertRevert(gbts.increaseLockAmount(lockReason2, lockPeriod));
+    await catchRevert(gbts.extendLock(lockReason2, lockPeriod));
+    await catchRevert(gbts.increaseLockAmount(lockReason2, lockPeriod));
   });
 
   it('can increase the number of tokens locked', async () => {
@@ -123,7 +103,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
   });
 
   it('cannot transfer tokens to null address', async function() {
-    await assertRevert(
+    await catchRevert(
       gbts.transfer(nullAddress, 100, {
         from: owner
       })
@@ -132,7 +112,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
 
   it('cannot transfer tokens greater than transferable balance', async () => {
     const balance = await gbts.balanceOf(owner);
-    await assertRevert(
+    await catchRevert(
       gbts.transfer(receiver, balance + 1, {
         from: owner
       })
@@ -146,7 +126,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
     assert(newAllowance.toNumber(), initialAllowance + approveAmount);
 
     it('cannot transfer tokens from an address greater than allowance', async () => {
-      await assertRevert(
+      await catchRevert(
         gbts.transferFrom(owner, receiver, 2, {
           from: spender
         })
@@ -155,7 +135,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
   });
 
   it('cannot transfer tokens from an address to null address', async () => {
-    await assertRevert(
+    await catchRevert(
       gbts.transferFrom(owner, nullAddress, 100, {
         from: owner
       })
@@ -165,7 +145,7 @@ contract('GBTStandardToken', function([owner, receiver, spender]) {
   it('cannot transfer tokens from an address greater than owners balance', async () => {
     const balance = await gbts.balanceOf(owner);
     await gbts.approve(spender, balance);
-    await assertRevert(
+    await catchRevert(
       gbts.transferFrom(owner, receiver, balance.toNumber() + 1, {
         from: spender
       })

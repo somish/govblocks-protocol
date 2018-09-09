@@ -1,6 +1,7 @@
 const Governance = artifacts.require('Governance');
 const GovernanceData = artifacts.require('GovernanceData');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
+const increaseTime = require('../helpers/increaseTime.js').increaseTime;
 const encode = require('../helpers/encoder.js').encode;
 const Pool = artifacts.require('Pool');
 const SimpleVoting = artifacts.require('SimpleVoting');
@@ -28,27 +29,6 @@ const BigNumber = web3.BigNumber;
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
-
-const increaseTime = function(duration) {
-  web3.currentProvider.sendAsync(
-    {
-      jsonrpc: '2.0',
-      method: 'evm_increaseTime',
-      params: [duration],
-      id: amount
-    },
-    (err, resp) => {
-      if (!err) {
-        web3.currentProvider.send({
-          jsonrpc: '2.0',
-          method: 'evm_mine',
-          params: [],
-          id: amount + 1
-        });
-      }
-    }
-  );
-};
 
 contract('Governance', ([owner, notOwner, noStake]) => {
   before(() => {
