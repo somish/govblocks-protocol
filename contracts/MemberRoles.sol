@@ -26,7 +26,6 @@ contract MemberRoles is Governed {
     bytes32[] internal memberRole;
     StandardToken public dAppToken;
     bool internal constructorCheck;
-    uint constant internal UINT_MAX = uint256(0) - uint256(1);
 
     struct MemberRoleDetails {
         uint memberCounter;
@@ -67,10 +66,9 @@ contract MemberRoles is Governed {
             "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.", //solhint-disable-line
             false
         );
-        memberRoleData[1].memberCounter = 1;
+        memberRoleData[1].memberCounter++;
         memberRoleData[1].memberActive[_firstAB] = true;
         memberRoleData[1].memberAddress.push(_firstAB);
-        memberRoleData[1].validity[_firstAB] = UINT_MAX;
         constructorCheck = true;
     }
 
@@ -87,7 +85,7 @@ contract MemberRoles is Governed {
         uint length = getRoleIdLengthByAddress(_memberAddress);
         uint j = 0;
         assignedRoles = new uint[](length);
-        for (uint i = 0; i < getTotalMemberRoles(); i++) {
+        for (uint i = 1; i <= getTotalMemberRoles(); i++) {
             if (memberRoleData[i].memberActive[_memberAddress]
                 && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now) //solhint-disable-line
             ) {
@@ -157,7 +155,8 @@ contract MemberRoles is Governed {
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.sub(memberRoleData[_roleId].memberCounter, 1);
-            memberRoleData[_roleId].memberActive[_memberAddress] = false;
+            delete memberRoleData[_roleId].memberActive[_memberAddress];
+            delete memberRoleData[_roleId].validity[_memberAddress];
         }
     }
 
@@ -279,7 +278,7 @@ contract MemberRoles is Governed {
     /// @dev Get Total number of role ids that has been assigned to a member so far.
     function getRoleIdLengthByAddress(address _memberAddress) internal view returns(uint8 count) {
         uint length = getTotalMemberRoles();
-        for (uint i = 0; i < length; i++) {
+        for (uint i = 1; i <= length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress]
                 && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now)) //solhint-disable-line
                 count++;       

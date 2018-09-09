@@ -38,6 +38,11 @@ contract('MemberRoles', function([owner, member, other]) {
       true,
       'Owner not added to AB'
     );
+    assert.equal(
+      await mr.checkRoleIdByAddress(member, 1),
+      false,
+      'user added to AB incorrectly'
+    );
     assert.equal(roles[0].toNumber(), 1, 'Owner not added to AB');
   });
 
@@ -100,6 +105,7 @@ contract('MemberRoles', function([owner, member, other]) {
       true,
       'user not added to AB'
     );
+    await mr.setRoleValidity(1, false);
   });
 
   it('Should be able to remove member from a role', async function() {
@@ -130,7 +136,12 @@ contract('MemberRoles', function([owner, member, other]) {
 
   it('Should get proper Roles', async () => {
     const mrs = await mr.getRoleIdByAddress(owner);
-    assert.equal(mrs[0], 1);
+    assert.equal(
+      await mr.checkRoleIdByAddress(owner, 1),
+      true,
+      'Owner not added to AB'
+    );
+    assert.equal(mrs[0].toNumber(), 1);
     const mrs2 = await mr.getRoleIdByAddress(other);
   });
 
