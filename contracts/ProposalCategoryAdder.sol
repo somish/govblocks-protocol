@@ -28,9 +28,7 @@ contract ProposalCategoryAdder {
         rewardPerc[0] = 30;
         rewardPerc[1] = 30;
         rewardPerc[2] = 40;
-        stakeInecntive[0] = 10 ** 5;
-        stakeInecntive[1] = 604800;
-        stakeInecntive[2] = 10 ** 5;
+
         proposalCategory.addInitialSubC(
             "Configure parameters",
             "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
@@ -40,6 +38,11 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
+
+        stakeInecntive[0] = 10 ** 5;
+        stakeInecntive[1] = 604800;
+        stakeInecntive[2] = 10 ** 5;
+
         proposalCategory.addInitialSubC(
             "Transfer Ether",
             "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
@@ -58,7 +61,7 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
-        stakeInecntive[2] = 0;
+
         proposalCategory.addInitialSubC(
             "Add new version",
             "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w",
@@ -141,7 +144,7 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Others, not specified",
+            "External Proposal",
             "", 
             7, 
             address(0), 
@@ -149,5 +152,15 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
+        proposalCategory.addInitialSubC(
+            "Others, not specified",
+            "", 
+            8, 
+            address(0), 
+            "EX",
+            stakeInecntive,
+            rewardPerc
+        );
+        //21 sub cat len, 20 sub cat id
     }
 }

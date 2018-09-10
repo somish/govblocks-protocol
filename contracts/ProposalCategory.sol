@@ -48,24 +48,26 @@ contract ProposalCategory is Governed {
 
     constructor() public {
         uint[] memory rs = new uint[](1);
-        uint[] memory al = new uint[](1);
-        uint[] memory alab = new uint[](1);
+        uint[] memory al = new uint[](2);
+        uint[] memory alex = new uint[](1);
         uint[] memory mv = new uint[](1);
         uint[] memory ct = new uint[](1);
         
         rs[0] = 1;
         mv[0] = 50;
-        al[0] = 0;
-        alab[0] = 1;
-        ct[0] = 1800;
+        al[0] = 1;
+        al[1] = 2;
+        alex[0] = 0;
+        ct[0] = 72000;
         
         allCategory.push(Category("Uncategorized", rs, mv, al, ct));
         allCategory.push(Category("Member role", rs, mv, al, ct));
         allCategory.push(Category("Categories", rs, mv, al, ct));
         allCategory.push(Category("Parameters", rs, mv, al, ct));
-        allCategory.push(Category("Transfer Assets", rs, mv, alab, ct));
+        allCategory.push(Category("Transfer Assets", rs, mv, al, ct));
         allCategory.push(Category("Critical Actions", rs, mv, al, ct));
         allCategory.push(Category("Immediate Actions", rs, mv, al, ct));
+        allCategory.push(Category("External Feedback", rs, mv, alex, ct));
         allCategory.push(Category("Others", rs, mv, al, ct));
     }
 
@@ -117,20 +119,10 @@ contract ProposalCategory is Governed {
     {
         require(_roleName.length == _majorityVote.length && _majorityVote.length == _closingTime.length);
         allCategory[_categoryId].name = _name;
-        allCategory[_categoryId].allowedToCreateProposal.length = _allowedToCreateProposal.length;
-        allCategory[_categoryId].memberRoleSequence.length = _roleName.length;
-        allCategory[_categoryId].memberRoleMajorityVote.length = _majorityVote.length;
-        allCategory[_categoryId].closingTime.length = _closingTime.length;
-        uint i;
-
-        for (i = 0; i < _roleName.length; i++) {
-            allCategory[_categoryId].memberRoleSequence[i] = _roleName[i];
-            allCategory[_categoryId].memberRoleMajorityVote[i] = _majorityVote[i];
-            allCategory[_categoryId].closingTime[i] = _closingTime[i];
-        }
-        for (i = 0; i < _allowedToCreateProposal.length; i++) {
-            allCategory[_categoryId].allowedToCreateProposal[i] = _allowedToCreateProposal[i];
-        }
+        allCategory[_categoryId].memberRoleSequence = _roleName;
+        allCategory[_categoryId].memberRoleMajorityVote = _majorityVote;
+        allCategory[_categoryId].closingTime = _closingTime;
+        allCategory[_categoryId].allowedToCreateProposal = _allowedToCreateProposal;  
     }
 
     /// @dev Add new sub category against category.
@@ -378,7 +370,7 @@ contract ProposalCategory is Governed {
     ) 
         public 
     {
-        if (allSubCategory.length < 17) {
+        if (allSubCategory.length <= 21) {
             allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
             allSubCategory.push(SubCategory(
                     _subCategoryName, 
@@ -499,7 +491,7 @@ contract ProposalCategory is Governed {
             "PC",
             stakeInecntive,
             rewardPerc
-        );
+        ); //8 sub cat len
         if (getCodeSize(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a) > 0)        //kovan testnet
             ProposalCategoryAdder proposalCategoryAdder = 
                 ProposalCategoryAdder(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a);

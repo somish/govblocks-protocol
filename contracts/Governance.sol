@@ -220,13 +220,10 @@ contract Governance is Upgradeable {
         require(memberRole.checkRoleIdByAddress(msg.sender, 1) 
             || msg.sender == governanceDat.getProposalOwner(_proposalId)
         );
-        require(dappIncentive <= govBlocksToken.balanceOf(poolAddress));
         
         uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
-        
-        require(allowedToCreateProposal(category));
-        governanceDat.setProposalIncentive(_proposalId, dappIncentive);
         address tokenAddress;
+
         /* solhint-disable */
         if (proposalCategory.isCategoryExternal(category))
             tokenAddress = address(govBlocksToken);
@@ -235,6 +232,12 @@ contract Governance is Upgradeable {
         else
             tokenAddress = dAppToken;
         /* solhint-enable */
+
+        require(dappIncentive <= GBTStandardToken(tokenAddress).balanceOf(poolAddress));
+        require(allowedToCreateProposal(category));
+
+        governanceDat.setProposalIncentive(_proposalId, dappIncentive);
+        
         require(validateStake(_subCategoryId, tokenAddress));
         governanceDat.setProposalSubCategory(_proposalId, _subCategoryId, tokenAddress);
     }

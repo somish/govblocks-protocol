@@ -36,7 +36,7 @@ contract('Proposal Category', function([owner, taker]) {
     const g8 = await pc.getAllSubIdsByCategory(0);
     assert.equal(g8[0].toNumber(), 0);
     const g9 = await pc.getMRAllowed(0);
-    assert.equal(g9[0].toNumber(), 0);
+    assert.equal(g9[0].toNumber(), 1);
     const g10 = await pc.getAllSubIdsLengthByCategory(0);
     assert.equal(g10.toNumber(), 1);
     const g11 = await pc.getRoleMajorityVotelength(0);

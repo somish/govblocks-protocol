@@ -72,8 +72,9 @@ contract('Governance', ([owner, notOwner, noStake]) => {
 
   it('Should create an uncategorized proposal', async function() {
     this.timeout(100000);
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    p1 = await gd.getProposalLength();
     await gbt.lock('GOV', amount, 54685456133563456);
+    await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -81,24 +82,42 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       0,
       0
     );
-    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
-    assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      0,
+      { from: notOwner }
+    );
+    await catchRevert(
+      gv.createProposal(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        0,
+        9,
+        { from: notOwner }
+      )
+    );
+    p2 = await gd.getProposalLength();
+    assert.equal(p1.toNumber() + 2, p2.toNumber(), 'Proposal not created');
   });
 
   it('Should categorize the proposal', async function() {
     this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
+    p = await gd.getProposalLength();
+    p = p.toNumber() - 1;
     await catchRevert(gv.openProposalForVoting(p));
     await catchRevert(gv.categorizeProposal(p, 9));
     await gbt.transfer(pl.address, amount);
-    await catchRevert(gv.categorizeProposal(p, 9, { from: notOwner }));
+    await catchRevert(gv.categorizeProposal(p, 9, { from: noStake }));
     await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     await catchRevert(gv.categorizeProposal(p, 9, { from: notOwner }));
     await mr.updateMemberRole(notOwner, 1, false, 356800000054);
-    await gv.categorizeProposal(p, 9);
+    await gv.categorizeProposal(p, 19);
     const category = await gd.getProposalSubCategory(p);
-    assert.equal(category.toNumber(), 9, 'Category not set properly');
+    assert.equal(category.toNumber(), 19, 'Category not set properly');
   });
 
   it('Should submit proposal with solution', async function() {
@@ -110,18 +129,14 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       owner,
       false
     );
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await catchRevert(
-      gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash, {
-        from: notOwner
-      })
-    );
-    await gv.submitProposalWithSolution(
-      p1.toNumber(),
-      'Addnewmember',
-      actionHash
-    );
     pid = (await gd.getProposalLength()).toNumber() - 1;
+    await catchRevert(
+      gv.submitProposalWithSolution(pid, 'Addnewmember', actionHash)
+    );
+    await gv.submitProposalWithSolution(pid, 'Addnewmember', actionHash, {
+      from: notOwner
+    });
+    pid;
     await catchRevert(
       gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash)
     );
@@ -156,7 +171,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       'Add new member',
       'Addnewmember',
       0,
-      9
+      15
     );
     propId = (await gd.getProposalLength()).toNumber() - 1;
     await gd.setDAppTokenSupportsLocking(true);
@@ -165,15 +180,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       'Add new member',
       'Addnewmember',
       0,
-      9
-    );
-    await gv.createProposal(
-      'Add new member',
-      'Add new member',
-      'Addnewmember',
-      0,
-      0,
-      { from: notOwner }
+      20
     );
     await gv.createProposal(
       'Add new member',
@@ -269,7 +276,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     await gbt.transfer(notOwner, amount);
     await gbt.lock('GOV', amount, 54685456133563456, { from: notOwner });
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await gv.categorizeProposal(p1.toNumber(), 9, { from: notOwner });
+    await gv.categorizeProposal(p1.toNumber(), 20, { from: notOwner });
     await gv.categorizeProposal(p1.toNumber(), 4);
     const category = await gd.getProposalSubCategory(p1.toNumber());
     assert.equal(category.toNumber(), 4, 'Category not set properly');
@@ -293,17 +300,17 @@ contract('Governance', ([owner, notOwner, noStake]) => {
 
   it('Should claim rewards', async () => {
     const b1 = await gbt.balanceOf(owner);
-    const g1 = await gv.getMemberDetails(owner);
+    const g1 = await gv.getMemberDetails(notOwner);
     let pr = await pl.getPendingReward(owner);
-    assert.equal(pr[0].toNumber(), 0);
-    assert.equal(pr[1].toNumber(), 100000);
+    assert.equal(pr[0].toNumber(), 40000);
+    assert.equal(pr[1].toNumber(), 0);
     pr = await pl.getPendingReward(notOwner);
-    assert.equal(pr[0].toNumber(), 0);
+    assert.equal(pr[0].toNumber(), 60000);
     assert.equal(pr[1].toNumber(), 0);
     await pl.claimReward(owner);
     await pl.claimReward(notOwner);
     const b2 = await gbt.balanceOf(owner);
-    const g2 = await gv.getMemberDetails(owner);
+    const g2 = await gv.getMemberDetails(notOwner);
     b2.should.be.bignumber.above(b1);
     g2[0].should.be.bignumber.above(g1[0]);
     const pr2 = await pl.getPendingReward(owner);
