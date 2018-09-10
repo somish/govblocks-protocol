@@ -64,8 +64,8 @@ contract ProposalCategory is Governed {
         allCategory.push(Category("Categories", rs, mv, al, ct));
         allCategory.push(Category("Parameters", rs, mv, al, ct));
         allCategory.push(Category("Transfer Assets", rs, mv, alab, ct));
-        allCategory.push(Category("New contracts", rs, mv, al, ct));
-        allCategory.push(Category("Proposals", rs, mv, al, ct));
+        allCategory.push(Category("Critical Actions", rs, mv, al, ct));
+        allCategory.push(Category("Immediate Actions", rs, mv, al, ct));
         allCategory.push(Category("Others", rs, mv, al, ct));
     }
 

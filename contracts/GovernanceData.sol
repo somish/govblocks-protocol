@@ -311,15 +311,16 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         }
     }
 
-    /// @dev pauses or resumes a proposal
-    /// @param pause true = pause proposal, false = resume
-    function toggleProposalPause(bool pause, uint _proposalId) public onlyInternal {
-        if (pause && !proposalPaused[_proposalId])
-            proposalPaused[_proposalId] = true;
-        else if (!pause && proposalPaused[_proposalId]) {
-            proposalPaused[_proposalId] = false;
-            allProposal[_proposalId].dateUpd = now; //solhint-disable-line
-        }
+    /// @dev resume a proposal
+    function resumeProposal(uint _proposalId) public onlyInternal {
+        require(proposalPaused[_proposalId]);
+        proposalPaused[_proposalId] = false;
+        allProposal[_proposalId].dateUpd = now; //solhint-disable-line
+    }
+
+    /// @dev pause a proposal
+    function pauseProposal(uint _proposalId) public onlyInternal {
+        proposalPaused[_proposalId] = true;
     }
 
     /// @dev Gets Total number of voting types has been added till now.

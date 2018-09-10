@@ -105,17 +105,17 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Pause Proposal",
-            "QmPh5j3aAPhC6VZ8snjwLWPtR7Ps3os8zdYERTtp5W6RAp",
-            6,
+            "Resume Proposal",
+            "QmSDojLprBLDrPqF7HAaDCdi2Hy129LBwzfRMKhkt2begC",
+            5,
             address(0),
             "GD",
             stakeInecntive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Resume Proposal",
-            "QmSDojLprBLDrPqF7HAaDCdi2Hy129LBwzfRMKhkt2begC",
+            "Pause Proposal",
+            "QmPh5j3aAPhC6VZ8snjwLWPtR7Ps3os8zdYERTtp5W6RAp",
             6,
             address(0),
             "GD",

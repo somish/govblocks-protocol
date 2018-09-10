@@ -152,12 +152,12 @@ contract('Governance Data', function([owner, notOwner]) {
 
   it('Should pause unpause proposal', async function() {
     this.timeout(100000);
-    await gd.toggleProposalPause(true, 0);
-    await gd.toggleProposalPause(true, 0);
-    let p1 = await gd.proposalPaused(0);
-    await gd.toggleProposalPause(false, 0);
-    let p2 = await gd.proposalPaused(0);
-    assert.notEqual(p1, p2, 'proposal not paused unpaused properly');
+    await gd.pauseProposal(0);
+    const p1 = await gd.proposalPaused(0);
+    assert.equal(p1, true);
+    await gd.resumeProposal(0);
+    const p2 = await gd.proposalPaused(0);
+    assert.equal(p2, false);
   });
 
   it('Should change parameters', async function() {
