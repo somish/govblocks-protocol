@@ -65,12 +65,16 @@ contract Governance is Upgradeable {
     ) 
         external
     {
-        uint _proposalId = governanceDat.getProposalLength();
-        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _subCategoryId);
-        proposalSubmission(
-            _proposalId, 
-            _solutionHash, 
-            _action
+        uint proposalId = governanceDat.getProposalLength();
+        _createProposalwithSolution(
+            _proposalTitle, 
+            _proposalSD, 
+            _proposalDescHash, 
+            _votingTypeId, 
+            _subCategoryId,
+            _solutionHash,
+            _action,
+            proposalId
         );
     }
 
@@ -90,15 +94,19 @@ contract Governance is Upgradeable {
     ) 
         external
     {
-        uint _proposalId = governanceDat.getProposalLength();
-        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _subCategoryId);
-        proposalSubmission(
-            _proposalId, 
-            _solutionHash, 
-            _action
+        uint proposalId = governanceDat.getProposalLength();
+        _createProposalwithSolution(
+            _proposalTitle, 
+            _proposalSD, 
+            _proposalDescHash, 
+            _votingTypeId, 
+            _subCategoryId,
+            _solutionHash,
+            _action,
+            proposalId
         );
-        VotingType votingType = VotingType(governanceDat.getProposalVotingAddress(_proposalId));
-        votingType.initialVote(uint32(_proposalId), msg.sender);
+        VotingType votingType = VotingType(governanceDat.getProposalVotingAddress(proposalId));
+        votingType.initialVote(uint32(proposalId), msg.sender);
     }
 
     /// @dev updates all dependency addresses to latest ones from Master
@@ -254,27 +262,6 @@ contract Governance is Upgradeable {
         require(category != 0);
         governanceDat.changeProposalStatus(_proposalId, 2);
         callCloseEvent(_proposalId);
-    }
-
-    /// @dev Updates proposal's major details (Called from close proposal vote)
-    /// @param _proposalId Proposal id
-    /// @param _currVotingStatus It is the index to fetch the role id from voting sequence array. 
-    ///         i.e. Tells which role id members is going to vote
-    /// @param _intermediateVerdict Intermediate verdict is set after every voting layer is passed.
-    /// @param _finalVerdict Final verdict is set after final layer of voting
-    function updateProposalDetails(
-        uint _proposalId, 
-        uint _currVotingStatus, 
-        uint64 _intermediateVerdict, 
-        uint64 _finalVerdict
-    ) 
-    public
-    onlyInternal 
-    {
-        governanceDat.setProposalCurrentVotingId(_proposalId, _currVotingStatus);
-        governanceDat.setProposalIntermediateVerdict(_proposalId, _intermediateVerdict);
-        governanceDat.setProposalFinalVerdict(_proposalId, _finalVerdict);
-        governanceDat.setProposalDateUpd(_proposalId);
     }
 
     /// @dev Calculates member reward to be claimed
@@ -602,6 +589,31 @@ contract Governance is Upgradeable {
             now
         );
         /* solhint-enable */
+    }
+
+    /// @dev Creates a new proposal
+    /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
+    /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
+    /// @param _subCategoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
+    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
+    function _createProposalwithSolution(
+        string _proposalTitle, 
+        string _proposalSD, 
+        string _proposalDescHash, 
+        uint _votingTypeId, 
+        uint _subCategoryId, 
+        string _solutionHash, 
+        bytes _action,
+        uint _proposalId
+    ) 
+        internal
+    {
+        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _subCategoryId);
+        proposalSubmission(
+            _proposalId, 
+            _solutionHash, 
+            _action
+        );
     }
 
 }

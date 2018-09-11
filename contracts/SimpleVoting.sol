@@ -416,7 +416,7 @@ contract SimpleVoting is Upgradeable {
             closeProposalVote1(finalVoteValue[max], totalVoteValue, category, _proposalId, max);
         } else {
             uint64 interVerdict = governanceDat.getProposalIntermediateVerdict(_proposalId);
-            governance.updateProposalDetails(_proposalId, currentVotingId, max, interVerdict);
+            governanceDat.updateProposalDetails(_proposalId, currentVotingId, max, interVerdict);
             if (governanceDat.getProposalCurrentVotingId(_proposalId) + 1 
                 < proposalCategory.getRoleSequencLength(category)
             )
@@ -496,7 +496,7 @@ contract SimpleVoting is Upgradeable {
             if (max > 0) {
                 currentVotingId = currentVotingId + 1;
                 if (currentVotingId < proposalCategory.getRoleSequencLength(category)) {
-                    governance.updateProposalDetails(
+                    governanceDat.updateProposalDetails(
                         _proposalId, 
                         currentVotingId, 
                         max, 
@@ -504,7 +504,7 @@ contract SimpleVoting is Upgradeable {
                     );
                     eventCaller.callCloseProposalOnTime(_proposalId, _closingTime + now); //solhint-disable-line
                 } else {
-                    governance.updateProposalDetails(_proposalId, currentVotingId - 1, max, max);
+                    governanceDat.updateProposalDetails(_proposalId, currentVotingId - 1, max, max);
                     governanceDat.changeProposalStatus(_proposalId, 3);
                     uint subCategory = governanceDat.getProposalSubCategory(_proposalId);
                     bytes2 contractName = proposalCategory.getContractName(subCategory);
@@ -520,11 +520,11 @@ contract SimpleVoting is Upgradeable {
                     finalActions(_proposalId);
                 }
             } else {
-                governance.updateProposalDetails(_proposalId, currentVotingId, max, max);
+                governanceDat.updateProposalDetails(_proposalId, currentVotingId, max, max);
                 governanceDat.changeProposalStatus(_proposalId, 4);
             }
         } else {
-            governance.updateProposalDetails(
+            governanceDat.updateProposalDetails(
                 _proposalId, 
                 currentVotingId, 
                 max, 
