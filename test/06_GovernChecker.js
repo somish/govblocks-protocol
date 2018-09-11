@@ -52,11 +52,7 @@ contract('GovernCheckerContract', function([first, second, third, foruth]) {
     this.timeout(100000);
     await gc.updateGBMAdress(first);
     await catchRevert(gc.initializeAuthorized('0x42', first));
-    assert.equal(
-      await gc.getGovBlockMasterAddress(),
-      first,
-      'gbm not added properly'
-    );
+    assert.equal(await gc.govBlockMaster(), first, 'gbm not added properly');
     await catchRevert(gc.updateGBMAdress(second, { from: second }));
   });
 });

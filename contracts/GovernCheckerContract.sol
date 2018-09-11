@@ -16,22 +16,26 @@
 pragma solidity 0.4.24;
 
 
-contract GBM {
+contract InitalVerifier {
     function getDappMasterAddress(bytes32 _gbUserName) public view returns(address masterAddress);
 }
 
 
 contract GovernCheckerContract {
 
+    event Authorized(bytes32 indexed dAppName, address authorizedAddress);
+
+    event AuthorizationTransferred(bytes32 indexed dAppName, address from, address to);
+
     mapping (bytes32 => address[]) public authorized;   //Mapping to store authorized address of every dApp
 
-    GBM internal govBlockMaster; //GovBlockMaster instance to prevent registeration of non existant dApps.
+    InitalVerifier public govBlockMaster; //GovBlockMaster instance to prevent registeration of non existant dApps.
 
     /// @dev Updates GBM address, can only be called by current GBM
     /// @param _govBlockMaster new govBlockMaster address
     function updateGBMAdress(address _govBlockMaster) public {
         require(address(govBlockMaster) == msg.sender || address(govBlockMaster) == address(0));
-        govBlockMaster = GBM(_govBlockMaster);
+        govBlockMaster = InitalVerifier(_govBlockMaster);
     }
 
     /// @dev Allows dApp's master to add authorized address for initalization
@@ -42,6 +46,7 @@ contract GovernCheckerContract {
         if (address(govBlockMaster) != address(0))
             require(govBlockMaster.getDappMasterAddress(_dAppName) == msg.sender);
         authorized[_dAppName].push(_authorizedAddress);
+        emit Authorized(_dAppName, _authorizedAddress);
     }
 
     /// @dev Allows the authorized address to pass on the authorized to someone else
@@ -51,6 +56,7 @@ contract GovernCheckerContract {
         uint authNumber = authorizedAddressNumber(_dAppName, msg.sender);
         require(authNumber > 0);
         authorized[_dAppName][authNumber - 1] = _authorizedAddress;
+        emit AuthorizationTransferred(_dAppName, msg.sender, _authorizedAddress);
     }
 
     /// @dev add authorized address (a new voting type)
@@ -62,6 +68,7 @@ contract GovernCheckerContract {
         authNumber = authorizedAddressNumber(_dAppName, _authorizedAddress);
         if (authNumber == 0)
             authorized[_dAppName].push(_authorizedAddress);
+        emit Authorized(_dAppName, _authorizedAddress);
     }
 
     /// @dev checks if an address is authprized and returns its authorized number.
@@ -76,10 +83,5 @@ contract GovernCheckerContract {
                 return(i + 1); 
             }
         }
-    }
-
-    /// @dev Returns govBlockMaster Address
-    function getGovBlockMasterAddress() public view returns(address) {
-        return address(govBlockMaster);
     }
 }
