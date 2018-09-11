@@ -685,6 +685,27 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         _createProposal(_memberAddress, _votingTypeAddress);
     }
 
+    /// @dev Updates proposal's major details (Called from close proposal vote)
+    /// @param _proposalId Proposal id
+    /// @param _currVotingStatus It is the index to fetch the role id from voting sequence array. 
+    ///         i.e. Tells which role id members is going to vote
+    /// @param _intermediateVerdict Intermediate verdict is set after every voting layer is passed.
+    /// @param _finalVerdict Final verdict is set after final layer of voting
+    function updateProposalDetails(
+        uint _proposalId, 
+        uint _currVotingStatus, 
+        uint64 _intermediateVerdict, 
+        uint64 _finalVerdict
+    ) 
+    public
+    onlyInternal 
+    {
+        setProposalCurrentVotingId(_proposalId, _currVotingStatus);
+        setProposalIntermediateVerdict(_proposalId, _intermediateVerdict);
+        setProposalFinalVerdict(_proposalId, _finalVerdict);
+        setProposalDateUpd(_proposalId);
+    }
+
     /// @dev Creates new proposal
     function createProposal(address _memberAddress, address _votingTypeAddress) 
         public 
