@@ -110,6 +110,8 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     await catchRevert(gv.openProposalForVoting(p));
     await gbt.transfer(pl.address, amount);
     await catchRevert(gv.categorizeProposal(p, 15, { from: notOwner }));
+    await catchRevert(gv.categorizeProposal(p, 1, { from: notOwner }));
+    await catchRevert(gv.categorizeProposal(p, 19, { from: notOwner }));
     await gv.categorizeProposal(p, 19);
     await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     const category = await gd.getProposalSubCategory(p);
