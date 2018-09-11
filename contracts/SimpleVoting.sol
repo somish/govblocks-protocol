@@ -199,7 +199,7 @@ contract SimpleVoting is Upgradeable {
         GBTStandardToken tokenInstance = GBTStandardToken(token);
         tokenHoldingTimeThenBalance += now; //solhint-disable-line
         tokenHoldingTimeThenBalance = tokenInstance.tokensLockedAtTime(msg.sender, "GOV", tokenHoldingTimeThenBalance);
-        if (tokenHoldingTimeThenBalance > subCatThenMinStake)
+        if (tokenHoldingTimeThenBalance >= subCatThenMinStake)
             return true;
     }
 

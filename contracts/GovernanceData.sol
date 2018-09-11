@@ -20,9 +20,10 @@ import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./Governance.sol";
 import "./VotingType.sol";
+import "./Governed.sol";
 
 
-contract GovernanceData is Upgradeable { //solhint-disable-line
+contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     constructor (bool _dAppTokenSupportsLocking) public {
         dAppTokenSupportsLocking = _dAppTokenSupportsLocking;
@@ -260,6 +261,7 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         addMemberReputationPoints();
         setVotingTypeDetails("Simple Voting", address(0));
         allProposal.push(ProposalStruct(address(0), now, master.getLatestAddress("SV"))); //solhint-disable-line
+        dappName = master.dAppName();
         constructorCheck = true;
     }
 
@@ -279,7 +281,7 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         addSolutionOwnerPoints = _addSolutionOwnerPoints;
     }
 
-    function setDAppTokenSupportsLocking(bool _value) public onlyInternal {
+    function setDAppTokenSupportsLocking(bool _value) public onlyAuthorizedToGovern {
         dAppTokenSupportsLocking = _value;
     }
 
@@ -293,26 +295,26 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
     /// @param _typeOf Passing intials of the parameter name which value needs to be updated
     /// @param _value New value that needs to be updated    
     // solhint-disable-next-line
-    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public onlyInternal {                    
+    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public onlyAuthorizedToGovern {                    
         if (_typeOf == "APO") {
-            changeProposalOwnerAdd(_value);
+            _changeProposalOwnerAdd(_value);
         } else if (_typeOf == "AOO") {
-            changeSolutionOwnerAdd(_value);
+            _changeSolutionOwnerAdd(_value);
         } else if (_typeOf == "RW") {
-            changeReputationWeight(_value);
+            _changeReputationWeight(_value);
         } else if (_typeOf == "SW") {
-            changeStakeWeight(_value);
+            _changeStakeWeight(_value);
         } else if (_typeOf == "BR") {
-            changeBonusReputation(_value);
+            _changeBonusReputation(_value);
         } else if (_typeOf == "BS") {
-            changeBonusStake(_value);
+            _changeBonusStake(_value);
         } else if (_typeOf == "QP") {
-            changeQuorumPercentage(_value);
+            _changeQuorumPercentage(_value);
         }
     }
 
     /// @dev resume a proposal
-    function resumeProposal(uint _proposalId) public onlyInternal {
+    function resumeProposal(uint _proposalId) public onlyAuthorizedToGovern {
         require(proposalPaused[_proposalId]);
         proposalPaused[_proposalId] = false;
         allProposal[_proposalId].dateUpd = now; //solhint-disable-line
@@ -366,44 +368,8 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
         return allProposalSolutions[_proposalId][_index].action;
     }
 
-    /// @dev Changes stakeWeight that helps in calculation of reward distribution
-    function changeStakeWeight(uint _stakeWeight) public onlyInternal {
-        stakeWeight = _stakeWeight;
-    }
-
-    /// @dev Changes bonusStake that helps in calculation of reward distribution
-    function changeBonusStake(uint _bonusStake) public onlyInternal {
-        bonusStake = _bonusStake;
-    }
-
-    /// @dev Changes reputationWeight that helps in calculation of reward distribution
-    function changeReputationWeight(uint _reputationWeight) public onlyInternal {
-        reputationWeight = _reputationWeight;
-    }
-
-    /// @dev Changes bonusReputation that helps in calculation of reward distribution
-    function changeBonusReputation(uint _bonusReputation) public onlyInternal {
-        bonusReputation = _bonusReputation;
-    }
-
-    /// @dev Changes quoram percentage. Value required to pass proposal.
-    function changeQuorumPercentage(uint _quorumPercentage) public onlyInternal {
-        quorumPercentage = _quorumPercentage;
-    }
-
-    function setPunishVoters(bool _punish) public onlyInternal {
+    function setPunishVoters(bool _punish) public onlyAuthorizedToGovern {
         punishVoters = _punish;
-    }
-
-    /// @dev Changes Proposal owner reputation points that needs to be added at proposal acceptance
-    function changeProposalOwnerAdd(uint _repPoints) public onlyInternal {
-        addProposalOwnerPoints = _repPoints;
-    }
-
-    /// @dev Changes Solution owner reputation points that needs to be added if solution has won. 
-    ///     (Upvoted with many votes)
-    function changeSolutionOwnerAdd(uint _repPoints) public onlyInternal {
-        addSolutionOwnerPoints = _repPoints;
     }
 
     /// @dev Sets proposal category
@@ -716,17 +682,15 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
     {
         allProposalData[allProposal.length].subCategory = _subCategoryId;
         allProposalData[allProposal.length].stakeToken = _stakeToken;
-        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
-        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress)); //solhint-disable-line
+        _createProposal(_memberAddress, _votingTypeAddress);
     }
 
     /// @dev Creates new proposal
-    function createProposal1(address _memberAddress, address _votingTypeAddress) 
+    function createProposal(address _memberAddress, address _votingTypeAddress) 
         public 
         onlyInternal 
     {
-        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
-        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress)); //solhint-disable-line
+        _createProposal(_memberAddress, _votingTypeAddress);
     }
 
     /// @dev Gets final solution index won after majority voting.
@@ -845,6 +809,50 @@ contract GovernanceData is Upgradeable { //solhint-disable-line
     /// @dev Sets version number of proposal i.e. Version number increases everytime the proposal is modified
     function setProposalVersion(uint _proposalId, uint _versionNum) internal {
         allProposalData[_proposalId].versionNumber = _versionNum;
+    }
+
+    /// @dev Creates new proposal
+    function _createProposal(address _memberAddress, address _votingTypeAddress) 
+        internal    
+    {
+        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
+        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress)); //solhint-disable-line
+    }
+
+    /// @dev Changes stakeWeight that helps in calculation of reward distribution
+    function _changeStakeWeight(uint _stakeWeight) internal {
+        stakeWeight = _stakeWeight;
+    }
+
+    /// @dev Changes bonusStake that helps in calculation of reward distribution
+    function _changeBonusStake(uint _bonusStake) internal {
+        bonusStake = _bonusStake;
+    }
+
+    /// @dev Changes reputationWeight that helps in calculation of reward distribution
+    function _changeReputationWeight(uint _reputationWeight) internal {
+        reputationWeight = _reputationWeight;
+    }
+
+    /// @dev Changes bonusReputation that helps in calculation of reward distribution
+    function _changeBonusReputation(uint _bonusReputation) internal {
+        bonusReputation = _bonusReputation;
+    }
+
+    /// @dev Changes quoram percentage. Value required to pass proposal.
+    function _changeQuorumPercentage(uint _quorumPercentage) internal {
+        quorumPercentage = _quorumPercentage;
+    }
+
+    /// @dev Changes Proposal owner reputation points that needs to be added at proposal acceptance
+    function _changeProposalOwnerAdd(uint _repPoints) internal {
+        addProposalOwnerPoints = _repPoints;
+    }
+
+    /// @dev Changes Solution owner reputation points that needs to be added if solution has won. 
+    ///     (Upvoted with many votes)
+    function _changeSolutionOwnerAdd(uint _repPoints) internal {
+        addSolutionOwnerPoints = _repPoints;
     }
 
 }

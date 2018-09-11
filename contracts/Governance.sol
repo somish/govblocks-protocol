@@ -173,7 +173,7 @@ contract Governance is Upgradeable {
             uint incentive = proposalCategory.getSubCatIncentive(_subCategoryId);
             governanceDat.setProposalIncentive(_proposalId, incentive); 
         } else
-            governanceDat.createProposal1(msg.sender, votingAddress);
+            governanceDat.createProposal(msg.sender, votingAddress);
     }
 
     /// @dev Submit proposal with solution
@@ -204,7 +204,7 @@ contract Governance is Upgradeable {
         GBTStandardToken tokenInstance = GBTStandardToken(_token);
         tokenholdingTime += now; // solhint-disable-line
         uint lockedTokens = tokenInstance.tokensLockedAtTime(msg.sender, "GOV", tokenholdingTime);
-        if (lockedTokens > minStake)
+        if (lockedTokens >= minStake)
             return true;
     }
 

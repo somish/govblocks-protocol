@@ -121,10 +121,6 @@ contract('Governance Data', function([owner, notOwner]) {
     await gd.configureGlobalParameters('BS', 58);
     qp = await gd.bonusStake();
     assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await catchRevert(
-      gd.configureGlobalParameters('BS', 58, { from: notOwner })
-    );
   });
 
   it('Should change member rep points', async function() {
@@ -132,12 +128,6 @@ contract('Governance Data', function([owner, notOwner]) {
     await gd.changeMemberReputationPoints(20, 15);
     let pop = await gd.addProposalOwnerPoints();
     assert.equal(pop.toNumber(), 20, 'Member points not changed correctly');
-    await gd.changeProposalOwnerAdd(25);
-    pop = await gd.addProposalOwnerPoints();
-    assert.equal(pop.toNumber(), 25, 'Member points not changed correctly');
-    await gd.changeSolutionOwnerAdd(30);
-    pop = await gd.addSolutionOwnerPoints();
-    assert.equal(pop.toNumber(), 30, 'Member points not changed correctly');
   });
 
   it('Should set dApp supports locking', async function() {
@@ -158,26 +148,5 @@ contract('Governance Data', function([owner, notOwner]) {
     await gd.resumeProposal(0);
     const p2 = await gd.proposalPaused(0);
     assert.equal(p2, false);
-  });
-
-  it('Should change parameters', async function() {
-    this.timeout(100000);
-    await gd.changeStakeWeight(20);
-    let param = await gd.stakeWeight();
-    assert.equal(param.toNumber(), 20, 'parameter changed correctly');
-    await gd.changeBonusStake(25);
-    param = await gd.bonusStake();
-    assert.equal(param.toNumber(), 25, 'parameter changed correctly');
-    await gd.changeReputationWeight(30);
-    param = await gd.reputationWeight();
-    assert.equal(param.toNumber(), 30, 'parameter changed correctly');
-    await gd.changeBonusReputation(20);
-    param = await gd.bonusReputation();
-    assert.equal(param.toNumber(), 20, 'parameter changed correctly');
-    await gd.changeQuorumPercentage(25);
-    param = await gd.quorumPercentage();
-    assert.equal(param.toNumber(), 25, 'parameter changed correctly');
-    await gd.setPunishVoters(true);
-    assert.equal(await gd.punishVoters(), true, 'parameter changed correctly');
   });
 });
