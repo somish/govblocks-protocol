@@ -74,7 +74,6 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     this.timeout(100000);
     p1 = await gd.getProposalLength();
     await gbt.lock('GOV', amount, 54685456133563456);
-    await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -109,13 +108,10 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     p = await gd.getProposalLength();
     p = p.toNumber() - 1;
     await catchRevert(gv.openProposalForVoting(p));
-    await catchRevert(gv.categorizeProposal(p, 9));
     await gbt.transfer(pl.address, amount);
-    await catchRevert(gv.categorizeProposal(p, 9, { from: noStake }));
-    await mr.updateMemberRole(notOwner, 1, true, 356800000054);
-    await catchRevert(gv.categorizeProposal(p, 9, { from: notOwner }));
-    await mr.updateMemberRole(notOwner, 1, false, 356800000054);
+    await catchRevert(gv.categorizeProposal(p, 15, { from: notOwner }));
     await gv.categorizeProposal(p, 19);
+    await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     const category = await gd.getProposalSubCategory(p);
     assert.equal(category.toNumber(), 19, 'Category not set properly');
   });
@@ -249,7 +245,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
         'Addnewmember',
         0,
         10,
-        { from: notOwner }
+        { from: noStake }
       )
     );
     await catchRevert(
@@ -259,15 +255,15 @@ contract('Governance', ([owner, notOwner, noStake]) => {
         'Addnewmember',
         0,
         9,
-        { from: notOwner }
+        { from: noStake }
       )
     );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     await catchRevert(
-      gv.categorizeProposal(p1.toNumber(), 9, { from: notOwner })
+      gv.categorizeProposal(p1.toNumber(), 9, { from: noStake })
     );
     await catchRevert(
-      gv.categorizeProposal(p1.toNumber(), 10, { from: notOwner })
+      gv.categorizeProposal(p1.toNumber(), 10, { from: noStake })
     );
   });
 

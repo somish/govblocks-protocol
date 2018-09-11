@@ -124,18 +124,13 @@ contract Governance is Upgradeable {
 
     /// @dev checks if the msg.sender is allowed to create a proposal under certain category
     function allowedToCreateProposal(uint category) public view returns(bool check) {
+        if (category == 0)
+            return true;
         uint[] memory mrAllowed = proposalCategory.getMRAllowed(category);
-        if (mrAllowed[0] == 0) {
-            check = true;
-            return check;
-        } else {
-            for (uint i = 0; i < mrAllowed.length; i++) {
-                if (memberRole.checkRoleIdByAddress(msg.sender, mrAllowed[i])) {
-                    check = true;
-                    break;
-                }
-            }
-        }
+        for (uint i = 0; i < mrAllowed.length; i++) {
+            if (mrAllowed[i] == 0 || memberRole.checkRoleIdByAddress(msg.sender, mrAllowed[i]))
+                return true;
+        }  
     }
 
     /// @dev Creates a new proposal
@@ -225,9 +220,6 @@ contract Governance is Upgradeable {
         checkProposalValidity(_proposalId) 
     {
         uint dappIncentive = proposalCategory.getSubCatIncentive(_subCategoryId);
-        require(memberRole.checkRoleIdByAddress(msg.sender, 1) 
-            || msg.sender == governanceDat.getProposalOwner(_proposalId)
-        );
         
         uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
         address tokenAddress;
@@ -241,12 +233,15 @@ contract Governance is Upgradeable {
             tokenAddress = dAppToken;
         /* solhint-enable */
 
+        if (!memberRole.checkRoleIdByAddress(msg.sender, 1)) {
+            require(msg.sender == governanceDat.getProposalOwner(_proposalId));
+            require(validateStake(_subCategoryId, tokenAddress));
+            require(allowedToCreateProposal(category));
+        }
+
         require(dappIncentive <= GBTStandardToken(tokenAddress).balanceOf(poolAddress));
-        require(allowedToCreateProposal(category));
 
         governanceDat.setProposalIncentive(_proposalId, dappIncentive);
-        
-        require(validateStake(_subCategoryId, tokenAddress));
         governanceDat.setProposalSubCategory(_proposalId, _subCategoryId, tokenAddress);
     }
 
