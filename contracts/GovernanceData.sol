@@ -415,28 +415,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         allProposalData[_proposalId].finalVerdict = _finalVerdict;
     }
 
-    /// @dev Update member reputation once the proposal reward is distributed.
-    /// @param _description Cause of points being credited/debited from reputation
-    /// @param _proposalId Id of proposal
-    /// @param _memberAddress Address of member whose reputation is being updated
-    /// @param _repPoints Updated reputation of member
-    /// @param _repPointsEventLog Actual points being added/subtracted from member's reputation
-    /// @param _typeOf typeOf is "C" in case the points is credited, "D" otherwise!
-    function setMemberReputation(
-        string _description, 
-        uint _proposalId, 
-        address _memberAddress, 
-        uint _repPoints, 
-        uint _repPointsEventLog,
-        bytes4 _typeOf
-    ) 
-        public 
-        onlyInternal 
-    {
-        allMemberReputationByAddress[_memberAddress] = _repPoints;
-        emit Reputation(_memberAddress, _proposalId, _description, _repPointsEventLog, _typeOf);
-    }
-
     /// @dev Stores the information of version number of a given proposal. 
     ///     Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _proposalId, string _proposalDescHash) public onlyInternal {

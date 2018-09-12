@@ -142,6 +142,7 @@ contract('Governance Data', function([owner, notOwner]) {
 
   it('Should pause unpause proposal', async function() {
     this.timeout(100000);
+    await catchRevert(gd.resumeProposal(0));
     await gd.pauseProposal(0);
     const p1 = await gd.proposalPaused(0);
     assert.equal(p1, true);

@@ -476,9 +476,11 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
     await pl.claimReward(owner, ownerProposals, voterProposals);
     await catchRevert(pl.claimReward(owner, ownerProposals, voterProposals));
+    await catchRevert(pl.claimReward(owner, [0], voterProposals));
     [ownerProposals, voterProposals] = await getProposalIds(noStake, gd, sv);
     await pl.claimReward(noStake, ownerProposals, voterProposals);
     await catchRevert(pl.claimReward(noStake, ownerProposals, voterProposals));
+    await catchRevert(pl.claimReward(noStake, [0], voterProposals));
     const pr3 = await pl.getPendingReward(noStake, 0);
     assert.equal(pr3[0].toNumber(), 0);
     assert.equal(pr3[1].toNumber(), 0);
