@@ -306,29 +306,6 @@ contract Governance is Upgradeable {
         }
     }
 
-    /// @dev Gets remaining vote closing time against proposal 
-    /// i.e. Calculated closing time from current voting index to the last layer.
-    /// @param _proposalId Proposal Id
-    /// @param _index Current voting status id works as index here in voting layer sequence. 
-    /// @return totalTime Total time that left for proposal closing.
-    function getRemainingClosingTime(uint _proposalId, uint _index) 
-        public 
-        view 
-        returns(uint totalTime) 
-    {
-        uint pClosingTime;
-        uint subc = governanceDat.getProposalSubCategory(_proposalId);
-        uint categoryId = proposalCategory.getCategoryIdBySubId(subc);
-        uint ctLength = proposalCategory.getCloseTimeLength(categoryId);
-        for (uint i = _index; i < ctLength; i++) {
-            pClosingTime = pClosingTime + proposalCategory.getClosingTimeAtIndex(categoryId, i);
-        }
-
-        totalTime = pClosingTime 
-            + governanceDat.getProposalDateUpd(_proposalId)
-            - now; // solhint-disable-line
-    }
-
     /// @dev Gets member details
     /// @param _memberAddress Member address
     /// @return memberReputation Member reputation that has been updated till now

@@ -150,12 +150,6 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     await catchRevert(
       gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash)
     );
-    const remainingTime = await gv.getRemainingClosingTime(p1.toNumber(), 0);
-    await assert.isAtLeast(
-      remainingTime.toNumber(),
-      1,
-      'Remaining time not set'
-    );
     const g2 = await gv.getSolutionIdAgainstAddressProposal(owner, 0);
     assert.equal(g2[0].toNumber(), 0);
     const pr = await pl.getPendingReward(owner, 0);
