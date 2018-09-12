@@ -82,19 +82,6 @@ contract Pool is Upgradeable {
     }
 
     /// @dev user can calim the tokens rewarded them till now
-    function claimReward(address _claimer) public noReentrancy {
-        uint pendingGBTReward;
-        uint pendingDAppReward;
-        (pendingGBTReward, pendingDAppReward) = gov.calculateMemberReward(_claimer);
-        if (pendingGBTReward != 0) {
-            gbt.transfer(_claimer, pendingGBTReward);
-        }
-        if (pendingDAppReward != 0) {
-            dAppToken.transfer(_claimer, pendingDAppReward);
-        }
-    }
-
-    /// @dev user can calim the tokens rewarded them till now
     function claimReward(address _claimer, uint[] _ownerProposals, uint[] _voterProposals) public noReentrancy {
         uint pendingGBTReward;
         uint pendingDAppReward;
@@ -121,6 +108,8 @@ contract Pool is Upgradeable {
         if (pendingDAppReward != 0) {
             dAppToken.transfer(_claimer, pendingDAppReward);
         }
+
+        governanceDat.increaseMemberReputation(_claimer, pendingReputation);
 
         governanceDat.callRewardClaimed(
             _claimer, 

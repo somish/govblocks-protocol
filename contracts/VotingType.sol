@@ -30,8 +30,6 @@ contract VotingType {
 
     function getTotalNumberOfVotesByAddress(address _memberAddress) public view returns(uint);
 
-    function claimVoteReward(address _memberAddress) public returns(uint, uint);
-
     function claimVoteReward(address _memberAddress, uint[] _proposals) public returns(uint, uint);
 
     function getPendingReward(address _memberAddress, uint _lastRewardVoteId) public view returns(uint, uint);

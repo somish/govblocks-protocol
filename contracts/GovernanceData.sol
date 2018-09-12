@@ -60,8 +60,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         uint256 dateAdd, 
         uint256 voteId
     );
-
-    event Reward(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
     
     event ProposalStatus(uint256 indexed proposalId, uint256 proposalStatus, uint256 dateAdd);
     
@@ -209,18 +207,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         emit Vote(_from, _proposalId, _dateAdd, _voteId);
     }
 
-    /// @dev Calls reward event
-    /// @param _to Address of the receiver of the reward
-    /// @param _proposalId Proposal id
-    /// @param _description Description of the event
-    /// @param _amount Reward amount
-    function callRewardEvent(address _to, uint256 _proposalId, string _description, uint256 _amount) 
-        public 
-        onlyInternal 
-    {
-        emit Reward(_to, _proposalId, _description, _amount);
-    }
-
     using SafeMath for uint;
 
     struct ProposalStruct {
@@ -254,7 +240,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(address => uint) internal allMemberReputationByAddress;
-    mapping(address => uint) public lastRewardDetails;
     mapping(uint => bool) public proposalPaused;
     mapping(address => mapping(uint => bool)) internal rewardClaimed;
 
@@ -313,12 +298,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     function setDAppTokenSupportsLocking(bool _value) public onlyAuthorizedToGovern {
         dAppTokenSupportsLocking = _value;
-    }
-
-    /// @dev Sets the last proposal id till which the reward has been distributed for Solution Owner 
-    ///     (For providing correct solution Reward)
-    function setLastRewardIdOfSolutionProposals(address _memberAddress, uint _proposalId) public onlyInternal {
-        lastRewardDetails[_memberAddress] = _proposalId;
     }
 
     /// @dev Configures global parameters i.e. Voting or Reputation parameters
@@ -464,6 +443,12 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         uint versionNo = allProposalData[_proposalId].versionNumber + 1;
         emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now); //solhint-disable-line
         setProposalVersion(_proposalId, versionNo);
+    }
+
+    /// @dev Sets proposal's date when the proposal last modified
+    function increaseMemberReputation(address _memberAddress, uint _repPoints) public onlyInternal {
+        allMemberReputationByAddress[_memberAddress] = 
+            allMemberReputationByAddress[_memberAddress].add(_repPoints);
     }
 
     /// @dev Sets proposal's date when the proposal last modified

@@ -49,8 +49,7 @@ contract SimpleVoting is Upgradeable {
     mapping(address => mapping(uint => uint)) internal addressProposalVote;
     mapping(uint => mapping(uint => uint[])) internal proposalRoleVote;
     mapping(address => uint[]) internal allVotesByMember;
-    mapping(address => uint) internal lastRewardVoteId;
-    mapping(uint => bool) internal rewardClaimed;
+    mapping(uint => bool) public rewardClaimed;
     
 
     ProposalVote[] internal allVotes;
@@ -232,34 +231,6 @@ contract SimpleVoting is Upgradeable {
         voteValue = SafeMath.add(stakeWeight, reputationWeight);
     }
 
-    function claimVoteReward(address _memberAddress) 
-        public onlyInternal returns(uint pendingGBTReward, uint pendingDAppReward) 
-    {
-        uint lastIndex;
-        uint i;
-        uint totalVotes = allVotesByMember[_memberAddress].length;
-        uint voteId;
-        uint proposalId;
-        uint _lastRewardVoteId = lastRewardVoteId[_memberAddress] + 1;
-        uint tempGBTReward;
-        uint tempDAppReward;
-        for (i = _lastRewardVoteId; i <= totalVotes; i++) {
-            voteId = allVotesByMember[_memberAddress][i - 1];
-            if (!rewardClaimed[voteId]) {
-                proposalId = allVotes[voteId].proposalId;
-                (tempGBTReward, tempDAppReward, lastIndex) = 
-                    calculateVoteReward(_memberAddress, i, proposalId, lastIndex);
-                pendingGBTReward += tempGBTReward;
-                pendingDAppReward += tempDAppReward;
-                if (tempGBTReward > 0 || tempDAppReward > 0)
-                    rewardClaimed[voteId] = true;
-            }
-        }
-        if (lastIndex == 0)
-            lastIndex = i;
-        lastRewardVoteId[_memberAddress] = lastIndex - 1;
-    }
-
     function claimVoteReward(address _memberAddress, uint[] _proposals) 
         public onlyInternal returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
@@ -271,9 +242,14 @@ contract SimpleVoting is Upgradeable {
         uint totalReward;
         uint subCategory;
         uint calcReward;
-        for (uint i = _proposals.length - 1; i >= 0; i++) {
+        uint i = _proposals.length;
+
+        //0th element is skipped always as sometimes we actually need length of _proposals be 0. 
+        for (i--; i > 0; i--) {
             voteId = addressProposalVote[_memberAddress][_proposals[i]];
+
             require(!rewardClaimed[voteId]);
+
             rewardClaimed[voteId] = true;
             (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
                 getVoteDetailsForReward(voteId, _proposals[i]);
@@ -633,53 +609,6 @@ contract SimpleVoting is Upgradeable {
             pendingGBTReward = calcReward;
         else
             pendingDAppReward = calcReward;
-    }
-
-    function calculateVoteReward(address _memberAddress, uint _voteNo, uint _proposalId, uint lastIndex) 
-        internal
-        returns (uint pendingGBTReward, uint pendingDAppReward, uint lastindex) 
-    {
-        uint solutionChosen;
-        uint proposalStatus;
-        uint finalVredict;
-        uint voteValue;
-        uint totalReward;
-        uint subCategory;
-        uint calcReward;
-
-        (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
-            getVoteDetailsToCalculateReward(_memberAddress, _voteNo - 1);
-
-        if (proposalStatus <= 2 && lastIndex == 0)
-            lastIndex = _voteNo;
-        if (finalVredict > 0 && solutionChosen == finalVredict) {
-            calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
-                / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
-            if (calcReward > 0) {
-                governanceDat.callRewardEvent(
-                    _memberAddress, 
-                    _proposalId, 
-                    "Reward-vote accepted", 
-                    calcReward
-                );
-            }
-        } else if (!governanceDat.punishVoters() && finalVredict > 0) {
-            calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
-                / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
-            if (calcReward > 0) {
-                governanceDat.callRewardEvent(
-                    _memberAddress, 
-                    _proposalId, 
-                    "Reward-voting", 
-                    calcReward
-                );
-            }
-        }
-        if (proposalCategory.isSubCategoryExternal(subCategory))    
-            pendingGBTReward = calcReward;
-        else
-            pendingDAppReward = calcReward;
-        lastindex = lastIndex;
     }
 
     /// @dev Gets vote id details when giving member address and proposal id

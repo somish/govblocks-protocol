@@ -258,31 +258,6 @@ contract Governance is Upgradeable {
         eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
     }
 
-    /// @dev Calculates member reward to be claimed
-    /// @param _memberAddress Member address
-    /// @return rewardToClaim Rewards to be claimed
-    function calculateMemberReward(address _memberAddress) 
-        public 
-        onlyInternal 
-        returns(uint pendingGBTReward, uint pendingDAppReward) 
-    {
-        uint lastRewardProposalId = governanceDat.lastRewardDetails(_memberAddress);
-
-        (pendingGBTReward, pendingDAppReward) = calculateProposalReward(_memberAddress, lastRewardProposalId); 
-        uint tempGBTReward;
-        uint tempDAppRward;
-        (tempGBTReward, tempDAppRward) = calculateSolutionReward(_memberAddress, lastRewardProposalId);
-        pendingGBTReward += tempGBTReward;
-        pendingDAppReward += tempDAppRward;
-        uint votingTypes = governanceDat.getVotingTypeLength();
-        for (uint i = 0; i < votingTypes; i++) {
-            VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
-            (tempGBTReward, tempDAppRward) = votingType.claimVoteReward(_memberAddress);
-            pendingGBTReward += tempGBTReward;
-            pendingDAppReward += tempDAppRward;
-        }
-    }
-
     /// @dev calculates reward to distribute for a user
     /// @param _memberAddress Member address
     /// @param _proposals proposal ids to calculate reward for
@@ -299,15 +274,15 @@ contract Governance is Upgradeable {
         uint subCategory;
         uint totalReward;
         bool rewardClaimedThenIsExternal;
-
-        for (i--; i >= 0; i--) {
+        //0th element is skipped always as sometimes we actually need length of _proposals be 0. 
+        for (i--; i > 0; i--) {
             //solhint-disable-next-line
             (rewardClaimedThenIsExternal, subCategory, proposalStatusThenRewardPercent, finalVerdictThenRewardPerc, solutionIdThenRep, totalReward) =
                 governanceDat.getProposalDetailsForReward(_proposals[i], _memberAddress);           
             totalReward = totalReward / 100;
 
             require(!rewardClaimedThenIsExternal && proposalStatusThenRewardPercent > 2);
-            
+
             if (finalVerdictThenRewardPerc > 0) {
 
                 rewardClaimedThenIsExternal = proposalCategory.isSubCategoryExternal(subCategory);
@@ -417,150 +392,6 @@ contract Governance is Upgradeable {
         for (uint i = 0; i < length; i++) {
             totalVotes = totalVotes + votingType.getAllVoteIdsLengthByProposalRole(_proposalId, i);
         }
-    }
-
-    /// @dev Calculate reward for proposal creation against member
-    /// @param _memberAddress Address of member who claimed the reward
-    /// @param _lastRewardProposalId Last id proposal till which the reward being distributed
-    function calculateProposalReward(
-        address _memberAddress, 
-        uint _lastRewardProposalId
-    ) 
-        internal
-        returns(uint pendingGBTReward, uint pendingDAppReward)
-    {
-        uint allProposalLength = governanceDat.getProposalLength();
-        uint lastIndex = 0;
-        uint finalVredict;
-        uint proposalStatus;
-        uint calcReward;
-        uint subCategory;
-        bool rewardClaimed;
-        uint i;
-
-        for (i = _lastRewardProposalId; i < allProposalLength; i++) {
-            if (_memberAddress == governanceDat.getProposalOwner(i)) {
-                (rewardClaimed, subCategory, proposalStatus, finalVredict) = 
-                    governanceDat.getProposalDetailsById3(i, _memberAddress);
-                if (proposalStatus <= 2 && lastIndex == 0) 
-                    lastIndex = i;
-                if (proposalStatus > 2 && finalVredict > 0 && !rewardClaimed) {
-                    calcReward = proposalCategory.getRewardPercProposal(subCategory).mul(
-                            governanceDat.getProposalIncentive(i)
-                        );
-                    calcReward = calcReward.div(100);
-                    if (proposalCategory.isSubCategoryExternal(subCategory))    
-                        pendingGBTReward += calcReward;
-                    else
-                        pendingDAppReward += calcReward;
-
-                    calculateProposalReward1(_memberAddress, i, calcReward);
-                }
-            }
-        }
-
-        if (lastIndex == 0)
-            lastIndex = i - 1;
-        governanceDat.setLastRewardIdOfSolutionProposals(_memberAddress, lastIndex);
-    }
-
-    /// @dev Saving reward and member reputation details 
-    function calculateProposalReward1(
-        address _memberAddress, 
-        uint i, 
-        uint calcReward
-    ) 
-        internal
-    {
-        if (calcReward > 0) {
-            governanceDat.callRewardEvent(
-                _memberAddress, 
-                i, 
-                "Reward-Proposal owner", 
-                calcReward
-            );
-        }
-        uint addProposalOwnerPoints = governanceDat.addProposalOwnerPoints();
-        governanceDat.setMemberReputation(
-            "Reputation credit-proposal owner", 
-            i, 
-            _memberAddress, 
-            governanceDat.getMemberReputation(_memberAddress) + addProposalOwnerPoints, 
-            addProposalOwnerPoints, 
-            "C"
-        );
-
-    }
-
-    /// @dev Calculate reward for proposing solution against different proposals
-    /// @param _memberAddress Address of member who claimed the reward
-    /// @param _lastRewardSolutionProposalId Last id proposal(To which solutions being proposed) 
-    ///         till which the reward being distributed
-    function calculateSolutionReward(
-        address _memberAddress, 
-        uint _lastRewardSolutionProposalId
-    ) 
-        internal
-        returns(uint pendingGBTReward, uint pendingDAppReward) 
-    {
-        uint allProposalLength = governanceDat.getProposalLength();
-        uint calcReward;
-        uint lastIndex = 0;
-        uint i;
-        uint proposalStatus;
-        uint finalVerdict;
-        uint solutionId;
-        uint totalReward;
-        uint subCategory;
-        
-        for (i = _lastRewardSolutionProposalId; i < allProposalLength; i++) {
-            (i, solutionId, proposalStatus, finalVerdict, totalReward, subCategory) = 
-                getSolutionIdAgainstAddressProposal(_memberAddress, i);
-            if (proposalStatus <= 2 && lastIndex == 0)
-                lastIndex = i;
-            if (finalVerdict > 0 && finalVerdict == solutionId 
-                && !governanceDat.getRewardClaimed(i, _memberAddress)
-            ) {
-                governanceDat.setRewardClaimed(i, _memberAddress);
-                calcReward = (proposalCategory.getRewardPercSolution(subCategory) * totalReward) / 100;
-                if (proposalCategory.isSubCategoryExternal(subCategory))    
-                    pendingGBTReward += calcReward;
-                else
-                    pendingDAppReward += calcReward;
-                calculateSolutionReward1(_memberAddress, i, calcReward);
-            }
-        }
-
-        if (lastIndex == 0)
-            lastIndex = i - 1;
-    }
-
-    /// @dev Saving solution reward and member reputation details
-    function calculateSolutionReward1(
-        address _memberAddress, 
-        uint i, 
-        uint calcReward
-    ) 
-        internal  
-    {
-        
-        if (calcReward > 0) {
-            governanceDat.callRewardEvent(
-                _memberAddress, 
-                i, 
-                "Reward-Solution owner", 
-                calcReward
-            );
-        }
-        uint addSolutionOwnerPoints = governanceDat.addSolutionOwnerPoints();
-        governanceDat.setMemberReputation(
-                "Reputation credit-solution owner", 
-                i, 
-                _memberAddress, 
-                governanceDat.getMemberReputation(_memberAddress) + addSolutionOwnerPoints, 
-                addSolutionOwnerPoints, 
-                "C"
-            );
     }
 
     /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
