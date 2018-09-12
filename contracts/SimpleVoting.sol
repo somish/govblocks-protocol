@@ -49,8 +49,7 @@ contract SimpleVoting is Upgradeable {
     mapping(address => mapping(uint => uint)) internal addressProposalVote;
     mapping(uint => mapping(uint => uint[])) internal proposalRoleVote;
     mapping(address => uint[]) internal allVotesByMember;
-    mapping(address => uint) internal lastRewardVoteId;
-    mapping(uint => bool) internal rewardClaimed;
+    mapping(uint => bool) public rewardClaimed;
     
 
     ProposalVote[] internal allVotes;
@@ -72,7 +71,7 @@ contract SimpleVoting is Upgradeable {
         external 
     {
         if (msg.sender == _memberAddress) {
-            require(validateStake(_proposalId));
+            require(validateStake(_proposalId, _memberAddress));
         } else
             require(master.isInternal(msg.sender));
         require(!alreadyAdded(_proposalId, _memberAddress));
@@ -85,85 +84,12 @@ contract SimpleVoting is Upgradeable {
     /// @dev Casts vote
     /// @param _proposalId Proposal id
     /// @param _solutionChosen solution chosen while voting. _solutionChosen[0] is the chosen solution
-    function proposalVoting(
-        uint32 _proposalId,  
-        uint64[] _solutionChosen 
-    ) 
-        external
-    {
-        //Variables are reused to save gas. We know that this reduces code readability but proposalVoting is
-        //where gas usage should be optimized as much as possible. voters should not feel burdened while voting.
-        require(addressProposalVote[msg.sender][_proposalId] == 0);
-
-        uint categoryThenMRSequence;
-        uint intermediateVerdict;
-        uint currentVotingIdThenVoteValue;
-
-        (categoryThenMRSequence, currentVotingIdThenVoteValue, intermediateVerdict) 
-            = governanceDat.getProposalDetailsForSV(_proposalId);
-
-        categoryThenMRSequence = 
-            proposalCategory.getMRSequenceBySubCat(categoryThenMRSequence, currentVotingIdThenVoteValue);
-        //categoryThenMRSequence is now MemberRoleSequence
-
-        require(memberRole.checkRoleIdByAddress(msg.sender, categoryThenMRSequence));
-
-        if (currentVotingIdThenVoteValue == 0)
-            require(_solutionChosen[0] <= governanceDat.getTotalSolutions(_proposalId));
-        else
-            require(_solutionChosen[0] == intermediateVerdict || _solutionChosen[0] == 0);
-
-        currentVotingIdThenVoteValue = validateStakeAndReturnVoteValue(_proposalId, msg.sender);
-        //currentVotingIdThenVoteValue is now VoteValue
-
-        proposalRoleVote[_proposalId][categoryThenMRSequence].push(allVotes.length);
-        allVotesByMember[msg.sender].push(allVotes.length);
-        addressProposalVote[msg.sender][_proposalId] = allVotes.length;
-        governanceDat.callVoteEvent(msg.sender, _proposalId, now, allVotes.length); //solhint-disable-line
-        allVotes.push(ProposalVote(msg.sender, _solutionChosen[0], _proposalId, currentVotingIdThenVoteValue));
-
-        if (proposalRoleVote[_proposalId][categoryThenMRSequence].length
-            == memberRole.getAllMemberLength(categoryThenMRSequence) 
-            && categoryThenMRSequence != 2
-            && categoryThenMRSequence != 0
-        ) {
-            eventCaller.callVoteCast(_proposalId);
-        }
-    }
+    function proposalVoting(uint32 _proposalId, uint64[] _solutionChosen) external {
+        _addVote(_proposalId, _solutionChosen[0], msg.sender);
+    } 
 
     function initialVote(uint32 _proposalId, address _voter) external onlyInternal {
-        uint categoryThenMRSequence;
-        uint intermediateVerdict;
-        uint currentVotingIdThenVoteValue;
-
-        (categoryThenMRSequence, currentVotingIdThenVoteValue, intermediateVerdict) 
-            = governanceDat.getProposalDetailsForSV(_proposalId);
-
-        require(currentVotingIdThenVoteValue == 0);
-        
-        categoryThenMRSequence = 
-            proposalCategory.getMRSequenceBySubCat(categoryThenMRSequence, currentVotingIdThenVoteValue);
-        //categoryThenMRSequence is now MemberRoleSequence
-
-        require(memberRole.checkRoleIdByAddress(_voter, categoryThenMRSequence));
-
-        currentVotingIdThenVoteValue = validateStakeAndReturnVoteValue(_proposalId, _voter);
-        //currentVotingIdThenVoteValue is now VoteValue
-
-        proposalRoleVote[_proposalId][categoryThenMRSequence].push(allVotes.length);
-        allVotesByMember[_voter].push(allVotes.length);
-        addressProposalVote[_voter][_proposalId] = allVotes.length;
-        governanceDat.callVoteEvent(_voter, _proposalId, now, allVotes.length); //solhint-disable-line
-        allVotes.push(ProposalVote(_voter, 1, _proposalId, currentVotingIdThenVoteValue));
-
-        require(proposalRoleVote[_proposalId][categoryThenMRSequence].length == 1);
-
-        if (memberRole.getAllMemberLength(categoryThenMRSequence) == 1
-            && categoryThenMRSequence != 2
-            && categoryThenMRSequence != 0
-        ) {
-            eventCaller.callVoteCast(_proposalId);
-        }
+        _addVote(_proposalId, 1, _voter);
     }
 
     /// @dev Initiates simple voting contract
@@ -171,6 +97,7 @@ contract SimpleVoting is Upgradeable {
         require(!constructorCheck);
         votingTypeName = "Simple Voting";
         allVotes.push(ProposalVote(address(0), 0, 0, 1));
+        rewardClaimed[0] = true;
         constructorCheck = true;
     }
 
@@ -187,86 +114,53 @@ contract SimpleVoting is Upgradeable {
         governChecker = GovernChecker(master.getGovernCheckerAddress());
     }
 
-    /// @dev validates that the voter has enough tokens locked for voting
-    function validateStake(uint32 _proposalId) public view returns(bool) {
-        address token;
-        uint subCatThenMinStake;
-        uint tokenHoldingTimeThenBalance;
-        (token, subCatThenMinStake) = governanceDat.getTokenAndSubCat(_proposalId);
-        (subCatThenMinStake, tokenHoldingTimeThenBalance) = proposalCategory.getRequiredStake(subCatThenMinStake);
-        if (subCatThenMinStake == 0)
-            return true; 
-        GBTStandardToken tokenInstance = GBTStandardToken(token);
-        tokenHoldingTimeThenBalance += now; //solhint-disable-line
-        tokenHoldingTimeThenBalance = tokenInstance.tokensLockedAtTime(msg.sender, "GOV", tokenHoldingTimeThenBalance);
-        if (tokenHoldingTimeThenBalance >= subCatThenMinStake)
-            return true;
-    }
-
-    /// @dev validates that the voter has enough tokens locked for voting and returns vote value
-    ///     Seperate function from validateStake to save gas.
-    function validateStakeAndReturnVoteValue(uint32 _proposalId, address _voter) 
-        public view returns(uint voteValue) 
-    {
-        address token;
-        uint subCatThenMinStake;
-        uint tokenHoldingTimeThenBalance;
-        uint stakeWeight;
-        uint bonusStake;
-        uint reputationWeight;
-        uint bonusReputation;
-        uint memberReputation;
-        (stakeWeight, bonusStake, reputationWeight, bonusReputation, memberReputation, token, subCatThenMinStake) 
-            = governanceDat.getMemberReputationSV(_voter, _proposalId);
-        (subCatThenMinStake, tokenHoldingTimeThenBalance) = proposalCategory.getRequiredStake(subCatThenMinStake);
-        GBTStandardToken tokenInstance = GBTStandardToken(token);
-        tokenHoldingTimeThenBalance += now; //solhint-disable-line
-        tokenHoldingTimeThenBalance = tokenInstance.tokensLockedAtTime(_voter, "GOV", tokenHoldingTimeThenBalance);
-
-        require(tokenHoldingTimeThenBalance >= subCatThenMinStake);
-    
-        tokenHoldingTimeThenBalance = SafeMath.div(tokenHoldingTimeThenBalance, tokenInstance.decimals());
-        stakeWeight = SafeMath.mul(SafeMath.add(log(tokenHoldingTimeThenBalance), bonusStake), stakeWeight);
-        reputationWeight = SafeMath.mul(SafeMath.add(log(memberReputation), bonusReputation), reputationWeight);
-        voteValue = SafeMath.add(stakeWeight, reputationWeight);
-    }
-
-    function claimVoteReward(address _memberAddress) 
+    function claimVoteReward(address _memberAddress, uint[] _proposals) 
         public onlyInternal returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
-        uint lastIndex;
-        uint i;
-        uint totalVotes = allVotesByMember[_memberAddress].length;
         uint voteId;
-        uint proposalId;
-        uint _lastRewardVoteId = lastRewardVoteId[_memberAddress] + 1;
-        uint tempGBTReward;
-        uint tempDAppReward;
-        for (i = _lastRewardVoteId; i <= totalVotes; i++) {
-            voteId = allVotesByMember[_memberAddress][i - 1];
-            if (!rewardClaimed[voteId]) {
-                proposalId = allVotes[voteId].proposalId;
-                (tempGBTReward, tempDAppReward, lastIndex) = 
-                    calculateVoteReward(_memberAddress, i, proposalId, lastIndex);
-                pendingGBTReward += tempGBTReward;
-                pendingDAppReward += tempDAppReward;
-                if (tempGBTReward > 0 || tempDAppReward > 0)
-                    rewardClaimed[voteId] = true;
+        uint solutionChosen;
+        uint proposalStatus;
+        uint finalVredict;
+        uint voteValue;
+        uint totalReward;
+        uint subCategory;
+        uint calcReward;
+        uint i = _proposals.length;
+
+        //0th element is skipped always as sometimes we actually need length of _proposals be 0. 
+        for (i--; i > 0; i--) {
+            voteId = addressProposalVote[_memberAddress][_proposals[i]];
+
+            require(!rewardClaimed[voteId]);
+
+            rewardClaimed[voteId] = true;
+            (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
+                getVoteDetailsForReward(voteId, _proposals[i]);
+            require(proposalStatus > 2);
+            if (finalVredict > 0 && solutionChosen == finalVredict) {
+                calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
+                    / (100 * governanceDat.getProposalTotalVoteValue(_proposals[i]));
+                
+            } else if (!governanceDat.punishVoters() && finalVredict > 0) {
+                calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
+                    / (100 * governanceDat.getProposalTotalVoteValue(_proposals[i]));
+                
             }
+            if (proposalCategory.isSubCategoryExternal(subCategory))    
+                pendingGBTReward = calcReward;
+            else
+                pendingDAppReward = calcReward;
         }
-        if (lastIndex == 0)
-            lastIndex = i;
-        lastRewardVoteId[_memberAddress] = lastIndex - 1;
+        
     }
 
-    function getPendingReward(address _memberAddress) 
+    function getPendingReward(address _memberAddress, uint _lastRewardVoteId) 
         public view returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
         uint i;
         uint totalVotes = allVotesByMember[_memberAddress].length;
         uint voteId;
         uint proposalId;
-        uint _lastRewardVoteId = lastRewardVoteId[_memberAddress];
         uint tempGBTReward;
         uint tempDAppReward;
         for (i = _lastRewardVoteId; i < totalVotes; i++) {
@@ -600,53 +494,6 @@ contract SimpleVoting is Upgradeable {
             pendingDAppReward = calcReward;
     }
 
-    function calculateVoteReward(address _memberAddress, uint _voteNo, uint _proposalId, uint lastIndex) 
-        internal
-        returns (uint pendingGBTReward, uint pendingDAppReward, uint lastindex) 
-    {
-        uint solutionChosen;
-        uint proposalStatus;
-        uint finalVredict;
-        uint voteValue;
-        uint totalReward;
-        uint subCategory;
-        uint calcReward;
-
-        (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
-            getVoteDetailsToCalculateReward(_memberAddress, _voteNo - 1);
-
-        if (proposalStatus <= 2 && lastIndex == 0)
-            lastIndex = _voteNo;
-        if (finalVredict > 0 && solutionChosen == finalVredict) {
-            calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
-                / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
-            if (calcReward > 0) {
-                governanceDat.callRewardEvent(
-                    _memberAddress, 
-                    _proposalId, 
-                    "Reward-vote accepted", 
-                    calcReward
-                );
-            }
-        } else if (!governanceDat.punishVoters() && finalVredict > 0) {
-            calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
-                / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
-            if (calcReward > 0) {
-                governanceDat.callRewardEvent(
-                    _memberAddress, 
-                    _proposalId, 
-                    "Reward-voting", 
-                    calcReward
-                );
-            }
-        }
-        if (proposalCategory.isSubCategoryExternal(subCategory))    
-            pendingGBTReward = calcReward;
-        else
-            pendingDAppReward = calcReward;
-        lastindex = lastIndex;
-    }
-
     /// @dev Gets vote id details when giving member address and proposal id
     function getVoteDetailsToCalculateReward(
         address _memberAddress, 
@@ -671,6 +518,121 @@ contract SimpleVoting is Upgradeable {
         finalVerdict = governanceDat.getProposalFinalVerdict(proposalId);
         totalReward = governanceDat.getProposalIncentive(proposalId);
         subCategory = governanceDat.getProposalSubCategory(proposalId);
+    }
+
+    /// @dev Gets vote id details for reward
+    function getVoteDetailsForReward(uint _voteId, uint _proposalId) 
+        internal 
+        view 
+        returns(
+            uint solutionChosen, 
+            uint proposalStatus, 
+            uint finalVerdict, 
+            uint voteValue, 
+            uint totalReward, 
+            uint subCategory
+        ) 
+    {
+        voteValue = allVotes[_voteId].voteValue;
+        solutionChosen = allVotes[_voteId].solutionChosen;
+        proposalStatus = governanceDat.getProposalStatus(_proposalId);
+        finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
+        totalReward = governanceDat.getProposalIncentive(_proposalId);
+        subCategory = governanceDat.getProposalSubCategory(_proposalId);
+    }
+
+    function _getLockedBalance(address _token, address _of, uint _time) 
+        internal view returns(uint lockedTokens) 
+    {
+        GBTStandardToken tokenInstance = GBTStandardToken(_token);
+        _time += now; //solhint-disable-line
+        lockedTokens = tokenInstance.tokensLockedAtTime(_of, "GOV", _time);
+    }
+
+    function _addVote(uint32 _proposalId, uint64 _solution, address _voter) internal {
+        //Variables are reused to save gas. We know that this reduces code readability but proposalVoting is
+        //where gas usage should be optimized as much as possible. voters should not feel burdened while voting.
+        require(addressProposalVote[_voter][_proposalId] == 0);
+
+        require(validateStake(_proposalId, _voter));
+
+        uint categoryThenMRSequence;
+        uint intermediateVerdict;
+        uint currentVotingIdThenVoteValue;
+
+        (categoryThenMRSequence, currentVotingIdThenVoteValue, intermediateVerdict) 
+            = governanceDat.getProposalDetailsForSV(_proposalId);
+
+        categoryThenMRSequence = 
+            proposalCategory.getMRSequenceBySubCat(categoryThenMRSequence, currentVotingIdThenVoteValue);
+        //categoryThenMRSequence is now MemberRoleSequence
+
+        require(memberRole.checkRoleIdByAddress(_voter, categoryThenMRSequence));
+
+        if (currentVotingIdThenVoteValue == 0)
+            require(_solution <= governanceDat.getTotalSolutions(_proposalId));
+        else
+            require(_solution == intermediateVerdict || _solution == 0);
+
+        currentVotingIdThenVoteValue = calculateVoteValue(_proposalId, _voter);
+        //currentVotingIdThenVoteValue is now VoteValue
+
+        proposalRoleVote[_proposalId][categoryThenMRSequence].push(allVotes.length);
+        allVotesByMember[_voter].push(allVotes.length);
+        addressProposalVote[_voter][_proposalId] = allVotes.length;
+        governanceDat.callVoteEvent(_voter, _proposalId, now, allVotes.length); //solhint-disable-line
+        allVotes.push(ProposalVote(_voter, _solution, _proposalId, currentVotingIdThenVoteValue));
+
+        if (proposalRoleVote[_proposalId][categoryThenMRSequence].length
+            == memberRole.getAllMemberLength(categoryThenMRSequence) 
+            && categoryThenMRSequence != 2
+            && categoryThenMRSequence != 0
+        ) {
+            eventCaller.callVoteCast(_proposalId);
+        }
+    }
+
+    /// @dev validates that the voter has enough tokens locked for voting
+    function validateStake(uint32 _proposalId, address _of) internal view returns(bool success) {
+        address token;
+        uint subCat;
+        uint minStake;
+        uint tokenHoldingTime;
+        (token, subCat) = governanceDat.getTokenAndSubCat(_proposalId);
+        (minStake, tokenHoldingTime) = proposalCategory.getRequiredStake(subCat);
+
+        if (minStake == 0)
+            return true; 
+        
+        if (_getLockedBalance(token, _of, tokenHoldingTime) >= minStake)
+            return true;
+    }
+
+    /// @dev validates that the voter has enough tokens locked for voting and returns vote value
+    ///     Seperate function from validateStake to save gas.
+    function calculateVoteValue(uint32 _proposalId, address _of) 
+        internal view returns(uint voteValue) 
+    {
+        address token;
+        uint subCat;
+        uint tokenHoldingTime;
+        uint stakeWeight;
+        uint bonusStake;
+        uint reputationWeight;
+        uint bonusReputation;
+        uint memberReputation;
+        uint balance;
+
+        (stakeWeight, bonusStake, reputationWeight, bonusReputation, memberReputation, token, subCat) 
+            = governanceDat.getMemberReputationSV(_of, _proposalId);
+        tokenHoldingTime = proposalCategory.getTokenHoldingTime(subCat);
+        
+        balance = _getLockedBalance(token, _of, tokenHoldingTime);
+    
+        balance = SafeMath.div(balance, GBTStandardToken(token).decimals());
+        stakeWeight = SafeMath.mul(SafeMath.add(log(balance), bonusStake), stakeWeight);
+        reputationWeight = SafeMath.mul(SafeMath.add(log(memberReputation), bonusReputation), reputationWeight);
+        voteValue = SafeMath.add(stakeWeight, reputationWeight);
     }
 
     /* solhint-disable */

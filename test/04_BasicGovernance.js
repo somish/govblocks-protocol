@@ -4,10 +4,12 @@ const MemberRoles = artifacts.require('MemberRoles');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const encode = require('../helpers/encoder.js').encode;
+const getProposalIds = require('../helpers/reward.js').getProposalIds;
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Pool = artifacts.require('Pool');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const sampleAddress = 0x0000000000000000000000000000000000000001;
+const amount = 500000000000000;
 
 let gv;
 let gd;
@@ -224,7 +226,7 @@ contract('Proposal, solution and voting', function([
 
   it('Should show zero pending reward when only rep is to be earned', async function() {
     this.timeout(100000);
-    let reward = await pl.getPendingReward(owner);
+    let reward = await pl.getPendingReward(owner, 0);
     assert.equal(reward[0].toNumber(), 0, 'Incorrect Reward');
   });
 
@@ -277,6 +279,7 @@ contract('Proposal, solution and voting', function([
 
   it('Should create a proposal with solution', async function() {
     this.timeout(100000);
+    await gbt.transfer(pl.address, amount);
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     const c = await pc.getSubCategoryLength();
     await gv.createProposalwithSolution(
@@ -413,18 +416,21 @@ contract('Proposal, solution and voting', function([
   it('Should claim pending reward/reputation', async function() {
     this.timeout(100000);
     let rep1 = await gd.getMemberReputation(owner);
-    let pr = await pl.getPendingReward(owner);
+    let pr = await pl.getPendingReward(owner, 0);
     assert.equal(pr[1].toNumber(), 0);
     assert.isAtLeast(pr[0].toNumber(), 40);
-    pr = await pl.getPendingReward(ab);
+    pr = await pl.getPendingReward(ab, 0);
     assert.equal(pr[1].toNumber(), 0);
     assert.isAtLeast(pr[0].toNumber(), 40);
-    pr = await pl.getPendingReward(member);
+    pr = await pl.getPendingReward(member, 0);
     assert.equal(pr[1].toNumber(), 0);
     assert.isAtLeast(pr[0].toNumber(), 0);
-    await pl.claimReward(owner);
-    await pl.claimReward(ab);
-    await pl.claimReward(member);
+    [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
+    await pl.claimReward(owner, ownerProposals, voterProposals);
+    [ownerProposals, voterProposals] = await getProposalIds(ab, gd, sv);
+    await pl.claimReward(ab, ownerProposals, voterProposals);
+    [ownerProposals, voterProposals] = await getProposalIds(member, gd, sv);
+    await pl.claimReward(member, ownerProposals, voterProposals);
     let rep2 = await gd.getMemberReputation(owner);
     assert.isAbove(rep2.toNumber(), rep1.toNumber(), 'Incorrect Reward');
   });

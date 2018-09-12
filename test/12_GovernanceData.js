@@ -121,6 +121,8 @@ contract('Governance Data', function([owner, notOwner]) {
     await gd.configureGlobalParameters('BS', 58);
     qp = await gd.bonusStake();
     assert(qp.toNumber(), 58, 'Global parameter not changed');
+
+    await gd.configureGlobalParameters('GG', 58);
   });
 
   it('Should change member rep points', async function() {
@@ -142,6 +144,7 @@ contract('Governance Data', function([owner, notOwner]) {
 
   it('Should pause unpause proposal', async function() {
     this.timeout(100000);
+    await catchRevert(gd.resumeProposal(0));
     await gd.pauseProposal(0);
     const p1 = await gd.proposalPaused(0);
     assert.equal(p1, true);

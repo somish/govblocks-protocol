@@ -82,33 +82,64 @@ contract Pool is Upgradeable {
     }
 
     /// @dev user can calim the tokens rewarded them till now
-    function claimReward(address _claimer) public noReentrancy {
+    /// Index 0 of _ownerProposals, _voterProposals is not parsed. 
+    /// proposal arrays of 1 length are treated as empty.
+    function claimReward(address _claimer, uint[] _ownerProposals, uint[] _voterProposals) public noReentrancy {
         uint pendingGBTReward;
         uint pendingDAppReward;
-        (pendingGBTReward, pendingDAppReward) = gov.calculateMemberReward(_claimer);
+        uint pendingReputation;
+        
+        (pendingGBTReward, pendingDAppReward, pendingReputation) = 
+            gov.calculateMemberReward(_claimer, _ownerProposals);
+
+        uint votingTypes = governanceDat.getVotingTypeLength();
+        uint tempGBTReward;
+        uint tempDAppRward;
+
+        for (uint i = 0; i < votingTypes; i++) {
+            VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
+            (tempGBTReward, tempDAppRward) = 
+                votingType.claimVoteReward(_claimer, _voterProposals);
+            pendingGBTReward += tempGBTReward;
+            pendingDAppReward += tempDAppRward;
+        }
+
         if (pendingGBTReward != 0) {
             gbt.transfer(_claimer, pendingGBTReward);
         }
         if (pendingDAppReward != 0) {
             dAppToken.transfer(_claimer, pendingDAppReward);
         }
+
+        governanceDat.increaseMemberReputation(_claimer, pendingReputation);
+
+        governanceDat.callRewardClaimed(
+            _claimer, 
+            _ownerProposals, 
+            _voterProposals,
+            pendingGBTReward, 
+            pendingDAppReward, 
+            pendingReputation
+        );
     }
 
-    function getPendingReward(address _memberAddress) 
+    function getPendingReward(address _memberAddress, uint _lastRewardProposalId) 
         public view returns (uint pendingGBTReward, uint pendingDAppReward) 
     {
         uint tempGBTReward;
         uint tempDAppRward;
-        uint lastRewardProposalId = governanceDat.lastRewardDetails(_memberAddress);
-        (pendingGBTReward, pendingDAppReward) = getPendingProposalReward(_memberAddress, lastRewardProposalId); 
-        (tempGBTReward, tempDAppRward) = getPendingSolutionReward(_memberAddress, lastRewardProposalId);
+        (pendingGBTReward, pendingDAppReward) = 
+            getPendingProposalReward(_memberAddress, _lastRewardProposalId); 
+        (tempGBTReward, tempDAppRward) = 
+            getPendingSolutionReward(_memberAddress, _lastRewardProposalId);
         pendingGBTReward += tempGBTReward;
         pendingDAppReward += tempDAppRward;
 
         uint votingTypes = governanceDat.getVotingTypeLength();
         for (uint i = 0; i < votingTypes; i++) {
             VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
-            (tempGBTReward, tempDAppRward) = votingType.getPendingReward(_memberAddress);
+            (tempGBTReward, tempDAppRward) = 
+                votingType.getPendingReward(_memberAddress, _lastRewardProposalId);
             pendingGBTReward += tempGBTReward;
             pendingDAppReward += tempDAppRward;
         }

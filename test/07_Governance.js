@@ -3,6 +3,7 @@ const GovernanceData = artifacts.require('GovernanceData');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const increaseTime = require('../helpers/increaseTime.js').increaseTime;
 const encode = require('../helpers/encoder.js').encode;
+const getProposalIds = require('../helpers/reward.js').getProposalIds;
 const Pool = artifacts.require('Pool');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const Master = artifacts.require('Master');
@@ -20,10 +21,11 @@ let gd;
 let gv;
 let ms;
 let mr;
-let tp;
 let pc;
 let propId;
 let pid;
+let ownerProposals;
+let voterProposals;
 
 const BigNumber = web3.BigNumber;
 require('chai')
@@ -99,6 +101,15 @@ contract('Governance', ([owner, notOwner, noStake]) => {
         { from: notOwner }
       )
     );
+    await catchRevert(
+      gv.createProposal(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        0,
+        10
+      )
+    );
     p2 = await gd.getProposalLength();
     assert.equal(p1.toNumber() + 2, p2.toNumber(), 'Proposal not created');
   });
@@ -108,10 +119,11 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     p = await gd.getProposalLength();
     p = p.toNumber() - 1;
     await catchRevert(gv.openProposalForVoting(p));
-    await gbt.transfer(pl.address, amount);
     await catchRevert(gv.categorizeProposal(p, 15, { from: notOwner }));
     await catchRevert(gv.categorizeProposal(p, 1, { from: notOwner }));
     await catchRevert(gv.categorizeProposal(p, 19, { from: notOwner }));
+    await catchRevert(gv.categorizeProposal(p, 19));
+    await gbt.transfer(pl.address, amount);
     await gv.categorizeProposal(p, 19);
     await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     const category = await gd.getProposalSubCategory(p);
@@ -138,13 +150,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     await catchRevert(
       gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash)
     );
-    let remainingTime = await gv.getMaxCategoryTokenHoldTime(1);
-    await assert.isAtLeast(
-      remainingTime.toNumber(),
-      1,
-      'Remaining time not set'
-    );
-    remainingTime = await gv.getRemainingClosingTime(p1.toNumber(), 0);
+    const remainingTime = await gv.getRemainingClosingTime(p1.toNumber(), 0);
     await assert.isAtLeast(
       remainingTime.toNumber(),
       1,
@@ -152,8 +158,9 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     );
     const g2 = await gv.getSolutionIdAgainstAddressProposal(owner, 0);
     assert.equal(g2[0].toNumber(), 0);
-    const pr = await pl.getPendingReward(owner);
-    await pl.claimReward(owner);
+    const pr = await pl.getPendingReward(owner, 0);
+    [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
+    await pl.claimReward(owner, ownerProposals, voterProposals);
   });
 
   it('Should check getters', async function() {
@@ -299,19 +306,21 @@ contract('Governance', ([owner, notOwner, noStake]) => {
   it('Should claim rewards', async () => {
     const b1 = await gbt.balanceOf(owner);
     const g1 = await gv.getMemberDetails(notOwner);
-    let pr = await pl.getPendingReward(owner);
+    let pr = await pl.getPendingReward(owner, 0);
     assert.equal(pr[0].toNumber(), 40000);
     assert.equal(pr[1].toNumber(), 0);
-    pr = await pl.getPendingReward(notOwner);
+    pr = await pl.getPendingReward(notOwner, 0);
     assert.equal(pr[0].toNumber(), 60000);
     assert.equal(pr[1].toNumber(), 0);
-    await pl.claimReward(owner);
-    await pl.claimReward(notOwner);
+    [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
+    await pl.claimReward(owner, ownerProposals, voterProposals);
+    [ownerProposals, voterProposals] = await getProposalIds(notOwner, gd, sv);
+    await pl.claimReward(notOwner, ownerProposals, voterProposals);
     const b2 = await gbt.balanceOf(owner);
     const g2 = await gv.getMemberDetails(notOwner);
     b2.should.be.bignumber.above(b1);
     g2[0].should.be.bignumber.above(g1[0]);
-    const pr2 = await pl.getPendingReward(owner);
+    const pr2 = await pl.getPendingReward(owner, 0);
     pr2[0].should.be.bignumber.eq(0);
     pr2[1].should.be.bignumber.eq(0);
   });
@@ -323,10 +332,11 @@ contract('Governance', ([owner, notOwner, noStake]) => {
 
   it('Should allow claiming reward for preious proposals', async () => {
     const b1 = await gbt.balanceOf(owner);
-    const pr = await pl.getPendingReward(owner);
+    const pr = await pl.getPendingReward(owner, 0);
     assert.equal(pr[0].toNumber(), 0);
     assert.equal(pr[1].toNumber(), 100000);
-    await pl.claimReward(owner);
+    [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
+    await pl.claimReward(owner, ownerProposals, voterProposals);
     const b2 = await gbt.balanceOf(owner);
     b2.should.be.bignumber.above(b1);
   });
@@ -453,19 +463,25 @@ contract('Governance', ([owner, notOwner, noStake]) => {
 
   it('Should give reward to all voters if punishVoters is false', async function() {
     await gd.setPunishVoters(true);
-    const pr = await pl.getPendingReward(noStake);
+    const pr = await pl.getPendingReward(noStake, 0);
     assert.equal(pr[0].toNumber(), 0);
     assert.equal(pr[1].toNumber(), 0);
     // const pro = await pl.getPendingReward(owner);
     await gd.setPunishVoters(false);
-    const pr2 = await pl.getPendingReward(noStake);
+    const pr2 = await pl.getPendingReward(noStake, 0);
     assert.isAbove(pr2[0].toNumber(), 0);
     assert.equal(pr2[1].toNumber(), 0);
     // const pro2 = await pl.getPendingReward(owner);
     // assert.isBelow(pro2[0].toNumber(), pro[0].toNumber());
-    await pl.claimReward(owner);
-    await pl.claimReward(noStake);
-    const pr3 = await pl.getPendingReward(noStake);
+    [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
+    await pl.claimReward(owner, ownerProposals, voterProposals);
+    await catchRevert(pl.claimReward(owner, ownerProposals, voterProposals));
+    await catchRevert(pl.claimReward(owner, [0], voterProposals));
+    [ownerProposals, voterProposals] = await getProposalIds(noStake, gd, sv);
+    await pl.claimReward(noStake, ownerProposals, voterProposals);
+    await catchRevert(pl.claimReward(noStake, ownerProposals, voterProposals));
+    await catchRevert(pl.claimReward(noStake, [0], voterProposals));
+    const pr3 = await pl.getPendingReward(noStake, 0);
     assert.equal(pr3[0].toNumber(), 0);
     assert.equal(pr3[1].toNumber(), 0);
   });

@@ -60,8 +60,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         uint256 dateAdd, 
         uint256 voteId
     );
-
-    event Reward(address indexed to, uint256 indexed proposalId, string description, uint256 amount);
     
     event ProposalStatus(uint256 indexed proposalId, uint256 proposalStatus, uint256 dateAdd);
     
@@ -79,6 +77,36 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         string solutionDescHash, 
         uint256 dateAdd
     );
+
+    event RewardClaimed(
+        address indexed member, 
+        uint[] ownerProposals, 
+        uint[] voterProposals,
+        uint gbtReward, 
+        uint dAppReward, 
+        uint reputation
+    );
+
+    function callRewardClaimed(
+        address _member, 
+        uint[] _ownerProposals, 
+        uint[] _voterProposals,
+        uint _gbtReward, 
+        uint _dAppReward, 
+        uint _reputation
+    ) 
+        public
+        onlyInternal 
+    {
+        emit RewardClaimed(
+            _member, 
+            _ownerProposals, 
+            _voterProposals, 
+            _gbtReward, 
+            _dAppReward, 
+            _reputation
+        );
+    }
 
     /// @dev Calls proposal with solution event 
     /// @param proposalOwner Address of member whosoever has created the proposal
@@ -179,18 +207,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         emit Vote(_from, _proposalId, _dateAdd, _voteId);
     }
 
-    /// @dev Calls reward event
-    /// @param _to Address of the receiver of the reward
-    /// @param _proposalId Proposal id
-    /// @param _description Description of the event
-    /// @param _amount Reward amount
-    function callRewardEvent(address _to, uint256 _proposalId, string _description, uint256 _amount) 
-        public 
-        onlyInternal 
-    {
-        emit Reward(_to, _proposalId, _description, _amount);
-    }
-
     using SafeMath for uint;
 
     struct ProposalStruct {
@@ -224,7 +240,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(address => uint) internal allMemberReputationByAddress;
-    mapping(address => uint) public lastRewardDetails;
     mapping(uint => bool) public proposalPaused;
     mapping(address => mapping(uint => bool)) internal rewardClaimed;
 
@@ -283,12 +298,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     function setDAppTokenSupportsLocking(bool _value) public onlyAuthorizedToGovern {
         dAppTokenSupportsLocking = _value;
-    }
-
-    /// @dev Sets the last proposal id till which the reward has been distributed for Solution Owner 
-    ///     (For providing correct solution Reward)
-    function setLastRewardIdOfSolutionProposals(address _memberAddress, uint _proposalId) public onlyInternal {
-        lastRewardDetails[_memberAddress] = _proposalId;
     }
 
     /// @dev Configures global parameters i.e. Voting or Reputation parameters
@@ -406,34 +415,18 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         allProposalData[_proposalId].finalVerdict = _finalVerdict;
     }
 
-    /// @dev Update member reputation once the proposal reward is distributed.
-    /// @param _description Cause of points being credited/debited from reputation
-    /// @param _proposalId Id of proposal
-    /// @param _memberAddress Address of member whose reputation is being updated
-    /// @param _repPoints Updated reputation of member
-    /// @param _repPointsEventLog Actual points being added/subtracted from member's reputation
-    /// @param _typeOf typeOf is "C" in case the points is credited, "D" otherwise!
-    function setMemberReputation(
-        string _description, 
-        uint _proposalId, 
-        address _memberAddress, 
-        uint _repPoints, 
-        uint _repPointsEventLog,
-        bytes4 _typeOf
-    ) 
-        public 
-        onlyInternal 
-    {
-        allMemberReputationByAddress[_memberAddress] = _repPoints;
-        emit Reputation(_memberAddress, _proposalId, _description, _repPointsEventLog, _typeOf);
-    }
-
     /// @dev Stores the information of version number of a given proposal. 
     ///     Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _proposalId, string _proposalDescHash) public onlyInternal {
         uint versionNo = allProposalData[_proposalId].versionNumber + 1;
         emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now); //solhint-disable-line
         setProposalVersion(_proposalId, versionNo);
+    }
+
+    /// @dev Sets proposal's date when the proposal last modified
+    function increaseMemberReputation(address _memberAddress, uint _repPoints) public onlyInternal {
+        allMemberReputationByAddress[_memberAddress] = 
+            allMemberReputationByAddress[_memberAddress].add(_repPoints);
     }
 
     /// @dev Sets proposal's date when the proposal last modified
@@ -492,6 +485,26 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
             allProposalData[_proposalId].subCategory, 
             allProposalData[_proposalId].propStatus, 
             allProposalData[_proposalId].finalVerdict
+        );
+    }
+
+    function getProposalDetailsForReward(uint _proposalId, address _memberAddress) 
+        public
+        view
+        returns(bool, uint, uint, uint, uint, uint)
+    {
+        uint solutionId = allProposalSolutions[_proposalId].length;
+        for (solutionId--; solutionId > 0; solutionId--) {
+            if (_memberAddress == allProposalSolutions[_proposalId][solutionId].owner)
+                break;
+        }
+        return (
+            rewardClaimed[_memberAddress][_proposalId], 
+            allProposalData[_proposalId].subCategory, 
+            allProposalData[_proposalId].propStatus, 
+            allProposalData[_proposalId].finalVerdict,
+            solutionId,
+            allProposalData[_proposalId].commonIncentive
         );
     }
 
