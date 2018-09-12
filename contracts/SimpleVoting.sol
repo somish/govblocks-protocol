@@ -171,6 +171,7 @@ contract SimpleVoting is Upgradeable {
         require(!constructorCheck);
         votingTypeName = "Simple Voting";
         allVotes.push(ProposalVote(address(0), 0, 0, 1));
+        rewardClaimed[0] = true;
         constructorCheck = true;
     }
 
@@ -259,14 +260,48 @@ contract SimpleVoting is Upgradeable {
         lastRewardVoteId[_memberAddress] = lastIndex - 1;
     }
 
-    function getPendingReward(address _memberAddress) 
+    function claimVoteReward(address _memberAddress, uint[] _proposals) 
+        public onlyInternal returns(uint pendingGBTReward, uint pendingDAppReward) 
+    {
+        uint voteId;
+        uint solutionChosen;
+        uint proposalStatus;
+        uint finalVredict;
+        uint voteValue;
+        uint totalReward;
+        uint subCategory;
+        uint calcReward;
+        for (uint i = _proposals.length - 1; i >= 0; i++) {
+            voteId = addressProposalVote[_memberAddress][_proposals[i]];
+            require(!rewardClaimed[voteId]);
+            rewardClaimed[voteId] = true;
+            (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
+                getVoteDetailsForReward(voteId, _proposals[i]);
+            require(proposalStatus > 2);
+            if (finalVredict > 0 && solutionChosen == finalVredict) {
+                calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
+                    / (100 * governanceDat.getProposalTotalVoteValue(_proposals[i]));
+                
+            } else if (!governanceDat.punishVoters() && finalVredict > 0) {
+                calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
+                    / (100 * governanceDat.getProposalTotalVoteValue(_proposals[i]));
+                
+            }
+            if (proposalCategory.isSubCategoryExternal(subCategory))    
+                pendingGBTReward = calcReward;
+            else
+                pendingDAppReward = calcReward;
+        }
+        
+    }
+
+    function getPendingReward(address _memberAddress, uint _lastRewardVoteId) 
         public view returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
         uint i;
         uint totalVotes = allVotesByMember[_memberAddress].length;
         uint voteId;
         uint proposalId;
-        uint _lastRewardVoteId = lastRewardVoteId[_memberAddress];
         uint tempGBTReward;
         uint tempDAppReward;
         for (i = _lastRewardVoteId; i < totalVotes; i++) {
@@ -671,6 +706,27 @@ contract SimpleVoting is Upgradeable {
         finalVerdict = governanceDat.getProposalFinalVerdict(proposalId);
         totalReward = governanceDat.getProposalIncentive(proposalId);
         subCategory = governanceDat.getProposalSubCategory(proposalId);
+    }
+
+    /// @dev Gets vote id details for reward
+    function getVoteDetailsForReward(uint _voteId, uint _proposalId) 
+        internal 
+        view 
+        returns(
+            uint solutionChosen, 
+            uint proposalStatus, 
+            uint finalVerdict, 
+            uint voteValue, 
+            uint totalReward, 
+            uint subCategory
+        ) 
+    {
+        voteValue = allVotes[_voteId].voteValue;
+        solutionChosen = allVotes[_voteId].solutionChosen;
+        proposalStatus = governanceDat.getProposalStatus(_proposalId);
+        finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
+        totalReward = governanceDat.getProposalIncentive(_proposalId);
+        subCategory = governanceDat.getProposalSubCategory(_proposalId);
     }
 
     /* solhint-disable */

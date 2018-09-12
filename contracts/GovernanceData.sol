@@ -80,6 +80,36 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         uint256 dateAdd
     );
 
+    event RewardClaimed(
+        address indexed member, 
+        uint[] ownerProposals, 
+        uint[] voterProposals,
+        uint gbtReward, 
+        uint dAppReward, 
+        uint reputation
+    );
+
+    function callRewardClaimed(
+        address _member, 
+        uint[] _ownerProposals, 
+        uint[] _voterProposals,
+        uint _gbtReward, 
+        uint _dAppReward, 
+        uint _reputation
+    ) 
+        public
+        onlyInternal 
+    {
+        emit RewardClaimed(
+            _member, 
+            _ownerProposals, 
+            _voterProposals, 
+            _gbtReward, 
+            _dAppReward, 
+            _reputation
+        );
+    }
+
     /// @dev Calls proposal with solution event 
     /// @param proposalOwner Address of member whosoever has created the proposal
     /// @param proposalId ID or proposal created

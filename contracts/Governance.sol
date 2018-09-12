@@ -305,9 +305,10 @@ contract Governance is Upgradeable {
             (rewardClaimedThenIsExternal, subCategory, proposalStatusThenRewardPercent, finalVerdictThenRewardPerc, solutionIdThenRep, totalReward) =
                 governanceDat.getProposalDetailsForReward(_proposals[i], _memberAddress);           
             totalReward = totalReward / 100;
-            if (proposalStatusThenRewardPercent > 2 && 
-                    finalVerdictThenRewardPerc > 0 && 
-                    !rewardClaimedThenIsExternal) {
+
+            require(!rewardClaimedThenIsExternal && proposalStatusThenRewardPercent > 2);
+            
+            if (finalVerdictThenRewardPerc > 0) {
 
                 rewardClaimedThenIsExternal = proposalCategory.isSubCategoryExternal(subCategory);
                 (finalVerdictThenRewardPerc, solutionIdThenRep) = _getReward(
