@@ -495,6 +495,26 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         );
     }
 
+    function getProposalDetailsForReward(uint _proposalId, address _memberAddress) 
+        public
+        view
+        returns(bool, uint, uint, uint, uint, uint)
+    {
+        uint solutionId = allProposalSolutions[_proposalId].length;
+        for (solutionId--; solutionId > 0; solutionId--) {
+            if (_memberAddress == allProposalSolutions[_proposalId][solutionId].owner)
+                break;
+        }
+        return (
+            rewardClaimed[_memberAddress][_proposalId], 
+            allProposalData[_proposalId].subCategory, 
+            allProposalData[_proposalId].propStatus, 
+            allProposalData[_proposalId].finalVerdict,
+            solutionId,
+            allProposalData[_proposalId].commonIncentive
+        );
+    }
+
     /// @dev Gets proposal details of given proposal id
     /// @param totalVoteValue Total value of votes that has been casted so far against proposal
     /// @param totalSolutions Total number of solutions proposed till now against proposal

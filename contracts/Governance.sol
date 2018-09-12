@@ -174,6 +174,7 @@ contract Governance is Upgradeable {
             require(validateStake(_subCategoryId, token));
             governanceDat.addNewProposal(msg.sender, _subCategoryId, votingAddress, token);            
             uint incentive = proposalCategory.getSubCatIncentive(_subCategoryId);
+            require(incentive <= GBTStandardToken(token).balanceOf(poolAddress));
             governanceDat.setProposalIncentive(_proposalId, incentive); 
         } else
             governanceDat.createProposal(msg.sender, votingAddress);
@@ -235,8 +236,8 @@ contract Governance is Upgradeable {
 
         if (!memberRole.checkRoleIdByAddress(msg.sender, 1)) {
             require(msg.sender == governanceDat.getProposalOwner(_proposalId));
-            require(validateStake(_subCategoryId, tokenAddress));
             require(allowedToCreateProposal(category));
+            require(validateStake(_subCategoryId, tokenAddress));
         }
 
         require(dappIncentive <= GBTStandardToken(tokenAddress).balanceOf(poolAddress));
@@ -246,17 +247,15 @@ contract Governance is Upgradeable {
     }
 
     /// @dev Opens proposal for voting
-    function openProposalForVoting(
-        uint _proposalId
-    ) 
-        public 
-        onlyProposalOwner(_proposalId) 
-        checkProposalValidity(_proposalId) 
+    function openProposalForVoting(uint _proposalId) 
+        public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
     {
         uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalSubCategory(_proposalId));
         require(category != 0);
         governanceDat.changeProposalStatus(_proposalId, 2);
-        callCloseEvent(_proposalId);
+        uint closingTime = proposalCategory.getClosingTimeAtIndex(category, 0) + now; // solhint-disable-line
+        address votingType = governanceDat.getProposalVotingAddress(_proposalId);
+        eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
     }
 
     /// @dev Calculates member reward to be claimed
@@ -284,6 +283,53 @@ contract Governance is Upgradeable {
         }
     }
 
+    /// @dev calculates reward to distribute for a user
+    /// @param _memberAddress Member address
+    /// @param _proposals proposal ids to calculate reward for
+    function calculateMemberReward(address _memberAddress, uint[] _proposals) 
+        public 
+        onlyInternal 
+        returns(uint totalGBTReward, uint totalDAppReward, uint reputation) 
+    {
+        uint i = _proposals.length;
+        
+        uint finalVerdictThenRewardPerc;
+        uint proposalStatusThenRewardPercent;
+        uint solutionIdThenRep;
+        uint subCategory;
+        uint totalReward;
+        bool rewardClaimedThenIsExternal;
+
+        for (i--; i >= 0; i--) {
+            //solhint-disable-next-line
+            (rewardClaimedThenIsExternal, subCategory, proposalStatusThenRewardPercent, finalVerdictThenRewardPerc, solutionIdThenRep, totalReward) =
+                governanceDat.getProposalDetailsForReward(_proposals[i], _memberAddress);           
+            totalReward = totalReward / 100;
+            if (proposalStatusThenRewardPercent > 2 && 
+                    finalVerdictThenRewardPerc > 0 && 
+                    !rewardClaimedThenIsExternal) {
+
+                rewardClaimedThenIsExternal = proposalCategory.isSubCategoryExternal(subCategory);
+                (finalVerdictThenRewardPerc, solutionIdThenRep) = _getReward(
+                        _memberAddress, 
+                        _proposals[i], 
+                        finalVerdictThenRewardPerc, 
+                        solutionIdThenRep, 
+                        subCategory
+                    );
+
+                if (finalVerdictThenRewardPerc > 0) {
+                    if (rewardClaimedThenIsExternal)    
+                        totalGBTReward += finalVerdictThenRewardPerc.mul(totalReward);
+                    else
+                        totalDAppReward += finalVerdictThenRewardPerc.mul(totalReward);
+                }
+
+                reputation += solutionIdThenRep;
+            } 
+        }
+    }
+
     /// @dev Gets remaining vote closing time against proposal 
     /// i.e. Calculated closing time from current voting index to the last layer.
     /// @param _proposalId Proposal Id
@@ -303,23 +349,8 @@ contract Governance is Upgradeable {
         }
 
         totalTime = pClosingTime 
-            + proposalCategory.getTokenHoldingTime(subc)
             + governanceDat.getProposalDateUpd(_proposalId)
             - now; // solhint-disable-line
-    }
-
-    /// @dev Gets Total vote closing time against sub category i.e. 
-    /// Calculated Closing time from first voting layer where current voting index is 0.
-    /// @param _subCategoryId Category id
-    /// @return totalTime Total time before the voting gets closed
-    function getMaxCategoryTokenHoldTime(uint _subCategoryId) public view returns(uint totalTime) {
-        uint categoryId = proposalCategory.getCategoryIdBySubId(_subCategoryId);
-        uint ctLength = proposalCategory.getCloseTimeLength(categoryId);
-        for (uint i = 0; i < ctLength; i++) {
-            totalTime = totalTime + proposalCategory.getClosingTimeAtIndex(categoryId, i);
-        }
-        totalTime = totalTime + proposalCategory.getTokenHoldingTime(_subCategoryId);
-        return totalTime;
     }
 
     /// @dev Gets member details
@@ -385,16 +416,6 @@ contract Governance is Upgradeable {
         for (uint i = 0; i < length; i++) {
             totalVotes = totalVotes + votingType.getAllVoteIdsLengthByProposalRole(_proposalId, i);
         }
-    }
-
-    /// @dev Call event for closing proposal
-    /// @param _proposalId Proposal id which voting needs to be closed
-    function callCloseEvent(uint _proposalId) internal {
-        uint subCategory = governanceDat.getProposalSubCategory(_proposalId);
-        uint categoryId = proposalCategory.getCategoryIdBySubId(subCategory);
-        uint closingTime = proposalCategory.getClosingTimeAtIndex(categoryId, 0) + now; // solhint-disable-line
-        address votingType = governanceDat.getProposalVotingAddress(_proposalId);
-        eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
     }
 
     /// @dev Calculate reward for proposal creation against member
@@ -609,6 +630,25 @@ contract Governance is Upgradeable {
             _solutionHash, 
             _action
         );
+    }
+
+    /// @dev gets rewardPercent and reputation to award a user for a proposal 
+    function _getReward(
+        address _memberAddress, 
+        uint _proposal, 
+        uint _finalVerdict, 
+        uint _solutionId, 
+        uint _subCategory
+    ) internal returns (uint rewardPercent, uint reputation) {
+        governanceDat.setRewardClaimed(_proposal, _memberAddress);
+        if (_memberAddress == governanceDat.getProposalOwner(_proposal)) {
+            rewardPercent += proposalCategory.getRewardPercProposal(_subCategory);
+            reputation += governanceDat.addProposalOwnerPoints();
+        }
+        if (_finalVerdict == _solutionId) {  
+            rewardPercent += proposalCategory.getRewardPercSolution(_subCategory);                  
+            reputation += governanceDat.addSolutionOwnerPoints();
+        }
     }
 
 }

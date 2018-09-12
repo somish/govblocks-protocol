@@ -8,6 +8,7 @@ const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Pool = artifacts.require('Pool');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const sampleAddress = 0x0000000000000000000000000000000000000001;
+const amount = 500000000000000;
 
 let gv;
 let gd;
@@ -277,6 +278,7 @@ contract('Proposal, solution and voting', function([
 
   it('Should create a proposal with solution', async function() {
     this.timeout(100000);
+    await gbt.transfer(pl.address, amount);
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     const c = await pc.getSubCategoryLength();
     await gv.createProposalwithSolution(

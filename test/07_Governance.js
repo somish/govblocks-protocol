@@ -99,6 +99,15 @@ contract('Governance', ([owner, notOwner, noStake]) => {
         { from: notOwner }
       )
     );
+    await catchRevert(
+      gv.createProposal(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        0,
+        10
+      )
+    );
     p2 = await gd.getProposalLength();
     assert.equal(p1.toNumber() + 2, p2.toNumber(), 'Proposal not created');
   });
@@ -108,10 +117,11 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     p = await gd.getProposalLength();
     p = p.toNumber() - 1;
     await catchRevert(gv.openProposalForVoting(p));
-    await gbt.transfer(pl.address, amount);
     await catchRevert(gv.categorizeProposal(p, 15, { from: notOwner }));
     await catchRevert(gv.categorizeProposal(p, 1, { from: notOwner }));
     await catchRevert(gv.categorizeProposal(p, 19, { from: notOwner }));
+    await catchRevert(gv.categorizeProposal(p, 19));
+    await gbt.transfer(pl.address, amount);
     await gv.categorizeProposal(p, 19);
     await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     const category = await gd.getProposalSubCategory(p);
@@ -138,13 +148,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     await catchRevert(
       gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash)
     );
-    let remainingTime = await gv.getMaxCategoryTokenHoldTime(1);
-    await assert.isAtLeast(
-      remainingTime.toNumber(),
-      1,
-      'Remaining time not set'
-    );
-    remainingTime = await gv.getRemainingClosingTime(p1.toNumber(), 0);
+    const remainingTime = await gv.getRemainingClosingTime(p1.toNumber(), 0);
     await assert.isAtLeast(
       remainingTime.toNumber(),
       1,
