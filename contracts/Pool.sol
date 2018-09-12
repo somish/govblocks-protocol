@@ -82,6 +82,8 @@ contract Pool is Upgradeable {
     }
 
     /// @dev user can calim the tokens rewarded them till now
+    /// Index 0 of _ownerProposals, _voterProposals is not parsed. 
+    /// proposal arrays of 1 length are treated as empty.
     function claimReward(address _claimer, uint[] _ownerProposals, uint[] _voterProposals) public noReentrancy {
         uint pendingGBTReward;
         uint pendingDAppReward;
