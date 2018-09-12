@@ -45,6 +45,23 @@ contract('Proposal Category', function([owner, taker]) {
     assert.isAbove(g14.toNumber(), 1);
     const g15 = await pc.getRoleMajorityVoteAtIndex(4, 0);
     assert.equal(g15.toNumber(), 50);
+    const g16 = await pc.getTokenHoldingTime(1);
+    assert.equal(g16.toNumber(), 604800);
+  });
+
+  it('Should not add initial category after initialization', async function() {
+    this.timeout(100000);
+    await catchRevert(
+      pc.addInitialSubC(
+        'd',
+        '0x41',
+        1,
+        sampleAddress,
+        '0x41',
+        [1, 1, 1],
+        [1, 1, 1]
+      )
+    );
   });
 
   it('Should add a proposal category', async function() {
