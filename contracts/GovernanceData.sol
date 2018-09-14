@@ -17,17 +17,12 @@ pragma solidity 0.4.24;
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Master.sol";
 import "./Upgradeable.sol";
-import "./GBTStandardToken.sol";
 import "./Governance.sol";
 import "./VotingType.sol";
-import "./Governed.sol";
+import "./imports/govern/Governed.sol";
 
 
 contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
-
-    constructor (bool _dAppTokenSupportsLocking) public {
-        dAppTokenSupportsLocking = _dAppTokenSupportsLocking;
-    }
 
     event Proposal(
         address indexed proposalOwner, 
@@ -246,7 +241,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     uint public quorumPercentage;
     bool public constructorCheck;
     bool public punishVoters;
-    bool public dAppTokenSupportsLocking;
     uint public stakeWeight;
     uint public bonusStake;
     uint public reputationWeight;
@@ -257,15 +251,13 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     ProposalStruct[] internal allProposal;
     VotingTypeDetails[] internal allVotingTypeDetails;
 
-    GBTStandardToken internal gbt;
-    Governance internal gov;
+    Governance public gov;
     
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public {
         if (!constructorCheck)
             governanceDataInitiate();
         gov = Governance(master.getLatestAddress("GV"));
-        gbt = GBTStandardToken(master.getLatestAddress("GS"));
         editVotingTypeDetails(0, master.getLatestAddress("SV"));
     }
 
@@ -294,10 +286,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     {
         addProposalOwnerPoints = _addProposalOwnerPoints;
         addSolutionOwnerPoints = _addSolutionOwnerPoints;
-    }
-
-    function setDAppTokenSupportsLocking(bool _value) public onlyAuthorizedToGovern {
-        dAppTokenSupportsLocking = _value;
     }
 
     /// @dev Configures global parameters i.e. Voting or Reputation parameters

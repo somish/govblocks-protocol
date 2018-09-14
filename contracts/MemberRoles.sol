@@ -16,7 +16,7 @@
 pragma solidity 0.4.24;
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
-import "./Governed.sol";
+import "./imports/govern/Governed.sol";
 
 
 contract MemberRoles is Governed {
@@ -25,7 +25,10 @@ contract MemberRoles is Governed {
 
     bytes32[] internal memberRole;
     StandardToken public dAppToken;
+    address public firstAB;
+
     bool internal constructorCheck;
+    bool internal adderCheck;
 
     struct MemberRoleDetails {
         uint memberCounter;
@@ -50,6 +53,12 @@ contract MemberRoles is Governed {
         require(!constructorCheck);
         dappName = _dAppName;
         dAppToken = StandardToken(_dAppToken);
+        firstAB = _firstAB;
+        constructorCheck = true;
+    }
+
+    function addInitialMemberRoles() public {
+        require(!adderCheck);
         memberRole.push("");
         emit MemberRole(0, "Everyone", "Professionals that are a part of the GBT network", false);
         memberRole.push("Advisory Board");
@@ -67,9 +76,9 @@ contract MemberRoles is Governed {
             false
         );
         memberRoleData[1].memberCounter++;
-        memberRoleData[1].memberActive[_firstAB] = true;
-        memberRoleData[1].memberAddress.push(_firstAB);
-        constructorCheck = true;
+        memberRoleData[1].memberActive[firstAB] = true;
+        memberRoleData[1].memberAddress.push(firstAB);
+        adderCheck = true;
     }
 
     /// @dev To Initiate default settings whenever the contract is regenerated!
@@ -77,7 +86,7 @@ contract MemberRoles is Governed {
     }
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
-    function changeMasterAddress() public pure { //solhint-disable-line
+    function changeMasterAddress(address _masterAddress) public pure { //solhint-disable-line
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.

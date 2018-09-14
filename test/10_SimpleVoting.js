@@ -1,20 +1,16 @@
 const SimpleVoting = artifacts.require('SimpleVoting');
-const GovernanceData = artifacts.require('GovernanceData');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 let sv;
-const nullAddress = 0x0000000000000000000000000000000000000000;
+const getAddress = require('../helpers/getAddress.js').getAddress;
+const initializeContracts = require('../helpers/getAddress.js')
+  .initializeContracts;
 
 // proposalVoting, adddSolution, claimReward, closeProposal tested already
 contract('Simple Voting', function([owner]) {
-  before(function() {
-    SimpleVoting.deployed()
-      .then(function(instance) {
-        sv = instance;
-        return GovernanceData.deployed();
-      })
-      .then(function(instance) {
-        gd = instance;
-      });
+  it('Should fetch addresses from master', async function() {
+    await initializeContracts();
+    address = await getAddress('SV');
+    sv = await SimpleVoting.at(address);
   });
 
   it('Should be initialized', async function() {
@@ -43,6 +39,7 @@ contract('Simple Voting', function([owner]) {
   it('Should not allow self function to be called by others', async function() {
     this.timeout(100000);
     await catchRevert(sv.addAuthorized(owner));
+    await catchRevert(sv.upgrade());
     await catchRevert(sv.addVotingType(owner, 'yo'));
   });
 });

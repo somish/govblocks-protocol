@@ -24,19 +24,19 @@ import "./ProposalCategory.sol";
 import "./Pool.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./EventCaller.sol";
-import "./Governed.sol";
+import "./imports/govern/Governed.sol";
 
 
 contract SimpleVoting is Upgradeable {
     using SafeMath for uint;
-    GovernanceData internal governanceDat;
-    MemberRoles internal memberRole;
-    Governance internal governance;
-    ProposalCategory internal proposalCategory;
+    GovernanceData public governanceDat;
+    MemberRoles public memberRole;
+    Governance public governance;
+    ProposalCategory public proposalCategory;
     bool public constructorCheck;
-    Pool internal pool;
-    EventCaller internal eventCaller;
-    GovernChecker internal governChecker;
+    Pool public pool;
+    EventCaller public eventCaller;
+    GovernChecker public governChecker;
     bytes32 public votingTypeName;
 
     struct ProposalVote {
@@ -54,7 +54,7 @@ contract SimpleVoting is Upgradeable {
 
     ProposalVote[] internal allVotes;
 
-    modifier self {
+    modifier onlySelf {
         require(msg.sender == address(this));
         _;
     }
@@ -321,16 +321,26 @@ contract SimpleVoting is Upgradeable {
     }
 
     /// @dev ads an authorized address to goovernChecker
-    function addAuthorized(address _newVotingAddress) public self {
+    function addAuthorized(address _newVotingAddress) public onlySelf {
         governChecker.addAuthorized(master.dAppName(), _newVotingAddress);
     }
 
     /// @dev ads a voting type
-    function addVotingType(address _newVotingAddress, bytes2 _name) public self {
+    function addVotingType(address _newVotingAddress, bytes2 _name) public onlySelf {
         governChecker.addAuthorized(master.dAppName(), _newVotingAddress);
         master.addNewContract(_name, _newVotingAddress);
         governanceDat.setVotingTypeDetails(_name, _newVotingAddress);
     }
+
+    /// @dev transfers authority and funds to new addresses
+    function upgrade() public onlySelf {
+        address newSV = master.getLatestAddress("SV");
+        if (newSV != address(this)) {
+            governChecker.updateAuthorized(master.dAppName(), newSV);
+            governanceDat.editVotingTypeDetails(0, newSV);
+        }
+        pool.transferAssets();
+    } 
 
     /// @dev Checks If the proposal voting time is up and it's ready to close 
     ///      i.e. Closevalue is 1 in case of closing, 0 otherwise!
@@ -371,9 +381,7 @@ contract SimpleVoting is Upgradeable {
     /// @dev Does category specific tasks
     function finalActions(uint _proposalId) internal {
         uint subCategory = governanceDat.getProposalSubCategory(_proposalId); 
-        if (subCategory == 10) {
-            upgrade();
-        } else if (subCategory == 11) {
+        if (subCategory == 11) {
             addAuthorized(governanceDat.getLatestVotingAddress());
         }
     }
@@ -453,16 +461,6 @@ contract SimpleVoting is Upgradeable {
                 return true;
         }
     }
-
-    /// @dev transfers authority and funds to new addresses
-    function upgrade() internal {
-        address newSV = master.getLatestAddress("GS");
-        if (newSV != address(this)) {
-            governChecker.updateAuthorized(master.dAppName(), newSV);
-            governanceDat.editVotingTypeDetails(0, newSV);
-        }
-        pool.transferAssets();
-    } 
 
     function calculatePendingVoteReward(address _memberAddress, uint _voteNo, uint _proposalId) 
         internal

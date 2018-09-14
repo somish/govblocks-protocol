@@ -2,11 +2,9 @@ const GovernCheckerContract = artifacts.require('GovernCheckerContract');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 let gc;
 
-contract('GovernCheckerContract', function([first, second, third, foruth]) {
-  before(function() {
-    GovernCheckerContract.deployed().then(function(instance) {
-      gc = instance;
-    });
+contract('GovernCheckerContract', function([first, second, third]) {
+  it('Should fetch addresses for testing', async function() {
+    gc = await GovernCheckerContract.deployed();
   });
 
   it('should initalize authorized', async function() {

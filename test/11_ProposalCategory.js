@@ -1,32 +1,29 @@
 const ProposalCategory = artifacts.require('ProposalCategory');
-const GovernanceData = artifacts.require('GovernanceData');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 let pc;
-let gd;
+const getAddress = require('../helpers/getAddress.js').getAddress;
+const initializeContracts = require('../helpers/getAddress.js')
+  .initializeContracts;
 const sampleAddress = '0x0000000000000000000000000000000000000001';
 const nullAddress = '0x0000000000000000000000000000000000000000';
 
-contract('Proposal Category', function([owner, taker]) {
-  before(function() {
-    ProposalCategory.deployed()
-      .then(function(instance) {
-        pc = instance;
-        return GovernanceData.deployed();
-      })
-      .then(function(instance) {
-        gd = instance;
-      });
+contract('Proposal Category', function() {
+  it('Should fetch addresses from master', async function() {
+    await initializeContracts();
+    address = await getAddress('PC');
+    pc = await ProposalCategory.at(address);
   });
 
   it('Should be initialized', async function() {
     this.timeout(100000);
+    await catchRevert(pc.addDefaultCategories());
     await catchRevert(pc.proposalCategoryInitiate('0x41'));
     const g1 = await pc.allSubCategory(0);
-    assert.equal(g1[6].toNumber(), 604800);
+    assert.equal(g1[6].toNumber(), 0);
     const g2 = await pc.getCategoryDetails(0);
     assert.equal(g2[1][0].toNumber(), 1);
     const g3 = await pc.updateDependencyAddresses(); // Just for the interface, shouldn't throw.
-    const g4 = await pc.changeMasterAddress(); // Just for the interface, shouldn't throw.
+    const g4 = await pc.changeMasterAddress(pc.address); // Just for the interface, shouldn't throw.
     const g5 = await pc.getContractName(0);
     assert.equal(g5.toString(), '0x4558');
     const g6 = await pc.getContractAddress(0);
@@ -47,6 +44,8 @@ contract('Proposal Category', function([owner, taker]) {
     assert.equal(g15.toNumber(), 50);
     const g16 = await pc.getTokenHoldingTime(1);
     assert.equal(g16.toNumber(), 604800);
+    const g17 = await pc.getCloseTimeLength(1);
+    assert.equal(g17.toNumber(), 1);
   });
 
   it('Should not add initial category after initialization', async function() {

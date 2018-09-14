@@ -2,21 +2,18 @@ const Pool = artifacts.require('Pool');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Master = artifacts.require('Master');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
+const getAddress = require('../helpers/getAddress.js').getAddress;
 let pl;
 let gbts;
 let ms;
 
 // getPendingReward and claim reward tested already
 contract('Pool', function([owner, taker]) {
-  before(function() {
-    Pool.deployed()
-      .then(function(instance) {
-        pl = instance;
-        return Master.deployed();
-      })
-      .then(function(instance) {
-        ms = instance;
-      });
+  it('Should fetch addresses from master', async function() {
+    address = await getAddress('PL');
+    pl = await Pool.at(address);
+    address = await getAddress('MS');
+    ms = await Master.at(address);
   });
 
   it('Should buy gbt from ether', async function() {
@@ -42,7 +39,7 @@ contract('Pool', function([owner, taker]) {
 
   it('Should transfer token', async function() {
     this.timeout(100000);
-    let tokenAddress = await ms.getLatestAddress('GS');
+    let tokenAddress = await ms.gbt();
     gbts = await GBTStandardToken.at(tokenAddress);
     await pl.updateDependencyAddresses();
     let b1 = await gbts.balanceOf(pl.address);

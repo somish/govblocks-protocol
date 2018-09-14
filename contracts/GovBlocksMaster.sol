@@ -15,13 +15,16 @@
 
 pragma solidity 0.4.24;
 import "./Master.sol";
-import "./Governed.sol";
+import "./imports/govern/Governed.sol";
 import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./imports/proxy/GovernedUpgradeabilityProxy.sol";
 
 
 contract GovBlocksMaster is Ownable {
     address public eventCaller;
     address public gbtAddress;
+    address public masterAdd;
+    address[] public implementations;
     bool public initialized;
     GovernChecker internal governChecker;
 
@@ -35,7 +38,6 @@ contract GovBlocksMaster is Ownable {
     mapping(address => bytes32) internal govBlocksDappByAddress;
     mapping(bytes32 => GBDapps) internal govBlocksDapps;
     mapping(address => string) internal govBlocksUser;
-    bytes internal masterByteCode;
     bytes32[] internal allGovBlocksUsers;
     string internal byteCodeHash;
     string internal contractsAbiHash;
@@ -48,12 +50,9 @@ contract GovBlocksMaster is Ownable {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             Master master = Master(masterAddress);
             /* solhint-disable */
-            if (master.getCurrentVersion() > 0) {
-                //Master can re enter but we don't expect to use this function ever on the public network
-                if (address(master).call(bytes4(keccak256("changeGBTSAddress(address)")), _gbtContractAddress)) {
-                    //just to silence the compiler warning
-                }
-            } 
+            if (address(master).call(bytes4(keccak256("changeGBTSAddress()")))) {
+                //just to silence the compiler warning
+            }
             /* solhint-enable */     
         }
     }
@@ -65,16 +64,17 @@ contract GovBlocksMaster is Ownable {
             address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             Master master = Master(masterAddress);
             /* solhint-disable */
-            if (master.getCurrentVersion() > 0) {
-                //Master can re enter but we don't expect to use this function ever on the public network
-                if (address(master).call(bytes4(keccak256("changeGBMAddress(address)")), _newGBMAddress)) {
-                    //just to silence the compiler warning
-                }
-            }   
+            if (address(master).call(bytes4(keccak256("changeGBMAddress(address)")), _newGBMAddress)) {
+                //just to silence the compiler warning
+            }
             /* solhint-enable */   
         }
         if (address(governChecker) != address(0))
             governChecker.updateGBMAdress(_newGBMAddress);
+    }
+
+    function updateMasterAddress(address _newMaster) external onlyOwner {
+        masterAdd = _newMaster;
     }
 
     /// @dev Adds GovBlocks user
@@ -88,13 +88,15 @@ contract GovBlocksMaster is Ownable {
         string _dappDescriptionHash
     ) external {
         require(govBlocksDapps[_gbUserName].masterAddress == address(0));
-        address _newMasterAddress = deployMaster(_gbUserName, masterByteCode);
-        allGovBlocksUsers.push(_gbUserName);
-        govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;
         govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
-        govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
         govBlocksDapps[_gbUserName].proxyAddress = _tokenProxy;
-        govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
+        GovernedUpgradeabilityProxy tempInstance = new GovernedUpgradeabilityProxy(_gbUserName, masterAdd);
+        Master ms = Master(address(tempInstance));
+        ms.initMaster(msg.sender, _gbUserName, implementations);
+        allGovBlocksUsers.push(_gbUserName);
+        govBlocksDapps[_gbUserName].masterAddress = address(tempInstance);
+        govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
+        govBlocksDappByAddress[address(tempInstance)] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
     }
 
@@ -141,9 +143,8 @@ contract GovBlocksMaster is Ownable {
         contractsAbiHash = _abiHash;
     }
 
-    /// @dev Sets byte code of Master
-    function setMasterByteCode(bytes _masterByteCode) external onlyOwner {
-        masterByteCode = _masterByteCode;
+    function setImplementations(address[] _implementations) external onlyOwner {
+        implementations = _implementations;
     }
 
     /// @dev Sets dApp user information such as Email id, name etc.
@@ -158,15 +159,15 @@ contract GovBlocksMaster is Ownable {
 
     /// @dev Initializes GovBlocks master
     /// @param _gbtAddress GBT standard token address
-    function govBlocksMasterInit(address _gbtAddress, address _eventCaller) public {
+    function govBlocksMasterInit(address _gbtAddress, address _eventCaller, address _master) public {
         require(!initialized);
         require(owner != address(0));
         
         gbtAddress = _gbtAddress;
         eventCaller = _eventCaller;
+        masterAdd = _master;
         Governed govern = new Governed();
         governChecker = GovernChecker(govern.governChecker());
-        masterByteCode = "0x496e6974616c697a65";
         if (address(governChecker) != address(0))
             governChecker.updateGBMAdress(address(this));
         initialized = true;
@@ -306,16 +307,5 @@ contract GovBlocksMaster is Ownable {
     /// @dev Gets dApp username by address
     function getDappNameByAddress(address _contractAddress) public view returns(bytes32) {
         return govBlocksDappByAddress[_contractAddress];
-    }
-
-    /// @dev Deploys a new Master
-    function deployMaster(bytes32 _gbUserName, bytes _masterByteCode) internal returns(address deployedAddress) {
-        /* solhint-disable */
-        assembly {
-          deployedAddress := create(0, add(_masterByteCode, 0x20), mload(_masterByteCode))  // deploys contract
-        }
-        /* solhint-enable */
-        Master master = Master(deployedAddress);
-        master.initMaster(msg.sender, _gbUserName);
     }
 }

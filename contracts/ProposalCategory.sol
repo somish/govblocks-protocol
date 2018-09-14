@@ -13,12 +13,14 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity 0.4.24;
-import "./Governed.sol";
+import "./imports/govern/Governed.sol";
 import "./ProposalCategoryAdder.sol";
 
 
 contract ProposalCategory is Governed {
     bool public constructorCheck;
+    bool public adderCheck;
+    address public officialPCA;
 
     struct Category {
         string name;
@@ -45,31 +47,6 @@ contract ProposalCategory is Governed {
     SubCategory[] public allSubCategory;
     Category[] internal allCategory;
     mapping(uint => uint[]) internal allSubIdByCategory;
-
-    constructor() public {
-        uint[] memory rs = new uint[](1);
-        uint[] memory al = new uint[](2);
-        uint[] memory alex = new uint[](1);
-        uint[] memory mv = new uint[](1);
-        uint[] memory ct = new uint[](1);
-        
-        rs[0] = 1;
-        mv[0] = 50;
-        al[0] = 1;
-        al[1] = 2;
-        alex[0] = 0;
-        ct[0] = 72000;
-        
-        allCategory.push(Category("Uncategorized", rs, mv, al, ct));
-        allCategory.push(Category("Member role", rs, mv, al, ct));
-        allCategory.push(Category("Categories", rs, mv, al, ct));
-        allCategory.push(Category("Parameters", rs, mv, al, ct));
-        allCategory.push(Category("Transfer Assets", rs, mv, al, ct));
-        allCategory.push(Category("Critical Actions", rs, mv, al, ct));
-        allCategory.push(Category("Immediate Actions", rs, mv, al, ct));
-        allCategory.push(Category("External Feedback", rs, mv, alex, ct));
-        allCategory.push(Category("Others", rs, mv, al, ct));
-    }
 
     /// @dev Adds new category
     /// @param _name Category name
@@ -371,6 +348,7 @@ contract ProposalCategory is Governed {
         public 
     {
         require(allSubCategory.length <= 20);
+        require(msg.sender == officialPCA || officialPCA == address(0));
         allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
         allSubCategory.push(SubCategory(
                 _subCategoryName, 
@@ -393,35 +371,37 @@ contract ProposalCategory is Governed {
         require(!constructorCheck);
         dappName = _dAppName;
 
-        addInitialSubCategories();
-
+        if (_getCodeSize(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a) > 0)        //kovan testnet
+            officialPCA = 0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a;
+        
         constructorCheck = true;
     }
 
-    ///@dev just to follow the interface
-    function updateDependencyAddresses() public pure { //solhint-disable-line
-    }
+    function addDefaultCategories() external {
+        require(!adderCheck);
+        uint[] memory rs = new uint[](1);
+        uint[] memory al = new uint[](2);
+        uint[] memory alex = new uint[](1);
+        uint[] memory mv = new uint[](1);
+        uint[] memory ct = new uint[](1);
+        
+        rs[0] = 1;
+        mv[0] = 50;
+        al[0] = 1;
+        al[1] = 2;
+        alex[0] = 0;
+        ct[0] = 72000;
+        
+        allCategory.push(Category("Uncategorized", rs, mv, al, ct));
+        allCategory.push(Category("Member role", rs, mv, al, ct));
+        allCategory.push(Category("Categories", rs, mv, al, ct));
+        allCategory.push(Category("Parameters", rs, mv, al, ct));
+        allCategory.push(Category("Transfer Assets", rs, mv, al, ct));
+        allCategory.push(Category("Critical Actions", rs, mv, al, ct));
+        allCategory.push(Category("Immediate Actions", rs, mv, al, ct));
+        allCategory.push(Category("External Feedback", rs, mv, alex, ct));
+        allCategory.push(Category("Others", rs, mv, al, ct));
 
-    /// @dev just to adhere to GovBlockss' Upgradeable interface
-    function changeMasterAddress() public pure { //solhint-disable-line
-    }
-
-    function getCodeSize(address _addr) internal view returns(uint _size) {
-        assembly { //solhint-disable-line
-            _size := extcodesize(_addr)
-        }
-    }
-
-    /// @dev adds second half of the inital categories
-    function addInitialSubCategories() internal { //solhint-disable-line
-        uint[] memory stakeInecntive = new uint[](3); 
-        uint8[] memory rewardPerc = new uint8[](3);
-        stakeInecntive[0] = 0;
-        stakeInecntive[1] = 604800;
-        stakeInecntive[2] = 0;
-        rewardPerc[0] = 10;
-        rewardPerc[1] = 20;
-        rewardPerc[2] = 70;
         allSubIdByCategory[0].push(0);
         allSubCategory.push(SubCategory(
                 "Uncategorized",
@@ -429,72 +409,29 @@ contract ProposalCategory is Governed {
                 0, 
                 address(0), 
                 "EX", 
-                stakeInecntive[0], 
-                stakeInecntive[1], 
-                stakeInecntive[2],
-                rewardPerc[0], 
-                rewardPerc[1], 
-                rewardPerc[2]
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
             )
         );
-        addInitialSubC(
-            "Add new member role",
-            "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
-            1,
-            address(0),
-            "MR",
-            stakeInecntive,
-            rewardPerc
-        );
-        addInitialSubC(
-            "Update member role",
-            "QmZAjwUTsMdhhTHAL87RHFch7nq8op6MnEUXiud8SjecT9",
-            1,
-            address(0),
-            "MR",
-            stakeInecntive,
-            rewardPerc
-        );
-        addInitialSubC(
-            "Add new category",
-            "QmQ9EzwyUsLdkyayJsFU6iig1zPD6FdqLQ3ZF1jETL1tT2",
-            2,
-            address(0),
-            "PC",
-            stakeInecntive,
-            rewardPerc
-        );
-        addInitialSubC(
-            "Edit category",
-            "QmY31mwTHmgd7SL2shQeX9xuhnrNXpNNhTXb3ZyyXJJTWL",
-            2,
-            address(0),
-            "PC",
-            stakeInecntive,
-            rewardPerc
-        );
-        addInitialSubC(
-            "Add new sub category",
-            "QmXX2XxNjZeoEN2iiMdgWY3Xpo1XpGs9opD7SJnuotXyBu",
-            2,
-            address(0),
-            "PC",
-            stakeInecntive,
-            rewardPerc
-        );
-        addInitialSubC(
-            "Edit sub category",
-            "Qmd1yPsk9cfDN447AQVHMEnxTxx693VhnAXFeo3Q3JefHJ",
-            2,
-            address(0),
-            "PC",
-            stakeInecntive,
-            rewardPerc
-        ); //8 sub cat len
-        if (getCodeSize(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a) > 0)        //kovan testnet
-            ProposalCategoryAdder proposalCategoryAdder = 
-                ProposalCategoryAdder(0x4267dF0e1239f7b86C21C3830A2D15729B0Bd84a);
-        if (address(proposalCategoryAdder) != 0)
-            proposalCategoryAdder.addSubC(address(this));
+
+        adderCheck = true;
+    }
+
+    ///@dev just to follow the interface
+    function updateDependencyAddresses() public pure { //solhint-disable-line
+    }
+
+    /// @dev just to adhere to GovBlockss' Upgradeable interface
+    function changeMasterAddress(address _masterAddress) public pure { //solhint-disable-line
+    }
+
+    function _getCodeSize(address _addr) internal view returns(uint _size) {
+        assembly { //solhint-disable-line
+            _size := extcodesize(_addr)
+        }
     }
 }

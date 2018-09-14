@@ -1,16 +1,18 @@
 const MemberRoles = artifacts.require('MemberRoles');
+const getAddress = require('../helpers/getAddress.js').getAddress;
+const initializeContracts = require('../helpers/getAddress.js')
+  .initializeContracts;
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 let mr;
+let address;
 
 contract('MemberRoles', function([owner, member, other]) {
-  before(() => {
-    MemberRoles.deployed().then(instance => {
-      mr = instance;
-    });
-  });
-
   it('should be initialized', async function() {
+    await initializeContracts();
+    address = await getAddress('MR');
+    mr = await MemberRoles.at(address);
     await catchRevert(mr.memberRolesInitiate('0x41', owner, owner));
+    await catchRevert(mr.addInitialMemberRoles());
   });
 
   it('should have AB role defined', async function() {
@@ -76,7 +78,7 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('Should follow the upgradable interface', async function() {
-    await mr.changeMasterAddress(); // just for interface, they do nothing
+    await mr.changeMasterAddress(owner); // just for interface, they do nothing
     await mr.updateDependencyAddresses(); // just for interface, they do nothing
   });
 

@@ -4,6 +4,9 @@ const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const increaseTime = require('../helpers/increaseTime.js').increaseTime;
 const encode = require('../helpers/encoder.js').encode;
 const getProposalIds = require('../helpers/reward.js').getProposalIds;
+const getAddress = require('../helpers/getAddress.js').getAddress;
+const initializeContracts = require('../helpers/getAddress.js')
+  .initializeContracts;
 const Pool = artifacts.require('Pool');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const Master = artifacts.require('Master');
@@ -33,43 +36,25 @@ require('chai')
   .should();
 
 contract('Governance', ([owner, notOwner, noStake]) => {
-  before(() => {
-    Governance.deployed()
-      .then(instance => {
-        gv = instance;
-        return GovernanceData.deployed();
-      })
-      .then(instance => {
-        gd = instance;
-        return Pool.deployed();
-      })
-      .then(instance => {
-        pl = instance;
-        return SimpleVoting.deployed();
-      })
-      .then(instance => {
-        sv = instance;
-        return GBTStandardToken.deployed();
-      })
-      .then(instance => {
-        gbt = instance;
-        return Master.deployed();
-      })
-      .then(instance => {
-        ms = instance;
-        return MemberRoles.deployed();
-      })
-      .then(instance => {
-        mr = instance;
-        return TokenProxy.new(gbt.address);
-      })
-      .then(instance => {
-        tp = instance;
-        return ProposalCategory.deployed();
-      })
-      .then(instance => {
-        pc = instance;
-      });
+  it('Should fetch addresses from master', async function() {
+    await initializeContracts();
+    address = await getAddress('GV');
+    gv = await Governance.at(address);
+    address = await getAddress('GD');
+    gd = await GovernanceData.at(address);
+    address = await getAddress('SV');
+    sv = await SimpleVoting.at(address);
+    address = await getAddress('MR');
+    mr = await MemberRoles.at(address);
+    address = await getAddress('GBT');
+    gbt = await GBTStandardToken.at(address);
+    address = await getAddress('PC');
+    pc = await ProposalCategory.at(address);
+    address = await getAddress('PL');
+    pl = await Pool.at(address);
+    tp = await TokenProxy.new(gbt.address);
+    address = await getAddress('MS');
+    ms = await Master.at(address);
   });
 
   it('Should create an uncategorized proposal', async function() {
@@ -173,7 +158,6 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       15
     );
     propId = (await gd.getProposalLength()).toNumber() - 1;
-    await gd.setDAppTokenSupportsLocking(true);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -460,13 +444,10 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     const pr = await pl.getPendingReward(noStake, 0);
     assert.equal(pr[0].toNumber(), 0);
     assert.equal(pr[1].toNumber(), 0);
-    // const pro = await pl.getPendingReward(owner);
     await gd.setPunishVoters(false);
     const pr2 = await pl.getPendingReward(noStake, 0);
     assert.isAbove(pr2[0].toNumber(), 0);
     assert.equal(pr2[1].toNumber(), 0);
-    // const pro2 = await pl.getPendingReward(owner);
-    // assert.isBelow(pro2[0].toNumber(), pro[0].toNumber());
     [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
     await pl.claimReward(owner, ownerProposals, voterProposals);
     await catchRevert(pl.claimReward(owner, ownerProposals, voterProposals));

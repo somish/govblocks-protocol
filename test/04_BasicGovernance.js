@@ -5,6 +5,9 @@ const SimpleVoting = artifacts.require('SimpleVoting');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const encode = require('../helpers/encoder.js').encode;
 const getProposalIds = require('../helpers/reward.js').getProposalIds;
+const getAddress = require('../helpers/getAddress.js').getAddress;
+const initializeContracts = require('../helpers/getAddress.js')
+  .initializeContracts;
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Pool = artifacts.require('Pool');
 const ProposalCategory = artifacts.require('ProposalCategory');
@@ -26,35 +29,22 @@ contract('Proposal, solution and voting', function([
   member,
   nonMember
 ]) {
-  before(function() {
-    Governance.deployed()
-      .then(function(instance) {
-        gv = instance;
-        return GovernanceData.deployed();
-      })
-      .then(function(instance) {
-        gd = instance;
-        return SimpleVoting.deployed();
-      })
-      .then(function(instance) {
-        sv = instance;
-        return MemberRoles.deployed();
-      })
-      .then(function(instance) {
-        mr = instance;
-        return GBTStandardToken.deployed();
-      })
-      .then(function(instance) {
-        gbt = instance;
-        return Pool.deployed();
-      })
-      .then(function(instance) {
-        pl = instance;
-        return ProposalCategory.deployed();
-      })
-      .then(function(instance) {
-        pc = instance;
-      });
+  it('Should fetch addresses from master', async function() {
+    await initializeContracts();
+    address = await getAddress('GV');
+    gv = await Governance.at(address);
+    address = await getAddress('GD');
+    gd = await GovernanceData.at(address);
+    address = await getAddress('SV');
+    sv = await SimpleVoting.at(address);
+    address = await getAddress('MR');
+    mr = await MemberRoles.at(address);
+    address = await getAddress('GBT');
+    gbt = await GBTStandardToken.at(address);
+    address = await getAddress('PC');
+    pc = await ProposalCategory.at(address);
+    address = await getAddress('PL');
+    pl = await Pool.at(address);
   });
 
   it('Should create a proposal with solution to add new member role', async function() {

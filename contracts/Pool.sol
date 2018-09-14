@@ -27,11 +27,11 @@ import "./VotingType.sol";
 contract Pool is Upgradeable {
     using SafeMath for uint;
 
-    GBTStandardToken internal gbt;
-    GBTStandardToken internal dAppToken;
-    Governance internal gov;
-    GovernanceData internal governanceDat;
-    ProposalCategory internal proposalCategory;
+    GBTStandardToken public gbt;
+    GBTStandardToken public dAppToken;
+    Governance public gov;
+    GovernanceData public governanceDat;
+    ProposalCategory public proposalCategory;
     bool internal locked;
     
     function () public payable {} //solhint-disable-line
@@ -53,7 +53,7 @@ contract Pool is Upgradeable {
 
     /// @dev just to adhere to the interface
     function updateDependencyAddresses() public {
-        gbt = GBTStandardToken(master.getLatestAddress("GS"));
+        gbt = GBTStandardToken(master.gbt());
         gov = Governance(master.getLatestAddress("GV"));
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));

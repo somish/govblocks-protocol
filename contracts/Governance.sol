@@ -29,15 +29,14 @@ import "./EventCaller.sol";
 contract Governance is Upgradeable {
 
     using SafeMath for uint;
-    address internal poolAddress;
-    GBTStandardToken internal govBlocksToken;
-    MemberRoles internal memberRole;
-    ProposalCategory internal proposalCategory;
-    GovernanceData internal governanceDat;
-    Pool internal pool;
-    EventCaller internal eventCaller;
-    address internal dAppToken;
-    address internal dAppTokenProxy;
+    address public poolAddress;
+    GBTStandardToken public govBlocksToken;
+    MemberRoles public memberRole;
+    ProposalCategory public proposalCategory;
+    GovernanceData public governanceDat;
+    Pool public pool;
+    EventCaller public eventCaller;
+    address public dAppLocker;
 
     modifier onlyProposalOwner(uint _proposalId) {
         require(msg.sender == governanceDat.getProposalOwner(_proposalId));
@@ -111,14 +110,13 @@ contract Governance is Upgradeable {
 
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public {
-        dAppToken = master.dAppToken();
-        dAppTokenProxy = master.dAppTokenProxy();
+        dAppLocker = master.dAppLocker();
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
         poolAddress = master.getLatestAddress("PL");
         pool = Pool(poolAddress);
-        govBlocksToken = GBTStandardToken(master.getLatestAddress("GS"));
+        govBlocksToken = GBTStandardToken(master.gbt());
         eventCaller = EventCaller(master.getEventCallerAddress());
     }
 
@@ -166,10 +164,8 @@ contract Governance is Upgradeable {
             /* solhint-disable */
             if (proposalCategory.isCategoryExternal(category))
                 token = address(govBlocksToken);
-            else if (!governanceDat.dAppTokenSupportsLocking())
-                token = dAppTokenProxy;
             else
-                token = dAppToken;
+                token = dAppLocker;
             /* solhint-enable */
             require(validateStake(_subCategoryId, token));
             governanceDat.addNewProposal(msg.sender, _subCategoryId, votingAddress, token);            
@@ -228,10 +224,8 @@ contract Governance is Upgradeable {
         /* solhint-disable */
         if (proposalCategory.isCategoryExternal(category))
             tokenAddress = address(govBlocksToken);
-        else if (!governanceDat.dAppTokenSupportsLocking())
-            tokenAddress = dAppTokenProxy;
         else
-            tokenAddress = dAppToken;
+            tokenAddress = dAppLocker;
         /* solhint-enable */
 
         if (!memberRole.checkRoleIdByAddress(msg.sender, 1)) {

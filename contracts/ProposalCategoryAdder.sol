@@ -21,10 +21,75 @@ import "./ProposalCategory.sol";
 contract ProposalCategoryAdder {
 
     /// @dev ads the default govBlocks sub categories to dApps
-    function addSubC(address _to) public { //solhint-disable-line
+    function addCat(address _to) public { //solhint-disable-line
         ProposalCategory proposalCategory = ProposalCategory(_to);
         uint[] memory stakeInecntive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
+
+        stakeInecntive[0] = 0;
+        stakeInecntive[1] = 604800;
+        stakeInecntive[2] = 0;
+        rewardPerc[0] = 10;
+        rewardPerc[1] = 20;
+        rewardPerc[2] = 70;
+
+        proposalCategory.addDefaultCategories();
+
+        proposalCategory.addInitialSubC(
+            "Add new member role",
+            "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
+            1,
+            address(0),
+            "MR",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Update member role",
+            "QmZAjwUTsMdhhTHAL87RHFch7nq8op6MnEUXiud8SjecT9",
+            1,
+            address(0),
+            "MR",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Add new category",
+            "QmQ9EzwyUsLdkyayJsFU6iig1zPD6FdqLQ3ZF1jETL1tT2",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Edit category",
+            "QmY31mwTHmgd7SL2shQeX9xuhnrNXpNNhTXb3ZyyXJJTWL",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Add new sub category",
+            "QmXX2XxNjZeoEN2iiMdgWY3Xpo1XpGs9opD7SJnuotXyBu",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Edit sub category",
+            "Qmd1yPsk9cfDN447AQVHMEnxTxx693VhnAXFeo3Q3JefHJ",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+
         rewardPerc[0] = 30;
         rewardPerc[1] = 30;
         rewardPerc[2] = 40;
