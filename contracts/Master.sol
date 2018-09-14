@@ -24,6 +24,7 @@ import "./imports/govern/Governed.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 
+
 contract Master is Ownable {
 
     uint[] public versionDates;
@@ -100,6 +101,8 @@ contract Master is Ownable {
     function addNewContract(bytes2 _contractName, address _contractAddress) external authorizedOnly {
         allContractNames.push(_contractName);
         _generateProxy(_contractName, _contractAddress);
+        _changeMasterAddress(address(this));
+        _changeAllAddress();
     }
 
     /// @dev upgrades a single contract
@@ -107,6 +110,7 @@ contract Master is Ownable {
         external authorizedOnly 
     {
         _replaceImplementation(_contractsName, _contractsAddress);
+        versionDates.push(now);  //solhint-disable-line
     }
 
     /// @dev upgrades a single contract
@@ -115,6 +119,8 @@ contract Master is Ownable {
     {
         contractsActive[contractsAddress[_contractsName]] = false;
         _generateProxy(_contractsName, _contractsAddress);
+        _changeMasterAddress(address(this));
+        _changeAllAddress();
     }
 
     /// @dev sets dAppTokenProxy address
@@ -131,6 +137,8 @@ contract Master is Ownable {
     }
 
     /// @dev Changes Master contract address
+    /// To be called only when proxy is being changed
+    /// To update implementation, use voting to call upgradeTo of the proxy.
     function changeMasterAddress(address _masterAddress) external authorizedOnly {
         _changeMasterAddress(_masterAddress);
     }

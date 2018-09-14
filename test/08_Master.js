@@ -4,6 +4,7 @@ const initializeContracts = require('../helpers/getAddress.js')
   .initializeContracts;
 const sampleAddress = '0x0000000000000000000000000000000000000001';
 const MemberRoles = artifacts.require('MemberRoles');
+const OwnedUpgradeabilityProxy = artifacts.require('OwnedUpgradeabilityProxy');
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const Master = artifacts.require('Master');
 const Governance = artifacts.require('Governance');
@@ -14,45 +15,24 @@ const SimpleVoting = artifacts.require('SimpleVoting');
 const EventCaller = artifacts.require('EventCaller');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 let gbm;
-let ec;
-let gd;
-let mr;
-let pc;
+let temp;
 let sv;
-let gv;
-let pl;
 let add = [];
 let ms;
 
 contract('Master', function([owner, notOwner]) {
   it('Should fetch addresses from master', async function() {
     await initializeContracts();
-    address = await getAddress('GV');
-    gv = await Governance.at(address);
-    address = await getAddress('GD');
-    gd = await GovernanceData.at(address);
     address = await getAddress('SV');
     sv = await SimpleVoting.at(address);
-    address = await getAddress('MR');
-    mr = await MemberRoles.at(address);
     address = await getAddress('GBT');
     gbt = await GBTStandardToken.at(address);
-    address = await getAddress('PC');
-    pc = await ProposalCategory.at(address);
-    address = await getAddress('PL');
-    pl = await Pool.at(address);
     address = await getAddress('MS');
     ms = await Master.at(address);
     address = await getAddress('EC');
     ec = await EventCaller.at(address);
     address = await getAddress('GBM');
     gbm = await GovBlocksMaster.at(address);
-    add.push(gd.address);
-    add.push(mr.address);
-    add.push(pc.address);
-    add.push(sv.address);
-    add.push(gv.address);
-    add.push(pl.address);
   });
 
   it('Should check getters', async function() {
@@ -89,24 +69,84 @@ contract('Master', function([owner, notOwner]) {
 
   it('Should add new version', async function() {
     this.timeout(100000);
+    temp = await GovernanceData.new();
+    add.push(temp.address);
+    temp = await MemberRoles.new();
+    add.push(temp.address);
+    temp = await ProposalCategory.new();
+    add.push(temp.address);
+    const svad = await SimpleVoting.new();
+    add.push(svad.address);
+    temp = await Governance.new();
+    add.push(temp.address);
+    temp = await Pool.new();
+    add.push(temp.address);
+
     await ms.addNewVersion(add);
     await catchRevert(ms.addNewVersion(add, { from: notOwner }));
     const g6 = await ms.getLatestAddress('SV');
-    const g7 = await ms.getEventCallerAddress();
-    assert.equal(g6, sv.address, 'SV address incorrect');
-    assert.equal(g7, ec.address, 'EventCaller address incorrect');
+    assert.equal(g6, sv.address, 'SV proxy address incorrect');
+    g7 = await OwnedUpgradeabilityProxy.at(g6);
+    assert.equal(
+      await g7.implementation(),
+      svad.address,
+      'SV implementation address incorrect'
+    );
   });
 
   it('Should not allow non-gbm address to change gbt address', async function() {
     this.timeout(100000);
-    await catchRevert(ms.changeGBTSAddress());
+    await catchRevert(ms.changeGBTSAddress({ from: notOwner }));
+    await catchRevert(ms.changeGBMAddress(ms.address, { from: notOwner }));
   });
 
   it('Should add new contract', async function() {
     this.timeout(100000);
     // Will throw once owner's permissions are removed. will need to create proposal then.
-    await ms.addNewContract('QP', sampleAddress);
+    const newContract = await Pool.new();
+    await ms.addNewContract('QP', newContract.address);
     const QPproxy = await ms.getLatestAddress('QP');
     await catchRevert(ms.addNewContract('yo', owner, { from: notOwner }));
+  });
+
+  it('Should update implementation', async function() {
+    const poolProxyAddress = await ms.contractsAddress('PL');
+    const poolProxy = await OwnedUpgradeabilityProxy.at(poolProxyAddress);
+    const newPool = await Pool.new();
+    await ms.upgradeContractImplementation('PL', newPool.address);
+    const newPoolAddress = await poolProxy.implementation();
+    assert.equal(newPoolAddress, newPool.address);
+  });
+
+  it('Should update proxy', async function() {
+    const poolProxyAddress = await ms.contractsAddress('PL');
+    const poolProxy = await OwnedUpgradeabilityProxy.at(poolProxyAddress);
+    const poolAddress = await poolProxy.implementation();
+    await ms.upgradeContractProxy('PL', poolAddress);
+    const pool = await Pool.at(poolProxyAddress);
+    await pool.transferAssets();
+    await pool.transferAssets();
+    await gbt.transfer(poolProxyAddress, 10000);
+    await pool.sendTransaction({ value: 1000000000 });
+    await pool.transferAssets();
+    const newPoolProxyAddress = await ms.contractsAddress('PL');
+    const newPoolProxy = await OwnedUpgradeabilityProxy.at(newPoolProxyAddress);
+    const newPoolAddress = await newPoolProxy.implementation();
+    assert.equal(newPoolAddress, poolAddress);
+    assert.notEqual(poolProxyAddress, newPoolProxyAddress);
+  });
+
+  it('Should check authorization correctly', async function() {
+    assert.equal(await ms.isAuth(), true);
+    assert.equal(await ms.isAuth({ from: notOwner }), false);
+  });
+
+  it('Should change master address', async function() {
+    const poolProxyAddress = await ms.contractsAddress('PL');
+    const pool = await Pool.at(poolProxyAddress);
+    const newMaster = await Master.new();
+    await ms.changeMasterAddress(newMaster.address);
+    assert.equal(await pool.master(), newMaster.address);
+    await catchRevert(pool.changeMasterAddress(newMaster.address));
   });
 });

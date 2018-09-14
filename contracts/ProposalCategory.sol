@@ -377,7 +377,7 @@ contract ProposalCategory is Governed {
         constructorCheck = true;
     }
 
-    function addDefaultCategories() external {
+    function addDefaultCategories() public {
         require(!adderCheck);
         uint[] memory rs = new uint[](1);
         uint[] memory al = new uint[](2);
