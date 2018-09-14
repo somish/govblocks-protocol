@@ -91,13 +91,13 @@ contract GovBlocksMaster is Ownable {
         govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
         govBlocksDapps[_gbUserName].proxyAddress = _tokenProxy;
         GovernedUpgradeabilityProxy tempInstance = new GovernedUpgradeabilityProxy(_gbUserName, masterAdd);
-        Master ms = Master(address(tempInstance));
-        ms.initMaster(msg.sender, _gbUserName, implementations);
         allGovBlocksUsers.push(_gbUserName);
         govBlocksDapps[_gbUserName].masterAddress = address(tempInstance);
         govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
         govBlocksDappByAddress[address(tempInstance)] = _gbUserName;
         govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
+        Master ms = Master(address(tempInstance));
+        ms.initMaster(msg.sender, _gbUserName, implementations);
     }
 
     /// @dev Changes dApp master address
