@@ -50,8 +50,8 @@ contract('Master', function([owner, notOwner]) {
       'Master name not set'
     );
     assert.equal(g3, gbm.address, 'gbm address incorrect');
-    assert.equal(g4.toNumber(), 0, 'Incorrect Master Version');
-    assert.equal(g5[0].toNumber(), 0, 'Incorrect Master Version');
+    assert.equal(g4.toNumber(), 1, 'Incorrect Master Version');
+    assert.equal(g5[0].toNumber(), 1, 'Incorrect Master Version');
     assert.equal(
       await ms.isInternal(notOwner),
       false,

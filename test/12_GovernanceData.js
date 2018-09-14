@@ -12,7 +12,7 @@ let gd;
 let sv;
 let gbt;
 
-contract('Governance Data', function([owner]) {
+contract('Governance Data', function([owner, notOwner]) {
   it('Should fetch addresses from master', async function() {
     await initializeContracts();
     address = await getAddress('GV');
@@ -138,5 +138,6 @@ contract('Governance Data', function([owner]) {
     await gd.resumeProposal(0);
     const p2 = await gd.proposalPaused(0);
     assert.equal(p2, false);
+    await catchRevert(gd.pauseProposal(0, { from: notOwner }));
   });
 });

@@ -152,7 +152,7 @@ contract Master is Ownable {
     /// @dev Gets current version amd its master address
     /// @return versionNo Current version number that is active
     function getCurrentVersion() public view returns(uint versionNo) {
-        return versionDates.length - 1;
+        return versionDates.length;
     }
 
     /// @dev Checks if the address is authorized to make changes.
@@ -177,7 +177,7 @@ contract Master is Ownable {
         for (uint i = 0; i < allContractNames.length; i++)
             contractAddresses[i] = contractsAddress[allContractNames[i]];
 
-        return(versionDates.length - 1, allContractNames, contractAddresses);
+        return(versionDates.length, allContractNames, contractAddresses);
     }
 
     /// @dev Gets latest contract address
