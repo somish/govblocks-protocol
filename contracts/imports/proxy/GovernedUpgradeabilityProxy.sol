@@ -4,17 +4,18 @@ import './UpgradeabilityProxy.sol';
 import '../govern/GovernCheckerContract.sol';
 
 /**
- * @title OwnedUpgradeabilityProxy
- * @dev This contract combines an upgradeability proxy with basic authorization control functionalities
+ * @title GovernedUpgradeabilityProxy
+ * @dev This contract combines an upgradeability proxy with authorization control functionalities
+ *      of a network wide govern checker
  */
 contract GovernedUpgradeabilityProxy is UpgradeabilityProxy {
 
-    // Storage position of the owner of the contract
+    // Storage position of the governChecker Address and dAppName
     bytes32 private constant governCheckerPosition = keccak256("org.govblocks.govern.checker");
     bytes32 private constant dAppNamePosition = keccak256("org.govblocks.dApp.name");
 
     /**
-    * @dev the constructor sets the original owner of the contract to the sender account.
+    * @dev the constructor sets the governChecker, dAppName and implementation
     */
     constructor(bytes32 _dAppName, address _implementation) public {
         /* solhint-disable */
@@ -44,8 +45,10 @@ contract GovernedUpgradeabilityProxy is UpgradeabilityProxy {
             require(gc.authorizedAddressNumber(dAppName(), msg.sender) > 0);
         _;
     }
-
-    /// @dev checks if an address is authorized to govern
+    
+    /**
+    * @dev checks if an address is authorized to govern
+    */
     function isAuthorizedToGovern(address _toCheck) public view returns(bool) {
         GovernCheckerContract gc = GovernCheckerContract(governChecker());
         if (address(gc) == address(0) || gc.authorizedAddressNumber(dAppName(), _toCheck) > 0)
@@ -53,8 +56,8 @@ contract GovernedUpgradeabilityProxy is UpgradeabilityProxy {
     }
 
     /**
-     * @dev Tells the address of the owner
-     * @return the address of the owner
+     * @dev Tells the address of the governChecker
+     * @return the address of the governChecker
      */
     function governChecker() public view returns (address governCheckerAddress) {
         bytes32 position = governCheckerPosition;
@@ -65,8 +68,8 @@ contract GovernedUpgradeabilityProxy is UpgradeabilityProxy {
     }
 
     /**
-     * @dev Tells the address of the owner
-     * @return the address of the owner
+     * @dev Tells the dAppName
+     * @return the dAppName
      */
     function dAppName() public view returns (bytes32 dappName) {
         bytes32 position = dAppNamePosition;
@@ -85,8 +88,8 @@ contract GovernedUpgradeabilityProxy is UpgradeabilityProxy {
     }
 
     /**
-     * @dev Allows the proxy owner to upgrade the current version of the proxy and call the new implementation
-     * to initialize whatever is needed through a low level call.
+     * @dev Allows the authorized address to upgrade the current version of the proxy and call the
+     * new implementation to initialize whatever is needed through a low level call.
      * @param _implementation representing the address of the new implementation to be set.
      * @param _data represents the msg.data to bet sent in the low level call. This parameter may include the function
      * signature of the implementation to be called with the needed payload
@@ -108,7 +111,7 @@ contract GovernedUpgradeabilityProxy is UpgradeabilityProxy {
     }
 
     /**
-     * @dev Sets the address of the owner
+     * @dev Sets the dAppName
      */
     function _setDAppNameUnique(bytes32 _dAppName) internal {
         //solhint-disable-next-line
