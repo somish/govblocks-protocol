@@ -21,9 +21,7 @@ contract('Pool', function([owner, taker]) {
     await pl.transferAssets();
     await pl.send(10000000000000);
     let b1 = await web3.eth.getBalance(pl.address);
-    // will throw once owner's permission are taken away
     await pl.buyPoolGBT(1000000000000);
-    await catchRevert(pl.buyPoolGBT(1000000000000, { from: taker }));
     let b2 = await web3.eth.getBalance(pl.address);
     assert.isBelow(b2.toNumber(), b1.toNumber(), 'Balance not reduced');
   });
@@ -31,7 +29,6 @@ contract('Pool', function([owner, taker]) {
   it('Should transfer ether', async function() {
     this.timeout(100000);
     let b1 = await web3.eth.getBalance(pl.address);
-    // will throw once owner's permission are taken away
     await pl.transferEther(owner, 10);
     let b2 = await web3.eth.getBalance(pl.address);
     assert.isBelow(b2.toNumber(), b1.toNumber(), 'Balance not reduced');

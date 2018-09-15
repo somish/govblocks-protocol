@@ -16,6 +16,7 @@
 pragma solidity 0.4.24;
 
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./govern/Governed.sol";
 import "./GBTStandardToken.sol";
 import "./Upgradeable.sol";
 import "./Governance.sol";
@@ -24,7 +25,7 @@ import "./ProposalCategory.sol";
 import "./VotingType.sol";
 
 
-contract Pool is Upgradeable {
+contract Pool is Upgradeable, Governed {
     using SafeMath for uint;
 
     GBTStandardToken public gbt;
@@ -35,14 +36,6 @@ contract Pool is Upgradeable {
     bool internal locked;
     
     function () public payable {} //solhint-disable-line
-
-    modifier onlySV {
-        require(
-            master.getLatestAddress("SV") == msg.sender 
-            || master.isInternal(msg.sender) 
-        );
-        _;
-    }
 
     modifier noReentrancy() {
         require(!locked, "Reentrant call.");
@@ -58,6 +51,7 @@ contract Pool is Upgradeable {
         governanceDat = GovernanceData(master.getLatestAddress("GD"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
         dAppToken = GBTStandardToken(master.dAppToken());
+        dappName = master.dAppName();
     }
 
     /// @dev transfers its assets to latest addresses
@@ -75,7 +69,7 @@ contract Pool is Upgradeable {
 
     /// @dev converts pool ETH to GBT
     /// @param _gbt number of GBT to buy multiplied 10^decimals
-    function buyPoolGBT(uint _gbt) public onlySV {
+    function buyPoolGBT(uint _gbt) public onlyAuthorizedToGovern {
         uint _wei = SafeMath.mul(_gbt, gbt.tokenPrice());
         _wei = SafeMath.div(_wei, uint256(10) ** gbt.decimals());
         gbt.buyToken.value(_wei)();
@@ -208,7 +202,7 @@ contract Pool is Upgradeable {
     /// @dev Transfer Ether to someone    
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where ether has to be sent
-    function transferEther(address _receiverAddress, uint256 _amount) public onlySV {
+    function transferEther(address _receiverAddress, uint256 _amount) public onlyAuthorizedToGovern {
         _receiverAddress.transfer(_amount);
     }
 
@@ -216,7 +210,7 @@ contract Pool is Upgradeable {
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where tokens have to be sent
     /// @param _token address of token to transfer
-    function transferToken(address _token, address _receiverAddress, uint256 _amount) public onlySV {
+    function transferToken(address _token, address _receiverAddress, uint256 _amount) public onlyAuthorizedToGovern {
         GBTStandardToken token = GBTStandardToken(_token);
         token.transfer(_receiverAddress, _amount);
     }
