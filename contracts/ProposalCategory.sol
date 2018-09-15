@@ -371,8 +371,8 @@ contract ProposalCategory is Governed {
         require(!constructorCheck);
         dappName = _dAppName;
 
-        if (_getCodeSize(0x67d3ACcFcbf30dcca2551910f862Adbbb1236c9c) > 0)        //kovan testnet
-            officialPCA = 0x67d3ACcFcbf30dcca2551910f862Adbbb1236c9c;
+        if (_getCodeSize(0xf709a8bF60da205914EA7bb3689438DF6F3eF58A) > 0)        //kovan testnet
+            officialPCA = 0xf709a8bF60da205914EA7bb3689438DF6F3eF58A;
         
         constructorCheck = true;
     }

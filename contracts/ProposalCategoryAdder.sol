@@ -164,8 +164,8 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Upgrade a contract",
-            "QmYQXdESKMXNnWDquvH88CckH6AepjtGSUxnkyJ8D7YKpq",
+            "Upgrade a contract Implementation",
+            "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
             5,
             address(0),
             "MS",

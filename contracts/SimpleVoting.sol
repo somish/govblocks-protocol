@@ -381,7 +381,7 @@ contract SimpleVoting is Upgradeable {
     /// @dev Does category specific tasks
     function finalActions(uint _proposalId) internal {
         uint subCategory = governanceDat.getProposalSubCategory(_proposalId); 
-        if (subCategory == 11) {
+        if (subCategory == 12) { //add new voting type. gives authorization to it.
             addAuthorized(governanceDat.getLatestVotingAddress());
         }
     }
