@@ -411,10 +411,14 @@ contract SimpleVoting is Upgradeable {
                     uint subCategory = governanceDat.getProposalSubCategory(_proposalId);
                     bytes2 contractName = proposalCategory.getContractName(subCategory);
                     address actionAddress;
+                    /*solhint-disable*/
                     if (contractName == "EX")
                         actionAddress = proposalCategory.getContractAddress(subCategory);
+                    else if (contractName == "MS")
+                        actionAddress = address(master);
                     else
                         actionAddress = master.getLatestAddress(contractName);
+                    /*solhint-enable*/
                     if (actionAddress.call(governanceDat.getSolutionActionByProposalId(_proposalId, max))) { //solhint-disable-line
                         eventCaller.callActionSuccess(_proposalId);
                     }
