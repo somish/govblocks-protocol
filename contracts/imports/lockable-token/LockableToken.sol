@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import "./../openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import 'openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
 import './ERC1132.sol';
 
 

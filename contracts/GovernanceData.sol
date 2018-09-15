@@ -14,12 +14,12 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity 0.4.24;
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Master.sol";
 import "./Upgradeable.sol";
 import "./Governance.sol";
 import "./VotingType.sol";
-import "./imports/govern/Governed.sol";
+import "./govern/Governed.sol";
 
 
 contract GovernanceData is Upgradeable, Governed { //solhint-disable-line

@@ -17,15 +17,15 @@ pragma solidity 0.4.24;
 
 import "./Upgradeable.sol";
 import "./GovBlocksMaster.sol";
-import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./imports/proxy/OwnedUpgradeabilityProxy.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./proxy/OwnedUpgradeabilityProxy.sol";
 import "./GovernanceData.sol";
-import "./imports/govern/Governed.sol";
+import "./govern/Governed.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 
 
-contract Master is Ownable {
+contract Master is Ownable { //Ownable just for testing, will be changed to governed.
 
     uint[] public versionDates;
     bytes32 public dAppName;

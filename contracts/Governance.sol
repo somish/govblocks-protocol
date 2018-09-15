@@ -19,7 +19,7 @@ import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 import "./Master.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Pool.sol";
 import "./GBTStandardToken.sol";
 import "./VotingType.sol";

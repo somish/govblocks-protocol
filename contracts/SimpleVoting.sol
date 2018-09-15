@@ -22,9 +22,9 @@ import "./Upgradeable.sol";
 import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
 import "./Pool.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./EventCaller.sol";
-import "./imports/govern/Governed.sol";
+import "./govern/Governed.sol";
 
 
 contract SimpleVoting is Upgradeable {

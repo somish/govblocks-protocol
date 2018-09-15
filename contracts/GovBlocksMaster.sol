@@ -15,12 +15,12 @@
 
 pragma solidity 0.4.24;
 import "./Master.sol";
-import "./imports/govern/Governed.sol";
-import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./imports/proxy/GovernedUpgradeabilityProxy.sol";
+import "./govern/Governed.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./proxy/GovernedUpgradeabilityProxy.sol";
 
 
-contract GovBlocksMaster is Ownable {
+contract GovBlocksMaster is Ownable { //Ownable just for testing, will be changed to governed.
     address public eventCaller;
     address public gbtAddress;
     address public masterAdd;
