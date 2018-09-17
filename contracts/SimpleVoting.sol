@@ -147,9 +147,9 @@ contract SimpleVoting is Upgradeable {
                 
             }
             if (proposalCategory.isSubCategoryExternal(subCategory))    
-                pendingGBTReward = calcReward;
+                pendingGBTReward = pendingGBTReward.add(calcReward);
             else
-                pendingDAppReward = calcReward;
+                pendingDAppReward = pendingDAppReward.add(calcReward);
         }
         
     }
