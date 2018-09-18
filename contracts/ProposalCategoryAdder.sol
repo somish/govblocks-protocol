@@ -104,11 +104,21 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
 
-        stakeInecntive[0] = 10 ** 5;
-        stakeInecntive[1] = 604800;
-        stakeInecntive[2] = 10 ** 5;
+        proposalCategory.addInitialSubC( //Update
+            "Change dApp Token Proxy",
+            "QmWqSFWYbmQYS9wqs7cvHXdDDGXJ8wtUv9h2w3nxbjDKUb",
+            3,
+            address(0),
+            "MS",
+            stakeInecntive,
+            rewardPerc
+        );
 
-        proposalCategory.addInitialSubC(
+        stakeInecntive[0] = 10 ** 18;
+        stakeInecntive[1] = 604800;
+        stakeInecntive[2] = 10 ** 18;
+
+        proposalCategory.addInitialSubC( //subcat id 9
             "Transfer Ether",
             "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
             4,
@@ -172,7 +182,16 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialSubC( //update
+            "Upgrade a contract proxy",
+            "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
+            5,
+            address(0),
+            "MS",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC( //Update
             "Resume Proposal",
             "QmSDojLprBLDrPqF7HAaDCdi2Hy129LBwzfRMKhkt2begC",
             5,
@@ -181,7 +200,7 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialSubC( //Update
             "Pause Proposal",
             "QmPh5j3aAPhC6VZ8snjwLWPtR7Ps3os8zdYERTtp5W6RAp",
             6,
@@ -191,25 +210,7 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Change dApp Token Proxy",
-            "QmWqSFWYbmQYS9wqs7cvHXdDDGXJ8wtUv9h2w3nxbjDKUb",
-            3,
-            address(0),
-            "MS",
-            stakeInecntive,
-            rewardPerc
-        );
-        proposalCategory.addInitialSubC(
-            "dApp Token locking support",
-            "QmWfqjytQ4Qx3p4BJMbAUUMC6yQHcMqc4eMj5RaY4MbJQe",
-            3,
-            address(0),
-            "GD",
-            stakeInecntive,
-            rewardPerc
-        );
-        proposalCategory.addInitialSubC(
-            "External Proposal",
+            "External Proposal", //19
             "", 
             7, 
             address(0), 

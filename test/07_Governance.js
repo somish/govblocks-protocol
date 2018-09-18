@@ -14,7 +14,6 @@ const GBTStandardToken = artifacts.require('GBTStandardToken');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const MemberRoles = artifacts.require('MemberRoles');
 const TokenProxy = artifacts.require('TokenProxy');
-const amount = 500000000000000;
 const sampleAddress = 0x0000000000000000000000000000000000000001;
 
 let gbt;
@@ -34,6 +33,8 @@ const BigNumber = web3.BigNumber;
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
+
+const e18 = new BigNumber(1e18);
 
 contract('Governance', ([owner, notOwner, noStake]) => {
   it('Should fetch addresses from master', async function() {
@@ -60,7 +61,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
   it('Should create an uncategorized proposal', async function() {
     this.timeout(100000);
     p1 = await gd.getProposalLength();
-    await gbt.lock('GOV', amount, 54685456133563456);
+    await gbt.lock('GOV', e18.mul(10), 54685456133563456);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -108,7 +109,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     await catchRevert(gv.categorizeProposal(p, 1, { from: notOwner }));
     await catchRevert(gv.categorizeProposal(p, 19, { from: notOwner }));
     await catchRevert(gv.categorizeProposal(p, 19));
-    await gbt.transfer(pl.address, amount);
+    await gbt.transfer(pl.address, e18.mul(10));
     await gv.categorizeProposal(p, 19);
     await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     const category = await gd.getProposalSubCategory(p);
@@ -245,6 +246,17 @@ contract('Governance', ([owner, notOwner, noStake]) => {
         { from: noStake }
       )
     );
+    await gbt.transfer(notOwner, e18.mul(10));
+    await catchRevert(
+      gv.createProposal(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        0,
+        15,
+        { from: notOwner }
+      )
+    );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     await catchRevert(
       gv.categorizeProposal(p1.toNumber(), 9, { from: noStake })
@@ -255,10 +267,16 @@ contract('Governance', ([owner, notOwner, noStake]) => {
   });
 
   it('Should allow authorized people to categorize multiple times', async () => {
-    await mr.updateMemberRole(notOwner, 1, true, 356800000054);
-    await gbt.transfer(notOwner, amount);
-    await gbt.lock('GOV', amount, 54685456133563456, { from: notOwner });
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    await mr.updateMemberRole(notOwner, 1, false, 356800000054);
+    await catchRevert(
+      gv.categorizeProposal(p1.toNumber(), 18, { from: notOwner })
+    );
+    await catchRevert(
+      gv.categorizeProposal(p1.toNumber(), 19, { from: notOwner })
+    );
+    await gbt.lock('GOV', e18.mul(10), 54685456133563456, { from: notOwner });
+    await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     await gv.categorizeProposal(p1.toNumber(), 20, { from: notOwner });
     await gv.categorizeProposal(p1.toNumber(), 4);
     const category = await gd.getProposalSubCategory(p1.toNumber());
@@ -285,11 +303,9 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     const b1 = await gbt.balanceOf(owner);
     const g1 = await gv.getMemberDetails(notOwner);
     let pr = await pl.getPendingReward(owner, 0);
-    assert.equal(pr[0].toNumber(), 40000);
-    assert.equal(pr[1].toNumber(), 0);
+    pr[0].should.be.bignumber.eq(e18.div(2.5));
     pr = await pl.getPendingReward(notOwner, 0);
-    assert.equal(pr[0].toNumber(), 60000);
-    assert.equal(pr[1].toNumber(), 0);
+    pr[0].should.be.bignumber.eq(e18.mul(6).div(10));
     [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
     await pl.claimReward(owner, ownerProposals, voterProposals);
     [ownerProposals, voterProposals] = await getProposalIds(notOwner, gd, sv);
@@ -311,8 +327,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
   it('Should allow claiming reward for preious proposals', async () => {
     const b1 = await gbt.balanceOf(owner);
     const pr = await pl.getPendingReward(owner, 0);
-    assert.equal(pr[0].toNumber(), 0);
-    assert.equal(pr[1].toNumber(), 100000);
+    pr[1].should.be.bignumber.eq(e18);
     [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
     await pl.claimReward(owner, ownerProposals, voterProposals);
     const b2 = await gbt.balanceOf(owner);
