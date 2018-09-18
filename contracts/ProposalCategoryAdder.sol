@@ -106,7 +106,7 @@ contract ProposalCategoryAdder {
 
         proposalCategory.addInitialSubC( //Update
             "Change dApp Token Proxy",
-            "QmWqSFWYbmQYS9wqs7cvHXdDDGXJ8wtUv9h2w3nxbjDKUb",
+            "QmPR9K6BevCXRVBxWGjF9RV7Pmtxr7D4gE3qsZu5bzi8GK",
             3,
             address(0),
             "MS",
@@ -184,7 +184,7 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC( //update
             "Upgrade a contract proxy",
-            "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
+            "QmUNGEn7E2csB3YxohDxBKNqvzwa1WfvrSH4TCCFD9DZsg",
             5,
             address(0),
             "MS",
@@ -193,7 +193,7 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC( //Update
             "Resume Proposal",
-            "QmSDojLprBLDrPqF7HAaDCdi2Hy129LBwzfRMKhkt2begC",
+            "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1",
             5,
             address(0),
             "GD",
@@ -202,7 +202,7 @@ contract ProposalCategoryAdder {
         );
         proposalCategory.addInitialSubC( //Update
             "Pause Proposal",
-            "QmPh5j3aAPhC6VZ8snjwLWPtR7Ps3os8zdYERTtp5W6RAp",
+            "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk",
             6,
             address(0),
             "GD",

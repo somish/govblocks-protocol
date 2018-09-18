@@ -55,6 +55,9 @@ contract Master is Ownable {
     function initMaster(address _ownerAddress, bytes32 _gbUserName, address[] _implementations) external {
         require(address(gbm) == address(0));
 
+        _addContractNames();
+        require(allContractNames.length == _implementations.length);
+        
         contractsActive[address(this)] = true;
         gbm = GovBlocksMaster(msg.sender);
         gbt = gbm.gbtAddress();
@@ -64,8 +67,6 @@ contract Master is Ownable {
         owner = _ownerAddress;
         versionDates.push(now); //solhint-disable-line
 
-        _addContractNames();
-        require(allContractNames.length == _implementations.length);
         for (uint i = 0; i < allContractNames.length; i++) {
             _generateProxy(allContractNames[i], _implementations[i]);
         }

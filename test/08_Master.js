@@ -149,4 +149,9 @@ contract('Master', function([owner, notOwner]) {
     assert.equal(await pool.master(), newMaster.address);
     await catchRevert(pool.changeMasterAddress(newMaster.address));
   });
+
+  it('Should not get initiazlized with incorrect params', async function() {
+    const m = await Master.new();
+    await catchRevert(m.initMaster(owner, '0x42', [owner]));
+  });
 });
