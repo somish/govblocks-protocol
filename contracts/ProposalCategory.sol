@@ -346,7 +346,7 @@ contract ProposalCategory is Governed {
     ) 
         public 
     {
-        require(allSubCategory.length <= 20);
+        require(allSubCategory.length <= 21);
         require(msg.sender == officialPCA || officialPCA == address(0));
         allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
         allSubCategory.push(SubCategory(

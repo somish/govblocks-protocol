@@ -107,13 +107,13 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     await catchRevert(gv.openProposalForVoting(p));
     await catchRevert(gv.categorizeProposal(p, 15, { from: notOwner }));
     await catchRevert(gv.categorizeProposal(p, 1, { from: notOwner }));
-    await catchRevert(gv.categorizeProposal(p, 19, { from: notOwner }));
-    await catchRevert(gv.categorizeProposal(p, 19));
+    await catchRevert(gv.categorizeProposal(p, 20, { from: notOwner }));
+    await catchRevert(gv.categorizeProposal(p, 20));
     await gbt.transfer(pl.address, e18.mul(10));
-    await gv.categorizeProposal(p, 19);
+    await gv.categorizeProposal(p, 20);
     await mr.updateMemberRole(notOwner, 1, true, 356800000054);
     const category = await gd.getProposalSubCategory(p);
-    assert.equal(category.toNumber(), 19, 'Category not set properly');
+    assert.equal(category.toNumber(), 20, 'Category not set properly');
   });
 
   it('Should submit proposal with solution', async function() {
@@ -273,7 +273,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
       gv.categorizeProposal(p1.toNumber(), 18, { from: notOwner })
     );
     await catchRevert(
-      gv.categorizeProposal(p1.toNumber(), 19, { from: notOwner })
+      gv.categorizeProposal(p1.toNumber(), 20, { from: notOwner })
     );
     await gbt.lock('GOV', e18.mul(10), 54685456133563456, { from: notOwner });
     await mr.updateMemberRole(notOwner, 1, true, 356800000054);

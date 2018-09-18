@@ -118,7 +118,7 @@ contract ProposalCategoryAdder {
         stakeInecntive[1] = 604800;
         stakeInecntive[2] = 10 ** 18;
 
-        proposalCategory.addInitialSubC( //subcat id 9
+        proposalCategory.addInitialSubC(
             "Transfer Ether",
             "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
             4,
@@ -182,7 +182,7 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC( //update
+        proposalCategory.addInitialSubC( 
             "Upgrade a contract proxy",
             "QmUNGEn7E2csB3YxohDxBKNqvzwa1WfvrSH4TCCFD9DZsg",
             5,
@@ -191,7 +191,7 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC( //Update
+        proposalCategory.addInitialSubC( 
             "Resume Proposal",
             "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1",
             5,
@@ -200,12 +200,21 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC( //Update
+        proposalCategory.addInitialSubC( 
             "Pause Proposal",
             "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk",
             6,
             address(0),
             "GD",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC( 
+            "Buy GBT in Pool",
+            "QmUc6apk3aRoHPaSwafo7RkV4XTJaaWS6Q7MogTMqLDyWs",
+            6,
+            address(0),
+            "PL",
             stakeInecntive,
             rewardPerc
         );

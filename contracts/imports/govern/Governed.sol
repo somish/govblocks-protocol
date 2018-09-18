@@ -35,6 +35,10 @@ contract Governed {
     modifier onlyAuthorizedToGovern() {
         if (address(governChecker) != address(0))
             require(governChecker.authorizedAddressNumber(dappName, msg.sender) > 0);
+        else {
+            setGovernChecker();
+            require(_isAuthToGovern(msg.sender));
+        }
         _;
     }
 
@@ -44,8 +48,7 @@ contract Governed {
 
     /// @dev checks if an address is authorized to govern
     function isAuthorizedToGovern(address _toCheck) public view returns(bool) {
-        if (address(governChecker) == address(0) || governChecker.authorizedAddressNumber(dappName, _toCheck) > 0)
-            return true;
+        return _isAuthToGovern(_toCheck);
     }
 
     /// @dev sets the address of governChecker based on the network being used.
@@ -70,5 +73,11 @@ contract Governed {
         assembly {
             _size := extcodesize(_addr)
         }
+    }
+
+    function _isAuthToGovern(address _toCheck) internal view returns(bool auth) {
+        if (address(governChecker) == address(0) || 
+                governChecker.authorizedAddressNumber(dappName, _toCheck) > 0)
+            return true;
     }
 }
