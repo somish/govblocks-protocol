@@ -218,13 +218,12 @@ contract ProposalCategory is Governed {
     }
 
     function isCategoryExternal(uint _category) public view returns(bool ext) {
-        if (allCategory[_category].allowedToCreateProposal[0] == 0)
-            ext = true;
+        return _isCategoryExternal(_category);
     }
 
     function isSubCategoryExternal(uint _subCategory) public view returns(bool ext) {
-        if (allCategory[allSubCategory[_subCategory].categoryId].allowedToCreateProposal[0] == 0)
-            ext = true;
+        uint category = allSubCategory[_subCategory].categoryId;
+        return _isCategoryExternal(category);
     }
 
     function getRequiredStake(uint _subCategoryId) public view returns(uint, uint) {
@@ -433,5 +432,13 @@ contract ProposalCategory is Governed {
         assembly { //solhint-disable-line
             _size := extcodesize(_addr)
         }
+    }
+
+    function _isCategoryExternal(uint _category) internal view returns(bool ext) {
+        for (uint i = 0; i < allCategory[_category].allowedToCreateProposal.length; i++) {
+            if (allCategory[_category].allowedToCreateProposal[i] == 0)
+                ext = true;
+        }
+        
     }
 }

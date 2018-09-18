@@ -229,9 +229,9 @@ contract Governance is Upgradeable {
         /* solhint-enable */
 
         if (!memberRole.checkRoleIdByAddress(msg.sender, 1)) {
-            require(validateStake(_subCategoryId, tokenAddress));
             require(msg.sender == governanceDat.getProposalOwner(_proposalId));
             require(allowedToCreateProposal(category)); 
+            require(validateStake(_subCategoryId, tokenAddress));
         }
 
         require(dappIncentive <= GBTStandardToken(tokenAddress).balanceOf(poolAddress));
