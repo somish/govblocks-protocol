@@ -83,7 +83,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
         'Add new member',
         'Addnewmember',
         0,
-        9,
+        10,
         { from: notOwner }
       )
     );
@@ -93,7 +93,7 @@ contract('Governance', ([owner, notOwner, noStake]) => {
         'Add new member',
         'Addnewmember',
         0,
-        10
+        20
       )
     );
     p2 = await gd.getProposalLength();

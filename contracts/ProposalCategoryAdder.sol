@@ -20,7 +20,7 @@ import "./ProposalCategory.sol";
 
 contract ProposalCategoryAdder {
 
-    /// @dev ads the default govBlocks sub categories to dApps
+    /// @dev ads the default govBlocks categories and some sub cat to dApps
     function addCat(address _to) public { //solhint-disable-line
         ProposalCategory proposalCategory = ProposalCategory(_to);
         uint[] memory stakeInecntive = new uint[](3); 
@@ -29,9 +29,9 @@ contract ProposalCategoryAdder {
         stakeInecntive[0] = 0;
         stakeInecntive[1] = 604800;
         stakeInecntive[2] = 0;
-        rewardPerc[0] = 10;
-        rewardPerc[1] = 20;
-        rewardPerc[2] = 70;
+        rewardPerc[0] = 30;
+        rewardPerc[1] = 30;
+        rewardPerc[2] = 40;
 
         proposalCategory.addDefaultCategories();
 
@@ -90,10 +90,6 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
 
-        rewardPerc[0] = 30;
-        rewardPerc[1] = 30;
-        rewardPerc[2] = 40;
-
         proposalCategory.addInitialSubC(
             "Configure parameters",
             "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
@@ -104,7 +100,7 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
 
-        proposalCategory.addInitialSubC( //Update
+        proposalCategory.addInitialSubC(
             "Change dApp Token Proxy",
             "QmPR9K6BevCXRVBxWGjF9RV7Pmtxr7D4gE3qsZu5bzi8GK",
             3,
@@ -113,10 +109,21 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
+    }
 
-        stakeInecntive[0] = 10 ** 18;
+    /// @dev ads remaining sub cat. Function split to split gas cost.
+    function addSubCat(address _to) public {
+        ProposalCategory proposalCategory = ProposalCategory(_to);
+        uint[] memory stakeInecntive = new uint[](3); 
+        uint8[] memory rewardPerc = new uint8[](3);
+
+        stakeInecntive[0] = uint256(10) ** 18;
         stakeInecntive[1] = 604800;
-        stakeInecntive[2] = 10 ** 18;
+        stakeInecntive[2] = uint256(10) ** 18;
+
+        rewardPerc[0] = 30;
+        rewardPerc[1] = 30;
+        rewardPerc[2] = 40;
 
         proposalCategory.addInitialSubC(
             "Transfer Ether",
@@ -236,6 +243,6 @@ contract ProposalCategoryAdder {
             stakeInecntive,
             rewardPerc
         );
-        //21 sub cat len, 20 sub cat id
+        //22 sub cat len, 21 sub cat id
     }
 }

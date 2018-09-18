@@ -25,6 +25,7 @@ async function initializeContracts() {
   const mri = await MemberRoles.at(mr);
   try {
     await pca.addCat(pc);
+    await pca.addSubCat(pc);
     await mri.addInitialMemberRoles();
   } catch (exception) {
     console.log(exception);
