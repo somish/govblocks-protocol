@@ -1,6 +1,7 @@
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const increaseTime = require('../helpers/increaseTime.js').increaseTime;
+const getAddress = require('../helpers/getAddress.js').getAddress;
 let gbts;
 const supply = 100000000000000000000;
 const lockReason = 'GOV';
@@ -14,8 +15,8 @@ const nullAddress = 0x0000000000000000000000000000000000000000;
 
 contract('GBTStandardToken', function([owner, receiver, spender]) {
   before(function() {
-    GBTStandardToken.deployed().then(function(instance) {
-      gbts = instance;
+    getAddress('GBT').then(function(address) {
+      gbts = GBTStandardToken.at(address);
     });
   });
 

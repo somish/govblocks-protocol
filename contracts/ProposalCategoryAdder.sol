@@ -21,10 +21,75 @@ import "./ProposalCategory.sol";
 contract ProposalCategoryAdder {
 
     /// @dev ads the default govBlocks sub categories to dApps
-    function addSubC(address _to) public { //solhint-disable-line
+    function addCat(address _to) public { //solhint-disable-line
         ProposalCategory proposalCategory = ProposalCategory(_to);
         uint[] memory stakeInecntive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
+
+        stakeInecntive[0] = 0;
+        stakeInecntive[1] = 604800;
+        stakeInecntive[2] = 0;
+        rewardPerc[0] = 10;
+        rewardPerc[1] = 20;
+        rewardPerc[2] = 70;
+
+        proposalCategory.addDefaultCategories();
+
+        proposalCategory.addInitialSubC(
+            "Add new member role",
+            "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
+            1,
+            address(0),
+            "MR",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Update member role",
+            "QmZAjwUTsMdhhTHAL87RHFch7nq8op6MnEUXiud8SjecT9",
+            1,
+            address(0),
+            "MR",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Add new category",
+            "QmQ9EzwyUsLdkyayJsFU6iig1zPD6FdqLQ3ZF1jETL1tT2",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Edit category",
+            "QmY31mwTHmgd7SL2shQeX9xuhnrNXpNNhTXb3ZyyXJJTWL",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Add new sub category",
+            "QmXX2XxNjZeoEN2iiMdgWY3Xpo1XpGs9opD7SJnuotXyBu",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC(
+            "Edit sub category",
+            "Qmd1yPsk9cfDN447AQVHMEnxTxx693VhnAXFeo3Q3JefHJ",
+            2,
+            address(0),
+            "PC",
+            stakeInecntive,
+            rewardPerc
+        );
+
         rewardPerc[0] = 30;
         rewardPerc[1] = 30;
         rewardPerc[2] = 40;
@@ -39,11 +104,21 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
 
-        stakeInecntive[0] = 10 ** 5;
-        stakeInecntive[1] = 604800;
-        stakeInecntive[2] = 10 ** 5;
+        proposalCategory.addInitialSubC( //Update
+            "Change dApp Token Proxy",
+            "QmPR9K6BevCXRVBxWGjF9RV7Pmtxr7D4gE3qsZu5bzi8GK",
+            3,
+            address(0),
+            "MS",
+            stakeInecntive,
+            rewardPerc
+        );
 
-        proposalCategory.addInitialSubC(
+        stakeInecntive[0] = 10 ** 18;
+        stakeInecntive[1] = 604800;
+        stakeInecntive[2] = 10 ** 18;
+
+        proposalCategory.addInitialSubC( //subcat id 9
             "Transfer Ether",
             "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
             4,
@@ -99,26 +174,35 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Upgrade a contract",
-            "QmYQXdESKMXNnWDquvH88CckH6AepjtGSUxnkyJ8D7YKpq",
+            "Upgrade a contract Implementation",
+            "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
             5,
             address(0),
             "MS",
             stakeInecntive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialSubC( //update
+            "Upgrade a contract proxy",
+            "QmUNGEn7E2csB3YxohDxBKNqvzwa1WfvrSH4TCCFD9DZsg",
+            5,
+            address(0),
+            "MS",
+            stakeInecntive,
+            rewardPerc
+        );
+        proposalCategory.addInitialSubC( //Update
             "Resume Proposal",
-            "QmSDojLprBLDrPqF7HAaDCdi2Hy129LBwzfRMKhkt2begC",
+            "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1",
             5,
             address(0),
             "GD",
             stakeInecntive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialSubC( //Update
             "Pause Proposal",
-            "QmPh5j3aAPhC6VZ8snjwLWPtR7Ps3os8zdYERTtp5W6RAp",
+            "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk",
             6,
             address(0),
             "GD",
@@ -126,25 +210,7 @@ contract ProposalCategoryAdder {
             rewardPerc
         );
         proposalCategory.addInitialSubC(
-            "Change dApp Token Proxy",
-            "QmWqSFWYbmQYS9wqs7cvHXdDDGXJ8wtUv9h2w3nxbjDKUb",
-            3,
-            address(0),
-            "MS",
-            stakeInecntive,
-            rewardPerc
-        );
-        proposalCategory.addInitialSubC(
-            "dApp Token locking support",
-            "QmWfqjytQ4Qx3p4BJMbAUUMC6yQHcMqc4eMj5RaY4MbJQe",
-            3,
-            address(0),
-            "GD",
-            stakeInecntive,
-            rewardPerc
-        );
-        proposalCategory.addInitialSubC(
-            "External Proposal",
+            "External Proposal", //19
             "", 
             7, 
             address(0), 

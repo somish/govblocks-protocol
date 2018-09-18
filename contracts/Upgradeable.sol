@@ -29,10 +29,12 @@ contract Upgradeable {
 
     function updateDependencyAddresses() public; //To be implemented by every contract depending on its needs
 
-    function changeMasterAddress() public {
+    function changeMasterAddress(address _masterAddress) public {
         if (address(master) == address(0))
-            master = Master(msg.sender);
-        else
-            master = Master(master.getLatestAddress("MS"));
+            master = Master(_masterAddress);
+        else {
+            require(msg.sender == address(master));
+            master = Master(_masterAddress);
+        }
     }
 }

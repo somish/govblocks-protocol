@@ -3,6 +3,9 @@ const GovernanceData = artifacts.require('GovernanceData');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const encode = require('../helpers/encoder.js').encode;
+const getAddress = require('../helpers/getAddress.js').getAddress;
+const initializeContracts = require('../helpers/getAddress.js')
+  .initializeContracts;
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 let gv;
 let gd;
@@ -10,23 +13,16 @@ let sv;
 let gbt;
 
 contract('Governance Data', function([owner, notOwner]) {
-  before(function() {
-    Governance.deployed()
-      .then(function(instance) {
-        gv = instance;
-        return GovernanceData.deployed();
-      })
-      .then(function(instance) {
-        gd = instance;
-        return SimpleVoting.deployed();
-      })
-      .then(function(instance) {
-        sv = instance;
-        return GBTStandardToken.deployed();
-      })
-      .then(function(instance) {
-        gbt = instance;
-      });
+  it('Should fetch addresses from master', async function() {
+    await initializeContracts();
+    address = await getAddress('GV');
+    gv = await Governance.at(address);
+    address = await getAddress('GD');
+    gd = await GovernanceData.at(address);
+    address = await getAddress('SV');
+    sv = await SimpleVoting.at(address);
+    address = await getAddress('GBT');
+    gbt = await GBTStandardToken.at(address);
   });
 
   it('Should create a proposal with solution', async function() {
@@ -84,6 +80,7 @@ contract('Governance Data', function([owner, notOwner]) {
     let g12 = await gd.getStatusOfProposals();
     let g14 = await gd.getAllSolutionIdsByAddress(owner);
     let g15 = await gd.getLatestVotingAddress();
+    let g16 = await gd.getProposalDateUpd(0);
     await gd.storeProposalVersion(0, 'x');
     await catchRevert(gd.governanceDataInitiate());
     await gd.callReputationEvent(owner, 0, 'x', 1, '0x0');
@@ -132,16 +129,6 @@ contract('Governance Data', function([owner, notOwner]) {
     assert.equal(pop.toNumber(), 20, 'Member points not changed correctly');
   });
 
-  it('Should set dApp supports locking', async function() {
-    this.timeout(100000);
-    await gd.setDAppTokenSupportsLocking(true);
-    assert.equal(
-      await gd.dAppTokenSupportsLocking(),
-      true,
-      'dAppTokenSupportsLocking not changed correctly'
-    );
-  });
-
   it('Should pause unpause proposal', async function() {
     this.timeout(100000);
     await catchRevert(gd.resumeProposal(0));
@@ -151,5 +138,6 @@ contract('Governance Data', function([owner, notOwner]) {
     await gd.resumeProposal(0);
     const p2 = await gd.proposalPaused(0);
     assert.equal(p2, false);
+    await catchRevert(gd.pauseProposal(0, { from: notOwner }));
   });
 });

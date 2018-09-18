@@ -1,21 +1,21 @@
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const EventCaller = artifacts.require('EventCaller');
+const catchRevert = require('../helpers/exceptions.js').catchRevert;
+const getAddress = require('../helpers/getAddress.js').getAddress;
 let ec;
+let address;
+let gbm;
 const sampleBytes32 =
   '0x41647669736f727920426f617264000000000000000000000000000000000000';
 const sampleAddress = '0x0000000000000000000000000000000000000001';
 
 // addGovBlocksUser, setMasterByteCode already tested earlier
-contract('GovBlocksMaster', function([owner]) {
-  before(function() {
-    GovBlocksMaster.deployed()
-      .then(function(instance) {
-        gbm = instance;
-        return EventCaller.deployed();
-      })
-      .then(function(instance) {
-        ec = instance;
-      });
+contract('GovBlocksMaster', function([owner, notOwner]) {
+  it('Should fetch addresses for testing', async function() {
+    address = await getAddress('GBM');
+    gbm = await GovBlocksMaster.at(address);
+    address = await getAddress('EC');
+    ec = await EventCaller.at(address);
   });
 
   it('should be initialized', async function() {
@@ -32,6 +32,11 @@ contract('GovBlocksMaster', function([owner]) {
       'gbtAddress was not set properly'
     );
     assert.equal(await gbm.initialized(), true, 'initialized bool not set');
+    await catchRevert(
+      gbm.govBlocksMasterInit(sampleAddress, sampleAddress, sampleAddress)
+    );
+    let temp = await gbm.getGovBlocksUserDetails('0x4143');
+    temp = await gbm.getGovBlocksUserDetails1('0x4143');
   });
 
   it('should change dapp master', async function() {
@@ -44,6 +49,31 @@ contract('GovBlocksMaster', function([owner]) {
       'dApp Master not changed'
     );
     await gbm.changeDappMasterAddress('0x41', masterAddress);
+    await catchRevert(
+      gbm.changeDappMasterAddress('0x41', sampleAddress, { from: notOwner })
+    );
+  });
+
+  it('should change sample master', async function() {
+    this.timeout(100000);
+    let masterAddress = await gbm.masterAdd();
+    await gbm.updateMasterAddress(sampleAddress);
+    assert.equal(
+      await gbm.masterAdd(),
+      sampleAddress,
+      'Sample Master not changed'
+    );
+    await catchRevert(
+      gbm.updateMasterAddress(sampleAddress, { from: notOwner })
+    );
+    await gbm.updateMasterAddress(masterAddress);
+  });
+
+  it('should not allow to add dApp with same name', async function() {
+    this.timeout(100000);
+    await catchRevert(
+      gbm.addGovBlocksUser('0x41', sampleAddress, sampleAddress, 'yo')
+    );
   });
 
   it('should change dapp desc hash', async function() {
@@ -56,6 +86,7 @@ contract('GovBlocksMaster', function([owner]) {
       'dApp desc not changed'
     );
     await gbm.changeDappDescHash('0x41', desc);
+    await catchRevert(gbm.changeDappDescHash('0x41', desc, { from: notOwner }));
   });
 
   it('should change dapp token', async function() {
@@ -68,6 +99,9 @@ contract('GovBlocksMaster', function([owner]) {
       'dApp token not changed'
     );
     await gbm.changeDappTokenAddress('0x41', tokenAddress);
+    await catchRevert(
+      gbm.changeDappTokenAddress('0x41', sampleAddress, { from: notOwner })
+    );
   });
 
   it('should change gbt address', async function() {
