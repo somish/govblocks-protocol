@@ -112,7 +112,7 @@ contract ProposalCategoryAdder {
     }
 
     /// @dev ads remaining sub cat. Function split to split gas cost.
-    function addSubCat(address _to) public {
+    function addSubCat(address _to) public { //solhint-disable-line
         ProposalCategory proposalCategory = ProposalCategory(_to);
         uint[] memory stakeInecntive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);

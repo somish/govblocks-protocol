@@ -54,8 +54,8 @@ contract Governed {
     /// @dev sets the address of governChecker based on the network being used.
     function setGovernChecker() public {
         /* solhint-disable */
-        if (getCodeSize(0xD6De03F547FDA283b5119c6d8CA672DBE5C3F631) > 0)        //kovan testnet
-            governChecker = GovernChecker(0xD6De03F547FDA283b5119c6d8CA672DBE5C3F631);
+        if (getCodeSize(0x70c0191CAFBe32FAc38Cece874fb5aDA1f2ff497) > 0)        //kovan testnet
+            governChecker = GovernChecker(0x70c0191CAFBe32FAc38Cece874fb5aDA1f2ff497);
         else if (getCodeSize(0xdF6c6a73BCf71E8CAa6A2c131bCf98f10eBb5162) > 0)   //RSK testnet
             governChecker = GovernChecker(0xdF6c6a73BCf71E8CAa6A2c131bCf98f10eBb5162);
         else if (getCodeSize(0x67995F25f04d61614d05607044c276727DEA9Cf0) > 0)   //Rinkeyby testnet
