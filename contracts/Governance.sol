@@ -158,6 +158,12 @@ contract Governance is Upgradeable {
             _proposalSD, 
             _proposalDescHash
         );
+        eventCaller.callProposalCreated(
+            _proposalId,
+            _subCategoryId,
+            master.dAppName(),
+            _proposalDescHash
+        );
         /* solhint-enable */
         address token;
         if (_subCategoryId > 0) {

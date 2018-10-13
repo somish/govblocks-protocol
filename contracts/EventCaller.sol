@@ -18,6 +18,14 @@ pragma solidity 0.4.24;
 
 contract EventCaller {
 
+    /// @dev ProposalCreated event is called whenever a proposal is created. 
+    event ProposalCreated (
+        uint256 proposalId,
+        uint256 subCategoryId,
+        bytes32 dAppName,
+        string proposalDescHash
+    );
+
     /// @dev VoteCast event is called whenever a vote is cast that can potentially close the proposal. 
     ///      closeProposalAddress is used to call closeProposal(proposalId) if proposal is ready to be closed.
     event VoteCast (
@@ -46,6 +54,14 @@ contract EventCaller {
         uint256 proposalId,
         address closeProposalAddress
     );
+
+    /// @dev calls ProposalCreated event
+    /// @param _proposalId Id of the created proposal.
+    /// @param _dAppName Name of dApp in which proposal is created
+    /// @param _proposalDescHash Description hash of created proposal.
+    function callProposalCreated (uint256 _proposalId, uint256 _subCategoryId, bytes32 _dAppName, string _proposalDescHash ) external {
+        emit ProposalCreated(_proposalId, _subCategoryId, _dAppName, _proposalDescHash);
+    }
 
     /// @dev calls VoteCast event
     /// @param _proposalId Proposal ID for which the vote is cast
