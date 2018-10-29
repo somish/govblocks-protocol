@@ -406,7 +406,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev Stores the information of version number of a given proposal. 
     ///     Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _proposalId, string _proposalDescHash) public onlyInternal {
-        uint versionNo = allProposalData[_proposalId].versionNumber + 1;
+        uint versionNo = SafeMath.add(allProposalData[_proposalId].versionNumber, 1);
         emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now); //solhint-disable-line
         setProposalVersion(_proposalId, versionNo);
     }
@@ -532,7 +532,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         uint length = getProposalLength();
         for (uint i = 0; i < length; i++) {
             if (_memberAddress == getProposalOwner(i))
-                totalProposalCount++;
+                totalProposalCount = SafeMath.add(totalProposalCount, 1);
         }
     }
 
@@ -554,7 +554,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev Gets the total incentive amount given by dApp to different proposals
     function getTotalProposalIncentive() public view returns(uint allIncentive) {
         for (uint i = 0; i < allProposal.length; i++) {
-            allIncentive = allIncentive + allProposalData[i].commonIncentive;
+            allIncentive = SafeMath.add(allIncentive, allProposalData[i].commonIncentive);
         }
     }
 
@@ -617,7 +617,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         view
         returns(uint, uint, uint64) 
     {
-        require(allProposalData[_proposalId].propStatus == 2);
+        require(allProposalData[_proposalId].propStatus == uint8(Governance.ProposalStatus.VotingStarted));
         return(
             allProposalData[_proposalId].subCategory,
             allProposalData[_proposalId].currVotingStatus,
@@ -629,7 +629,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     function getTotalNumberOfVotesByAddress(address _voter) public view returns(uint totalVotes) {
         for (uint i = 0; i < allVotingTypeDetails.length; i++) {
             VotingType vt = VotingType(allVotingTypeDetails[i].votingTypeAddress);
-            totalVotes += vt.getTotalNumberOfVotesByAddress(_voter);
+            totalVotes = SafeMath.add(vt.getTotalNumberOfVotesByAddress(_voter), 1);
         }
     }
 
@@ -747,14 +747,14 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
         for (uint i = 0; i < _proposalLength; i++) {
             proposalStatus = getProposalStatus(i);
-            if (proposalStatus < 2) {
-                _draftProposals++;
-            } else if (proposalStatus == 2) {
-                _pendingProposals++;
-            } else if (proposalStatus == 3) {
-                _acceptedProposals++;
+            if (proposalStatus < uint8(Governance.ProposalStatus.VotingStarted)) {
+                _draftProposals = SafeMath.add(_draftProposals, 1);
+            } else if (proposalStatus == uint8(Governance.ProposalStatus.VotingStarted)) {
+                _pendingProposals = SafeMath.add(_pendingProposals, 1);
+            } else if (proposalStatus == uint8(Governance.ProposalStatus.Accepted)) {
+                _acceptedProposals = SafeMath.add(_acceptedProposals, 1);
             } else {
-                _rejectedProposals++;
+                _rejectedProposals = SafeMath.add(_rejectedProposals, 1);
             }
         }
     }
@@ -768,7 +768,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         for (uint i = 0; i < allProposal.length; i++) {
             for (uint j = 0; j < getTotalSolutions(i); j++) {
                 if (_memberAddress == getSolutionAddedByProposalId(i, j))
-                    totalSolutionProposalCount++;
+                    totalSolutionProposalCount = SafeMath.add(totalSolutionProposalCount, 1);
             }
         }
     }
@@ -791,7 +791,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
                 if (_memberAddress == getSolutionAddedByProposalId(i, j)) {
                     proposalIds[totalSolution] = i;
                     solutionProposalIds[totalSolution] = j;
-                    totalSolution++;
+                    totalSolution = SafeMath.add(totalSolution, 1);
                 }
             }
         }
