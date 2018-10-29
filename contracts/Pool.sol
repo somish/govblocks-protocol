@@ -94,8 +94,8 @@ contract Pool is Upgradeable, Governed {
             VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
             (tempGBTReward, tempDAppRward) = 
                 votingType.claimVoteReward(_claimer, _voterProposals);
-            pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
-            pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
+            pendingGBTReward += tempGBTReward;
+            pendingDAppReward += tempDAppRward;
         }
 
         if (pendingGBTReward != 0) {
@@ -126,16 +126,16 @@ contract Pool is Upgradeable, Governed {
             getPendingProposalReward(_memberAddress, _lastRewardProposalId); 
         (tempGBTReward, tempDAppRward) = 
             getPendingSolutionReward(_memberAddress, _lastRewardProposalId);
-        pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
-        pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
+        pendingGBTReward += tempGBTReward;
+        pendingDAppReward += tempDAppRward;
 
         uint votingTypes = governanceDat.getVotingTypeLength();
         for (uint i = 0; i < votingTypes; i++) {
             VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
             (tempGBTReward, tempDAppRward) = 
                 votingType.getPendingReward(_memberAddress, _lastRewardProposalId);
-            pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
-            pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
+            pendingGBTReward += tempGBTReward;
+            pendingDAppReward += tempDAppRward;
         }
     }
 
@@ -162,9 +162,9 @@ contract Pool is Upgradeable, Governed {
                 ) {
                     calcReward = (proposalCategory.getRewardPercProposal(subCat).mul(governanceDat.getProposalIncentive(i))).div(100);  //solhint-disable-line
                     if (proposalCategory.isSubCategoryExternal(subCat))    
-                        pendingGBTReward = SafeMath.add(pendingGBTReward, calcReward);
+                        pendingGBTReward += calcReward;
                     else
-                        pendingDAppReward = SafeMath.add(pendingDAppReward, calcReward);
+                        pendingDAppReward += calcReward;                
                 }
             }
         }
@@ -192,9 +192,9 @@ contract Pool is Upgradeable, Governed {
             ) {
                 calcReward = (proposalCategory.getRewardPercSolution(subCategory) * totalReward) / 100;
                 if (proposalCategory.isSubCategoryExternal(subCategory))    
-                    pendingGBTReward = SafeMath.add(pendingGBTReward, calcReward);
+                    pendingGBTReward += calcReward;
                 else
-                    pendingDAppReward = SafeMath.add(pendingDAppReward, calcReward);
+                    pendingDAppReward += calcReward;                
             }
         }
     }

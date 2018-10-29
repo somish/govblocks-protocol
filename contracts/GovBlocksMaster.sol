@@ -27,7 +27,6 @@ contract GovBlocksMaster is Ownable {
     address[] public implementations;
     bool public initialized;
     GovernChecker internal governChecker;
-    string constant dAppNotRegistered = "DApp not registered in GovBlocks network";
 
     struct GBDapps {
         address masterAddress;
@@ -38,7 +37,8 @@ contract GovBlocksMaster is Ownable {
 
     mapping(address => bytes32) internal govBlocksDappByAddress;
     mapping(bytes32 => GBDapps) internal govBlocksDapps;
-    bytes32[] internal allGovBlocksDapps;
+    mapping(address => string) internal govBlocksUser;
+    bytes32[] internal allGovBlocksUsers;
     string internal byteCodeHash;
     string internal contractsAbiHash;
 
@@ -46,22 +46,22 @@ contract GovBlocksMaster is Ownable {
     /// @param _gbtContractAddress New GBT standard token contract address
     function updateGBTAddress(address _gbtContractAddress) external onlyOwner {
         gbtAddress = _gbtContractAddress;
-        for (uint i = 0; i < allGovBlocksDapps.length; i++) {
-            address masterAddress = govBlocksDapps[allGovBlocksDapps[i]].masterAddress;
+        for (uint i = 0; i < allGovBlocksUsers.length; i++) {
+            address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             Master master = Master(masterAddress);
             /* solhint-disable */
             if (address(master).call(bytes4(keccak256("changeGBTSAddress()")))) {
                 //just to silence the compiler warning
             }
-            /* solhint-enable */
+            /* solhint-enable */     
         }
     }
 
     /// @dev Updates GovBlocks master address
     /// @param _newGBMAddress New GovBlocks master address
     function updateGBMAddress(address _newGBMAddress) external onlyOwner {
-        for (uint i = 0; i < allGovBlocksDapps.length; i++) {
-            address masterAddress = govBlocksDapps[allGovBlocksDapps[i]].masterAddress;
+        for (uint i = 0; i < allGovBlocksUsers.length; i++) {
+            address masterAddress = govBlocksDapps[allGovBlocksUsers[i]].masterAddress;
             Master master = Master(masterAddress);
             /* solhint-disable */
             if (address(master).call(bytes4(keccak256("changeGBMAddress(address)")), _newGBMAddress)) {
@@ -77,62 +77,62 @@ contract GovBlocksMaster is Ownable {
         masterAdd = _newMaster;
     }
 
-    /// @dev Adds GovBlocks dApp
-    /// @param _gbDAppName dApp name
+    /// @dev Adds GovBlocks user
+    /// @param _gbUserName dApp name
     /// @param _dappTokenAddress dApp token address
     /// @param _dappDescriptionHash dApp description hash having dApp or token logo information
-    function addGovBlocksDapp(
-        bytes32 _gbDAppName, 
+    function addGovBlocksUser(
+        bytes32 _gbUserName, 
         address _dappTokenAddress, 
         address _tokenProxy, 
         string _dappDescriptionHash
     ) external {
-        require(govBlocksDapps[_gbDAppName].masterAddress == address(0));
-        govBlocksDapps[_gbDAppName].tokenAddress = _dappTokenAddress;
-        govBlocksDapps[_gbDAppName].proxyAddress = _tokenProxy;
-        GovernedUpgradeabilityProxy tempInstance = new GovernedUpgradeabilityProxy(_gbDAppName, masterAdd);
-        allGovBlocksDapps.push(_gbDAppName);
-        govBlocksDapps[_gbDAppName].masterAddress = address(tempInstance);
-        govBlocksDapps[_gbDAppName].dappDescHash = _dappDescriptionHash;
-        govBlocksDappByAddress[address(tempInstance)] = _gbDAppName;
-        govBlocksDappByAddress[_dappTokenAddress] = _gbDAppName;
+        require(govBlocksDapps[_gbUserName].masterAddress == address(0));
+        govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;
+        govBlocksDapps[_gbUserName].proxyAddress = _tokenProxy;
+        GovernedUpgradeabilityProxy tempInstance = new GovernedUpgradeabilityProxy(_gbUserName, masterAdd);
+        allGovBlocksUsers.push(_gbUserName);
+        govBlocksDapps[_gbUserName].masterAddress = address(tempInstance);
+        govBlocksDapps[_gbUserName].dappDescHash = _dappDescriptionHash;
+        govBlocksDappByAddress[address(tempInstance)] = _gbUserName;
+        govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
         Master ms = Master(address(tempInstance));
-        ms.initMaster(msg.sender, _gbDAppName, implementations);
+        ms.initMaster(msg.sender, _gbUserName, implementations);
     }
 
     /// @dev Changes dApp master address
-    /// @param _gbDAppName dApp name
+    /// @param _gbUserName dApp name
     /// @param _newMasterAddress dApp new master address
-    function changeDappMasterAddress(bytes32 _gbDAppName, address _newMasterAddress) external {
+    function changeDappMasterAddress(bytes32 _gbUserName, address _newMasterAddress) external {
         if (address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
-            require(governChecker.authorizedAddressNumber(_gbDAppName, msg.sender) > 0 || owner == msg.sender);
+            require(governChecker.authorizedAddressNumber(_gbUserName, msg.sender) > 0 || owner == msg.sender);
         else
             require(owner == msg.sender);
-        govBlocksDapps[_gbDAppName].masterAddress = _newMasterAddress;                   
-        govBlocksDappByAddress[_newMasterAddress] = _gbDAppName;
+        govBlocksDapps[_gbUserName].masterAddress = _newMasterAddress;                   
+        govBlocksDappByAddress[_newMasterAddress] = _gbUserName;
     }
 
     /// @dev Changes dApp desc hash
-    /// @param _gbDAppName dApp name
+    /// @param _gbUserName dApp name
     /// @param _descHash dApp new desc hash
-    function changeDappDescHash(bytes32 _gbDAppName, string _descHash) external {
+    function changeDappDescHash(bytes32 _gbUserName, string _descHash) external {
         if (address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
-            require(governChecker.authorizedAddressNumber(_gbDAppName, msg.sender) > 0 || owner == msg.sender);
+            require(governChecker.authorizedAddressNumber(_gbUserName, msg.sender) > 0 || owner == msg.sender);
         else
             require(owner == msg.sender);
-        govBlocksDapps[_gbDAppName].dappDescHash = _descHash;                   
+        govBlocksDapps[_gbUserName].dappDescHash = _descHash;                   
     }
 
     /// @dev Changes dApp token address
-    /// @param _gbDAppName  dApp name
+    /// @param _gbUserName  dApp name
     /// @param _dappTokenAddress dApp new token address
-    function changeDappTokenAddress(bytes32 _gbDAppName, address _dappTokenAddress) external {
+    function changeDappTokenAddress(bytes32 _gbUserName, address _dappTokenAddress) external {
         if (address(governChecker) != address(0))          // Owner for debugging only, will be removed before launch
-            require(governChecker.authorizedAddressNumber(_gbDAppName, msg.sender) > 0 || owner == msg.sender);
+            require(governChecker.authorizedAddressNumber(_gbUserName, msg.sender) > 0 || owner == msg.sender);
         else
             require(owner == msg.sender);
-        govBlocksDapps[_gbDAppName].tokenAddress = _dappTokenAddress;                        
-        govBlocksDappByAddress[_dappTokenAddress] = _gbDAppName;
+        govBlocksDapps[_gbUserName].tokenAddress = _dappTokenAddress;                        
+        govBlocksDappByAddress[_dappTokenAddress] = _gbUserName;
     }
 
     /// @dev Sets byte code and abi hash that will help in generating new set of contracts for every dApp
@@ -145,6 +145,11 @@ contract GovBlocksMaster is Ownable {
 
     function setImplementations(address[] _implementations) external onlyOwner {
         implementations = _implementations;
+    }
+
+    /// @dev Sets dApp user information such as Email id, name etc.
+    function setDappUser(string _hash) external {
+        govBlocksUser[msg.sender] = _hash;
     }
 
     /// @dev Sets global event caller address
@@ -172,29 +177,55 @@ contract GovBlocksMaster is Ownable {
     function getByteCodeAndAbi() public view returns(string, string) {
         return (byteCodeHash, contractsAbiHash);
     }
-
-    /// @dev Gets dApp details such as master contract address and dApp name
-    function getGovBlocksDappDetailsByIndex(uint _index) 
+    
+    /// @dev Gets dApp details
+    /// @param _gbUserName dApp name
+    /// @return gbUserName dApp name
+    /// @return masterContractAddress Master contract address of dApp
+    /// @return allContractsbyteCodeHash All contracts byte code hash
+    /// @return allCcontractsAbiHash All contracts abi hash
+    /// @return versionNo Current Verson number of dApp
+    function getGovBlocksUserDetails(bytes32 _gbUserName) 
         public 
         view 
-        returns(uint index, bytes32 gbDAppName, address masterContractAddress) 
+        returns(
+            bytes32 gbUserName, 
+            address masterContractAddress, 
+            string allContractsbyteCodeHash, 
+            string allCcontractsAbiHash, 
+            uint versionNo
+        ) 
     {
-        return (_index, allGovBlocksDapps[_index], govBlocksDapps[allGovBlocksDapps[_index]].masterAddress);
+        address masterAddress = govBlocksDapps[_gbUserName].masterAddress;
+        if (masterAddress == address(0))
+            return (_gbUserName, address(0), "", "", 0);
+        Master master = Master(masterAddress);
+        versionNo = master.getCurrentVersion();
+        return (_gbUserName, govBlocksDapps[_gbUserName].masterAddress, byteCodeHash, contractsAbiHash, versionNo);
     }
 
-    /// @dev Gets dApp details
-    /// @param _gbDAppName dApp name whose details need to be fetched
+    /// @dev Gets dApp details such as master contract address and dApp name
+    function getGovBlocksUserDetailsByIndex(uint _index) 
+        public 
+        view 
+        returns(uint index, bytes32 gbUserName, address masterContractAddress) 
+    {
+        return (_index, allGovBlocksUsers[_index], govBlocksDapps[allGovBlocksUsers[_index]].masterAddress);
+    }
+
+    /// @dev Gets dApp details (another function)
+    /// @param _gbUserName dApp name whose details need to be fetched
     /// @return GbUserName dApp name 
     /// @return masterContractAddress Master contract address
     /// @return dappTokenAddress dApp token address
     /// @return allContractsbyteCodeHash All contracts byte code hash
     /// @return allCcontractsAbiHash All contract abi hash
     /// @return versionNo Version number
-    function getGovBlocksDappDetails(bytes32 _gbDAppName) 
+    function getGovBlocksUserDetails1(bytes32 _gbUserName) 
         public 
         view 
         returns(
-            bytes32 gbDAppName, 
+            bytes32 gbUserName, 
             address masterContractAddress, 
             address dappTokenAddress, 
             string allContractsbyteCodeHash, 
@@ -202,16 +233,16 @@ contract GovBlocksMaster is Ownable {
             uint versionNo
         ) 
     {
-        address masterAddress = govBlocksDapps[_gbDAppName].masterAddress;
-
-        require (masterAddress != address(0), dAppNotRegistered);
+        address masterAddress = govBlocksDapps[_gbUserName].masterAddress;
+        if (masterAddress == address(0))
+            return (_gbUserName, address(0), address(0), "", "", 0);
             
         Master master = Master(masterAddress);
         versionNo = master.getCurrentVersion();
         return (
-            _gbDAppName, 
-            govBlocksDapps[_gbDAppName].masterAddress, 
-            govBlocksDapps[_gbDAppName].tokenAddress, 
+            _gbUserName, 
+            govBlocksDapps[_gbUserName].masterAddress, 
+            govBlocksDapps[_gbUserName].tokenAddress, 
             byteCodeHash, 
             contractsAbiHash, 
             versionNo
@@ -223,7 +254,7 @@ contract GovBlocksMaster is Ownable {
     /// @return dappName dApp name
     /// @return masterContractAddress Master contract address of dApp
     /// @return dappTokenAddress dApp's token address
-    function getDappDetailsByAddress(address _address) 
+    function getGovBlocksUserDetails2(address _address) 
         public 
         view 
         returns(bytes32 dappName, address masterContractAddress, address dappTokenAddress) 
@@ -233,39 +264,44 @@ contract GovBlocksMaster is Ownable {
     }
 
     /// @dev Gets dApp description hash
-    /// @param _gbDAppName dApp name
-    function getDappDescHash(bytes32 _gbDAppName) public view returns(string) {
-        return govBlocksDapps[_gbDAppName].dappDescHash;
+    /// @param _gbUserName dApp name
+    function getDappDescHash(bytes32 _gbUserName) public view returns(string) {
+        return govBlocksDapps[_gbUserName].dappDescHash;
     }
 
     /// @dev Gets Total number of dApp that has been integrated with GovBlocks so far.
     function getAllDappLength() public view returns(uint) {
-        return (allGovBlocksDapps.length);
+        return (allGovBlocksUsers.length);
     }
 
     /// @dev Gets dApps users by index
-    function getAllDappById(uint _gbIndex) public view returns(bytes32 _gbDAppName) {
-        return (allGovBlocksDapps[_gbIndex]);
+    function getAllDappById(uint _gbIndex) public view returns(bytes32 _gbUserName) {
+        return (allGovBlocksUsers[_gbIndex]);
     }
 
     /// @dev Gets all dApps users
     function getAllDappArray() public view returns(bytes32[]) {
-        return (allGovBlocksDapps);
+        return (allGovBlocksUsers);
+    }
+
+    /// @dev Gets dApp username
+    function getDappUser() public view returns(string) {
+        return (govBlocksUser[msg.sender]);
     }
 
     /// @dev Gets dApp master address of dApp (username=govBlocksUser)
-    function getDappMasterAddress(bytes32 _gbDAppName) public view returns(address masterAddress) {
-        return (govBlocksDapps[_gbDAppName].masterAddress);
+    function getDappMasterAddress(bytes32 _gbUserName) public view returns(address masterAddress) {
+        return (govBlocksDapps[_gbUserName].masterAddress);
     }
 
     /// @dev Gets dApp token address of dApp (username=govBlocksUser)
-    function getDappTokenAddress(bytes32 _gbDAppName) public view returns(address tokenAddres) {
-        return (govBlocksDapps[_gbDAppName].tokenAddress);
+    function getDappTokenAddress(bytes32 _gbUserName) public view returns(address tokenAddres) {
+        return (govBlocksDapps[_gbUserName].tokenAddress);
     }
 
     /// @dev Gets dApp token address of dApp (username=govBlocksUser)
-    function getDappTokenProxyAddress(bytes32 _gbDAppName) public view returns(address tokenAddres) {
-        return (govBlocksDapps[_gbDAppName].proxyAddress);
+    function getDappTokenProxyAddress(bytes32 _gbUserName) public view returns(address tokenAddres) {
+        return (govBlocksDapps[_gbUserName].proxyAddress);
     }
 
     /// @dev Gets dApp username by address

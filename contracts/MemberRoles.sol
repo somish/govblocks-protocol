@@ -22,7 +22,6 @@ import "./imports/govern/Governed.sol";
 contract MemberRoles is Governed {
     event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription, bool limitedValidity);
     using SafeMath for uint;
-    enum Role { UnAssigned, AdvisoryBoard, TokenHolder }
 
     bytes32[] internal memberRole;
     StandardToken public dAppToken;
@@ -61,17 +60,17 @@ contract MemberRoles is Governed {
     function addInitialMemberRoles() public {
         require(!adderCheck);
         memberRole.push("");
-        emit MemberRole(uint(Role.UnAssigned), "Everyone", "Professionals that are a part of the GBT network", false);
+        emit MemberRole(0, "Everyone", "Professionals that are a part of the GBT network", false);
         memberRole.push("Advisory Board");
         emit MemberRole(
-            uint(Role.AdvisoryBoard),
+            1,
             "Advisory Board",
             "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.", //solhint-disable-line
             false
         );
         memberRole.push("Token Holder");
         emit MemberRole(
-            uint(Role.TokenHolder),
+            2,
             "Token Holder",
             "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.", //solhint-disable-line
             false
@@ -104,7 +103,7 @@ contract MemberRoles is Governed {
             }
         }
         if (dAppToken.balanceOf(_memberAddress) > 0) {
-            assignedRoles[j] = uint(Role.TokenHolder);
+            assignedRoles[j] = 2;
         }
 
         return assignedRoles;
@@ -123,9 +122,9 @@ contract MemberRoles is Governed {
     /// @param _roleId Checks member's authenticity with the roleId.
     /// i.e. Returns true if this roleId is assigned to member
     function checkRoleIdByAddress(address _memberAddress, uint _roleId) public view returns(bool) {
-        if (_roleId == uint(Role.UnAssigned))
+        if (_roleId == 0)
             return true;
-        if (_roleId == uint(Role.AdvisoryBoard)) {
+        if (_roleId == 2) {
             if (dAppToken.balanceOf(_memberAddress) > 0)
                 return true;
             else
@@ -291,10 +290,10 @@ contract MemberRoles is Governed {
         for (uint i = 1; i <= length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress]
                 && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now)) //solhint-disable-line
-                count = uint8(SafeMath.add(count, 1));
+                count++;       
         }
         if (dAppToken.balanceOf(_memberAddress) > 0)
-            count = uint8(SafeMath.add(count, 1));
+            count++;
         return count;
     }
 }

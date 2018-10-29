@@ -29,17 +29,6 @@ import "./EventCaller.sol";
 contract Governance is Upgradeable {
 
     using SafeMath for uint;
-    enum ProposalStatus { 
-        Draft,
-        ReadyForSubmission,
-        VotingStarted,
-        Accepted,
-        Rejected,
-        Majority_Not_Reached_But_Accepted_By_PrevVoting,
-        Denied,
-        Threshold_Not_Reached_But_Accepted_By_PrevVoting 
-    }
-    
     address public poolAddress;
     GBTStandardToken public govBlocksToken;
     MemberRoles public memberRole;
@@ -55,7 +44,7 @@ contract Governance is Upgradeable {
     }
 
     modifier checkProposalValidity(uint _proposalId) {
-        require(governanceDat.getProposalStatus(_proposalId) < uint(ProposalStatus.VotingStarted));
+        require(governanceDat.getProposalStatus(_proposalId) < 2);
         _;
     }
 
@@ -219,7 +208,7 @@ contract Governance is Upgradeable {
         if (minStake == 0)
             return true;
         GBTStandardToken tokenInstance = GBTStandardToken(_token);
-        tokenholdingTime = SafeMath.add(tokenholdingTime, now); // solhint-disable-line
+        tokenholdingTime += now; // solhint-disable-line
         uint lockedTokens = tokenInstance.tokensLockedAtTime(msg.sender, "GOV", tokenholdingTime);
         if (lockedTokens >= minStake)
             return true;
@@ -263,8 +252,8 @@ contract Governance is Upgradeable {
     {
         uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalSubCategory(_proposalId));
         require(category != 0);
-        governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.Accepted));
-        uint closingTime = SafeMath.add(proposalCategory.getClosingTimeAtIndex(category, 0), now); // solhint-disable-line
+        governanceDat.changeProposalStatus(_proposalId, 2);
+        uint closingTime = proposalCategory.getClosingTimeAtIndex(category, 0) + now; // solhint-disable-line
         address votingType = governanceDat.getProposalVotingAddress(_proposalId);
         eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
     }
@@ -290,9 +279,9 @@ contract Governance is Upgradeable {
             //solhint-disable-next-line
             (rewardClaimedThenIsExternal, subCategory, proposalStatusThenRewardPercent, finalVerdictThenRewardPerc, solutionIdThenRep, totalReward) =
                 governanceDat.getProposalDetailsForReward(_proposals[i], _memberAddress);           
-            totalReward = SafeMath.div(totalReward, 100);
+            totalReward = totalReward / 100;
 
-            require(!rewardClaimedThenIsExternal && proposalStatusThenRewardPercent > uint(ProposalStatus.Accepted));
+            require(!rewardClaimedThenIsExternal && proposalStatusThenRewardPercent > 2);
 
             if (finalVerdictThenRewardPerc > 0) {
 
@@ -307,12 +296,12 @@ contract Governance is Upgradeable {
 
                 if (finalVerdictThenRewardPerc > 0) {
                     if (rewardClaimedThenIsExternal)    
-                        totalGBTReward = SafeMath.add(totalGBTReward, SafeMath.mul(finalVerdictThenRewardPerc, totalReward));
+                        totalGBTReward += finalVerdictThenRewardPerc.mul(totalReward);
                     else
-                        totalDAppReward = SafeMath.add(totalDAppReward, SafeMath.mul(finalVerdictThenRewardPerc, totalReward));
+                        totalDAppReward += finalVerdictThenRewardPerc.mul(totalReward);
                 }
 
-                reputation = SafeMath.add(reputation, solutionIdThenRep);
+                reputation += solutionIdThenRep;
             } 
         }
     }
@@ -378,7 +367,7 @@ contract Governance is Upgradeable {
         uint length = memberRole.getTotalMemberRoles();
         VotingType votingType = VotingType(governanceDat.getProposalVotingAddress(_proposalId));
         for (uint i = 0; i < length; i++) {
-            totalVotes = SafeMath.add(totalVotes, votingType.getAllVoteIdsLengthByProposalRole(_proposalId, i));
+            totalVotes = totalVotes + votingType.getAllVoteIdsLengthByProposalRole(_proposalId, i);
         }
     }
 
@@ -462,12 +451,12 @@ contract Governance is Upgradeable {
     ) internal returns (uint rewardPercent, uint reputation) {
         governanceDat.setRewardClaimed(_proposal, _memberAddress);
         if (_memberAddress == governanceDat.getProposalOwner(_proposal)) {
-            rewardPercent = SafeMath.add(rewardPercent, proposalCategory.getRewardPercProposal(_subCategory));
-            reputation = SafeMath.add(reputation, governanceDat.addProposalOwnerPoints());
+            rewardPercent += proposalCategory.getRewardPercProposal(_subCategory);
+            reputation += governanceDat.addProposalOwnerPoints();
         }
         if (_finalVerdict == _solutionId) {  
-            rewardPercent = SafeMath.add(rewardPercent, proposalCategory.getRewardPercSolution(_subCategory));
-            reputation = SafeMath.add(reputation, governanceDat.addSolutionOwnerPoints());
+            rewardPercent += proposalCategory.getRewardPercSolution(_subCategory);                  
+            reputation += governanceDat.addSolutionOwnerPoints();
         }
     }
 
