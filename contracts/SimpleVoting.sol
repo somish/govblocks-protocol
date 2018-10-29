@@ -136,14 +136,14 @@ contract SimpleVoting is Upgradeable {
             rewardClaimed[voteId] = true;
             (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
                 getVoteDetailsForReward(voteId, _proposals[i]);
-            require(proposalStatus > 2);
+            require(proposalStatus > uint(Governance.ProposalStatus.VotingStarted));
             if (finalVredict > 0 && solutionChosen == finalVredict) {
-                calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
-                    / (100 * governanceDat.getProposalTotalVoteValue(_proposals[i]));
+                calcReward = SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), voteValue), totalReward) 
+                    / (SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposals[i])));
                 
             } else if (!governanceDat.punishVoters() && finalVredict > 0) {
-                calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
-                    / (100 * governanceDat.getProposalTotalVoteValue(_proposals[i]));
+                calcReward = SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), voteValue), totalReward) 
+                    / SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposals[i]));
                 
             }
             if (proposalCategory.isSubCategoryExternal(subCategory))    
@@ -168,8 +168,8 @@ contract SimpleVoting is Upgradeable {
             if (!rewardClaimed[voteId]) {
                 proposalId = allVotes[voteId].proposalId;
                 (tempGBTReward, tempDAppReward) = calculatePendingVoteReward(_memberAddress, i, proposalId);
-                pendingGBTReward += tempGBTReward;
-                pendingDAppReward += tempDAppReward;
+                pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
+                pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppReward);
             }
         }
     }
@@ -292,12 +292,12 @@ contract SimpleVoting is Upgradeable {
         for (i = 0; i < voteLen; i++) {
             voteId = proposalRoleVote[_proposalId][_mrSequenceId][i];
             voteValue = allVotes[voteId].voteValue;
-            totalVoteValue = totalVoteValue + voteValue;
+            totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
             finalVoteValue[allVotes[voteId].solutionChosen] = 
                 finalVoteValue[allVotes[voteId].solutionChosen].add(voteValue);
         }
 
-        totalVoteValue = totalVoteValue + governanceDat.getProposalTotalVoteValue(_proposalId);
+        totalVoteValue = SafeMath.add(totalVoteValue, governanceDat.getProposalTotalVoteValue(_proposalId));
         governanceDat.setProposalTotalVoteValue(_proposalId, totalVoteValue);
 
         for (i = 0; i < finalVoteValue.length; i++) {
@@ -314,9 +314,9 @@ contract SimpleVoting is Upgradeable {
             if (governanceDat.getProposalCurrentVotingId(_proposalId) + 1 
                 < proposalCategory.getRoleSequencLength(category)
             )
-                governanceDat.changeProposalStatus(_proposalId, 7);
+                governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Threshold_Not_Reached_But_Accepted_By_PrevVoting));
             else
-                governanceDat.changeProposalStatus(_proposalId, 6);
+                governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Denied));
         }
     }
 
@@ -363,15 +363,15 @@ contract SimpleVoting is Upgradeable {
             _category, 
             _currentVotingId
         );
-        if (pStatus == 2 && _roleId != 2 && _roleId != 0) {
+        if (pStatus == uint(Governance.ProposalStatus.VotingStarted) && _roleId != uint(MemberRoles.Role.TokenHolder) && _roleId != uint(MemberRoles.Role.UnAssigned)) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now ||  //solhint-disable-line
                 proposalRoleVote[_proposalId][_roleId].length == memberRole.getAllMemberLength(_roleId)
             )
                 closeValue = 1;
-        } else if (pStatus == 2) {
+        } else if (pStatus == uint(Governance.ProposalStatus.VotingStarted) ) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now) //solhint-disable-line
                 closeValue = 1;
-        } else if (pStatus > 2) {
+        } else if (pStatus > uint(Governance.ProposalStatus.VotingStarted)) {
             closeValue = 2;
         } else {
             closeValue = 0;
@@ -396,7 +396,7 @@ contract SimpleVoting is Upgradeable {
         (, _majorityVote, _closingTime) = proposalCategory.getCategoryData3(category, currentVotingId);
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
-                currentVotingId = currentVotingId + 1;
+                currentVotingId = SafeMath.add(currentVotingId, 1);
                 if (currentVotingId < proposalCategory.getRoleSequencLength(category)) {
                     governanceDat.updateProposalDetails(
                         _proposalId, 
@@ -407,7 +407,7 @@ contract SimpleVoting is Upgradeable {
                     eventCaller.callCloseProposalOnTime(_proposalId, _closingTime + now); //solhint-disable-line
                 } else {
                     governanceDat.updateProposalDetails(_proposalId, currentVotingId - 1, max, max);
-                    governanceDat.changeProposalStatus(_proposalId, 3);
+                    governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Accepted));
                     uint subCategory = governanceDat.getProposalSubCategory(_proposalId);
                     bytes2 contractName = proposalCategory.getContractName(subCategory);
                     address actionAddress;
@@ -427,7 +427,7 @@ contract SimpleVoting is Upgradeable {
                 }
             } else {
                 governanceDat.updateProposalDetails(_proposalId, currentVotingId, max, max);
-                governanceDat.changeProposalStatus(_proposalId, 4);
+                governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Rejected));
             }
         } else {
             governanceDat.updateProposalDetails(
@@ -436,7 +436,7 @@ contract SimpleVoting is Upgradeable {
                 max, 
                 governanceDat.getProposalIntermediateVerdict(_proposalId)
             );
-            governanceDat.changeProposalStatus(_proposalId, 5);
+            governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Majority_Not_Reached_But_Accepted_By_PrevVoting));
         }
     }
 
@@ -453,14 +453,13 @@ contract SimpleVoting is Upgradeable {
                 totalTokens = totalTokens.add(tokenInstance.balanceOf(voterAddress));
             }
 
-            thresHoldValue = totalTokens.mul(100) / tokenInstance.totalSupply();
+            thresHoldValue = SafeMath.div(totalTokens.mul(100), tokenInstance.totalSupply());
             if (thresHoldValue > governanceDat.quorumPercentage())
                 return true;
         } else if (_mrSequenceId == 0) {
             return true;
         } else {
-            thresHoldValue = (getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId) * 100)
-                / memberRole.getAllMemberLength(_mrSequenceId);
+            thresHoldValue = SafeMath.div(SafeMath.mul(getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId), 100), memberRole.getAllMemberLength(_mrSequenceId));
             if (thresHoldValue > governanceDat.quorumPercentage())
                 return true;
         }
@@ -483,12 +482,12 @@ contract SimpleVoting is Upgradeable {
             getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
 
         if (finalVredict > 0 && solutionChosen == finalVredict && totalReward != 0) {
-            calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
-                / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
+            calcReward = SafeMath.div(SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), voteValue), totalReward) 
+                , SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposalId)));
 
         } else if (!governanceDat.punishVoters() && finalVredict > 0 && totalReward != 0) {
-            calcReward = (proposalCategory.getRewardPercVote(subCategory) * voteValue * totalReward) 
-                / (100 * governanceDat.getProposalTotalVoteValue(_proposalId));
+            calcReward = SafeMath.div(SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), voteValue), totalReward) 
+                , SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposalId)));
         }
         if (proposalCategory.isSubCategoryExternal(subCategory))    
             pendingGBTReward = calcReward;
