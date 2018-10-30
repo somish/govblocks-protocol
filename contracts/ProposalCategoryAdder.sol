@@ -23,12 +23,12 @@ contract ProposalCategoryAdder {
     /// @dev ads the default govBlocks categories and some sub cat to dApps
     function addCat(address _to) public { //solhint-disable-line
         ProposalCategory proposalCategory = ProposalCategory(_to);
-        uint[] memory stakeInecntive = new uint[](3); 
+        uint[] memory stakeIncentive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
 
-        stakeInecntive[0] = 0;
-        stakeInecntive[1] = 604800;
-        stakeInecntive[2] = 0;
+        stakeIncentive[0] = 0;
+        stakeIncentive[1] = 604800;
+        stakeIncentive[2] = 0;
         rewardPerc[0] = 30;
         rewardPerc[1] = 30;
         rewardPerc[2] = 40;
@@ -41,7 +41,7 @@ contract ProposalCategoryAdder {
             1,
             address(0),
             "MR",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -50,7 +50,7 @@ contract ProposalCategoryAdder {
             1,
             address(0),
             "MR",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -59,7 +59,7 @@ contract ProposalCategoryAdder {
             2,
             address(0),
             "PC",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -68,7 +68,7 @@ contract ProposalCategoryAdder {
             2,
             address(0),
             "PC",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -77,7 +77,7 @@ contract ProposalCategoryAdder {
             2,
             address(0),
             "PC",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -86,7 +86,7 @@ contract ProposalCategoryAdder {
             2,
             address(0),
             "PC",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
 
@@ -96,7 +96,7 @@ contract ProposalCategoryAdder {
             3,
             address(0),
             "GD",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
 
@@ -106,7 +106,7 @@ contract ProposalCategoryAdder {
             3,
             address(0),
             "MS",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
     }
@@ -114,12 +114,12 @@ contract ProposalCategoryAdder {
     /// @dev ads remaining sub cat. Function split to split gas cost.
     function addSubCat(address _to) public { //solhint-disable-line
         ProposalCategory proposalCategory = ProposalCategory(_to);
-        uint[] memory stakeInecntive = new uint[](3); 
+        uint[] memory stakeIncentive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
 
-        stakeInecntive[0] = uint256(10) ** 18;
-        stakeInecntive[1] = 604800;
-        stakeInecntive[2] = uint256(10) ** 18;
+        stakeIncentive[0] = uint256(10) ** 18;
+        stakeIncentive[1] = 604800;
+        stakeIncentive[2] = uint256(10) ** 18;
 
         rewardPerc[0] = 30;
         rewardPerc[1] = 30;
@@ -131,7 +131,7 @@ contract ProposalCategoryAdder {
             4,
             address(0),
             "PL",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -140,7 +140,7 @@ contract ProposalCategoryAdder {
             4,
             address(0),
             "PL",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
 
@@ -150,7 +150,7 @@ contract ProposalCategoryAdder {
             5,
             address(0),
             "MS",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -159,7 +159,7 @@ contract ProposalCategoryAdder {
             5,
             address(0),
             "MS",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -168,7 +168,7 @@ contract ProposalCategoryAdder {
             5,
             address(0),
             "SV",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -177,7 +177,7 @@ contract ProposalCategoryAdder {
             5,
             address(0),
             "SV",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -186,7 +186,7 @@ contract ProposalCategoryAdder {
             5,
             address(0),
             "MS",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC( 
@@ -195,7 +195,7 @@ contract ProposalCategoryAdder {
             5,
             address(0),
             "MS",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC( 
@@ -204,7 +204,7 @@ contract ProposalCategoryAdder {
             5,
             address(0),
             "GD",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC( 
@@ -213,7 +213,7 @@ contract ProposalCategoryAdder {
             6,
             address(0),
             "GD",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC( 
@@ -222,7 +222,7 @@ contract ProposalCategoryAdder {
             6,
             address(0),
             "PL",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -231,7 +231,7 @@ contract ProposalCategoryAdder {
             7, 
             address(0), 
             "EX",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         proposalCategory.addInitialSubC(
@@ -240,7 +240,7 @@ contract ProposalCategoryAdder {
             8, 
             address(0), 
             "EX",
-            stakeInecntive,
+            stakeIncentive,
             rewardPerc
         );
         //22 sub cat len, 21 sub cat id

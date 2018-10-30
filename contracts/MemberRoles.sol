@@ -92,10 +92,10 @@ contract MemberRoles is Governed {
 
     /// @dev Get All role ids array that has been assigned to a member so far.
     function getRoleIdByAddress(address _memberAddress) public view returns(uint[] assignedRoles) {
-        uint length = getRoleIdLengthByAddress(_memberAddress);
+        uint length = getTotalMemberRoles();
         uint j = 0;
         assignedRoles = new uint[](length);
-        for (uint i = 1; i <= getTotalMemberRoles(); i++) {
+        for (uint i = 1; i <= length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress]
                 && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now) //solhint-disable-line
             ) {
@@ -284,17 +284,5 @@ contract MemberRoles is Governed {
     function getTotalMemberRoles() public view returns(uint) {
         return memberRole.length;
     }
-
-    /// @dev Get Total number of role ids that has been assigned to a member so far.
-    function getRoleIdLengthByAddress(address _memberAddress) internal view returns(uint8 count) {
-        uint length = getTotalMemberRoles();
-        for (uint i = 1; i <= length; i++) {
-            if (memberRoleData[i].memberActive[_memberAddress]
-                && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now)) //solhint-disable-line
-                count = uint8(SafeMath.add(count, 1));
-        }
-        if (dAppToken.balanceOf(_memberAddress) > 0)
-            count = uint8(SafeMath.add(count, 1));
-        return count;
-    }
+    
 }

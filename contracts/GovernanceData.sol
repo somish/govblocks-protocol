@@ -747,11 +747,11 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
         for (uint i = 0; i < _proposalLength; i++) {
             proposalStatus = getProposalStatus(i);
-            if (proposalStatus < uint8(Governance.ProposalStatus.VotingStarted)) {
+            if (proposalStatus < uint(Governance.ProposalStatus.VotingStarted)) {
                 _draftProposals = SafeMath.add(_draftProposals, 1);
-            } else if (proposalStatus == uint8(Governance.ProposalStatus.VotingStarted)) {
+            } else if (proposalStatus == uint(Governance.ProposalStatus.VotingStarted)) {
                 _pendingProposals = SafeMath.add(_pendingProposals, 1);
-            } else if (proposalStatus == uint8(Governance.ProposalStatus.Accepted)) {
+            } else if (proposalStatus == uint(Governance.ProposalStatus.Accepted)) {
                 _acceptedProposals = SafeMath.add(_acceptedProposals, 1);
             } else {
                 _rejectedProposals = SafeMath.add(_rejectedProposals, 1);

@@ -50,7 +50,7 @@ contract SimpleVoting is Upgradeable {
     mapping(uint => mapping(uint => uint[])) internal proposalRoleVote;
     mapping(address => uint[]) internal allVotesByMember;
     mapping(uint => bool) public rewardClaimed;
-    
+
 
     ProposalVote[] internal allVotes;
 
@@ -118,35 +118,26 @@ contract SimpleVoting is Upgradeable {
         public onlyInternal returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
         uint voteId;
-        uint solutionChosen;
-        uint proposalStatus;
-        uint finalVredict;
-        uint voteValue;
+        uint finalVerdict;
         uint totalReward;
         uint subCategory;
         uint calcReward;
-        uint i = _proposals.length;
 
-        //0th element is skipped always as sometimes we actually need length of _proposals be 0. 
-        for (i--; i > 0; i--) {
+        //0th element is skipped always as sometimes we actually need length of _proposals be 0.
+        for (uint i = 0; i < _proposals.length; i++) {
             voteId = addressProposalVote[_memberAddress][_proposals[i]];
 
             require(!rewardClaimed[voteId]);
 
             rewardClaimed[voteId] = true;
-            (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
+            (, , finalVerdict, , totalReward, subCategory) = 
                 getVoteDetailsForReward(voteId, _proposals[i]);
-            require(proposalStatus > uint(Governance.ProposalStatus.VotingStarted));
-            if (finalVredict > 0 && solutionChosen == finalVredict) {
-                calcReward = SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), voteValue), totalReward) 
-                    / (SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposals[i])));
-                
-            } else if (!governanceDat.punishVoters() && finalVredict > 0) {
-                calcReward = SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), voteValue), totalReward) 
-                    / SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposals[i]));
-                
+            require(governanceDat.getProposalStatus(_proposals[i]) > uint(Governance.ProposalStatus.VotingStarted));
+            if ((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict) || (!governanceDat.punishVoters() && finalVerdict > 0)) {
+                calcReward = SafeMath.div(SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), allVotes[voteId].voteValue), totalReward) 
+                    , (SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposals[i]))));
             }
-            if (proposalCategory.isSubCategoryExternal(subCategory))    
+            if (proposalCategory.isSubCategoryExternal(subCategory))
                 pendingGBTReward = pendingGBTReward.add(calcReward);
             else
                 pendingDAppReward = pendingDAppReward.add(calcReward);
@@ -481,11 +472,7 @@ contract SimpleVoting is Upgradeable {
         (solutionChosen, proposalStatus, finalVredict, voteValue, totalReward, subCategory) = 
             getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
 
-        if (finalVredict > 0 && solutionChosen == finalVredict && totalReward != 0) {
-            calcReward = SafeMath.div(SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), voteValue), totalReward) 
-                , SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposalId)));
-
-        } else if (!governanceDat.punishVoters() && finalVredict > 0 && totalReward != 0) {
+        if ((finalVredict > 0 && solutionChosen == finalVredict && totalReward != 0) || (!governanceDat.punishVoters() && finalVredict > 0 && totalReward != 0)) {
             calcReward = SafeMath.div(SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), voteValue), totalReward) 
                 , SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposalId)));
         }
