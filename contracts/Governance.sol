@@ -263,7 +263,7 @@ contract Governance is Upgradeable {
     {
         uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalSubCategory(_proposalId));
         require(category != 0);
-        governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.Accepted));
+        governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.VotingStarted));
         uint closingTime = SafeMath.add(proposalCategory.getClosingTimeAtIndex(category, 0), now); // solhint-disable-line
         address votingType = governanceDat.getProposalVotingAddress(_proposalId);
         eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
@@ -286,13 +286,13 @@ contract Governance is Upgradeable {
         uint totalReward;
         bool rewardClaimedThenIsExternal;
         //0th element is skipped always as sometimes we actually need length of _proposals be 0. 
-        for (i--; i > 0; i--) {
+        for (i = 0; i < _proposals.length ; i++) {
             //solhint-disable-next-line
             (rewardClaimedThenIsExternal, subCategory, proposalStatusThenRewardPercent, finalVerdictThenRewardPerc, solutionIdThenRep, totalReward) =
                 governanceDat.getProposalDetailsForReward(_proposals[i], _memberAddress);           
             totalReward = SafeMath.div(totalReward, 100);
 
-            require(!rewardClaimedThenIsExternal && proposalStatusThenRewardPercent > uint(ProposalStatus.Accepted));
+            require(!rewardClaimedThenIsExternal && proposalStatusThenRewardPercent > uint(ProposalStatus.VotingStarted));
 
             if (finalVerdictThenRewardPerc > 0) {
 

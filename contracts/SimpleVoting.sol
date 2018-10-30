@@ -359,7 +359,7 @@ contract SimpleVoting is Upgradeable {
                 proposalRoleVote[_proposalId][_roleId].length == memberRole.getAllMemberLength(_roleId)
             )
                 closeValue = 1;
-        } else if (pStatus == uint(Governance.ProposalStatus.VotingStarted) ) {
+        } else if (pStatus == uint(Governance.ProposalStatus.VotingStarted)) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now) //solhint-disable-line
                 closeValue = 1;
         } else if (pStatus > uint(Governance.ProposalStatus.VotingStarted)) {

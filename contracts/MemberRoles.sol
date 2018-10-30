@@ -125,7 +125,7 @@ contract MemberRoles is Governed {
     function checkRoleIdByAddress(address _memberAddress, uint _roleId) public view returns(bool) {
         if (_roleId == uint(Role.UnAssigned))
             return true;
-        if (_roleId == uint(Role.AdvisoryBoard)) {
+        if (_roleId == uint(Role.TokenHolder)) {
             if (dAppToken.balanceOf(_memberAddress) > 0)
                 return true;
             else

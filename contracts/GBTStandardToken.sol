@@ -32,6 +32,7 @@ contract GBTStandardToken is LockableToken, MintableToken, DetailedERC20 {
     /// @dev payable function to buy tokens. send ETH to get GBT
     function buyToken() public payable returns(uint actualAmount) {
         actualAmount = SafeMath.div(SafeMath.mul(msg.value, uint256(10) ** decimals), tokenPrice);
-        mint(msg.sender, actualAmount);
+        _mint(msg.sender, actualAmount);
+        emit Mint(msg.sender, actualAmount);
     } 
 }
