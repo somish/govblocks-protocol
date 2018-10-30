@@ -5,7 +5,7 @@ let gbm;
 contract('new dApp', function() {
   it('should deploy new dApp', async () => {
     gbm = await GovBlocksMaster.deployed();
-    const rc = await gbm.addGovBlocksUser(
+    const rc = await gbm.addGovBlocksDapp(
       '0x42',
       SampleAddress,
       SampleAddress,

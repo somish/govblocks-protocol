@@ -49,7 +49,7 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('should add a member to a role', async function() {
-    await mr.updateMemberRole(member, 1, true, 356800000054);
+    await mr.updateMemberRole(member, 1, true, 0);
     assert.equal(
       await mr.checkRoleIdByAddress(member, 1),
       true,

@@ -35,8 +35,7 @@ contract('GovBlocksMaster', function([owner, notOwner]) {
     await catchRevert(
       gbm.govBlocksMasterInit(sampleAddress, sampleAddress, sampleAddress)
     );
-    let temp = await gbm.getGovBlocksUserDetails('0x4143');
-    temp = await gbm.getGovBlocksUserDetails1('0x4143');
+    let temp = await gbm.getGovBlocksDappDetails('0x41');
   });
 
   it('should change dapp master', async function() {
@@ -72,7 +71,7 @@ contract('GovBlocksMaster', function([owner, notOwner]) {
   it('should not allow to add dApp with same name', async function() {
     this.timeout(100000);
     await catchRevert(
-      gbm.addGovBlocksUser('0x41', sampleAddress, sampleAddress, 'yo')
+      gbm.addGovBlocksDapp('0x41', sampleAddress, sampleAddress, 'yo')
     );
   });
 
@@ -126,13 +125,14 @@ contract('GovBlocksMaster', function([owner, notOwner]) {
     assert.equal(result[1], sampleBytes32, 'ABI hash not set properly');
   });
 
-  it('should set dapp user', async function() {
-    this.timeout(100000);
-    await gbm.setDappUser('yo');
-    assert.equal(await gbm.getDappUser(), 'yo', 'dApp user not set properly');
-  });
+  // Removed this case as it is not being used anywhere 
+  // it('should set dapp user', async function() {
+  //   this.timeout(100000);
+  //   await gbm.setDappUser('yo');
+  //   assert.equal(await gbm.getDappUser(), 'yo', 'dApp user not set properly');
+  // });
 
-  it('should change gbt address', async function() {
+  it('should change eventCaller address', async function() {
     this.timeout(100000);
     let ecAddress = await gbm.eventCaller();
     await gbm.setEventCallerAddress(sampleAddress);
@@ -147,10 +147,9 @@ contract('GovBlocksMaster', function([owner, notOwner]) {
   it('should check getters', async function() {
     this.timeout(100000);
     // TODO check all the data returned by getters
-    let g1 = await gbm.getGovBlocksUserDetails('0x41');
-    let g2 = await gbm.getGovBlocksUserDetailsByIndex(0);
-    let g3 = await gbm.getGovBlocksUserDetails1('0x41');
-    let g4 = await gbm.getGovBlocksUserDetails2(gbm.address);
+    let g1 = await gbm.getGovBlocksDappDetails('0x41');
+    let g2 = await gbm.getGovBlocksDappDetailsByIndex(0);
+    let g4 = await gbm.getDappDetailsByAddress(gbm.address);
     let dAppLength = await gbm.getAllDappLength();
     let dAppName = await gbm.getAllDappById(0);
     let allDappNameArray = await gbm.getAllDappArray();

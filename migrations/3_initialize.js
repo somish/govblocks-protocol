@@ -77,7 +77,7 @@ module.exports = deployer => {
       return gbm.setImplementations(addr);
     })
     .then(function() {
-      return gbm.addGovBlocksUser('0x41', gbt.address, gbt.address, 'descHash');
+      return gbm.addGovBlocksDapp('0x41', gbt.address, gbt.address, 'descHash');
     })
     .then(function() {
       console.log(
