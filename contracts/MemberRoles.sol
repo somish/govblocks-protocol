@@ -22,6 +22,7 @@ import "./imports/govern/Governed.sol";
 contract MemberRoles is Governed {
     event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription, bool limitedValidity);
     using SafeMath for uint;
+    enum Role { UnAssigned, AdvisoryBoard, TokenHolder }
 
     bytes32[] internal memberRole;
     StandardToken public dAppToken;
@@ -60,17 +61,17 @@ contract MemberRoles is Governed {
     function addInitialMemberRoles() public {
         require(!adderCheck);
         memberRole.push("");
-        emit MemberRole(0, "Everyone", "Professionals that are a part of the GBT network", false);
+        emit MemberRole(uint(Role.UnAssigned), "Everyone", "Professionals that are a part of the GBT network", false);
         memberRole.push("Advisory Board");
         emit MemberRole(
-            1,
+            uint(Role.AdvisoryBoard),
             "Advisory Board",
             "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.", //solhint-disable-line
             false
         );
         memberRole.push("Token Holder");
         emit MemberRole(
-            2,
+            uint(Role.TokenHolder),
             "Token Holder",
             "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.", //solhint-disable-line
             false
@@ -91,10 +92,10 @@ contract MemberRoles is Governed {
 
     /// @dev Get All role ids array that has been assigned to a member so far.
     function getRoleIdByAddress(address _memberAddress) public view returns(uint[] assignedRoles) {
-        uint length = getRoleIdLengthByAddress(_memberAddress);
+        uint length = getTotalMemberRoles();
         uint j = 0;
         assignedRoles = new uint[](length);
-        for (uint i = 1; i <= getTotalMemberRoles(); i++) {
+        for (uint i = 1; i <= length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress]
                 && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now) //solhint-disable-line
             ) {
@@ -103,7 +104,7 @@ contract MemberRoles is Governed {
             }
         }
         if (dAppToken.balanceOf(_memberAddress) > 0) {
-            assignedRoles[j] = 2;
+            assignedRoles[j] = uint(Role.TokenHolder);
         }
 
         return assignedRoles;
@@ -122,9 +123,9 @@ contract MemberRoles is Governed {
     /// @param _roleId Checks member's authenticity with the roleId.
     /// i.e. Returns true if this roleId is assigned to member
     function checkRoleIdByAddress(address _memberAddress, uint _roleId) public view returns(bool) {
-        if (_roleId == 0)
+        if (_roleId == uint(Role.UnAssigned))
             return true;
-        if (_roleId == 2) {
+        if (_roleId == uint(Role.TokenHolder)) {
             if (dAppToken.balanceOf(_memberAddress) > 0)
                 return true;
             else
@@ -283,17 +284,5 @@ contract MemberRoles is Governed {
     function getTotalMemberRoles() public view returns(uint) {
         return memberRole.length;
     }
-
-    /// @dev Get Total number of role ids that has been assigned to a member so far.
-    function getRoleIdLengthByAddress(address _memberAddress) internal view returns(uint8 count) {
-        uint length = getTotalMemberRoles();
-        for (uint i = 1; i <= length; i++) {
-            if (memberRoleData[i].memberActive[_memberAddress]
-                && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now)) //solhint-disable-line
-                count++;       
-        }
-        if (dAppToken.balanceOf(_memberAddress) > 0)
-            count++;
-        return count;
-    }
+    
 }

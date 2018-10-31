@@ -14,7 +14,7 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity 0.4.24;
-
+import "../openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract InitalVerifier {
     function getDappMasterAddress(bytes32 _gbUserName) public view returns(address masterAddress);
@@ -80,7 +80,7 @@ contract GovernCheckerContract {
     {
         for (uint i = 0; i < authorized[_dAppName].length; i++) {
             if (authorized[_dAppName][i] == _authorizedAddress) {
-                return(i + 1); 
+                return(SafeMath.add(i, 1)); 
             }
         }
     }

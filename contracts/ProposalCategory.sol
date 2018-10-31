@@ -362,7 +362,7 @@ contract ProposalCategory is Governed {
                 _rewardPercentage[1],
                 _rewardPercentage[2]
             )
-        );    
+        );
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
@@ -370,9 +370,9 @@ contract ProposalCategory is Governed {
         require(!constructorCheck);
         dappName = _dAppName;
 
-        if (_getCodeSize(0xa79986Be6e5c3454fED87A4AB3fA92D76FC56d05) > 0)        //kovan testnet
-            officialPCA = 0xa79986Be6e5c3454fED87A4AB3fA92D76FC56d05;
-        
+        if (_getCodeSize(0x31475f356a415fe6cb19e450ff8e49c9b6ef9819) > 0)        //kovan testnet
+            officialPCA = 0x31475f356a415fe6cb19e450ff8e49c9b6ef9819;
+
         constructorCheck = true;
     }
 

@@ -3,8 +3,8 @@ async function getProposalIds(member, gd, sv) {
   let voterProposals = [];
   let voteId;
   const totalProposals = (await gd.getProposalLength()).toNumber();
-  ownerProposals.push(0);
-  voterProposals.push(0);
+  // ownerProposals.push(0);
+  // voterProposals.push(0);
   for (let i = 1; i < totalProposals; i++) {
     if ((await gd.getProposalStatus(i)).toNumber() > 2) {
       if (!(await gd.getRewardClaimed(i, member))) ownerProposals.push(i);
