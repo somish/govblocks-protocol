@@ -69,7 +69,8 @@ contract SimpleVoting is Upgradeable {
         bytes _action
     ) 
         external 
-    {
+    {   
+        require(governanceDat.getProposalStatus(_proposalId) >= uint(Governance.ProposalStatus.AwaitingSolution) , "Proposal should be open for solution submission");
         if (msg.sender == _memberAddress) {
             require(validateStake(_proposalId, _memberAddress));
         } else

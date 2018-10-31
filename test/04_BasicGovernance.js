@@ -163,6 +163,20 @@ contract('Proposal, solution and voting', function([
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
+  it('Should not add solution before proposal is open for solution submission', async function() {
+    this.timeout(100000);
+    let actionHash = encode(
+      'addNewMemberRole(bytes32,string,address,bool)',
+      '0x41647669736f727920426f617265000000000000000000000000000000000000',
+      'New member role',
+      owner,
+      false
+    );
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber();
+    await catchRevert(sv.addSolution(p, owner, 'Addnewmember', actionHash));
+  });
+
   it('Should categorize the proposal and then open it for solution submission', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);

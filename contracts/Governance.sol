@@ -185,10 +185,11 @@ contract Governance is Upgradeable {
                 token = dAppLocker;
             /* solhint-enable */
             require(validateStake(_subCategoryId, token));
-            governanceDat.addNewProposal(msg.sender, _subCategoryId, votingAddress, token);            
+            governanceDat.addNewProposal(msg.sender, _subCategoryId, votingAddress, token);
             uint incentive = proposalCategory.getSubCatIncentive(_subCategoryId);
             require(incentive <= GBTStandardToken(token).balanceOf(poolAddress));
             governanceDat.setProposalIncentive(_proposalId, incentive); 
+            openProposalForSolutionSubmission(_proposalId);
         } else
             governanceDat.createProposal(msg.sender, votingAddress);
     }
