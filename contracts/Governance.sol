@@ -31,7 +31,7 @@ contract Governance is Upgradeable {
     using SafeMath for uint;
     enum ProposalStatus { 
         Draft,
-        ReadyForSubmission,
+        AwaitingSolution,
         VotingStarted,
         Accepted,
         Rejected,
@@ -204,10 +204,14 @@ contract Governance is Upgradeable {
         public 
         onlyProposalOwner(_proposalId) 
     {
-        proposalSubmission(
+        proposalSubmission1(
             _proposalId, 
             _solutionHash, 
             _action
+        );
+
+        openProposalForVoting(
+            _proposalId
         );
     }
 
@@ -230,9 +234,13 @@ contract Governance is Upgradeable {
         uint _proposalId, 
         uint _subCategoryId
     ) 
-        public 
-        checkProposalValidity(_proposalId) 
+        public  
     {
+
+        require(governanceDat.getProposalStatus(_proposalId) < uint(Governance.ProposalStatus.VotingStarted));
+
+        require(governanceDat.getTotalSolutions(_proposalId) < 2 , "Categorization not possible, since solutions had already been submitted");
+
         uint dappIncentive = proposalCategory.getSubCatIncentive(_subCategoryId);
         
         uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
@@ -251,10 +259,19 @@ contract Governance is Upgradeable {
             require(validateStake(_subCategoryId, tokenAddress));
         }
 
-        require(dappIncentive <= GBTStandardToken(tokenAddress).balanceOf(poolAddress));
+        require(dappIncentive <= GBTStandardToken(tokenAddress).balanceOf(poolAddress) , "Less token balance in pool for incentive distribution");
 
         governanceDat.setProposalIncentive(_proposalId, dappIncentive);
         governanceDat.setProposalSubCategory(_proposalId, _subCategoryId, tokenAddress);
+        openProposalForSolutionSubmission(_proposalId);
+    }
+
+    function openProposalForSolutionSubmission(uint _proposalId)
+        internal
+    {
+
+        governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
+        
     }
 
     /// @dev Opens proposal for voting
@@ -262,7 +279,10 @@ contract Governance is Upgradeable {
         public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
     {
         uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalSubCategory(_proposalId));
-        require(category != 0);
+
+        require (category!=0 , "Proposal category should be greater than 0");
+        
+        require(governanceDat.getTotalSolutions(_proposalId) > 1 , "Proposal should contain atleast two solutions before it is open for voting");
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.VotingStarted));
         uint closingTime = SafeMath.add(proposalCategory.getClosingTimeAtIndex(category, 0), now); // solhint-disable-line
         address votingType = governanceDat.getProposalVotingAddress(_proposalId);
@@ -390,7 +410,8 @@ contract Governance is Upgradeable {
     ) 
         internal 
     {
-        openProposalForVoting(
+
+        openProposalForSolutionSubmission(
             _proposalId
         );
 
@@ -398,6 +419,10 @@ contract Governance is Upgradeable {
             _proposalId, 
             _solutionHash, 
             _action
+        );
+
+        openProposalForVoting(
+            _proposalId
         );
     }
 
@@ -445,6 +470,7 @@ contract Governance is Upgradeable {
         internal
     {
         createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _votingTypeId, _subCategoryId);
+
         proposalSubmission(
             _proposalId, 
             _solutionHash, 

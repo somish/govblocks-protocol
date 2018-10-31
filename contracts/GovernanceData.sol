@@ -736,7 +736,8 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         view 
         returns(
             uint _proposalLength, 
-            uint _draftProposals, 
+            uint _draftProposals,
+            uint _awaitingSolution, 
             uint _pendingProposals, 
             uint _acceptedProposals, 
             uint _rejectedProposals
@@ -747,8 +748,10 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
         for (uint i = 0; i < _proposalLength; i++) {
             proposalStatus = getProposalStatus(i);
-            if (proposalStatus < uint(Governance.ProposalStatus.VotingStarted)) {
+            if (proposalStatus == uint(Governance.ProposalStatus.Draft)) {
                 _draftProposals = SafeMath.add(_draftProposals, 1);
+            } else if (proposalStatus == uint(Governance.ProposalStatus.AwaitingSolution)) {
+                _awaitingSolution = SafeMath.add(_awaitingSolution, 1);
             } else if (proposalStatus == uint(Governance.ProposalStatus.VotingStarted)) {
                 _pendingProposals = SafeMath.add(_pendingProposals, 1);
             } else if (proposalStatus == uint(Governance.ProposalStatus.Accepted)) {
