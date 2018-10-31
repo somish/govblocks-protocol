@@ -234,7 +234,6 @@ contract Governance is Upgradeable {
         uint _proposalId, 
         uint _subCategoryId
     ) 
-        public 
         checkProposalValidity(_proposalId)
         public  
     {
