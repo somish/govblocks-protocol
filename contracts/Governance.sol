@@ -234,10 +234,10 @@ contract Governance is Upgradeable {
         uint _proposalId, 
         uint _subCategoryId
     ) 
+        public 
+        checkProposalValidity(_proposalId)
         public  
     {
-
-        require(governanceDat.getProposalStatus(_proposalId) < uint(Governance.ProposalStatus.VotingStarted));
 
         require(governanceDat.getTotalSolutions(_proposalId) < 2 , "Categorization not possible, since solutions had already been submitted");
 
