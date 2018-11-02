@@ -283,6 +283,10 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     assert.equal(category.toNumber(), 4, 'Category not set properly');
   });
 
+  it('Should not allow to categorize when there are solutions', async () => {
+    await catchRevert(gv.categorizeProposal(pid, 9));
+  });
+
   it('Should vote in favour of the proposal', async function() {
     this.timeout(100000);
     const g3 = await gv.getAllVoteIdsLengthByProposal(pid);
