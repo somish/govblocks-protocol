@@ -160,6 +160,14 @@ contract('Proposal, solution and voting', function([
       0
     );
     p2 = await gd.getAllProposalIdsLengthByAddress(owner);
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      0
+    );
+    p3 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
@@ -182,6 +190,7 @@ contract('Proposal, solution and voting', function([
     p = await gd.getAllProposalIdsLengthByAddress(owner);
     p = p.toNumber();
     await gv.categorizeProposal(p, 1);
+    await gv.categorizeProposal(p3, 1);
   });
 
   it('Should not open the proposal for voting till there are atleast two solutions', async function() {
@@ -416,7 +425,7 @@ contract('Proposal, solution and voting', function([
     const ps = await gd.getStatusOfProposals();
     assert.equal(ps[0].toNumber(), 6);
     assert.equal(ps[1].toNumber(), 1);
-    assert.equal(ps[2].toNumber(), 0);
+    assert.equal(ps[2].toNumber(), 1);
     assert.equal(ps[3].toNumber(), 1);
     assert.equal(ps[4].toNumber(), 3);
     assert.equal(ps[5].toNumber(), 1);
