@@ -150,7 +150,6 @@ contract('Proposal, solution and voting', function([
 
   it('Should create an uncategorized proposal', async function() {
     this.timeout(100000);
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     mrLength = await mr.getTotalMemberRoles();
     await gv.createProposal(
       'Add new member',
@@ -159,7 +158,8 @@ contract('Proposal, solution and voting', function([
       0,
       0
     );
-    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
+    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    await gv.categorizeProposal(p1,1);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -167,7 +167,7 @@ contract('Proposal, solution and voting', function([
       0,
       0
     );
-    p3 = await gd.getAllProposalIdsLengthByAddress(owner);
+    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
@@ -190,7 +190,6 @@ contract('Proposal, solution and voting', function([
     p = await gd.getAllProposalIdsLengthByAddress(owner);
     p = p.toNumber();
     await gv.categorizeProposal(p, 1);
-    await gv.categorizeProposal(p3, 1);
   });
 
   it('Should not open the proposal for voting till there are atleast two solutions', async function() {
@@ -423,7 +422,7 @@ contract('Proposal, solution and voting', function([
     await sv.proposalVoting(p, [0], { from: ab });
     await sv.closeProposalVote(p);
     const ps = await gd.getStatusOfProposals();
-    assert.equal(ps[0].toNumber(), 6);
+    assert.equal(ps[0].toNumber(), 7);
     assert.equal(ps[1].toNumber(), 1);
     assert.equal(ps[2].toNumber(), 1);
     assert.equal(ps[3].toNumber(), 1);
