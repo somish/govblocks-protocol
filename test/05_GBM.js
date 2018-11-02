@@ -148,6 +148,9 @@ contract('GovBlocksMaster', function([owner, notOwner]) {
     this.timeout(100000);
     // TODO check all the data returned by getters
     let g1 = await gbm.getGovBlocksDappDetails('0x41');
+    await catchRevert(
+      gbm.getGovBlocksDappDetails('0x51')
+    );
     let g2 = await gbm.getGovBlocksDappDetailsByIndex(0);
     let g4 = await gbm.getDappDetailsByAddress(gbm.address);
     let dAppLength = await gbm.getAllDappLength();
