@@ -145,19 +145,19 @@ contract Governance is Upgradeable {
     /// @dev Creates a new proposal
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
-    /// @param _subCategoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
+    /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     function createProposal(
         string _proposalTitle, 
         string _proposalSD, 
         string _proposalDescHash, 
         uint _votingTypeId, 
-        uint _subCategoryId
+        uint _categoryId
     ) 
         public 
     {
-        uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
+        // uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
 
-        require(allowedToCreateProposal(category));
+        require(allowedToCreateProposal(_categoryId));
         address votingAddress = governanceDat.getVotingTypeAddress(_votingTypeId);
         uint _proposalId = governanceDat.getProposalLength();
         /* solhint-disable */
@@ -171,22 +171,22 @@ contract Governance is Upgradeable {
         );
         eventCaller.callProposalCreated(
             _proposalId,
-            _subCategoryId,
+            _categoryId,
             master.dAppName(),
             _proposalDescHash
         );
         /* solhint-enable */
         address token;
-        if (_subCategoryId > 0) {
+        if (_categoryId > 0) {
             /* solhint-disable */
-            if (proposalCategory.isCategoryExternal(category))
+            if (proposalCategory.isCategoryExternal(_categoryId))
                 token = address(govBlocksToken);
             else
                 token = dAppLocker;
             /* solhint-enable */
-            require(validateStake(_subCategoryId, token));
-            governanceDat.addNewProposal(msg.sender, _subCategoryId, votingAddress, token);
-            uint incentive = proposalCategory.getSubCatIncentive(_subCategoryId);
+            require(validateStake(_categoryId, token));
+            governanceDat.addNewProposal(msg.sender, _categoryId, votingAddress, token);
+            uint incentive = proposalCategory.getCatIncentive(_categoryId);
             require(incentive <= GBTStandardToken(token).balanceOf(poolAddress));
             governanceDat.setProposalIncentive(_proposalId, incentive); 
             openProposalForSolutionSubmission(_proposalId);
@@ -233,7 +233,7 @@ contract Governance is Upgradeable {
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
     function categorizeProposal(
         uint _proposalId, 
-        uint _subCategoryId
+        uint _categoryId
     ) 
         checkProposalValidity(_proposalId)
         public  
@@ -241,13 +241,13 @@ contract Governance is Upgradeable {
 
         require(governanceDat.getTotalSolutions(_proposalId) < 2 , "Categorization not possible, since solutions had already been submitted");
 
-        uint dappIncentive = proposalCategory.getSubCatIncentive(_subCategoryId);
+        uint dappIncentive = proposalCategory.getCatIncentive(_categoryId);
         
-        uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
+        // uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
         address tokenAddress;
 
         /* solhint-disable */
-        if (proposalCategory.isCategoryExternal(category))
+        if (proposalCategory.isCategoryExternal(_categoryId))
             tokenAddress = address(govBlocksToken);
         else
             tokenAddress = dAppLocker;
@@ -255,14 +255,14 @@ contract Governance is Upgradeable {
 
         if (!memberRole.checkRoleIdByAddress(msg.sender, 1)) {
             require(msg.sender == governanceDat.getProposalOwner(_proposalId));
-            require(allowedToCreateProposal(category)); 
-            require(validateStake(_subCategoryId, tokenAddress));
+            require(allowedToCreateProposal(_categoryId)); 
+            require(validateStake(_categoryId, tokenAddress));
         }
 
         require(dappIncentive <= GBTStandardToken(tokenAddress).balanceOf(poolAddress) , "Less token balance in pool for incentive distribution");
 
         governanceDat.setProposalIncentive(_proposalId, dappIncentive);
-        governanceDat.setProposalSubCategory(_proposalId, _subCategoryId, tokenAddress);
+        governanceDat.setProposalCategory(_proposalId, _categoryId, tokenAddress);
         openProposalForSolutionSubmission(_proposalId);
     }
 
@@ -278,7 +278,7 @@ contract Governance is Upgradeable {
     function openProposalForVoting(uint _proposalId) 
         public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
     {
-        uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalSubCategory(_proposalId));
+        uint category = governanceDat.getProposalCategory(_proposalId);
 
         require (category!=0 , "Proposal category should be greater than 0");
         
@@ -316,7 +316,7 @@ contract Governance is Upgradeable {
 
             if (finalVerdictThenRewardPerc > 0) {
 
-                rewardClaimedThenIsExternal = proposalCategory.isSubCategoryExternal(subCategory);
+                rewardClaimedThenIsExternal = proposalCategory.isCategoryExternal(subCategory);
                 (finalVerdictThenRewardPerc, solutionIdThenRep) = _getReward(
                         _memberAddress, 
                         _proposals[i], 
@@ -384,7 +384,7 @@ contract Governance is Upgradeable {
                 proposalStatus = governanceDat.getProposalStatus(_proposalId);
                 finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
                 totalReward = governanceDat.getProposalIncentive(_proposalId);
-                subCategory = governanceDat.getProposalSubCategory(_proposalId);
+                subCategory = governanceDat.getProposalCategory(_proposalId);
                 break;
             }
         }

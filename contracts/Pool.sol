@@ -161,7 +161,7 @@ contract Pool is Upgradeable, Governed {
                     !rewardClaimed
                 ) {
                     calcReward = (proposalCategory.getRewardPercProposal(subCat).mul(governanceDat.getProposalIncentive(i))).div(100);  //solhint-disable-line
-                    if (proposalCategory.isSubCategoryExternal(subCat))    
+                    if (proposalCategory.isCategoryExternal(subCat))    
                         pendingGBTReward = SafeMath.add(pendingGBTReward, calcReward);
                     else
                         pendingDAppReward = SafeMath.add(pendingDAppReward, calcReward);
@@ -191,7 +191,7 @@ contract Pool is Upgradeable, Governed {
                 && !governanceDat.getRewardClaimed(i, _memberAddress)
             ) {
                 calcReward = (proposalCategory.getRewardPercSolution(subCategory) * totalReward) / 100;
-                if (proposalCategory.isSubCategoryExternal(subCategory))    
+                if (proposalCategory.isCategoryExternal(subCategory))    
                     pendingGBTReward = SafeMath.add(pendingGBTReward, calcReward);
                 else
                     pendingDAppReward = SafeMath.add(pendingDAppReward, calcReward);

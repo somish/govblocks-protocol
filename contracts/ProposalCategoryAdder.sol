@@ -25,87 +25,132 @@ contract ProposalCategoryAdder {
         ProposalCategory proposalCategory = ProposalCategory(_to);
         uint[] memory stakeIncentive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
+        uint rs;
+        uint[] memory al = new uint[](2);
+        uint[] memory alex = new uint[](1);
+        uint mv;
+        uint ct;
+        uint tokenHoldingTime;
+        
+        rs = 1;
+        mv = 50;
+        al[0] = 1;
+        al[1] = 2;
+        alex[0] = 0;
+        ct = 72000;
 
         stakeIncentive[0] = 0;
-        stakeIncentive[1] = 604800;
-        stakeIncentive[2] = 0;
+        stakeIncentive[1] = 0;
+        tokenHoldingTime = 604800;
         rewardPerc[0] = 30;
         rewardPerc[1] = 30;
         rewardPerc[2] = 40;
 
         proposalCategory.addDefaultCategories();
 
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Add new member role",
+            rs,
+            mv,
+            al,
+            ct,
             "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
-            1,
             address(0),
             "MR",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Update member role",
+            rs,
+            mv,
+            al,
+            ct,
             "QmZAjwUTsMdhhTHAL87RHFch7nq8op6MnEUXiud8SjecT9",
-            1,
             address(0),
             "MR",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Add new category",
+            rs,
+            mv,
+            al,
+            ct,
             "QmQ9EzwyUsLdkyayJsFU6iig1zPD6FdqLQ3ZF1jETL1tT2",
-            2,
             address(0),
             "PC",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Edit category",
+            rs,
+            mv,
+            al,
+            ct,
             "QmY31mwTHmgd7SL2shQeX9xuhnrNXpNNhTXb3ZyyXJJTWL",
-            2,
             address(0),
             "PC",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Add new sub category",
+            rs,
+            mv,
+            al,
+            ct,
             "QmXX2XxNjZeoEN2iiMdgWY3Xpo1XpGs9opD7SJnuotXyBu",
-            2,
             address(0),
             "PC",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Edit sub category",
+            rs,
+            mv,
+            al,
+            ct,
             "Qmd1yPsk9cfDN447AQVHMEnxTxx693VhnAXFeo3Q3JefHJ",
-            2,
             address(0),
             "PC",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
 
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Configure parameters",
+            rs,
+            mv,
+            al,
+            ct,
             "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
-            3,
             address(0),
             "GD",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
 
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Change dApp Token Proxy",
+            rs,
+            mv,
+            al,
+            ct,
             "QmPR9K6BevCXRVBxWGjF9RV7Pmtxr7D4gE3qsZu5bzi8GK",
-            3,
             address(0),
             "MS",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
@@ -116,7 +161,12 @@ contract ProposalCategoryAdder {
         ProposalCategory proposalCategory = ProposalCategory(_to);
         uint[] memory stakeIncentive = new uint[](3); 
         uint8[] memory rewardPerc = new uint8[](3);
-
+        uint rs;
+        uint mv;
+        uint[] memory alex = new uint[](1);
+        uint[] memory al = new uint[](1);
+        uint ct;
+        uint tokenHoldingTime = 604800;
         stakeIncentive[0] = uint256(10) ** 18;
         stakeIncentive[1] = 604800;
         stakeIncentive[2] = uint256(10) ** 18;
@@ -124,122 +174,180 @@ contract ProposalCategoryAdder {
         rewardPerc[0] = 30;
         rewardPerc[1] = 30;
         rewardPerc[2] = 40;
+        rs = 1;
+        mv = 50;
+        al[0] = 1;
+        al[1] = 2;
+        alex[0] = 0;
+        ct = 72000;
 
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Transfer Ether",
+            rs,
+            mv,
+            al,
+            ct,
             "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
-            4,
             address(0),
             "PL",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Transfer Token",
+            rs,
+            mv,
+            al,
+            ct,
             "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB",
-            4,
             address(0),
             "PL",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
 
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Add new version",
+            rs,
+            mv,
+            al,
+            ct,
             "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w",
-            5,
             address(0),
             "MS",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Add new contract",
+            rs,
+            mv,
+            al,
+            ct,
             "QmWP3P58YcmveHeXqgsBCRmDewTYV1QqeQqBmRkDujrDLR",
-            5,
             address(0),
             "MS",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Add new voting type",
+            rs,
+            mv,
+            al,
+            ct,
             "QmeWbgsSkeHUL9PWwugnvbnuvSr711CDpmkksB5dEyMFWj",
-            5,
             address(0),
             "SV",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Add new authorized address",
+            rs,
+            mv,
+            al,
+            ct,
             "QmRczxM2yN11th3MB8159rm1qAnk4VSrYYmFQCEXXRUf9Z",
-            5,
             address(0),
             "SV",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Upgrade a contract Implementation",
+            rs,
+            mv,
+            al,
+            ct,
             "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
-            5,
             address(0),
             "MS",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC( 
+        proposalCategory.addInitialCategories( 
             "Upgrade a contract proxy",
+            rs,
+            mv,
+            al,
+            ct,
             "QmUNGEn7E2csB3YxohDxBKNqvzwa1WfvrSH4TCCFD9DZsg",
-            5,
             address(0),
             "MS",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC( 
+        proposalCategory.addInitialCategories( 
             "Resume Proposal",
+            rs,
+            mv,
+            al,
+            ct,
             "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1",
-            5,
             address(0),
             "GD",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC( 
+        proposalCategory.addInitialCategories( 
             "Pause Proposal",
+            rs,
+            mv,
+            al,
+            ct,
             "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk",
-            6,
             address(0),
             "GD",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC( 
+        proposalCategory.addInitialCategories( 
             "Buy GBT in Pool",
+            rs,
+            mv,
+            al,
+            ct,
             "QmUc6apk3aRoHPaSwafo7RkV4XTJaaWS6Q7MogTMqLDyWs",
-            6,
             address(0),
             "PL",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "External Proposal", //19
+            rs,
+            mv,
+            al,
+            ct,
             "", 
-            7, 
             address(0), 
             "EX",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );
-        proposalCategory.addInitialSubC(
+        proposalCategory.addInitialCategories(
             "Others, not specified",
+            rs,
+            mv,
+            al,
+            ct,
             "", 
-            8, 
             address(0), 
             "EX",
+            tokenHoldingTime,
             stakeIncentive,
             rewardPerc
         );

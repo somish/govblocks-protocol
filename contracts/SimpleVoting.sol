@@ -138,7 +138,7 @@ contract SimpleVoting is Upgradeable {
                 calcReward = SafeMath.div(SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), allVotes[voteId].voteValue), totalReward) 
                     , (SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposals[i]))));
             }
-            if (proposalCategory.isSubCategoryExternal(subCategory))
+            if (proposalCategory.isCategoryExternal(subCategory))
                 pendingGBTReward = pendingGBTReward.add(calcReward);
             else
                 pendingDAppReward = pendingDAppReward.add(calcReward);
@@ -268,7 +268,7 @@ contract SimpleVoting is Upgradeable {
 
     /// @dev Closes Proposal Voting after All voting layers done with voting or Time out happens.
     function closeProposalVote(uint _proposalId) public {
-        uint category = proposalCategory.getCategoryIdBySubId(governanceDat.getProposalSubCategory(_proposalId));
+        uint category = governanceDat.getProposalCategory(_proposalId);
         uint currentVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
         uint _mrSequenceId = proposalCategory.getRoleSequencAtIndex(category, currentVotingId);
         uint64 max;
@@ -372,7 +372,7 @@ contract SimpleVoting is Upgradeable {
 
     /// @dev Does category specific tasks
     function finalActions(uint _proposalId) internal {
-        uint subCategory = governanceDat.getProposalSubCategory(_proposalId); 
+        uint subCategory = governanceDat.getProposalCategory(_proposalId); 
         if (subCategory == 12) { //add new voting type. gives authorization to it.
             addAuthorized(governanceDat.getLatestVotingAddress());
         }
@@ -400,7 +400,7 @@ contract SimpleVoting is Upgradeable {
                 } else {
                     governanceDat.updateProposalDetails(_proposalId, currentVotingId - 1, max, max);
                     governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Accepted));
-                    uint subCategory = governanceDat.getProposalSubCategory(_proposalId);
+                    uint subCategory = governanceDat.getProposalCategory(_proposalId);
                     bytes2 contractName = proposalCategory.getContractName(subCategory);
                     address actionAddress;
                     /*solhint-disable*/
@@ -477,7 +477,7 @@ contract SimpleVoting is Upgradeable {
             calcReward = SafeMath.div(SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), voteValue), totalReward) 
                 , SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposalId)));
         }
-        if (proposalCategory.isSubCategoryExternal(subCategory))    
+        if (proposalCategory.isCategoryExternal(subCategory))    
             pendingGBTReward = calcReward;
         else
             pendingDAppReward = calcReward;
@@ -506,7 +506,7 @@ contract SimpleVoting is Upgradeable {
         proposalStatus = governanceDat.getProposalStatus(proposalId);
         finalVerdict = governanceDat.getProposalFinalVerdict(proposalId);
         totalReward = governanceDat.getProposalIncentive(proposalId);
-        subCategory = governanceDat.getProposalSubCategory(proposalId);
+        subCategory = governanceDat.getProposalCategory(proposalId);
     }
 
     /// @dev Gets vote id details for reward
@@ -527,7 +527,7 @@ contract SimpleVoting is Upgradeable {
         proposalStatus = governanceDat.getProposalStatus(_proposalId);
         finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
         totalReward = governanceDat.getProposalIncentive(_proposalId);
-        subCategory = governanceDat.getProposalSubCategory(_proposalId);
+        subCategory = governanceDat.getProposalCategory(_proposalId);
     }
 
     function _getLockedBalance(address _token, address _of, uint _time) 

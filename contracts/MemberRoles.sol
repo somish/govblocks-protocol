@@ -20,7 +20,7 @@ import "./imports/govern/Governed.sol";
 
 
 contract MemberRoles is Governed {
-    event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription, bool limitedValidity);
+    event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription);
     using SafeMath for uint;
     enum Role { UnAssigned, AdvisoryBoard, TokenHolder }
 
@@ -34,8 +34,6 @@ contract MemberRoles is Governed {
     struct MemberRoleDetails {
         uint memberCounter;
         mapping(address => bool) memberActive;
-        bool limitedValidity;
-        mapping(address => uint) validity;
         address[] memberAddress;
     }
 
@@ -61,21 +59,17 @@ contract MemberRoles is Governed {
     function addInitialMemberRoles() public {
         require(!adderCheck);
         memberRole.push("");
-        emit MemberRole(uint(Role.UnAssigned), "Everyone", "Professionals that are a part of the GBT network", false);
+        emit MemberRole(uint(Role.UnAssigned), "Everyone", "Professionals that are a part of the GBT network");
         memberRole.push("Advisory Board");
         emit MemberRole(
             uint(Role.AdvisoryBoard),
             "Advisory Board",
-            "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.", //solhint-disable-line
-            false
-        );
+            "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp."); //solhint-disable-line
         memberRole.push("Token Holder");
         emit MemberRole(
             uint(Role.TokenHolder),
             "Token Holder",
-            "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.", //solhint-disable-line
-            false
-        );
+            "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default."); //solhint-disable-line
         memberRoleData[1].memberCounter++;
         memberRoleData[1].memberActive[firstAB] = true;
         memberRoleData[1].memberAddress.push(firstAB);
@@ -96,9 +90,7 @@ contract MemberRoles is Governed {
         uint j = 0;
         assignedRoles = new uint[](length);
         for (uint i = 1; i <= length; i++) {
-            if (memberRoleData[i].memberActive[_memberAddress]
-                && (!memberRoleData[i].limitedValidity || memberRoleData[i].validity[_memberAddress] > now) //solhint-disable-line
-            ) {
+            if (memberRoleData[i].memberActive[_memberAddress]) {
                 assignedRoles[j] = i;
                 j++;
             }
@@ -108,14 +100,6 @@ contract MemberRoles is Governed {
         }
 
         return assignedRoles;
-    }
-
-    function getValidity(address _memberAddress, uint _roleId) public view returns (uint) {
-        return memberRoleData[_roleId].validity[_memberAddress];
-    }
-
-    function getRoleValidity(uint _roleId) public view returns (bool) {
-        return memberRoleData[_roleId].limitedValidity;
     }
 
     /// @dev Returns true if the given role id is assigned to a member.
@@ -131,8 +115,7 @@ contract MemberRoles is Governed {
             else
                 return false;
         }
-        if (memberRoleData[_roleId].memberActive[_memberAddress]
-            && (!memberRoleData[_roleId].limitedValidity || memberRoleData[_roleId].validity[_memberAddress] > now)) //solhint-disable-line
+        if (memberRoleData[_roleId].memberActive[_memberAddress]) //solhint-disable-line
             return true;
         else
             return false;
@@ -145,42 +128,24 @@ contract MemberRoles is Governed {
     function updateMemberRole(
         address _memberAddress,
         uint _roleId,
-        bool _typeOf,
-        uint _validity
+        bool _typeOf
     )
         public
         checkRoleAuthority(_roleId)
     {
         if (_typeOf) {
-            if (memberRoleData[_roleId].validity[_memberAddress] <= _validity) {
-                if (!memberRoleData[_roleId].memberActive[_memberAddress]) {
-                    memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
-                    memberRoleData[_roleId].memberActive[_memberAddress] = true;
-                    memberRoleData[_roleId].memberAddress.push(_memberAddress);
-                    memberRoleData[_roleId].validity[_memberAddress] = _validity;
-                } else {
-                    memberRoleData[_roleId].validity[_memberAddress] = _validity;
-                }
+            if (!memberRoleData[_roleId].memberActive[_memberAddress]) {
+                memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
+                memberRoleData[_roleId].memberActive[_memberAddress] = true;
+                memberRoleData[_roleId].memberAddress.push(_memberAddress);
+            } else {
+
             }
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.sub(memberRoleData[_roleId].memberCounter, 1);
             delete memberRoleData[_roleId].memberActive[_memberAddress];
-            delete memberRoleData[_roleId].validity[_memberAddress];
         }
-    }
-
-    /// @dev Updates Validity of a user
-    function setValidityOfMember(address _memberAddress, uint _roleId, uint _validity)
-        public
-        checkRoleAuthority(_roleId)
-    {
-        memberRoleData[_roleId].validity[_memberAddress] = _validity;
-    }
-
-    /// @dev Update validity of role
-    function setRoleValidity(uint _roleId, bool _validity) public checkRoleAuthority(_roleId) {
-        memberRoleData[_roleId].limitedValidity = _validity;
     }
 
     /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
@@ -197,8 +162,7 @@ contract MemberRoles is Governed {
     function addNewMemberRole(
         bytes32 _newRoleName, 
         string _roleDescription, 
-        address _canAddMembers, 
-        bool _limitedValidity
+        address _canAddMembers
     )
         public
         onlyAuthorizedToGovern
@@ -206,8 +170,7 @@ contract MemberRoles is Governed {
         uint rolelength = memberRole.length;
         memberRole.push(_newRoleName);
         authorizedAddressAgainstRole[rolelength] = _canAddMembers;
-        memberRoleData[rolelength].limitedValidity = _limitedValidity;
-        emit MemberRole(rolelength, _newRoleName, _roleDescription, _limitedValidity);
+        emit MemberRole(rolelength, _newRoleName, _roleDescription);
     }
 
     /// @dev Gets the member addresses assigned by a specific role
@@ -221,10 +184,8 @@ contract MemberRoles is Governed {
         address[] memory tempAllMemberAddress = new address[](memberRoleData[_memberRoleId].memberCounter);
         for (i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
-            if (memberRoleData[_memberRoleId].memberActive[member]
-                && (!memberRoleData[_memberRoleId].limitedValidity 
-                    || memberRoleData[_memberRoleId].validity[member] > now) //solhint-disable-line
-            ) {
+            if (memberRoleData[_memberRoleId].memberActive[member]) //solhint-disable-line
+            {
                 tempAllMemberAddress[j] = member;
                 j++;
             }

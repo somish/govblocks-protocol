@@ -215,7 +215,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         uint64 finalVerdict;
         uint64 currentVerdict;
         uint currVotingStatus;
-        uint subCategory;
+        uint category;
         uint versionNumber;
         uint totalVoteValue;
         uint commonIncentive;
@@ -370,8 +370,8 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Sets proposal category
-    function setProposalSubCategory(uint _proposalId, uint _subCategoryId, address _stakeToken) public onlyInternal {
-        allProposalData[_proposalId].subCategory = _subCategoryId;
+    function setProposalCategory(uint _proposalId, uint _categoryId, address _stakeToken) public onlyInternal {
+        allProposalData[_proposalId].category = _categoryId;
         allProposalData[_proposalId].stakeToken = _stakeToken;
     }
 
@@ -443,7 +443,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         view 
         returns(
             uint id,
-            uint subCategory, 
+            uint category, 
             uint currentVotingId, 
             uint64 intermediateVerdict, 
             uint64 finalVerdict, 
@@ -453,7 +453,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     {
         return (
             _proposalId, 
-            allProposalData[_proposalId].subCategory, 
+            allProposalData[_proposalId].category, 
             allProposalData[_proposalId].currVotingStatus, 
             allProposalData[_proposalId].currentVerdict, 
             allProposalData[_proposalId].finalVerdict, 
@@ -470,7 +470,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     {
         return (
             rewardClaimed[_memberAddress][_proposalId], 
-            allProposalData[_proposalId].subCategory, 
+            allProposalData[_proposalId].category, 
             allProposalData[_proposalId].propStatus, 
             allProposalData[_proposalId].finalVerdict
         );
@@ -488,7 +488,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         }
         return (
             rewardClaimed[_memberAddress][_proposalId], 
-            allProposalData[_proposalId].subCategory, 
+            allProposalData[_proposalId].category, 
             allProposalData[_proposalId].propStatus, 
             allProposalData[_proposalId].finalVerdict,
             solutionId,
@@ -574,8 +574,8 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Gets proposal sub category when given proposal id
-    function getProposalSubCategory(uint _proposalId) public view returns(uint) {
-        return allProposalData[_proposalId].subCategory;
+    function getProposalCategory(uint _proposalId) public view returns(uint) {
+        return allProposalData[_proposalId].category;
     }
 
     function setRewardClaimed(uint _proposalId, address _memberAddress) public onlyInternal {
@@ -607,7 +607,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
             bonusReputation, 
             allMemberReputationByAddress[_memberAddress],
             allProposalData[_proposalId].stakeToken, 
-            allProposalData[_proposalId].subCategory
+            allProposalData[_proposalId].category
         );
     }
 
@@ -619,7 +619,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     {
         require(allProposalData[_proposalId].propStatus == uint8(Governance.ProposalStatus.VotingStarted));
         return(
-            allProposalData[_proposalId].subCategory,
+            allProposalData[_proposalId].category,
             allProposalData[_proposalId].currVotingStatus,
             allProposalData[_proposalId].currentVerdict
         );
@@ -645,7 +645,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     /// @dev Gets stakeToken and sub cat proposal
     function getTokenAndSubCat(uint _proposalId) public view returns(address, uint) {
-        return (allProposalData[_proposalId].stakeToken, allProposalData[_proposalId].subCategory);
+        return (allProposalData[_proposalId].stakeToken, allProposalData[_proposalId].category);
     }
 
     /// @dev Gets Total number of proposal created till now in dApp
@@ -674,14 +674,14 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev Adds new proposal
     function addNewProposal( 
         address _memberAddress, 
-        uint _subCategoryId, 
+        uint _categoryId, 
         address _votingTypeAddress,
         address _stakeToken
     ) 
         public 
         onlyInternal 
     {
-        allProposalData[allProposal.length].subCategory = _subCategoryId;
+        allProposalData[allProposal.length].category = _categoryId;
         allProposalData[allProposal.length].stakeToken = _stakeToken;
         _createProposal(_memberAddress, _votingTypeAddress);
     }

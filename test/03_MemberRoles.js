@@ -49,7 +49,7 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('should add a member to a role', async function() {
-    await mr.updateMemberRole(member, 1, true, 0);
+    await mr.updateMemberRole(member, 1, true);
     assert.equal(
       await mr.checkRoleIdByAddress(member, 1),
       true,
@@ -82,48 +82,36 @@ contract('MemberRoles', function([owner, member, other]) {
     await mr.updateDependencyAddresses(); // just for interface, they do nothing
   });
 
-  it('Should change validity of role', async function() {
-    await mr.setRoleValidity(1, true);
-    assert.equal(await mr.getRoleValidity(1), true);
-  });
-
-  it('Should change validity of member', async function() {
-    await mr.setValidityOfMember(member, 1, 5);
-    const mrs22 = await mr.getAllAddressByRoleId(1);
-    const val = await mr.getValidity(member, 1);
-    assert.equal(val.toNumber(), 5, 'Validity not updated');
-  });
-
-  it('Should not list expired member as valid', async function() {
-    await mr.updateMemberRole(member, 1, true, 1);
+  it('Should not list invalid member as valid', async function() {
+    var a = await mr.checkRoleIdByAddress(member, 1);
+    await mr.updateMemberRole(member, 1, false);
     assert.equal(
       await mr.checkRoleIdByAddress(member, 1),
       false,
       'user incorrectly added to AB'
     );
-    await mr.updateMemberRole(member, 1, true, 356000000000854);
+    await mr.updateMemberRole(member, 1, true);
     assert.equal(
       await mr.checkRoleIdByAddress(member, 1),
       true,
       'user not added to AB'
     );
-    await mr.setRoleValidity(1, false);
   });
 
   it('Should be able to remove member from a role', async function() {
-    await mr.updateMemberRole(member, 1, false, 0);
+    await mr.updateMemberRole(member, 1, false);
     assert.equal(
       await mr.checkRoleIdByAddress(member, 1),
       false,
       'user not removed from AB'
     );
-    catchRevert(mr.updateMemberRole(member, 1, false, 0));
+    catchRevert(mr.updateMemberRole(member, 1, false));
   });
 
   it('Should not allow unauthorized people to update member roles', async function() {
     await mr.changeCanAddMember(1, owner);
     await catchRevert(
-      mr.updateMemberRole(member, 1, true, 356854, { from: other })
+      mr.updateMemberRole(member, 1, true, { from: other })
     );
   });
 
