@@ -423,7 +423,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById1(uint _proposalId) 
+    function getProposalDetailsById(uint _proposalId) 
         public 
         view 
         returns(uint id, address owner, uint dateUpd, uint versionNum, uint8 propStatus) 
@@ -438,7 +438,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById2(uint _proposalId) 
+    function getProposalVotingDetails(uint _proposalId) 
         public 
         view 
         returns(
@@ -463,7 +463,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById3(uint _proposalId, address _memberAddress) 
+    function getProposalStatusAndVerdict(uint _proposalId, address _memberAddress) 
         public 
         view 
         returns(bool, uint, uint8, uint64) 
@@ -497,11 +497,12 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Gets proposal details of given proposal id
+    /// @param status Current proposal status
     /// @param totalVoteValue Total value of votes that has been casted so far against proposal
     /// @param totalSolutions Total number of solutions proposed till now against proposal
     /// @param commonIncentive Incentive that needs to be distributed once the proposal is closed.
     /// @param finalVerdict Final solution index that has won by maximum votes.
-    function getProposalDetailsById6(uint _proposalId) 
+    function getProposalDetails(uint _proposalId) 
         public 
         view 
         returns(

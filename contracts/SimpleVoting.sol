@@ -299,7 +299,7 @@ contract SimpleVoting is Upgradeable {
         }
 
         if (checkForThreshold(_proposalId, _mrSequenceId)) {
-            closeProposalVote1(finalVoteValue[max], totalVoteValue, category, _proposalId, max);
+            closeProposalVoteThReached(finalVoteValue[max], totalVoteValue, category, _proposalId, max);
         } else {
             uint64 interVerdict = governanceDat.getProposalIntermediateVerdict(_proposalId);
             governanceDat.updateProposalDetails(_proposalId, currentVotingId, max, interVerdict);
@@ -350,8 +350,8 @@ contract SimpleVoting is Upgradeable {
 
         require(!governanceDat.proposalPaused(_proposalId));
         
-        (, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById1(_proposalId);
-        (, _majorityVote, _closingTime) = proposalCategory.getCategoryData3(
+        (, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById(_proposalId);
+        (, _majorityVote, _closingTime) = proposalCategory.getCategoryVotingLayerData(
             _category, 
             _currentVotingId
         );
@@ -378,14 +378,14 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
-    /// @dev This does the remaining functionality of closing proposal vote
-    function closeProposalVote1(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64 max) 
+    /// @dev This does the remaining functionality of closing proposal vote, called only if threshold is reached
+    function closeProposalVoteThReached(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64 max) 
         internal 
     {
         uint _closingTime;
         uint _majorityVote;
         uint currentVotingId = governanceDat.getProposalCurrentVotingId(_proposalId);
-        (, _majorityVote, _closingTime) = proposalCategory.getCategoryData3(category, currentVotingId);
+        (, _majorityVote, _closingTime) = proposalCategory.getCategoryVotingLayerData(category, currentVotingId);
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
                 currentVotingId = SafeMath.add(currentVotingId, 1);

@@ -205,7 +205,7 @@ contract Governance is Upgradeable {
         public 
         onlyProposalOwner(_proposalId) 
     {
-        proposalSubmission1(
+        submitProposal(
             _proposalId, 
             _solutionHash, 
             _action
@@ -415,7 +415,7 @@ contract Governance is Upgradeable {
             _proposalId
         );
 
-        proposalSubmission1(
+        submitProposal(
             _proposalId, 
             _solutionHash, 
             _action
@@ -427,7 +427,7 @@ contract Governance is Upgradeable {
     }
 
     /// @dev When creating proposal with solution, it adds solution details against proposal
-    function proposalSubmission1(
+    function submitProposal(
         uint _proposalId, 
         string _solutionHash, 
         bytes _action
