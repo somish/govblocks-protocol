@@ -20,8 +20,8 @@ contract('Proposal Category', function() {
     await catchRevert(pc.proposalCategoryInitiate('0x41'));
     // const g1 = await pc.allSubCategory(0);
     // assert.equal(g1[6].toNumber(), 0);
-    const g2 = await pc.getCategoryDetails(0);
-    assert.equal(g2[1][0].toNumber(), 1);
+    const g2 = await pc.getCategoryDetails(1);
+    assert.equal(g2[0].toNumber(), 1);
     const g3 = await pc.updateDependencyAddresses(); // Just for the interface, shouldn't throw.
     const g4 = await pc.changeMasterAddress(pc.address); // Just for the interface, shouldn't throw.
     const g5 = await pc.getContractName(0);
@@ -34,10 +34,10 @@ contract('Proposal Category', function() {
     // assert.equal(g8[0].toNumber(), 0);
     const g9 = await pc.getMRAllowed(0);
     assert.equal(g9[0].toNumber(), 1);
-    const g10 = await pc.getAllSubIdsLengthByCategory(0);
-    assert.equal(g10.toNumber(), 1);
     const g11 = await pc.getRoleMajorityVotelength(0);
     assert.equal(g11[1].toNumber(), 1);
+    const f12 = await pc.getCategoryLength();
+    console.log(f12.toNumber());
     const g14 = await pc.getMinStake(9);
     assert.isAbove(g14.toNumber(), 1);
     const g15 = await pc.getRoleMajorityVoteAtIndex(4, 0);

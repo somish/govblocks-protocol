@@ -553,7 +553,7 @@ contract SimpleVoting is Upgradeable {
             = governanceDat.getProposalDetailsForSV(_proposalId);
 
         categoryThenMRSequence = 
-            proposalCategory.getMRSequenceBySubCat(categoryThenMRSequence, currentVotingIdThenVoteValue);
+            proposalCategory.getRoleSequencAtIndex(categoryThenMRSequence, currentVotingIdThenVoteValue);
         //categoryThenMRSequence is now MemberRoleSequence
 
         require(memberRole.checkRoleIdByAddress(_voter, categoryThenMRSequence));

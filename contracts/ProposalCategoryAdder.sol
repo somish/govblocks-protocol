@@ -23,8 +23,7 @@ contract ProposalCategoryAdder {
     /// @dev ads the default govBlocks categories and some sub cat to dApps
     function addCat(address _to) public { //solhint-disable-line
         ProposalCategory proposalCategory = ProposalCategory(_to);
-        uint[] memory stakeIncentive = new uint[](3); 
-        uint8[] memory rewardPerc = new uint8[](3);
+        uint[] memory stakeIncentive = new uint[](2);
         uint rs;
         uint[] memory al = new uint[](2);
         uint[] memory alex = new uint[](1);
@@ -42,12 +41,19 @@ contract ProposalCategoryAdder {
         stakeIncentive[0] = 0;
         stakeIncentive[1] = 0;
         tokenHoldingTime = 604800;
-        rewardPerc[0] = 30;
-        rewardPerc[1] = 30;
-        rewardPerc[2] = 40;
 
-        proposalCategory.addDefaultCategories();
-
+        proposalCategory.addInitialCategories(
+            "Uncategorized",
+            rs,
+            mv,
+            al,
+            ct,
+            "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
+            address(0),
+            "MR",
+            0,
+            stakeIncentive
+        );
         proposalCategory.addInitialCategories(
             "Add new member role",
             rs,
@@ -58,8 +64,7 @@ contract ProposalCategoryAdder {
             address(0),
             "MR",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Update member role",
@@ -71,8 +76,7 @@ contract ProposalCategoryAdder {
             address(0),
             "MR",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Add new category",
@@ -84,8 +88,7 @@ contract ProposalCategoryAdder {
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Edit category",
@@ -97,8 +100,7 @@ contract ProposalCategoryAdder {
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Add new sub category",
@@ -110,8 +112,7 @@ contract ProposalCategoryAdder {
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Edit sub category",
@@ -123,8 +124,7 @@ contract ProposalCategoryAdder {
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
 
         proposalCategory.addInitialCategories(
@@ -137,8 +137,7 @@ contract ProposalCategoryAdder {
             address(0),
             "GD",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
 
         proposalCategory.addInitialCategories(
@@ -151,35 +150,8 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
-    }
-
-    /// @dev ads remaining sub cat. Function split to split gas cost.
-    function addSubCat(address _to) public { //solhint-disable-line
-        ProposalCategory proposalCategory = ProposalCategory(_to);
-        uint[] memory stakeIncentive = new uint[](3); 
-        uint8[] memory rewardPerc = new uint8[](3);
-        uint rs;
-        uint mv;
-        uint[] memory alex = new uint[](1);
-        uint[] memory al = new uint[](1);
-        uint ct;
-        uint tokenHoldingTime = 604800;
-        stakeIncentive[0] = uint256(10) ** 18;
-        stakeIncentive[1] = 604800;
-        stakeIncentive[2] = uint256(10) ** 18;
-
-        rewardPerc[0] = 30;
-        rewardPerc[1] = 30;
-        rewardPerc[2] = 40;
-        rs = 1;
-        mv = 50;
-        al[0] = 1;
-        al[1] = 2;
-        alex[0] = 0;
-        ct = 72000;
 
         proposalCategory.addInitialCategories(
             "Transfer Ether",
@@ -191,8 +163,7 @@ contract ProposalCategoryAdder {
             address(0),
             "PL",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Transfer Token",
@@ -204,8 +175,7 @@ contract ProposalCategoryAdder {
             address(0),
             "PL",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
 
         proposalCategory.addInitialCategories(
@@ -218,8 +188,7 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Add new contract",
@@ -231,8 +200,7 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Add new voting type",
@@ -244,8 +212,7 @@ contract ProposalCategoryAdder {
             address(0),
             "SV",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Add new authorized address",
@@ -257,8 +224,7 @@ contract ProposalCategoryAdder {
             address(0),
             "SV",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Upgrade a contract Implementation",
@@ -270,8 +236,7 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories( 
             "Upgrade a contract proxy",
@@ -283,8 +248,7 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories( 
             "Resume Proposal",
@@ -296,8 +260,7 @@ contract ProposalCategoryAdder {
             address(0),
             "GD",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories( 
             "Pause Proposal",
@@ -309,8 +272,7 @@ contract ProposalCategoryAdder {
             address(0),
             "GD",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories( 
             "Buy GBT in Pool",
@@ -322,8 +284,7 @@ contract ProposalCategoryAdder {
             address(0),
             "PL",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "External Proposal", //19
@@ -335,8 +296,7 @@ contract ProposalCategoryAdder {
             address(0), 
             "EX",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Others, not specified",
@@ -348,9 +308,7 @@ contract ProposalCategoryAdder {
             address(0), 
             "EX",
             tokenHoldingTime,
-            stakeIncentive,
-            rewardPerc
+            stakeIncentive
         );
-        //22 sub cat len, 21 sub cat id
     }
 }

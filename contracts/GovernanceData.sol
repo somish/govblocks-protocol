@@ -56,20 +56,10 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         uint256 voteId
     );
     
-    event ProposalStatus(uint256 indexed proposalId, uint256 proposalStatus, uint256 dateAdd);
-    
     event ProposalVersion(
         uint256 indexed proposalId, 
         uint256 indexed versionNumber, 
         string proposalDescHash, 
-        uint256 dateAdd
-    );
-        
-    event ProposalWithSolution(
-        address indexed proposalOwner, 
-        uint256 indexed proposalId, 
-        string proposalDescHash, 
-        string solutionDescHash, 
         uint256 dateAdd
     );
 
@@ -213,19 +203,19 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     struct ProposalData {
         uint8 propStatus;
         uint64 finalVerdict;
-        uint64 currentVerdict;
-        uint currVotingStatus;
+        // uint64 currentVerdict;
+        // uint currVotingStatus;
         uint category;
-        uint versionNumber;
+        // uint versionNumber;
         uint totalVoteValue;
         uint commonIncentive;
         address stakeToken;
     }
 
-    struct VotingTypeDetails {
-        bytes32 votingTypeName;
-        address votingTypeAddress;
-    }
+    // struct VotingTypeDetails {
+    //     bytes32 votingTypeName;
+    //     address votingTypeAddress;
+    // }
 
     struct SolutionStruct {
         address owner;
@@ -234,22 +224,15 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
-    mapping(address => uint) internal allMemberReputationByAddress;
+    // mapping(address => uint) internal allMemberReputationByAddress;
     mapping(uint => bool) public proposalPaused;
     mapping(address => mapping(uint => bool)) internal rewardClaimed;
 
     uint public quorumPercentage;
     bool public constructorCheck;
-    bool public punishVoters;
-    uint public stakeWeight;
-    uint public bonusStake;
-    uint public reputationWeight;
-    uint public bonusReputation;
-    uint public addProposalOwnerPoints;
-    uint public addSolutionOwnerPoints;
 
     ProposalStruct[] internal allProposal;
-    VotingTypeDetails[] internal allVotingTypeDetails;
+    // VotingTypeDetails[] internal allVotingTypeDetails;
 
     Governance public gov;
     
@@ -272,40 +255,12 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         constructorCheck = true;
     }
 
-    /// @dev Changes points to add or subtract in member reputation when proposal/Solution/vote gets denied or accepted
-    /// @param _addProposalOwnerPoints Points that needs to be added in Proposal owner reputation 
-    ///     after proposal acceptance
-    /// @param _addSolutionOwnerPoints Points that needs to be added in Solution Owner reputation 
-    ///     for providing correct solution against proposal
-    function changeMemberReputationPoints(
-        uint _addProposalOwnerPoints, 
-        uint _addSolutionOwnerPoints
-    ) 
-        public 
-        onlyInternal 
-    {
-        addProposalOwnerPoints = _addProposalOwnerPoints;
-        addSolutionOwnerPoints = _addSolutionOwnerPoints;
-    }
-
     /// @dev Configures global parameters i.e. Voting or Reputation parameters
     /// @param _typeOf Passing intials of the parameter name which value needs to be updated
     /// @param _value New value that needs to be updated    
     // solhint-disable-next-line
-    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public onlyAuthorizedToGovern {                    
-        if (_typeOf == "APO") {
-            _changeProposalOwnerAdd(_value);
-        } else if (_typeOf == "AOO") {
-            _changeSolutionOwnerAdd(_value);
-        } else if (_typeOf == "RW") {
-            _changeReputationWeight(_value);
-        } else if (_typeOf == "SW") {
-            _changeStakeWeight(_value);
-        } else if (_typeOf == "BR") {
-            _changeBonusReputation(_value);
-        } else if (_typeOf == "BS") {
-            _changeBonusStake(_value);
-        } else if (_typeOf == "QP") {
+    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public onlyAuthorizedToGovern {
+        if (_typeOf == "QP") {
             _changeQuorumPercentage(_value);
         }
     }
@@ -365,10 +320,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         return allProposalSolutions[_proposalId][_index].action;
     }
 
-    function setPunishVoters(bool _punish) public onlyAuthorizedToGovern {
-        punishVoters = _punish;
-    }
-
     /// @dev Sets proposal category
     function setProposalCategory(uint _proposalId, uint _categoryId, address _stakeToken) public onlyInternal {
         allProposalData[_proposalId].category = _categoryId;
@@ -384,17 +335,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     function changeProposalStatus(uint _id, uint8 _status) public onlyInternal {
         emit ProposalStatus(_id, _status, now); //solhint-disable-line
         updateProposalStatus(_id, _status);
-    }
-
-    /// @dev Sets proposal current voting id i.e. Which Role id is next in row to vote against proposal
-    /// @param _currVotingStatus It is the index to fetch the role id from voting sequence array. 
-    function setProposalCurrentVotingId(uint _proposalId, uint _currVotingStatus) public onlyInternal {
-        allProposalData[_proposalId].currVotingStatus = _currVotingStatus;
-    }
-
-    /// @dev Updates proposal's intermediateVerdict after every voting layer is passed.
-    function setProposalIntermediateVerdict(uint _proposalId, uint64 _intermediateVerdict) public onlyInternal {
-        allProposalData[_proposalId].currentVerdict = _intermediateVerdict;
     }
 
     /// @dev Sets proposal's final verdict once the final voting layer is crossed 
@@ -443,9 +383,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         view 
         returns(
             uint id,
-            uint category, 
-            uint currentVotingId, 
-            uint64 intermediateVerdict, 
+            uint category,
             uint64 finalVerdict, 
             address votingTypeAddress, 
             uint totalSolutions
@@ -453,9 +391,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     {
         return (
             _proposalId, 
-            allProposalData[_proposalId].category, 
-            allProposalData[_proposalId].currVotingStatus, 
-            allProposalData[_proposalId].currentVerdict, 
+            allProposalData[_proposalId].category,
             allProposalData[_proposalId].finalVerdict, 
             allProposal[_proposalId].votingTypeAddress, 
             allProposalSolutions[_proposalId].length
@@ -558,11 +494,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         }
     }
 
-    /// @dev Gets proposal current voting status i.e. Who is next in voting sequence
-    function getProposalCurrentVotingId(uint _proposalId) public view returns(uint) {
-        return (allProposalData[_proposalId].currVotingStatus);
-    }
-
     /// @dev Get Total number of Solutions being proposed against proposal.
     function getTotalSolutions(uint _proposalId) public view returns(uint) {
         return allProposalSolutions[_proposalId].length;
@@ -598,13 +529,9 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     function getMemberReputationSV(address _memberAddress, uint32 _proposalId) 
         public 
         view 
-        returns (uint, uint, uint, uint, uint, address, uint) 
+        returns (uint, address, uint) 
     {
         return(
-            stakeWeight, 
-            bonusStake, 
-            reputationWeight, 
-            bonusReputation, 
             allMemberReputationByAddress[_memberAddress],
             allProposalData[_proposalId].stakeToken, 
             allProposalData[_proposalId].category
@@ -619,9 +546,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     {
         require(allProposalData[_proposalId].propStatus == uint8(Governance.ProposalStatus.VotingStarted));
         return(
-            allProposalData[_proposalId].category,
-            allProposalData[_proposalId].currVotingStatus,
-            allProposalData[_proposalId].currentVerdict
+            allProposalData[_proposalId].category
         );
     }
 
@@ -688,21 +613,14 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     /// @dev Updates proposal's major details (Called from close proposal vote)
     /// @param _proposalId Proposal id
-    /// @param _currVotingStatus It is the index to fetch the role id from voting sequence array. 
-    ///         i.e. Tells which role id members is going to vote
-    /// @param _intermediateVerdict Intermediate verdict is set after every voting layer is passed.
     /// @param _finalVerdict Final verdict is set after final layer of voting
     function updateProposalDetails(
-        uint _proposalId, 
-        uint _currVotingStatus, 
-        uint64 _intermediateVerdict, 
+        uint _proposalId,
         uint64 _finalVerdict
     ) 
     public
     onlyInternal 
     {
-        setProposalCurrentVotingId(_proposalId, _currVotingStatus);
-        setProposalIntermediateVerdict(_proposalId, _intermediateVerdict);
         setProposalFinalVerdict(_proposalId, _finalVerdict);
         setProposalDateUpd(_proposalId);
     }
@@ -718,11 +636,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev Gets final solution index won after majority voting.
     function getProposalFinalVerdict(uint _proposalId) public view returns(uint finalSolutionIndex) {
         finalSolutionIndex = allProposalData[_proposalId].finalVerdict;
-    }
-
-    /// @dev Gets Intermidiate solution is while voting is still in progress by other voting layers
-    function getProposalIntermediateVerdict(uint _proposalId) public view returns(uint64) {
-        return allProposalData[_proposalId].currentVerdict;
     }
 
     /// @dev Gets statuses of proposals
@@ -810,19 +723,9 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         allVotingTypeDetails[_votingTypeId].votingTypeAddress = _votingTypeAddress;
     }
 
-    /// @dev Adds points to add or subtract in member reputation when proposal/Solution/vote gets denied or accepted
-    function addMemberReputationPoints() internal {
-        addProposalOwnerPoints = 5;
-        addSolutionOwnerPoints = 5;
-    }
-
     /// @dev Sets global parameters that will help in distributing reward
     function setGlobalParameters() internal {
         quorumPercentage = 25;
-        stakeWeight = 1;
-        bonusStake = 2;
-        reputationWeight = 1;
-        bonusReputation = 2;
     }
 
     /// @dev Updates status of an existing proposal
@@ -844,40 +747,9 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress)); //solhint-disable-line
     }
 
-    /// @dev Changes stakeWeight that helps in calculation of reward distribution
-    function _changeStakeWeight(uint _stakeWeight) internal {
-        stakeWeight = _stakeWeight;
-    }
-
-    /// @dev Changes bonusStake that helps in calculation of reward distribution
-    function _changeBonusStake(uint _bonusStake) internal {
-        bonusStake = _bonusStake;
-    }
-
-    /// @dev Changes reputationWeight that helps in calculation of reward distribution
-    function _changeReputationWeight(uint _reputationWeight) internal {
-        reputationWeight = _reputationWeight;
-    }
-
-    /// @dev Changes bonusReputation that helps in calculation of reward distribution
-    function _changeBonusReputation(uint _bonusReputation) internal {
-        bonusReputation = _bonusReputation;
-    }
-
     /// @dev Changes quoram percentage. Value required to pass proposal.
     function _changeQuorumPercentage(uint _quorumPercentage) internal {
         quorumPercentage = _quorumPercentage;
-    }
-
-    /// @dev Changes Proposal owner reputation points that needs to be added at proposal acceptance
-    function _changeProposalOwnerAdd(uint _repPoints) internal {
-        addProposalOwnerPoints = _repPoints;
-    }
-
-    /// @dev Changes Solution owner reputation points that needs to be added if solution has won. 
-    ///     (Upvoted with many votes)
-    function _changeSolutionOwnerAdd(uint _repPoints) internal {
-        addSolutionOwnerPoints = _repPoints;
     }
 
 }

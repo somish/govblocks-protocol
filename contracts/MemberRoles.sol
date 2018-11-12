@@ -24,12 +24,7 @@ contract MemberRoles is Governed {
     using SafeMath for uint;
     enum Role { UnAssigned, AdvisoryBoard, TokenHolder }
 
-    bytes32[] internal memberRole;
     StandardToken public dAppToken;
-    address public firstAB;
-
-    bool internal constructorCheck;
-    bool internal adderCheck;
 
     struct MemberRoleDetails {
         uint memberCounter;
@@ -48,32 +43,25 @@ contract MemberRoles is Governed {
         _;
     }
 
-    function memberRolesInitiate(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
-        require(!constructorCheck);
+    function MemberRoles(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
         dappName = _dAppName;
         dAppToken = StandardToken(_dAppToken);
-        firstAB = _firstAB;
-        constructorCheck = true;
+        addInitialMemberRoles(_firstAB);        
     }
 
-    function addInitialMemberRoles() public {
-        require(!adderCheck);
-        memberRole.push("");
+    function addInitialMemberRoles(address _firstAB) internal {
         emit MemberRole(uint(Role.UnAssigned), "Everyone", "Professionals that are a part of the GBT network");
-        memberRole.push("Advisory Board");
         emit MemberRole(
             uint(Role.AdvisoryBoard),
             "Advisory Board",
             "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp."); //solhint-disable-line
-        memberRole.push("Token Holder");
         emit MemberRole(
             uint(Role.TokenHolder),
             "Token Holder",
             "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default."); //solhint-disable-line
         memberRoleData[1].memberCounter++;
-        memberRoleData[1].memberActive[firstAB] = true;
-        memberRoleData[1].memberAddress.push(firstAB);
-        adderCheck = true;
+        memberRoleData[1].memberActive[_firstAB] = true;
+        memberRoleData[1].memberAddress.push(_firstAB);
     }
 
     /// @dev To Initiate default settings whenever the contract is regenerated!
@@ -89,7 +77,7 @@ contract MemberRoles is Governed {
         uint length = getTotalMemberRoles();
         uint j = 0;
         assignedRoles = new uint[](length);
-        for (uint i = 1; i <= length; i++) {
+        for (uint i = 1; i < length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress]) {
                 assignedRoles[j] = i;
                 j++;
@@ -109,13 +97,13 @@ contract MemberRoles is Governed {
     function checkRoleIdByAddress(address _memberAddress, uint _roleId) public view returns(bool) {
         if (_roleId == uint(Role.UnAssigned))
             return true;
-        if (_roleId == uint(Role.TokenHolder)) {
+        else if (_roleId == uint(Role.TokenHolder)) {
             if (dAppToken.balanceOf(_memberAddress) > 0)
                 return true;
             else
                 return false;
         }
-        if (memberRoleData[_roleId].memberActive[_memberAddress]) //solhint-disable-line
+        else if (memberRoleData[_roleId].memberActive[_memberAddress]) //solhint-disable-line
             return true;
         else
             return false;
@@ -133,13 +121,12 @@ contract MemberRoles is Governed {
         public
         checkRoleAuthority(_roleId)
     {
+        require( _roleId != uint(Role.TokenHolder),"Membership to Token holder is detected automatically");
         if (_typeOf) {
             if (!memberRoleData[_roleId].memberActive[_memberAddress]) {
                 memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
                 memberRoleData[_roleId].memberActive[_memberAddress] = true;
                 memberRoleData[_roleId].memberAddress.push(_memberAddress);
-            } else {
-
             }
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
@@ -168,7 +155,6 @@ contract MemberRoles is Governed {
         onlyAuthorizedToGovern
     {
         uint rolelength = memberRole.length;
-        memberRole.push(_newRoleName);
         authorizedAddressAgainstRole[rolelength] = _canAddMembers;
         emit MemberRole(rolelength, _newRoleName, _roleDescription);
     }
@@ -205,7 +191,7 @@ contract MemberRoles is Governed {
     }
 
     /// @dev Return Member address at specific index against Role id.
-    function getMemberAddressById(uint _memberRoleId, uint _index) public view returns(address) {
+    function getMemberAddressByRoleAndIndex(uint _memberRoleId, uint _index) public view returns(address) {
         return memberRoleData[_memberRoleId].memberAddress[_index];
     }
 
@@ -214,36 +200,15 @@ contract MemberRoles is Governed {
         return authorizedAddressAgainstRole[_memberRoleId];
     }
 
-    /// @dev Gets the role name when given role id
-    /// @param _memberRoleId Role id to get the Role name details
-    /// @return  roleId Same role id
-    /// @return memberRoleName Role name against that role id.
-    function getMemberRoleNameById(uint _memberRoleId)
-        public
-        view
-        returns(uint roleId, bytes32 memberRoleName)
-    {
-        memberRoleName = memberRole[_memberRoleId];
-        roleId = _memberRoleId;
-    }
-
+   
     /// @dev Return total number of members assigned against each role id.
     /// @return roleName Role name array is returned
     /// @return totalMembers Total members in particular role id
-    function getRolesAndMember() public view returns(bytes32[] roleName, uint[] totalMembers) {
-        roleName = new bytes32[](memberRole.length);
+    function getMemberLengthForAllRoles() public view returns(uint[] totalMembers) {
         totalMembers = new uint[](memberRole.length);
         for (uint i = 0; i < memberRole.length; i++) {
-            bytes32 name;
-            (, name) = getMemberRoleNameById(i);
-            roleName[i] = name;
             totalMembers[i] = getAllMemberLength(i);
         }
-    }
-
-    /// @dev Gets total number of member roles available
-    function getTotalMemberRoles() public view returns(uint) {
-        return memberRole.length;
     }
     
 }
