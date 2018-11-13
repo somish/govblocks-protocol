@@ -52,7 +52,8 @@ contract ProposalCategoryAdder {
             address(0),
             "MR",
             0,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Add new member role",
@@ -64,7 +65,8 @@ contract ProposalCategoryAdder {
             address(0),
             "MR",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Update member role",
@@ -76,7 +78,8 @@ contract ProposalCategoryAdder {
             address(0),
             "MR",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Add new category",
@@ -88,7 +91,8 @@ contract ProposalCategoryAdder {
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Edit category",
@@ -100,7 +104,8 @@ contract ProposalCategoryAdder {
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Add new sub category",
@@ -112,7 +117,8 @@ contract ProposalCategoryAdder {
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Edit sub category",
@@ -124,7 +130,8 @@ contract ProposalCategoryAdder {
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
 
         proposalCategory.addInitialCategories(
@@ -137,7 +144,8 @@ contract ProposalCategoryAdder {
             address(0),
             "GD",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
 
         proposalCategory.addInitialCategories(
@@ -150,7 +158,8 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
 
         proposalCategory.addInitialCategories(
@@ -163,7 +172,8 @@ contract ProposalCategoryAdder {
             address(0),
             "PL",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Transfer Token",
@@ -175,7 +185,8 @@ contract ProposalCategoryAdder {
             address(0),
             "PL",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
 
         proposalCategory.addInitialCategories(
@@ -188,7 +199,8 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Add new contract",
@@ -200,7 +212,8 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Add new voting type",
@@ -212,7 +225,8 @@ contract ProposalCategoryAdder {
             address(0),
             "SV",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Add new authorized address",
@@ -224,7 +238,8 @@ contract ProposalCategoryAdder {
             address(0),
             "SV",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Upgrade a contract Implementation",
@@ -236,7 +251,8 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories( 
             "Upgrade a contract proxy",
@@ -248,7 +264,8 @@ contract ProposalCategoryAdder {
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories( 
             "Resume Proposal",
@@ -260,7 +277,8 @@ contract ProposalCategoryAdder {
             address(0),
             "GD",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories( 
             "Pause Proposal",
@@ -272,7 +290,8 @@ contract ProposalCategoryAdder {
             address(0),
             "GD",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories( 
             "Buy GBT in Pool",
@@ -284,7 +303,8 @@ contract ProposalCategoryAdder {
             address(0),
             "PL",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "External Proposal", //19
@@ -296,7 +316,8 @@ contract ProposalCategoryAdder {
             address(0), 
             "EX",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
         proposalCategory.addInitialCategories(
             "Others, not specified",
@@ -308,7 +329,8 @@ contract ProposalCategoryAdder {
             address(0), 
             "EX",
             tokenHoldingTime,
-            stakeIncentive
+            stakeIncentive,
+            25
         );
     }
 }

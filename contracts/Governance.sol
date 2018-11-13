@@ -59,35 +59,6 @@ contract Governance is Upgradeable {
         _;
     }
 
-    /// @dev Creates a new proposal
-    /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
-    /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
-    /// @param _subCategoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
-    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
-    function createProposalwithSolution(
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash, 
-        uint _votingTypeId, 
-        uint _subCategoryId, 
-        string _solutionHash, 
-        bytes _action
-    ) 
-        external
-    {
-        uint proposalId = governanceDat.getProposalLength();
-        _createProposalwithSolution(
-            _proposalTitle, 
-            _proposalSD, 
-            _proposalDescHash, 
-            _votingTypeId, 
-            _subCategoryId,
-            _solutionHash,
-            _action,
-            proposalId
-        );
-    }
-
     /// @dev Creates a new proposal with solution and votes for the solution
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
@@ -189,7 +160,7 @@ contract Governance is Upgradeable {
             uint incentive = proposalCategory.getCatIncentive(_categoryId);
             require(incentive <= GBTStandardToken(token).balanceOf(poolAddress));
             governanceDat.setProposalIncentive(_proposalId, incentive); 
-            openProposalForSolutionSubmission(_proposalId);
+            governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
         } else
             governanceDat.createProposal(msg.sender, votingAddress);
     }
@@ -205,7 +176,7 @@ contract Governance is Upgradeable {
         public 
         onlyProposalOwner(_proposalId) 
     {
-        proposalSubmission1(
+        submitProposal(
             _proposalId, 
             _solutionHash, 
             _action
@@ -263,20 +234,12 @@ contract Governance is Upgradeable {
 
         governanceDat.setProposalIncentive(_proposalId, dappIncentive);
         governanceDat.setProposalCategory(_proposalId, _categoryId, tokenAddress);
-        openProposalForSolutionSubmission(_proposalId);
-    }
-
-    function openProposalForSolutionSubmission(uint _proposalId)
-        internal
-    {
-
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
-        
     }
 
     /// @dev Opens proposal for voting
     function openProposalForVoting(uint _proposalId) 
-        public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
+        internal onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
     {
         uint category = governanceDat.getProposalCategory(_proposalId);
 
@@ -309,7 +272,7 @@ contract Governance is Upgradeable {
         for (i = 0; i < _proposals.length ; i++) {
             //solhint-disable-next-line
             (rewardClaimedThenIsExternal, subCategory, proposalStatusThenRewardPercent, finalVerdictThenRewardPerc, solutionIdThenRep, totalReward) =
-                governanceDat.getProposalDetailsForReward(_proposals[i], _memberAddress);           
+                governanceDat.getProposalDetailsForReward(_proposals[i], _memberAddress);
             totalReward = SafeMath.div(totalReward, 100);
 
             require(!rewardClaimedThenIsExternal && proposalStatusThenRewardPercent > uint(ProposalStatus.VotingStarted));
@@ -378,7 +341,7 @@ contract Governance is Upgradeable {
         uint length = governanceDat.getTotalSolutions(_proposalId);
         proposalId = _proposalId;
         for (uint i = 1; i < length; i++) {
-            if (_memberAddress == governanceDat.getSolutionAddedByProposalId(_proposalId, i)) {
+            if (_memberAddress == governanceDat.getSolutionOwnerByProposalIdAndIndex(_proposalId, i)) {
                 proposalId = _proposalId;
                 solutionId = i;
                 proposalStatus = governanceDat.getProposalStatus(_proposalId);
@@ -387,18 +350,6 @@ contract Governance is Upgradeable {
                 subCategory = governanceDat.getProposalCategory(_proposalId);
                 break;
             }
-        }
-    }
-
-    /// @dev Gets total votes against a proposal when given proposal id
-    /// @param _proposalId Proposal id
-    /// @return totalVotes total votes against a proposal
-    function getAllVoteIdsLengthByProposal(uint _proposalId) public view returns(uint totalVotes) {
-        // memberRole=MemberRoles(MRAddress);
-        uint length = memberRole.getTotalMemberRoles();
-        VotingType votingType = VotingType(governanceDat.getProposalVotingAddress(_proposalId));
-        for (uint i = 0; i < length; i++) {
-            totalVotes = SafeMath.add(totalVotes, votingType.getAllVoteIdsLengthByProposalRole(_proposalId, i));
         }
     }
 
@@ -411,11 +362,9 @@ contract Governance is Upgradeable {
         internal 
     {
 
-        openProposalForSolutionSubmission(
-            _proposalId
-        );
+        governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
 
-        proposalSubmission1(
+        submitProposal(
             _proposalId, 
             _solutionHash, 
             _action
@@ -427,7 +376,7 @@ contract Governance is Upgradeable {
     }
 
     /// @dev When creating proposal with solution, it adds solution details against proposal
-    function proposalSubmission1(
+    function submitProposal(
         uint _proposalId, 
         string _solutionHash, 
         bytes _action
@@ -491,7 +440,7 @@ contract Governance is Upgradeable {
             rewardPercent = SafeMath.add(rewardPercent, proposalCategory.getRewardPercProposal(_subCategory));
             reputation = SafeMath.add(reputation, governanceDat.addProposalOwnerPoints());
         }
-        if (_finalVerdict == _solutionId) {  
+        if (_finalVerdict == _solutionId) {
             rewardPercent = SafeMath.add(rewardPercent, proposalCategory.getRewardPercSolution(_subCategory));
             reputation = SafeMath.add(reputation, governanceDat.addSolutionOwnerPoints());
         }

@@ -171,7 +171,7 @@ contract SimpleVoting is Upgradeable {
     /// @param _memberAddress Member address
     function alreadyAdded(uint _proposalId, address _memberAddress) public view returns(bool) {
         for (uint i = 1; i < governanceDat.getTotalSolutions(_proposalId); i++) {
-            if (governanceDat.getSolutionAddedByProposalId(_proposalId, i) == _memberAddress)
+            if (governanceDat.getSolutionOwnerByProposalIdAndIndex(_proposalId, i) == _memberAddress)
                 return true;
         }
     }
@@ -316,14 +316,7 @@ contract SimpleVoting is Upgradeable {
     function addAuthorized(address _newVotingAddress) public onlySelf {
         governChecker.addAuthorized(master.dAppName(), _newVotingAddress);
     }
-
-    /// @dev ads a voting type
-    function addVotingType(address _newVotingAddress, bytes2 _name) public onlySelf {
-        governChecker.addAuthorized(master.dAppName(), _newVotingAddress);
-        master.addNewContract(_name, _newVotingAddress);
-        governanceDat.setVotingTypeDetails(_name, _newVotingAddress);
-    }
-
+    
     /// @dev transfers authority and funds to new addresses
     function upgrade() public onlySelf {
         address newSV = master.getLatestAddress("SV");
@@ -553,7 +546,7 @@ contract SimpleVoting is Upgradeable {
             = governanceDat.getProposalDetailsForSV(_proposalId);
 
         categoryThenMRSequence = 
-            proposalCategory.getRoleSequencAtIndex(categoryThenMRSequence, currentVotingIdThenVoteValue);
+            proposalCategory.allCategory(categoryThenMRSequence, currentVotingIdThenVoteValue);
         //categoryThenMRSequence is now MemberRoleSequence
 
         require(memberRole.checkRoleIdByAddress(_voter, categoryThenMRSequence));
@@ -612,16 +605,14 @@ contract SimpleVoting is Upgradeable {
         uint memberReputation;
         uint balance;
 
-        (stakeWeight, bonusStake, reputationWeight, bonusReputation, memberReputation, token, subCat) 
+        (token, subCat) 
             = governanceDat.getMemberReputationSV(_of, _proposalId);
         tokenHoldingTime = proposalCategory.getTokenHoldingTime(subCat);
         
         balance = _getLockedBalance(token, _of, tokenHoldingTime);
     
         balance = SafeMath.div(balance, GBTStandardToken(token).decimals());
-        stakeWeight = SafeMath.mul(SafeMath.add(log(balance), bonusStake), stakeWeight);
-        reputationWeight = SafeMath.mul(SafeMath.add(log(memberReputation), bonusReputation), reputationWeight);
-        voteValue = SafeMath.add(stakeWeight, reputationWeight);
+        voteValue = balance;
     }
 
     /* solhint-disable */

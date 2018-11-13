@@ -32,6 +32,7 @@ contract ProposalCategory is Governed {
         uint defaultIncentive;
         address contractAddress;
         bytes2 contractName;
+        uint thresholdPerc;
     }
 
     event Category(uint indexed categoryId,string categoryName,string actionHash);
@@ -46,7 +47,7 @@ contract ProposalCategory is Governed {
     /// @param _name Category name
     /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
     /// @param _allowedToCreateProposal Member roles allowed to create the proposal
-    /// @param _majorityVotePerc Majority Vote threshhold for Each voting layer
+    /// @param _majorityVotePerc Majority Vote threshold for Each voting layer
     /// @param _closingTime Vote closing time for Each voting layer
     function addNewCategory(
         string _name, 
@@ -58,7 +59,8 @@ contract ProposalCategory is Governed {
         address _contractAddress,
         bytes2 _contractName,
         uint _tokenHoldingTime,
-        uint[2] _incentives
+        uint[2] _incentives,
+        uint _thresholdPerc
     ) 
         public
         onlyAuthorizedToGovern 
@@ -73,7 +75,8 @@ contract ProposalCategory is Governed {
                 _incentives[0],
                 _incentives[0],
                 _contractAddress,
-                _contractName
+                _contractName,
+                _thresholdPerc
             ))
         );
         callCategoryEvent(allCategory.length-1, _name, _actionHash);
@@ -82,7 +85,7 @@ contract ProposalCategory is Governed {
     /// @dev Updates category details
     /// @param _categoryId Category id that needs to be updated
     /// @param _roleName Updated Role sequence to vote i.e. Updated voting layer sequence
-    /// @param _majorityVote Updated Majority threshhold value against each voting layer.
+    /// @param _majorityVote Updated Majority threshold value against each voting layer.
     /// @param _allowedToCreateProposal Member roles allowed to create the proposal
     /// @param _closingTime Updated Vote closing time against each voting layer
     function updateCategory(
@@ -96,7 +99,8 @@ contract ProposalCategory is Governed {
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[2] _incentives
+        uint[2] _incentives,
+        uint _thresholdPerc
     )
         public
         onlyAuthorizedToGovern
@@ -109,11 +113,12 @@ contract ProposalCategory is Governed {
         allCategory[_categoryId].minStake = _incentives[0];
         allCategory[_categoryId].contractAddress = _contractAddress;
         allCategory[_categoryId].contractName = _contractName;
+        allCategory[_categoryId].thresholdPerc =  _thresholdPerc;
         callCategoryEvent(_categoryId, _name, _actionHash);
     }
 
     /// @dev gets category details
-    function getCategoryDetails(uint _categoryId) public view returns(uint, string, uint, uint, uint[], uint, uint) {
+    function getCategoryDetails(uint _categoryId) public view returns(uint, string, uint, uint, uint[], uint, uint, uint) {
         return(
             _categoryId,
             allCategory[_categoryId].name,
@@ -124,7 +129,8 @@ contract ProposalCategory is Governed {
             allCategory[_categoryId].tokenHoldingTime,
             allCategory[_categoryId].contractAddress,
             allCategory[_categoryId].contractName,
-            [allCategory[_categoryId].minStake, allCategory[_categoryId].defaultIncentive]
+            [allCategory[_categoryId].minStake, allCategory[_categoryId].defaultIncentive],
+            allCategory[_categoryId].thresholdPerc
         );
     }
     
@@ -147,7 +153,8 @@ contract ProposalCategory is Governed {
         address _contractAddress,
         bytes2 _contractName,
         uint _tokenHoldingTime,
-        uint[] _incentives
+        uint[] _incentives,
+        uint _thresholdPerc
     ) 
         public 
     {
@@ -163,7 +170,8 @@ contract ProposalCategory is Governed {
                  _incentives[0],
                  _incentives[1],
                 _contractAddress,
-                _contractName
+                _contractName,
+                _thresholdPerc
             )
         );
         callCategoryEvent(allCategory.length-1 , _name, _actionHash);

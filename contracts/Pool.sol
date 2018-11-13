@@ -105,7 +105,7 @@ contract Pool is Upgradeable, Governed {
             dAppToken.transfer(_claimer, pendingDAppReward);
         }
 
-        governanceDat.increaseMemberReputation(_claimer, pendingReputation);
+        governanceDat.increaseMemberReputation(_claimer, pendingReputation);  /------Removed
 
         governanceDat.callRewardClaimed(
             _claimer, 

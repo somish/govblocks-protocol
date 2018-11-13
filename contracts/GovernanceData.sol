@@ -204,18 +204,11 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         uint8 propStatus;
         uint64 finalVerdict;
         // uint64 currentVerdict;
-        // uint currVotingStatus;
         uint category;
-        // uint versionNumber;
         uint totalVoteValue;
         uint commonIncentive;
         address stakeToken;
     }
-
-    // struct VotingTypeDetails {
-    //     bytes32 votingTypeName;
-    //     address votingTypeAddress;
-    // }
 
     struct SolutionStruct {
         address owner;
@@ -224,7 +217,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
-    // mapping(address => uint) internal allMemberReputationByAddress;
     mapping(uint => bool) public proposalPaused;
     mapping(address => mapping(uint => bool)) internal rewardClaimed;
 
@@ -232,7 +224,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     bool public constructorCheck;
 
     ProposalStruct[] internal allProposal;
-    // VotingTypeDetails[] internal allVotingTypeDetails;
 
     Governance public gov;
     
@@ -241,7 +232,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         if (!constructorCheck)
             governanceDataInitiate();
         gov = Governance(master.getLatestAddress("GV"));
-        editVotingTypeDetails(0, master.getLatestAddress("SV"));
     }
 
     /// @dev Initiates governance data
@@ -249,7 +239,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         require(!constructorCheck);
         setGlobalParameters();
         addMemberReputationPoints();
-        setVotingTypeDetails("Simple Voting", address(0));
         allProposal.push(ProposalStruct(address(0), now, master.getLatestAddress("SV"))); //solhint-disable-line
         dappName = master.dAppName();
         constructorCheck = true;
@@ -277,29 +266,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         proposalPaused[_proposalId] = true;
     }
 
-    /// @dev Gets Total number of voting types has been added till now.
-    function getVotingTypeLength() public view returns(uint) {
-        return allVotingTypeDetails.length;
-    }
-
-    /// @dev Gets voting type details by passing voting id
-    function getVotingTypeDetailsById(uint _votingTypeId) 
-        public
-        view 
-        returns(uint votingTypeId, bytes32 vtName, address vtAddress) 
-    {
-        return (
-            _votingTypeId, 
-            allVotingTypeDetails[_votingTypeId].votingTypeName, 
-            allVotingTypeDetails[_votingTypeId].votingTypeAddress
-        );
-    }
-
-    /// @dev Gets Voting type address when voting type id is passes by
-    function getVotingTypeAddress(uint _votingTypeId) public view returns(address votingAddress) {
-        return (allVotingTypeDetails[_votingTypeId].votingTypeAddress);
-    }
-
     /// @dev Sets the address of member as solution owner whosoever provided the solution
     function setSolutionAdded(uint _proposalId, address _memberAddress, bytes _action) public onlyInternal {
         allProposalSolutions[_proposalId].push(SolutionStruct(_memberAddress, _action));
@@ -307,7 +273,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     /// @dev Gets The Address of Solution owner By solution sequence index 
     ///     As a proposal might have n number of solutions.
-    function getSolutionAddedByProposalId(uint _proposalId, uint _index) 
+    function getSolutionOwnerByProposalIdAndIndex(uint _proposalId, uint _index) 
         public 
         view 
         returns(address memberAddress) 
@@ -352,18 +318,12 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Sets proposal's date when the proposal last modified
-    function increaseMemberReputation(address _memberAddress, uint _repPoints) public onlyInternal {
-        allMemberReputationByAddress[_memberAddress] = 
-            allMemberReputationByAddress[_memberAddress].add(_repPoints);
-    }
-
-    /// @dev Sets proposal's date when the proposal last modified
     function setProposalDateUpd(uint _proposalId) public onlyInternal {
         allProposal[_proposalId].dateUpd = now; //solhint-disable-line
     }
 
     /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById1(uint _proposalId) 
+    function getProposalDetailsById(uint _proposalId) 
         public 
         view 
         returns(uint id, address owner, uint dateUpd, uint versionNum, uint8 propStatus) 
@@ -378,7 +338,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById2(uint _proposalId) 
+    function getProposalVotingDetails(uint _proposalId) 
         public 
         view 
         returns(
@@ -399,7 +359,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Fetch details of proposal when giving proposal id
-    function getProposalDetailsById3(uint _proposalId, address _memberAddress) 
+    function getProposalStatusAndVerdict(uint _proposalId, address _memberAddress) 
         public 
         view 
         returns(bool, uint, uint8, uint64) 
@@ -437,7 +397,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @param totalSolutions Total number of solutions proposed till now against proposal
     /// @param commonIncentive Incentive that needs to be distributed once the proposal is closed.
     /// @param finalVerdict Final solution index that has won by maximum votes.
-    function getProposalDetailsById6(uint _proposalId) 
+    function getProposalDetails(uint _proposalId) 
         public 
         view 
         returns(
@@ -487,7 +447,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         return allProposalData[_proposalId].commonIncentive;
     }
 
-    /// @dev Gets the total incentive amount given by dApp to different proposals
+    /// @dev Gets the total incentive amount given by dApp for different proposals
     function getTotalProposalIncentive() public view returns(uint allIncentive) {
         for (uint i = 0; i < allProposal.length; i++) {
             allIncentive = SafeMath.add(allIncentive, allProposalData[i].commonIncentive);
@@ -517,22 +477,13 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         return (rewardClaimed[_memberAddress][_proposalId]);
     }
 
-    /// @dev Get member's reputation points and it's likely to be updated with time.
-    function getMemberReputation(address _memberAddress) public view returns(uint memberPoints) {
-        if (allMemberReputationByAddress[_memberAddress] == 0)
-            memberPoints = 1;
-        else
-            memberPoints = allMemberReputationByAddress[_memberAddress];
-    }
-
     /// @dev Get member's reputation points and scalind data for sv.
     function getMemberReputationSV(address _memberAddress, uint32 _proposalId) 
         public 
         view 
-        returns (uint, address, uint) 
+        returns (address, uint) 
     {
         return(
-            allMemberReputationByAddress[_memberAddress],
             allProposalData[_proposalId].stakeToken, 
             allProposalData[_proposalId].category
         );
@@ -552,8 +503,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     /// @dev gets total number of votes by a voter
     function getTotalNumberOfVotesByAddress(address _voter) public view returns(uint totalVotes) {
-        for (uint i = 0; i < allVotingTypeDetails.length; i++) {
-            VotingType vt = VotingType(allVotingTypeDetails[i].votingTypeAddress);
+            VotingType vt = VotingType(master.getLatestAddress("SV"));
             totalVotes = SafeMath.add(vt.getTotalNumberOfVotesByAddress(_voter), 1);
         }
     }
@@ -579,7 +529,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     function getLatestVotingAddress() public view returns(address) {
-        return allVotingTypeDetails[allVotingTypeDetails.length - 1].votingTypeAddress;
+        return master.getLatestAddress("SV");
     }
 
     function getProposalVotingAddress(uint _proposalId) public view returns(address) {
@@ -683,7 +633,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     {
         for (uint i = 0; i < allProposal.length; i++) {
             for (uint j = 0; j < getTotalSolutions(i); j++) {
-                if (_memberAddress == getSolutionAddedByProposalId(i, j))
+                if (_memberAddress == getSolutionOwnerByProposalIdAndIndex(i, j))
                     totalSolutionProposalCount = SafeMath.add(totalSolutionProposalCount, 1);
             }
         }
@@ -704,23 +654,13 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         solutionProposalIds = new uint[](solutionProposalLength);
         for (uint i = 0; i < allProposal.length; i++) {
             for (uint j = 0; j < allProposalSolutions[i].length; j++) {
-                if (_memberAddress == getSolutionAddedByProposalId(i, j)) {
+                if (_memberAddress == getSolutionOwnerByProposalIdAndIndex(i, j)) {
                     proposalIds[totalSolution] = i;
                     solutionProposalIds[totalSolution] = j;
                     totalSolution = SafeMath.add(totalSolution, 1);
                 }
             }
         }
-    }
-
-    /// @dev Sets Voting type details such as Voting type name and address
-    function setVotingTypeDetails(bytes32 _votingTypeName, address _votingTypeAddress) public onlyInternal {
-        allVotingTypeDetails.push(VotingTypeDetails(_votingTypeName, _votingTypeAddress));
-    }
-
-    /// @dev Edits Voting type address when given voting type name
-    function editVotingTypeDetails(uint _votingTypeId, address _votingTypeAddress) public onlyInternal {
-        allVotingTypeDetails[_votingTypeId].votingTypeAddress = _votingTypeAddress;
     }
 
     /// @dev Sets global parameters that will help in distributing reward
