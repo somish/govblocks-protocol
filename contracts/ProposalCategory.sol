@@ -32,7 +32,7 @@ contract ProposalCategory is Governed {
         uint defaultIncentive;
         address contractAddress;
         bytes2 contractName;
-        uint thresholdPerc;
+        uint quorumPerc;
     }
 
     event Category(uint indexed categoryId,string categoryName,string actionHash);
@@ -60,7 +60,7 @@ contract ProposalCategory is Governed {
         bytes2 _contractName,
         uint _tokenHoldingTime,
         uint[2] _incentives,
-        uint _thresholdPerc
+        uint _quorumPerc
     ) 
         public
         onlyAuthorizedToGovern 
@@ -76,7 +76,7 @@ contract ProposalCategory is Governed {
                 _incentives[0],
                 _contractAddress,
                 _contractName,
-                _thresholdPerc
+                _quorumPerc
             ))
         );
         callCategoryEvent(allCategory.length-1, _name, _actionHash);
@@ -100,7 +100,7 @@ contract ProposalCategory is Governed {
         address _contractAddress,
         bytes2 _contractName,
         uint[2] _incentives,
-        uint _thresholdPerc
+        uint _quorumPerc
     )
         public
         onlyAuthorizedToGovern
@@ -113,12 +113,12 @@ contract ProposalCategory is Governed {
         allCategory[_categoryId].minStake = _incentives[0];
         allCategory[_categoryId].contractAddress = _contractAddress;
         allCategory[_categoryId].contractName = _contractName;
-        allCategory[_categoryId].thresholdPerc =  _thresholdPerc;
+        allCategory[_categoryId].thresholdPerc =  _quorumPerc;
         callCategoryEvent(_categoryId, _name, _actionHash);
     }
 
     /// @dev gets category details
-    function getCategoryDetails(uint _categoryId) public view returns(uint, string, uint, uint, uint[], uint, uint, uint) {
+    function getCategoryDetails(uint _categoryId) public view returns(uint, string, uint, uint, uint[], uint, uint, address, bytes2, uint[], uint) {
         return(
             _categoryId,
             allCategory[_categoryId].name,
@@ -130,7 +130,7 @@ contract ProposalCategory is Governed {
             allCategory[_categoryId].contractAddress,
             allCategory[_categoryId].contractName,
             [allCategory[_categoryId].minStake, allCategory[_categoryId].defaultIncentive],
-            allCategory[_categoryId].thresholdPerc
+            allCategory[_categoryId].quorumPerc
         );
     }
     
@@ -154,7 +154,7 @@ contract ProposalCategory is Governed {
         bytes2 _contractName,
         uint _tokenHoldingTime,
         uint[] _incentives,
-        uint _thresholdPerc
+        uint _quorumPerc
     ) 
         public 
     {
@@ -171,7 +171,7 @@ contract ProposalCategory is Governed {
                  _incentives[1],
                 _contractAddress,
                 _contractName,
-                _thresholdPerc
+                _quorumPerc
             )
         );
         callCategoryEvent(allCategory.length-1 , _name, _actionHash);

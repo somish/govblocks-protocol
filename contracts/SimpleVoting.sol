@@ -133,7 +133,9 @@ contract SimpleVoting is Upgradeable {
             rewardClaimed[voteId] = true;
             (, , finalVerdict, , totalReward, subCategory) = 
                 getVoteDetailsForReward(voteId, _proposals[i]);
+                
             require(governanceDat.getProposalStatus(_proposals[i]) > uint(Governance.ProposalStatus.VotingStarted));
+
             if ((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict) || (!governanceDat.punishVoters() && finalVerdict > 0)) {
                 calcReward = SafeMath.div(SafeMath.mul(SafeMath.mul(proposalCategory.getRewardPercVote(subCategory), allVotes[voteId].voteValue), totalReward) 
                     , (SafeMath.mul(100, governanceDat.getProposalTotalVoteValue(_proposals[i]))));
@@ -299,7 +301,7 @@ contract SimpleVoting is Upgradeable {
         }
 
         if (checkForThreshold(_proposalId, _mrSequenceId)) {
-            closeProposalVote1(finalVoteValue[max], totalVoteValue, category, _proposalId, max);
+            closeProposalVoteThReached(finalVoteValue[max], totalVoteValue, category, _proposalId, max);
         } else {
             uint64 interVerdict = governanceDat.getProposalIntermediateVerdict(_proposalId);
             governanceDat.updateProposalDetails(_proposalId, currentVotingId, max, interVerdict);
@@ -316,7 +318,7 @@ contract SimpleVoting is Upgradeable {
     function addAuthorized(address _newVotingAddress) public onlySelf {
         governChecker.addAuthorized(master.dAppName(), _newVotingAddress);
     }
-    
+
     /// @dev transfers authority and funds to new addresses
     function upgrade() public onlySelf {
         address newSV = master.getLatestAddress("SV");
@@ -372,7 +374,7 @@ contract SimpleVoting is Upgradeable {
     }
 
     /// @dev This does the remaining functionality of closing proposal vote
-    function closeProposalVote1(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64 max) 
+    function closeProposalVoteThReached(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64 max) 
         internal 
     {
         uint _closingTime;
@@ -428,6 +430,8 @@ contract SimpleVoting is Upgradeable {
     /// @dev Checks if the vote count against any solution passes the threshold value or not.
     function checkForThreshold(uint _proposalId, uint _mrSequenceId) internal view returns(bool) {
         uint thresHoldValue;
+        uint categoryQuorumPerc;
+        (,,,,,,,,,,categoryQuorumPerc) = proposalCategory.getCategoryDetails(governanceDat.getProposalCategory(_proposalId))
         if (_mrSequenceId == 2) {
             uint totalTokens;
             address token = governanceDat.getStakeToken(_proposalId);
@@ -439,13 +443,13 @@ contract SimpleVoting is Upgradeable {
             }
 
             thresHoldValue = SafeMath.div(totalTokens.mul(100), tokenInstance.totalSupply());
-            if (thresHoldValue > governanceDat.quorumPercentage())
+            if (thresHoldValue > categoryQuorumPerc);
                 return true;
         } else if (_mrSequenceId == 0) {
             return true;
         } else {
             thresHoldValue = SafeMath.div(SafeMath.mul(getAllVoteIdsLengthByProposalRole(_proposalId, _mrSequenceId), 100), memberRole.getAllMemberLength(_mrSequenceId));
-            if (thresHoldValue > governanceDat.quorumPercentage())
+            if (thresHoldValue > categoryQuorumPerc)
                 return true;
         }
     }
@@ -546,7 +550,7 @@ contract SimpleVoting is Upgradeable {
             = governanceDat.getProposalDetailsForSV(_proposalId);
 
         categoryThenMRSequence = 
-            proposalCategory.allCategory(categoryThenMRSequence, currentVotingIdThenVoteValue);
+            proposalCategory.allCategory[categoryThenMRSequence].memberRoleToVote;
         //categoryThenMRSequence is now MemberRoleSequence
 
         require(memberRole.checkRoleIdByAddress(_voter, categoryThenMRSequence));

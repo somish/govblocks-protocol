@@ -86,17 +86,14 @@ contract Pool is Upgradeable, Governed {
         (pendingGBTReward, pendingDAppReward, pendingReputation) = 
             gov.calculateMemberReward(_claimer, _ownerProposals);
 
-        uint votingTypes = governanceDat.getVotingTypeLength();
         uint tempGBTReward;
         uint tempDAppRward;
 
-        for (uint i = 0; i < votingTypes; i++) {
-            VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
-            (tempGBTReward, tempDAppRward) = 
-                votingType.claimVoteReward(_claimer, _voterProposals);
-            pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
-            pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
-        }
+        VotingType votingType = VotingType(governanceDat.getLatestVotingAddress());
+        (tempGBTReward, tempDAppRward) = 
+            votingType.claimVoteReward(_claimer, _voterProposals);
+        pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
+        pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
 
         if (pendingGBTReward != 0) {
             gbt.transfer(_claimer, pendingGBTReward);
@@ -104,8 +101,6 @@ contract Pool is Upgradeable, Governed {
         if (pendingDAppReward != 0) {
             dAppToken.transfer(_claimer, pendingDAppReward);
         }
-
-        governanceDat.increaseMemberReputation(_claimer, pendingReputation);  /------Removed
 
         governanceDat.callRewardClaimed(
             _claimer, 
@@ -129,14 +124,11 @@ contract Pool is Upgradeable, Governed {
         pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
         pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
 
-        uint votingTypes = governanceDat.getVotingTypeLength();
-        for (uint i = 0; i < votingTypes; i++) {
-            VotingType votingType = VotingType(governanceDat.getVotingTypeAddress(i));
-            (tempGBTReward, tempDAppRward) = 
-                votingType.getPendingReward(_memberAddress, _lastRewardProposalId);
-            pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
-            pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
-        }
+        VotingType votingType = VotingType(governanceDat.getLatestVotingAddress());
+        (tempGBTReward, tempDAppRward) = 
+            votingType.getPendingReward(_memberAddress, _lastRewardProposalId);
+        pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
+        pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
     }
 
     function getPendingProposalReward(address _memberAddress, uint _lastRewardProposalId)

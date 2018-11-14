@@ -197,7 +197,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     struct ProposalStruct {
         address owner;
         uint dateUpd;
-        address votingTypeAddress;
     }
 
     struct ProposalData {
@@ -219,9 +218,10 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(uint => bool) public proposalPaused;
     mapping(address => mapping(uint => bool)) internal rewardClaimed;
-
-    uint public quorumPercentage;
+    mapping (uint => uint) internal proposalVersion;
+    
     bool public constructorCheck;
+    bool public punishVoters;
 
     ProposalStruct[] internal allProposal;
 
@@ -237,21 +237,13 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev Initiates governance data
     function governanceDataInitiate() public {
         require(!constructorCheck);
-        setGlobalParameters();
-        addMemberReputationPoints();
         allProposal.push(ProposalStruct(address(0), now, master.getLatestAddress("SV"))); //solhint-disable-line
         dappName = master.dAppName();
         constructorCheck = true;
     }
 
-    /// @dev Configures global parameters i.e. Voting or Reputation parameters
-    /// @param _typeOf Passing intials of the parameter name which value needs to be updated
-    /// @param _value New value that needs to be updated    
-    // solhint-disable-next-line
-    function configureGlobalParameters(bytes4 _typeOf, uint32 _value) public onlyAuthorizedToGovern {
-        if (_typeOf == "QP") {
-            _changeQuorumPercentage(_value);
-        }
+    function setPunishVoters(bool _punish) public onlyAuthorizedToGovern {
+        punishVoters = _punish;
     }
 
     /// @dev resume a proposal
@@ -312,9 +304,8 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev Stores the information of version number of a given proposal. 
     ///     Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _proposalId, string _proposalDescHash) public onlyInternal {
-        uint versionNo = SafeMath.add(allProposalData[_proposalId].versionNumber, 1);
-        emit ProposalVersion(_proposalId, versionNo, _proposalDescHash, now); //solhint-disable-line
-        setProposalVersion(_proposalId, versionNo);
+        proposalVersion[_proposalId].versionNumber = SafeMath.add(proposalVersion[_proposalId].versionNumber, 1);
+        emit ProposalVersion(_proposalId, proposalVersion[_proposalId].versionNumber, _proposalDescHash, now); //solhint-disable-line
     }
 
     /// @dev Sets proposal's date when the proposal last modified
@@ -349,13 +340,11 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
             uint totalSolutions
         ) 
     {
-        return (
-            _proposalId, 
-            allProposalData[_proposalId].category,
-            allProposalData[_proposalId].finalVerdict, 
-            allProposal[_proposalId].votingTypeAddress, 
-            allProposalSolutions[_proposalId].length
-        );
+            id = _proposalId;
+            category = allProposalData[_proposalId].category;
+            finalVerdict = allProposalData[_proposalId].finalVerdict;
+            votingTypeAddress = getLatestVotingAddress();
+            totalSolutions = allProposalSolutions[_proposalId].length;
     }
 
     /// @dev Fetch details of proposal when giving proposal id
@@ -493,7 +482,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     function getProposalDetailsForSV(uint _proposalId) 
         public
         view
-        returns(uint, uint, uint64) 
+        returns(uint) 
     {
         require(allProposalData[_proposalId].propStatus == uint8(Governance.ProposalStatus.VotingStarted));
         return(
@@ -530,16 +519,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     function getLatestVotingAddress() public view returns(address) {
         return master.getLatestAddress("SV");
-    }
-
-    function getProposalVotingAddress(uint _proposalId) public view returns(address) {
-        return allProposal[_proposalId].votingTypeAddress;
-    }
-    
-    /// @dev Get Latest updated version of proposal.
-    function getProposalVersion(uint _proposalId) public view returns(uint) {
-        return allProposalData[_proposalId].versionNumber;
-    }
+    }    
 
     /// @dev Sets Total calculated vote value from all the votes that has been casted against of winning solution
     function setProposalTotalVoteValue(uint _proposalId, uint _voteValue) public onlyInternal {
@@ -550,7 +530,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     function addNewProposal( 
         address _memberAddress, 
         uint _categoryId, 
-        address _votingTypeAddress,
         address _stakeToken
     ) 
         public 
@@ -558,7 +537,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     {
         allProposalData[allProposal.length].category = _categoryId;
         allProposalData[allProposal.length].stakeToken = _stakeToken;
-        _createProposal(_memberAddress, _votingTypeAddress);
+        _createProposal(_memberAddress);
     }
 
     /// @dev Updates proposal's major details (Called from close proposal vote)
@@ -575,12 +554,12 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         setProposalDateUpd(_proposalId);
     }
 
-    /// @dev Creates new proposal
-    function createProposal(address _memberAddress, address _votingTypeAddress) 
+    /// @dev Creates a proposal
+    function createProposal(address _memberAddress) 
         public 
         onlyInternal 
     {
-        _createProposal(_memberAddress, _votingTypeAddress);
+        _createProposal(_memberAddress);
     }
 
     /// @dev Gets final solution index won after majority voting.
@@ -617,7 +596,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
                 _awaitingSolution = SafeMath.add(_awaitingSolution, 1);
             } else if (proposalStatus == uint(Governance.ProposalStatus.VotingStarted)) {
                 _pendingProposals = SafeMath.add(_pendingProposals, 1);
-            } else if (proposalStatus == uint(Governance.ProposalStatus.Accepted)) {
+            } else if (proposalStatus == uint(Governance.ProposalStatus.Accepted) || proposalStatus == uint(Governance.ProposalStatus.Majority_Not_Reached_But_Accepted_By_PrevVoting) || proposalStatus == uint(Governance.ProposalStatus.Threshold_Not_Reached_But_Accepted_By_PrevVoting)) {
                 _acceptedProposals = SafeMath.add(_acceptedProposals, 1);
             } else {
                 _rejectedProposals = SafeMath.add(_rejectedProposals, 1);
@@ -663,33 +642,18 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         }
     }
 
-    /// @dev Sets global parameters that will help in distributing reward
-    function setGlobalParameters() internal {
-        quorumPercentage = 25;
-    }
-
     /// @dev Updates status of an existing proposal
     function updateProposalStatus(uint _id, uint8 _status) internal {
         allProposalData[_id].propStatus = _status;
         allProposal[_id].dateUpd = now; //solhint-disable-line
     }
 
-    /// @dev Sets version number of proposal i.e. Version number increases everytime the proposal is modified
-    function setProposalVersion(uint _proposalId, uint _versionNum) internal {
-        allProposalData[_proposalId].versionNumber = _versionNum;
-    }
-
     /// @dev Creates new proposal
-    function _createProposal(address _memberAddress, address _votingTypeAddress) 
+    function _createProposal(address _memberAddress) 
         internal    
     {
         allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
-        allProposal.push(ProposalStruct(_memberAddress, now, _votingTypeAddress)); //solhint-disable-line
-    }
-
-    /// @dev Changes quoram percentage. Value required to pass proposal.
-    function _changeQuorumPercentage(uint _quorumPercentage) internal {
-        quorumPercentage = _quorumPercentage;
+        allProposal.push(ProposalStruct(_memberAddress, now)); //solhint-disable-line
     }
 
 }
