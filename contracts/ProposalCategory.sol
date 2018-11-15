@@ -35,12 +35,12 @@ contract ProposalCategory is Governed {
         uint quorumPerc;
     }
 
-    event Category(uint indexed categoryId,string categoryName,string actionHash);
+    event CategoryEvent(uint indexed categoryId,string categoryName,string actionHash);
 
     Category[] public allCategory;
 
     function callCategoryEvent(uint _categoryId, string _categoryName, string _actionHash) internal{
-        emit Category(_categoryId, _categoryName, _actionHash);
+        emit CategoryEvent(_categoryId, _categoryName, _actionHash);
     }
 
     /// @dev Adds new category
@@ -113,15 +113,14 @@ contract ProposalCategory is Governed {
         allCategory[_categoryId].minStake = _incentives[0];
         allCategory[_categoryId].contractAddress = _contractAddress;
         allCategory[_categoryId].contractName = _contractName;
-        allCategory[_categoryId].thresholdPerc =  _quorumPerc;
+        allCategory[_categoryId].quorumPerc =  _quorumPerc;
         callCategoryEvent(_categoryId, _name, _actionHash);
     }
 
     /// @dev gets category details
-    function getCategoryDetails(uint _categoryId) public view returns(uint, string, uint, uint, uint[], uint, uint, address, bytes2, uint[], uint) {
+    function getCategoryDetails(uint _categoryId) public view returns(uint, uint, uint, uint[], uint, uint, address, bytes2, uint, uint, uint) {
         return(
             _categoryId,
-            allCategory[_categoryId].name,
             allCategory[_categoryId].memberRoleToVote,
             allCategory[_categoryId].majorityVotePerc,
             allCategory[_categoryId].allowedToCreateProposal,
@@ -129,7 +128,8 @@ contract ProposalCategory is Governed {
             allCategory[_categoryId].tokenHoldingTime,
             allCategory[_categoryId].contractAddress,
             allCategory[_categoryId].contractName,
-            [allCategory[_categoryId].minStake, allCategory[_categoryId].defaultIncentive],
+            allCatergoy[_categoryId].minStake,
+            allCategory[_categoryId].defaultIncentive,
             allCategory[_categoryId].quorumPerc
         );
     }
@@ -162,7 +162,6 @@ contract ProposalCategory is Governed {
         require(msg.sender == officialPCA || officialPCA == address(0));
         // allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);        
         allCategory.push(Category(
-                 _roleName, 
                  _majorityVote, 
                  _allowedToCreateProposal,
                  _closingTime,

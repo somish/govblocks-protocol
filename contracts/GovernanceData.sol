@@ -395,12 +395,13 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
             uint totalVoteValue, 
             uint totalSolutions, 
             uint commonIncentive, 
-            uint finalVerdict
+            uint finalVerdict,
+            uint finalVoteValue
         ) 
     {
         proposalId = _proposalId;
         status = getProposalStatus(_proposalId);
-        totalVoteValue = getProposalTotalVoteValue(_proposalId);
+        (totalVoteValue, finalVoteValue) = getProposalVoteValue(_proposalId);
         totalSolutions = getTotalSolutions(_proposalId);
         commonIncentive = getProposalIncentive(_proposalId);
         finalVerdict = allProposalData[_proposalId].finalVerdict;
@@ -466,18 +467,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         return (rewardClaimed[_memberAddress][_proposalId]);
     }
 
-    /// @dev Get member's reputation points and scalind data for sv.
-    function getMemberReputationSV(address _memberAddress, uint32 _proposalId) 
-        public 
-        view 
-        returns (address, uint) 
-    {
-        return(
-            allProposalData[_proposalId].stakeToken, 
-            allProposalData[_proposalId].category
-        );
-    }
-
     /// @dev fetches details for simplevoting and also verifies that proposal is open for voting
     function getProposalDetailsForSV(uint _proposalId) 
         public
@@ -498,8 +487,11 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Gets Total vote value from all the votes that has been casted against of winning solution
-    function getProposalTotalVoteValue(uint _proposalId) public view returns(uint voteValue) {
+    /// @param totalVoteValue vote value of all the votes polled under proposal
+    /// @param finalVoteValue vote value of all the votes which were casted for finalVerdict
+    function getProposalVoteValue(uint _proposalId) public view returns(uint voteValue, uint finalVoteValue) {
         voteValue = allProposalData[_proposalId].totalVoteValue;
+        finalVoteValue = allProposalData[_proposalId].finalVoteValue;
     }
 
     /// @dev Gets stakeToken proposal
@@ -508,7 +500,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Gets stakeToken and sub cat proposal
-    function getTokenAndSubCat(uint _proposalId) public view returns(address, uint) {
+    function getTokenAndCategory(uint _proposalId) public view returns(address, uint) {
         return (allProposalData[_proposalId].stakeToken, allProposalData[_proposalId].category);
     }
 
@@ -522,8 +514,9 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }    
 
     /// @dev Sets Total calculated vote value from all the votes that has been casted against of winning solution
-    function setProposalTotalVoteValue(uint _proposalId, uint _voteValue) public onlyInternal {
+    function setProposalVoteValue(uint _proposalId, uint _voteValue,uint _finalVoteValue) public onlyInternal {
         allProposalData[_proposalId].totalVoteValue = _voteValue;
+        allProposalData[_proposalId].finalVoteValue = _finalVoteValue;
     }
 
     /// @dev Adds new proposal
@@ -596,7 +589,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
                 _awaitingSolution = SafeMath.add(_awaitingSolution, 1);
             } else if (proposalStatus == uint(Governance.ProposalStatus.VotingStarted)) {
                 _pendingProposals = SafeMath.add(_pendingProposals, 1);
-            } else if (proposalStatus == uint(Governance.ProposalStatus.Accepted) || proposalStatus == uint(Governance.ProposalStatus.Majority_Not_Reached_But_Accepted_By_PrevVoting) || proposalStatus == uint(Governance.ProposalStatus.Threshold_Not_Reached_But_Accepted_By_PrevVoting)) {
+            } else if (proposalStatus == uint(Governance.ProposalStatus.Accepted) || proposalStatus == uint(Governance.ProposalStatus.Majority_Not_Reached_But_Accepted) || proposalStatus == uint(Governance.ProposalStatus.Threshold_Not_Reached_But_Accepted_By_PrevVoting)) {
                 _acceptedProposals = SafeMath.add(_acceptedProposals, 1);
             } else {
                 _rejectedProposals = SafeMath.add(_rejectedProposals, 1);
@@ -650,7 +643,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     /// @dev Creates new proposal
     function _createProposal(address _memberAddress) 
-        internal    
+        internal
     {
         allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
         allProposal.push(ProposalStruct(_memberAddress, now)); //solhint-disable-line

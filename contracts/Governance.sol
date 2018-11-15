@@ -35,7 +35,7 @@ contract Governance is Upgradeable {
         VotingStarted,
         Accepted,
         Rejected,
-        Majority_Not_Reached_But_Accepted_By_PrevVoting,
+        Majority_Not_Reached_But_Accepted,
         Denied,
         Threshold_Not_Reached_But_Accepted_By_PrevVoting 
     }
