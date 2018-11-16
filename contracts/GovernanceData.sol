@@ -93,25 +93,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         );
     }
 
-    /// @dev Calls proposal with solution event 
-    /// @param proposalOwner Address of member whosoever has created the proposal
-    /// @param proposalId ID or proposal created
-    /// @param proposalDescHash Description hash of proposal having short and long description for proposal
-    /// @param solutionDescHash Description hash of Solution 
-    /// @param dateAdd Date when proposal was created
-    function callProposalWithSolutionEvent(
-        address proposalOwner, 
-        uint256 proposalId, 
-        string proposalDescHash, 
-        string solutionDescHash, 
-        uint256 dateAdd
-    )
-        public
-        onlyInternal 
-    {
-        emit ProposalWithSolution(proposalOwner, proposalId, proposalDescHash, solutionDescHash, dateAdd);
-    }
-
     /// @dev Calls proposal version event
     /// @param proposalId Id of proposal
     /// @param vNumber Version number
@@ -205,6 +186,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         // uint64 currentVerdict;
         uint category;
         uint totalVoteValue;
+        uint finalVoteValue;
         uint commonIncentive;
         address stakeToken;
     }
@@ -219,6 +201,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     mapping(uint => bool) public proposalPaused;
     mapping(address => mapping(uint => bool)) internal rewardClaimed;
     mapping (uint => uint) internal proposalVersion;
+    
     
     bool public constructorCheck;
     bool public punishVoters;
@@ -237,7 +220,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev Initiates governance data
     function governanceDataInitiate() public {
         require(!constructorCheck);
-        allProposal.push(ProposalStruct(address(0), now, master.getLatestAddress("SV"))); //solhint-disable-line
+        allProposal.push(ProposalStruct(address(0), now)); //solhint-disable-line
         dappName = master.dAppName();
         constructorCheck = true;
     }
@@ -291,7 +274,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     /// @dev Changes the status of a given proposal.
     function changeProposalStatus(uint _id, uint8 _status) public onlyInternal {
-        emit ProposalStatus(_id, _status, now); //solhint-disable-line
         updateProposalStatus(_id, _status);
     }
 
@@ -304,8 +286,8 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev Stores the information of version number of a given proposal. 
     ///     Maintains the record of all the versions of a proposal.
     function storeProposalVersion(uint _proposalId, string _proposalDescHash) public onlyInternal {
-        proposalVersion[_proposalId].versionNumber = SafeMath.add(proposalVersion[_proposalId].versionNumber, 1);
-        emit ProposalVersion(_proposalId, proposalVersion[_proposalId].versionNumber, _proposalDescHash, now); //solhint-disable-line
+        proposalVersion[_proposalId] = SafeMath.add(proposalVersion[_proposalId], 1);
+        emit ProposalVersion(_proposalId, proposalVersion[_proposalId], _proposalDescHash, now); //solhint-disable-line
     }
 
     /// @dev Sets proposal's date when the proposal last modified
@@ -323,7 +305,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
             _proposalId, 
             allProposal[_proposalId].owner, 
             allProposal[_proposalId].dateUpd, 
-            allProposalData[_proposalId].versionNumber, 
+            proposalVersion[_proposalId], 
             allProposalData[_proposalId].propStatus
         );
     }
@@ -467,28 +449,13 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         return (rewardClaimed[_memberAddress][_proposalId]);
     }
 
-    /// @dev fetches details for simplevoting and also verifies that proposal is open for voting
-    function getProposalDetailsForSV(uint _proposalId) 
-        public
-        view
-        returns(uint) 
-    {
-        require(allProposalData[_proposalId].propStatus == uint8(Governance.ProposalStatus.VotingStarted));
-        return(
-            allProposalData[_proposalId].category
-        );
-    }
-
     /// @dev gets total number of votes by a voter
     function getTotalNumberOfVotesByAddress(address _voter) public view returns(uint totalVotes) {
             VotingType vt = VotingType(master.getLatestAddress("SV"));
             totalVotes = SafeMath.add(vt.getTotalNumberOfVotesByAddress(_voter), 1);
-        }
     }
 
     /// @dev Gets Total vote value from all the votes that has been casted against of winning solution
-    /// @param totalVoteValue vote value of all the votes polled under proposal
-    /// @param finalVoteValue vote value of all the votes which were casted for finalVerdict
     function getProposalVoteValue(uint _proposalId) public view returns(uint voteValue, uint finalVoteValue) {
         voteValue = allProposalData[_proposalId].totalVoteValue;
         finalVoteValue = allProposalData[_proposalId].finalVoteValue;

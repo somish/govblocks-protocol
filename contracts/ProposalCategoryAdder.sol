@@ -162,6 +162,9 @@ contract ProposalCategoryAdder {
             25
         );
 
+        stakeIncentive[0] = uint256(10) ** 18;
+        stakeIncentive[1] = uint256(10) ** 18;
+
         proposalCategory.addInitialCategories(
             "Transfer Ether",
             rs,
@@ -307,7 +310,7 @@ contract ProposalCategoryAdder {
             25
         );
         proposalCategory.addInitialCategories(
-            "External Proposal", //19
+            "External Proposal", 
             rs,
             mv,
             al,

@@ -34,7 +34,9 @@ contract MemberRoles is Governed {
 
     mapping(uint => address) internal authorizedAddressAgainstRole;
     mapping(uint => MemberRoleDetails) internal memberRoleData;
-
+    uint public memberRoleLength;
+    bool internal constructorCheck;
+    
     modifier checkRoleAuthority(uint _memberRoleId) {
         if (authorizedAddressAgainstRole[_memberRoleId] != address(0))
             require(msg.sender == authorizedAddressAgainstRole[_memberRoleId]);
@@ -43,10 +45,12 @@ contract MemberRoles is Governed {
         _;
     }
 
-    function MemberRoles(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
+    function memberRolesInitiate(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
+        require(!constructorCheck);
         dappName = _dAppName;
         dAppToken = StandardToken(_dAppToken);
-        addInitialMemberRoles(_firstAB);        
+        addInitialMemberRoles(_firstAB);
+        constructorCheck = true;
     }
 
     function addInitialMemberRoles(address _firstAB) internal {
@@ -59,6 +63,8 @@ contract MemberRoles is Governed {
             uint(Role.TokenHolder),
             "Token Holder",
             "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default."); //solhint-disable-line
+        memberRoleLength = 3;
+
         memberRoleData[1].memberCounter++;
         memberRoleData[1].memberActive[_firstAB] = true;
         memberRoleData[1].memberAddress.push(_firstAB);
@@ -74,7 +80,7 @@ contract MemberRoles is Governed {
 
     /// @dev Get All role ids array that has been assigned to a member so far.
     function getRoleIdByAddress(address _memberAddress) public view returns(uint[] assignedRoles) {
-        uint length = getTotalMemberRoles();
+        uint length = memberRoleLength;
         uint j = 0;
         assignedRoles = new uint[](length);
         for (uint i = 1; i < length; i++) {
@@ -154,9 +160,9 @@ contract MemberRoles is Governed {
         public
         onlyAuthorizedToGovern
     {
-        uint rolelength = memberRole.length;
-        authorizedAddressAgainstRole[rolelength] = _canAddMembers;
-        emit MemberRole(rolelength, _newRoleName, _roleDescription);
+        authorizedAddressAgainstRole[memberRoleLength] = _canAddMembers;
+        emit MemberRole(memberRoleLength, _newRoleName, _roleDescription);
+        SafeMath.add(memberRoleLength,1);
     }
 
     /// @dev Gets the member addresses assigned by a specific role
@@ -202,11 +208,10 @@ contract MemberRoles is Governed {
 
    
     /// @dev Return total number of members assigned against each role id.
-    /// @return roleName Role name array is returned
     /// @return totalMembers Total members in particular role id
     function getMemberLengthForAllRoles() public view returns(uint[] totalMembers) {
-        totalMembers = new uint[](memberRole.length);
-        for (uint i = 0; i < memberRole.length; i++) {
+        totalMembers = new uint[](memberRoleLength);
+        for (uint i = 0; i < memberRoleLength; i++) {
             totalMembers[i] = getAllMemberLength(i);
         }
     }

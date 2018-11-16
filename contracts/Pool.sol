@@ -82,18 +82,10 @@ contract Pool is Upgradeable, Governed {
         uint pendingGBTReward;
         uint pendingDAppReward;
         uint pendingReputation;
-        
-        (pendingGBTReward, pendingDAppReward, pendingReputation) = 
-            gov.calculateMemberReward(_claimer, _ownerProposals);
-
-        uint tempGBTReward;
-        uint tempDAppRward;
 
         VotingType votingType = VotingType(governanceDat.getLatestVotingAddress());
-        (tempGBTReward, tempDAppRward) = 
+        (pendingGBTReward, pendingDAppReward) = 
             votingType.claimVoteReward(_claimer, _voterProposals);
-        pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
-        pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
 
         if (pendingGBTReward != 0) {
             gbt.transfer(_claimer, pendingGBTReward);
@@ -111,86 +103,7 @@ contract Pool is Upgradeable, Governed {
             pendingReputation
         );
     }
-
-    function getPendingReward(address _memberAddress, uint _lastRewardProposalId) 
-        public view returns (uint pendingGBTReward, uint pendingDAppReward) 
-    {
-        uint tempGBTReward;
-        uint tempDAppRward;
-        (pendingGBTReward, pendingDAppReward) = 
-            getPendingProposalReward(_memberAddress, _lastRewardProposalId); 
-        (tempGBTReward, tempDAppRward) = 
-            getPendingSolutionReward(_memberAddress, _lastRewardProposalId);
-        pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
-        pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
-
-        VotingType votingType = VotingType(governanceDat.getLatestVotingAddress());
-        (tempGBTReward, tempDAppRward) = 
-            votingType.getPendingReward(_memberAddress, _lastRewardProposalId);
-        pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
-        pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppRward);
-    }
-
-    function getPendingProposalReward(address _memberAddress, uint _lastRewardProposalId)
-        public
-        view
-        returns (uint pendingGBTReward, uint pendingDAppReward)
-    {
-        uint allProposalLength = governanceDat.getProposalLength();
-        uint finalVredict;
-        uint8 proposalStatus;
-        uint calcReward;
-        uint subCat;
-        bool rewardClaimed;
-        for (uint i = _lastRewardProposalId; i < allProposalLength; i++) {
-            if (_memberAddress == governanceDat.getProposalOwner(i)) {
-                (rewardClaimed, subCat, proposalStatus, finalVredict) = 
-                    governanceDat.getProposalDetailsById3(i, _memberAddress);
-                if (
-                    proposalStatus > 2 && 
-                    finalVredict > 0 && 
-                    governanceDat.getProposalIncentive(i) != 0 &&
-                    !rewardClaimed
-                ) {
-                    calcReward = (proposalCategory.getRewardPercProposal(subCat).mul(governanceDat.getProposalIncentive(i))).div(100);  //solhint-disable-line
-                    if (proposalCategory.isCategoryExternal(subCat))    
-                        pendingGBTReward = SafeMath.add(pendingGBTReward, calcReward);
-                    else
-                        pendingDAppReward = SafeMath.add(pendingDAppReward, calcReward);
-                }
-            }
-        }
-    }
-
-    function getPendingSolutionReward(address _memberAddress, uint _lastRewardSolutionProposalId)
-        public
-        view
-        returns (uint pendingGBTReward, uint pendingDAppReward)
-    {
-        uint allProposalLength = governanceDat.getProposalLength();
-        uint calcReward;
-        uint i;
-        uint finalVerdict;
-        uint solutionId;
-        uint proposalId;
-        uint totalReward;
-        uint subCategory;
-
-        for (i = _lastRewardSolutionProposalId; i < allProposalLength; i++) {
-            (proposalId, solutionId, , finalVerdict, totalReward, subCategory) = 
-                gov.getSolutionIdAgainstAddressProposal(_memberAddress, i);
-            if (finalVerdict > 0 && finalVerdict == solutionId && proposalId == i 
-                && !governanceDat.getRewardClaimed(i, _memberAddress)
-            ) {
-                calcReward = (proposalCategory.getRewardPercSolution(subCategory) * totalReward) / 100;
-                if (proposalCategory.isCategoryExternal(subCategory))    
-                    pendingGBTReward = SafeMath.add(pendingGBTReward, calcReward);
-                else
-                    pendingDAppReward = SafeMath.add(pendingDAppReward, calcReward);
-            }
-        }
-    }
-
+    
     /// @dev Transfer Ether to someone    
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where ether has to be sent

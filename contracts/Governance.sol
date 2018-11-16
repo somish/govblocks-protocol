@@ -61,7 +61,6 @@ contract Governance is Upgradeable {
 
     /// @dev Creates a new proposal with solution and votes for the solution
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
-    /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
     /// @param _subCategoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
     function createProposalwithVote(
@@ -104,7 +103,8 @@ contract Governance is Upgradeable {
     function allowedToCreateProposal(uint category) public view returns(bool check) {
         if (category == 0)
             return true;
-        uint[] memory mrAllowed = proposalCategory.getMRAllowed(category);
+        uint[] memory mrAllowed;
+        (,,,mrAllowed,,,) = proposalCategory.getCategoryDetails(category);
         for (uint i = 0; i < mrAllowed.length; i++) {
             if (mrAllowed[i] == 0 || memberRole.checkRoleIdByAddress(msg.sender, mrAllowed[i]))
                 return true;
@@ -113,7 +113,6 @@ contract Governance is Upgradeable {
 
     /// @dev Creates a new proposal
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
-    /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     function createProposal(
         string _proposalTitle, 
@@ -153,7 +152,8 @@ contract Governance is Upgradeable {
             /* solhint-enable */
             require(validateStake(_categoryId, token));
             governanceDat.addNewProposal(msg.sender, _categoryId, token);
-            uint incentive = proposalCategory.getCatIncentive(_categoryId);
+            uint incentive;
+            (,,incentive) = proposalCategory.getCategoryActionDetails(_categoryId);
             require(incentive <= GBTStandardToken(token).balanceOf(poolAddress));
             governanceDat.setProposalIncentive(_proposalId, incentive); 
             governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
@@ -184,10 +184,10 @@ contract Governance is Upgradeable {
     }
 
     /// @dev checks if the msg.sender has enough tokens locked for creating a proposal or solution
-    function validateStake(uint _subCat, address _token) public view returns(bool) {
+    function validateStake(uint _categoryId, address _token) public view returns(bool) {
         uint minStake;
         uint tokenholdingTime;
-        (minStake, tokenholdingTime) = proposalCategory.getRequiredStake(_subCat);
+        (,,,,, tokenholdingTime, minStake) = proposalCategory.getCategoryDetails(_categoryId);
         if (minStake == 0)
             return true;
         GBTStandardToken tokenInstance = GBTStandardToken(_token);
@@ -208,7 +208,8 @@ contract Governance is Upgradeable {
 
         require(governanceDat.getTotalSolutions(_proposalId) < 2 , "Categorization not possible, since solutions had already been submitted");
 
-        uint dappIncentive = proposalCategory.getCatIncentive(_categoryId);
+        uint dappIncentive;
+        (,, dappIncentive) = proposalCategory.getCategoryActionDetails(_categoryId);
         
         // uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
         address tokenAddress;
@@ -243,55 +244,11 @@ contract Governance is Upgradeable {
 
         require(governanceDat.getTotalSolutions(_proposalId) > 1 , "Proposal should contain atleast two solutions before it is open for voting");
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.VotingStarted));
-        uint closingTime = SafeMath.add(proposalCategory.getClosingTimeAtIndex(category, 0), now); // solhint-disable-line
+        uint closingTime;
+        (,,,,closingTime,,) = proposalCategory.getCategoryDetails(category);
+        closingTime = SafeMath.add(closingTime, now); // solhint-disable-line
         address votingType = governanceDat.getLatestVotingAddress();
         eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
-    }
-
-    /// @dev calculates reward to distribute for a user
-    /// @param _memberAddress Member address
-    /// @param _proposals proposal ids to calculate reward for
-    function calculateMemberReward(address _memberAddress, uint[] _proposals) 
-        public 
-        onlyInternal 
-        returns(uint totalGBTReward, uint totalDAppReward) 
-    {
-        uint i = _proposals.length;
-
-        uint finalVerdictThenRewardPerc;
-        uint proposalStatusThenRewardPercent;
-        uint solutionIdThenRep;
-        uint subCategory;
-        uint totalReward;
-        bool rewardClaimedThenIsExternal;
-        //0th element is skipped always as sometimes we actually need length of _proposals be 0. 
-        for (i = 0; i < _proposals.length ; i++) {
-            //solhint-disable-next-line
-            (rewardClaimedThenIsExternal, subCategory, proposalStatusThenRewardPercent, finalVerdictThenRewardPerc, solutionIdThenRep, totalReward) =
-                governanceDat.getProposalDetailsForReward(_proposals[i], _memberAddress);
-            totalReward = SafeMath.div(totalReward, 100);
-
-            require(!rewardClaimedThenIsExternal && (proposalStatusThenRewardPercent > uint(ProposalStatus.VotingStarted)));
-
-            if (finalVerdictThenRewardPerc > 0) {
-
-                rewardClaimedThenIsExternal = proposalCategory.isCategoryExternal(subCategory);
-                (finalVerdictThenRewardPerc) = _getReward(
-                        _memberAddress, 
-                        _proposals[i], 
-                        finalVerdictThenRewardPerc, 
-                        solutionIdThenRep, 
-                        subCategory
-                    );
-
-                if (finalVerdictThenRewardPerc > 0) {
-                    if (rewardClaimedThenIsExternal)    
-                        totalGBTReward = SafeMath.add(totalGBTReward, SafeMath.mul(finalVerdictThenRewardPerc, totalReward));
-                    else
-                        totalDAppReward = SafeMath.add(totalDAppReward, SafeMath.mul(finalVerdictThenRewardPerc, totalReward));
-                }
-            } 
-        }
     }
 
     /// @dev Gets member details
@@ -304,13 +261,11 @@ contract Governance is Upgradeable {
         public 
         view 
         returns(
-            uint memberReputation, 
             uint totalProposal, 
             uint totalSolution, 
             uint totalVotes
         ) 
     {
-        memberReputation = governanceDat.getMemberReputation(_memberAddress);
         totalProposal = governanceDat.getAllProposalIdsLengthByAddress(_memberAddress);
         totalSolution = governanceDat.getAllSolutionIdsLengthByAddress(_memberAddress);
         totalVotes = governanceDat.getTotalNumberOfVotesByAddress(_memberAddress);
@@ -384,20 +339,10 @@ contract Governance is Upgradeable {
             _solutionHash, 
             _action
         );
-        /* solhint-disable */
-        governanceDat.callProposalWithSolutionEvent(
-            msg.sender, 
-            _proposalId, 
-            "", 
-            _solutionHash, 
-            now
-        );
-        /* solhint-enable */
     }
 
     /// @dev Creates a new proposal
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
-    /// @param _votingTypeId Voting type id that depicts which voting procedure to follow for this proposal
     /// @param _subCategoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
     function _createProposalwithSolution(
@@ -418,23 +363,6 @@ contract Governance is Upgradeable {
             _solutionHash, 
             _action
         );
-    }
-
-    /// @dev gets rewardPercent and reputation to award a user for a proposal 
-    function _getReward(
-        address _memberAddress, 
-        uint _proposal, 
-        uint _finalVerdict, 
-        uint _solutionId, 
-        uint _subCategory
-    ) internal returns (uint rewardPercent) {
-        governanceDat.setRewardClaimed(_proposal, _memberAddress);
-        if (_memberAddress == governanceDat.getProposalOwner(_proposal)) {
-            rewardPercent = SafeMath.add(rewardPercent, proposalCategory.getRewardPercProposal(_subCategory));
-        }
-        if (_finalVerdict == _solutionId) {
-            rewardPercent = SafeMath.add(rewardPercent, proposalCategory.getRewardPercSolution(_subCategory));
-        }
     }
 
 }

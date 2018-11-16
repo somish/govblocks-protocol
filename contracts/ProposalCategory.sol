@@ -118,7 +118,7 @@ contract ProposalCategory is Governed {
     }
 
     /// @dev gets category details
-    function getCategoryDetails(uint _categoryId) public view returns(uint, uint, uint, uint[], uint, uint, address, bytes2, uint, uint, uint) {
+    function getCategoryDetails(uint _categoryId) public view returns(uint, uint, uint, uint[], uint, uint, uint) {
         return(
             _categoryId,
             allCategory[_categoryId].memberRoleToVote,
@@ -126,10 +126,20 @@ contract ProposalCategory is Governed {
             allCategory[_categoryId].allowedToCreateProposal,
             allCategory[_categoryId].closingTime,
             allCategory[_categoryId].tokenHoldingTime,
+            allCategory[_categoryId].minStake
+        );
+    }
+
+    function getCategoryActionDetails(uint _categoryId) public view returns(address, bytes2, uint){
+        return(
             allCategory[_categoryId].contractAddress,
             allCategory[_categoryId].contractName,
-            allCatergoy[_categoryId].minStake,
-            allCategory[_categoryId].defaultIncentive,
+            allCategory[_categoryId].defaultIncentive
+        );
+    }
+
+    function getCategoryQuorumPercent(uint _categoryId) public view returns(uint){
+        return(
             allCategory[_categoryId].quorumPerc
         );
     }
@@ -162,12 +172,13 @@ contract ProposalCategory is Governed {
         require(msg.sender == officialPCA || officialPCA == address(0));
         // allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);        
         allCategory.push(Category(
-                 _majorityVote, 
-                 _allowedToCreateProposal,
-                 _closingTime,
-                 _tokenHoldingTime,
-                 _incentives[0],
-                 _incentives[1],
+                _roleName,
+                _majorityVote,
+                _allowedToCreateProposal,
+                _closingTime,
+                _tokenHoldingTime,
+                _incentives[0],
+                _incentives[1],
                 _contractAddress,
                 _contractName,
                 _quorumPerc

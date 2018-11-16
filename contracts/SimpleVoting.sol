@@ -139,7 +139,7 @@ contract SimpleVoting is Upgradeable {
             if(governanceDat.punishVoters()){
                 if((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)){
                     calcReward = SafeMath.mul(SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, finalVoteValue),100),totalReward);
-                }   
+                }
             }
             else if(finalVerdict > 0){
                 calcReward = SafeMath.mul(SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, totalVoteValue),100),totalReward);
@@ -149,7 +149,7 @@ contract SimpleVoting is Upgradeable {
             else
                 pendingDAppReward = pendingDAppReward.add(calcReward);
         }
-        
+
     }
 
     function getPendingReward(address _memberAddress, uint _lastRewardVoteId) 
@@ -251,7 +251,6 @@ contract SimpleVoting is Upgradeable {
     }
 
     /// @dev Gets All the Role specific vote ids against proposal 
-    /// @param _roleId Role id which number of votes to be fetched.
     /// @return totalVotes Total votes casted by this particular role id.
     function getAllVoteIdsByProposal(uint _proposalId) public view returns(uint[] totalVotes) {
         return proposalRoleVote[_proposalId];
@@ -292,7 +291,7 @@ contract SimpleVoting is Upgradeable {
             finalVoteValues[allVotes[voteId].solutionChosen] = 
                 finalVoteValues[allVotes[voteId].solutionChosen].add(voteValue);
         }
-        (voteValue,) = governanceDat,getProposalVoteValue(_proposalId);
+        (voteValue,) = governanceDat.getProposalVoteValue(_proposalId);
         totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
 
         for (i = 0; i < finalVoteValues.length; i++) {
@@ -327,7 +326,6 @@ contract SimpleVoting is Upgradeable {
         address newSV = master.getLatestAddress("SV");
         if (newSV != address(this)) {
             governChecker.updateAuthorized(master.dAppName(), newSV);
-            governanceDat.editVotingTypeDetails(0, newSV);
         }
         pool.transferAssets();
     } 
@@ -335,7 +333,6 @@ contract SimpleVoting is Upgradeable {
     /// @dev Checks If the proposal voting time is up and it's ready to close 
     ///      i.e. Closevalue is 1 in case of closing, 0 otherwise!
     /// @param _proposalId Proposal id to which closing value is being checked
-    /// @param _roleId Voting will gets close for the role id provided here.
     function checkForClosing(uint _proposalId, uint _category) 
         public 
         view 
@@ -348,8 +345,8 @@ contract SimpleVoting is Upgradeable {
         uint _roleId;
         require(!governanceDat.proposalPaused(_proposalId));
         
-        (, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById1(_proposalId);
-        (,_roleId,_majorityVote,, _closingTime,,,,,,) = proposalCategory.getCategoryDetails(_category);
+        (, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById(_proposalId);
+        (,_roleId,_majorityVote,, _closingTime,,) = proposalCategory.getCategoryDetails(_category);
         if (pStatus == uint(Governance.ProposalStatus.VotingStarted) && _roleId != uint(MemberRoles.Role.TokenHolder) && _roleId != uint(MemberRoles.Role.UnAssigned)) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now ||  //solhint-disable-line
                 proposalRoleVote[_proposalId].length == memberRole.getAllMemberLength(_roleId)
@@ -374,14 +371,15 @@ contract SimpleVoting is Upgradeable {
     }
 
     /// @dev This does the remaining functionality of closing proposal vote
-    function closeProposalVoteThReached(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64  ) 
+    function closeProposalVoteThReached(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64 max) 
         internal 
     {
         uint _closingTime;
         uint _majorityVote;
         bytes2 contractName;
         address actionAddress;
-        (,,_majorityVote,, _closingTime,, actionAddress, contractName,,,) = proposalCategory.getCategoryDetails(category);
+        (,,_majorityVote,, _closingTime,,) = proposalCategory.getCategoryDetails(category);
+        (actionAddress, contractName,) = proposalCategory.getCategoryActionDetails(category);
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
                 governanceDat.updateProposalDetails(_proposalId, max);
@@ -415,7 +413,8 @@ contract SimpleVoting is Upgradeable {
         uint thresHoldValue;
         uint categoryQuorumPerc;
         uint _mrSequenceId;
-        (,_mrSequenceId,,,,,,,,,,categoryQuorumPerc) = proposalCategory.getCategoryDetails(_category);
+        (,_mrSequenceId,,,,,) = proposalCategory.getCategoryDetails(_category);
+        categoryQuorumPerc = proposalCategory.getCategoryQuorumPercent(_category);
         if (_mrSequenceId == 2) {
             uint totalTokens;
             address token = governanceDat.getStakeToken(_proposalId);
@@ -427,7 +426,7 @@ contract SimpleVoting is Upgradeable {
             }
 
             thresHoldValue = SafeMath.div(totalTokens.mul(100), tokenInstance.totalSupply());
-            if (thresHoldValue > categoryQuorumPerc);
+            if (thresHoldValue > categoryQuorumPerc)
                 return true;
         } else if (_mrSequenceId == 0) {
             return true;
@@ -449,11 +448,10 @@ contract SimpleVoting is Upgradeable {
         uint totalReward;
         uint category;
         uint calcReward;
-        uint voteValue;
         uint finalVoteValue;
         uint totalVoteValue;
         uint voteId = allVotesByMember[_memberAddress][_voteNo];
-        (solutionChosen, proposalStatus, finalVerdict, voteValue, totalReward, category) = 
+        (solutionChosen,, finalVerdict, voteValue, totalReward, category) = 
             getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
         (totalVoteValue,finalVoteValue) = governanceDat.getProposalVoteValue(_proposalId);
         if(governanceDat.punishVoters()){
@@ -530,15 +528,17 @@ contract SimpleVoting is Upgradeable {
         //where gas usage should be optimized as much as possible. voters should not feel burdened while voting.
         require(addressProposalVote[_voter][_proposalId] == 0);
 
+        require (governanceDat.getProposalStatus(_proposalId) == uint(Governance.ProposalStatus.VotingStarted));
+        
         require(validateStake(_proposalId, _voter));
 
         uint categoryThenMRSequence;
         uint voteValue;
 
         (categoryThenMRSequence) 
-            = governanceDat.getProposalDetailsForSV(_proposalId);
+            = governanceDat.getProposalCategory(_proposalId);
 
-        (,categoryThenMRSequence,,,,,,,,,,) = proposalCategory.getCategoryDetails(categoryThenMRSequence);
+        (,categoryThenMRSequence,,,,,) = proposalCategory.getCategoryDetails(categoryThenMRSequence);
         //categoryThenMRSequence is now MemberRoleSequence
 
         require(memberRole.checkRoleIdByAddress(_voter, categoryThenMRSequence));
@@ -568,7 +568,7 @@ contract SimpleVoting is Upgradeable {
         uint minStake;
         uint tokenHoldingTime;
         (token, category) = governanceDat.getTokenAndCategory(_proposalId);
-        (,,,, tokenHoldingTime,,,minStake,,) = proposalCategory.getCategoryDetails(category);
+        (,,,,, tokenHoldingTime, minStake) = proposalCategory.getCategoryDetails(category);
 
         if (minStake == 0)
             return true; 
@@ -583,13 +583,13 @@ contract SimpleVoting is Upgradeable {
         internal view returns(uint voteValue) 
     {
         address token;
-        uint subCat;
+        uint category;
         uint tokenHoldingTime;
         uint balance;
 
-        (token, subCat) 
+        (token, category) 
             = governanceDat.getTokenAndCategory(_proposalId);
-        tokenHoldingTime = proposalCategory.getTokenHoldingTime(subCat);
+        (,,,,,tokenHoldingTime,) = proposalCategory.getCategoryDetails(category);
         
         balance = _getLockedBalance(token, _of, tokenHoldingTime);
     
