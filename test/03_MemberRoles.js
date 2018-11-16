@@ -8,28 +8,18 @@ let address;
 
 contract('MemberRoles', function([owner, member, other]) {
   it('should be initialized', async function() {
-    await initializeContracts();
+    await initializeContracts(owner);
     address = await getAddress('MR');
     mr = await MemberRoles.at(address);
     await catchRevert(mr.memberRolesInitiate('0x41', owner, owner));
-    await catchRevert(mr.addInitialMemberRoles());
   });
 
-  it('should have AB role defined', async function() {
-    const ab = await mr.getMemberRoleNameById.call(1);
+  it('should have added initial member roles', async function() {
+    const ab = await mr.memberRoleLength.call();
     assert.equal(
-      ab[1],
-      '0x41647669736f727920426f617264000000000000000000000000000000000000',
-      'Advisory Board not created'
-    );
-  });
-
-  it('should have Token Holder role defined', async function() {
-    const th = await mr.getMemberRoleNameById(2);
-    assert.equal(
-      th[1],
-      '0x546f6b656e20486f6c6465720000000000000000000000000000000000000000',
-      'Token Holder not created'
+      ab,
+      3,
+      'Initial member roles not created'
     );
   });
 
@@ -45,7 +35,7 @@ contract('MemberRoles', function([owner, member, other]) {
       false,
       'user added to AB incorrectly'
     );
-    assert.equal(roles[0].toNumber(), 1, 'Owner not added to AB');
+    assert.equal(roles[0].toNumber(), 1, 'Owner added to AB');
   });
 
   it('should add a member to a role', async function() {
@@ -68,13 +58,15 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('Should fetch address by role id and index', async function() {
-    const g5 = await mr.getMemberAddressById(1, 0);
+    const g5 = await mr.getMemberAddressByRoleAndIndex(1, 0);
     assert.equal(g5, owner);
   });
 
-  it('Should fetch all address and role id', async function() {
-    const g6 = await mr.getRolesAndMember();
-    assert.equal(g6[0].length, 3);
+  it('Should fetch member count of all roles', async function() {
+    const g6 = await mr.getMemberLengthForAllRoles();
+    assert.equal(g6.length, 3);
+    assert.equal(g6[0],0);
+    assert.equal(g6[1],2);
   });
 
   it('Should follow the upgradable interface', async function() {

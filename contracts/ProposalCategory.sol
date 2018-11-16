@@ -84,14 +84,14 @@ contract ProposalCategory is Governed {
 
     /// @dev Updates category details
     /// @param _categoryId Category id that needs to be updated
-    /// @param _roleName Updated Role sequence to vote i.e. Updated voting layer sequence
+    /// @param _memberRoleToVote Updated Role sequence to vote i.e. Updated voting layer sequence
     /// @param _majorityVote Updated Majority threshold value against each voting layer.
     /// @param _allowedToCreateProposal Member roles allowed to create the proposal
     /// @param _closingTime Updated Vote closing time against each voting layer
     function updateCategory(
         uint _categoryId, 
         string _name, 
-        uint _roleName, 
+        uint _memberRoleToVote, 
         uint _majorityVote, 
         uint[] _allowedToCreateProposal,
         uint _closingTime,
@@ -105,7 +105,7 @@ contract ProposalCategory is Governed {
         public
         onlyAuthorizedToGovern
     { 
-        allCategory[_categoryId].memberRoleToVote = _roleName;
+        allCategory[_categoryId].memberRoleToVote = _memberRoleToVote;
         allCategory[_categoryId].majorityVotePerc = _majorityVote;
         allCategory[_categoryId].closingTime = _closingTime;
         allCategory[_categoryId].allowedToCreateProposal = _allowedToCreateProposal; 
@@ -155,7 +155,7 @@ contract ProposalCategory is Governed {
 
     function addInitialCategories(
         string _name, 
-        uint _roleName, 
+        uint _memberRoleToVote, 
         uint _majorityVote, 
         uint[] _allowedToCreateProposal,
         uint _closingTime,
@@ -172,7 +172,7 @@ contract ProposalCategory is Governed {
         require(msg.sender == officialPCA || officialPCA == address(0));
         // allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);        
         allCategory.push(Category(
-                _roleName,
+                _memberRoleToVote,
                 _majorityVote,
                 _allowedToCreateProposal,
                 _closingTime,

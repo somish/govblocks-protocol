@@ -61,13 +61,13 @@ contract Governance is Upgradeable {
 
     /// @dev Creates a new proposal with solution and votes for the solution
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
-    /// @param _subCategoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
+    /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
     function createProposalwithVote(
         string _proposalTitle, 
         string _proposalSD, 
         string _proposalDescHash,
-        uint _subCategoryId, 
+        uint _categoryId, 
         string _solutionHash, 
         bytes _action
     ) 
@@ -78,7 +78,7 @@ contract Governance is Upgradeable {
             _proposalTitle, 
             _proposalSD, 
             _proposalDescHash,
-            _subCategoryId,
+            _categoryId,
             _solutionHash,
             _action,
             proposalId
@@ -172,7 +172,7 @@ contract Governance is Upgradeable {
         public 
         onlyProposalOwner(_proposalId) 
     {
-        submitProposal(
+        submitSolution(
             _proposalId, 
             _solutionHash, 
             _action
@@ -313,7 +313,7 @@ contract Governance is Upgradeable {
 
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
 
-        submitProposal(
+        submitSolution(
             _proposalId, 
             _solutionHash, 
             _action
@@ -325,7 +325,7 @@ contract Governance is Upgradeable {
     }
 
     /// @dev When creating proposal with solution, it adds solution details against proposal
-    function submitProposal(
+    function submitSolution(
         uint _proposalId, 
         string _solutionHash, 
         bytes _action
@@ -343,20 +343,20 @@ contract Governance is Upgradeable {
 
     /// @dev Creates a new proposal
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
-    /// @param _subCategoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
+    /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
     function _createProposalwithSolution(
         string _proposalTitle, 
         string _proposalSD, 
         string _proposalDescHash,
-        uint _subCategoryId, 
+        uint _categoryId, 
         string _solutionHash, 
         bytes _action,
         uint _proposalId
     ) 
         internal
     {
-        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _subCategoryId);
+        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _categoryId);
 
         proposalSubmission(
             _proposalId, 

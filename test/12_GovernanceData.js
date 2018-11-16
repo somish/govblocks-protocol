@@ -25,7 +25,7 @@ contract('Governance Data', function([owner, notOwner]) {
     gbt = await GBTStandardToken.at(address);
   });
 
-  it('Should create a proposal with solution', async function() {
+  it('Should create a proposal with solution and vote', async function() {
     this.timeout(100000);
     let actionHash = encode(
       'addNewMemberRole(bytes32,string,address,bool)',
@@ -37,11 +37,10 @@ contract('Governance Data', function([owner, notOwner]) {
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     let amount = 50000000000000000000;
     await gbt.lock('GOV', amount, 5468545613353456);
-    await gv.createProposalwithSolution(
+    await gv.createProposalwithVote(
       'Add new member',
       'Add new member',
       'Addnewmember',
-      0,
       1,
       'Add new member',
       actionHash
@@ -50,11 +49,10 @@ contract('Governance Data', function([owner, notOwner]) {
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
-  it('Should vote in favour of the proposal', async function() {
+  it('Should not vote again', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
     p = p.toNumber();
-    await sv.proposalVoting(p, [1]);
     await catchRevert(sv.proposalVoting(p, [1]));
   });
 
@@ -70,13 +68,11 @@ contract('Governance Data', function([owner, notOwner]) {
     this.timeout(100000);
     let g1 = await gd.constructorCheck();
     let pl = await gd.getProposalLength();
-    let g3 = await gd.getVotingTypeDetailsById(0);
     let g4 = await gd.callProposalVersionEvent(0, 0, 'yo', 0);
-    let g5 = await gd.getProposalDetailsById2(0);
-    let g6 = await gd.getProposalDetailsById3(0, owner);
-    let g7 = await gd.getProposalDetailsById6(0);
+    let g5 = await gd.getProposalVotingDetails(0);
+    let g6 = await gd.getProposalStatusAndVerdict(0, owner);
+    let g7 = await gd.getProposalDetails(0);
     let g9 = await gd.getTotalProposalIncentive();
-    let g10 = await gd.getProposalVersion(0);
     let g12 = await gd.getStatusOfProposals();
     let g14 = await gd.getAllSolutionIdsByAddress(owner);
     let g15 = await gd.getLatestVotingAddress();
@@ -88,45 +84,12 @@ contract('Governance Data', function([owner, notOwner]) {
     // TODO verify the data returned
   });
 
-  it('Should configure Global Parameters', async function() {
+  it('Should set punish voters', async function() {
     this.timeout(100000);
     // Will throw once owner's permissions are removed. will need to create proposal then.
-    await gd.configureGlobalParameters('QP', 58);
-    let qp = await gd.quorumPercentage();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await gd.configureGlobalParameters('APO', 58);
-    qp = await gd.addProposalOwnerPoints();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await gd.configureGlobalParameters('AOO', 58);
-    qp = await gd.addSolutionOwnerPoints();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await gd.configureGlobalParameters('RW', 58);
-    qp = await gd.reputationWeight();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await gd.configureGlobalParameters('SW', 58);
-    qp = await gd.stakeWeight();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await gd.configureGlobalParameters('BR', 58);
-    qp = await gd.bonusReputation();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await gd.configureGlobalParameters('BS', 58);
-    qp = await gd.bonusStake();
-    assert(qp.toNumber(), 58, 'Global parameter not changed');
-
-    await gd.configureGlobalParameters('GG', 58);
-  });
-
-  it('Should change member rep points', async function() {
-    this.timeout(100000);
-    await gd.changeMemberReputationPoints(20, 15);
-    let pop = await gd.addProposalOwnerPoints();
-    assert.equal(pop.toNumber(), 20, 'Member points not changed correctly');
+    await gd.setPunishVoters(true);
+    let pv = await gd.punishVoters();
+    assert(pv, true, 'Punish voters not changed');
   });
 
   it('Should pause unpause proposal', async function() {
