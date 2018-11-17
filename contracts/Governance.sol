@@ -124,7 +124,7 @@ contract Governance is Upgradeable {
     {
         // uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
 
-        require(allowedToCreateProposal(_categoryId));
+        require(allowedToCreateProposal(_categoryId) , "User not authorized to create proposal under this category");
         uint _proposalId = governanceDat.getProposalLength();
         /* solhint-disable */
         governanceDat.callProposalEvent(
@@ -222,9 +222,8 @@ contract Governance is Upgradeable {
         /* solhint-enable */
 
         if (!memberRole.checkRoleIdByAddress(msg.sender, 1)) {
-            require(msg.sender == governanceDat.getProposalOwner(_proposalId));
-            require(allowedToCreateProposal(_categoryId)); 
-            require(validateStake(_categoryId, tokenAddress));
+            require(allowedToCreateProposal(_categoryId),"User not authorized to categorize this proposal"); 
+            require(validateStake(_categoryId, tokenAddress), "Lock more tokens");
         }
 
         require(dappIncentive <= GBTStandardToken(tokenAddress).balanceOf(poolAddress) , "Less token balance in pool for incentive distribution");

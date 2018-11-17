@@ -26,7 +26,7 @@ contract('Simple Voting', function([owner]) {
     let g5 = await sv.getSolutionByVoteId(0);
     let g6 = await sv.getVoteIdAgainstMember(owner, 0);
     let g7 = await sv.getVoterAddress(0);
-    let g8 = await sv.getAllVoteIdsByProposalRole(0, 1);
+    let g8 = await sv.getAllVoteIdsByProposal(0);
     let g9 = await sv.getVoteValue(0);
     let g10 = await sv.allVotesTotal();
     let g11 = await sv.getSolutionByVoteIdAndIndex(0, 0);
@@ -40,6 +40,5 @@ contract('Simple Voting', function([owner]) {
     this.timeout(100000);
     await catchRevert(sv.addAuthorized(owner));
     await catchRevert(sv.upgrade());
-    await catchRevert(sv.addVotingType(owner, 'yo'));
   });
 });
