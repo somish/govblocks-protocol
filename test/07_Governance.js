@@ -283,6 +283,10 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     assert.equal(category.toNumber(), 4, 'Category not set properly');
   });
 
+  it('Should not allow to categorize when there are solutions', async () => {
+    await catchRevert(gv.categorizeProposal(pid, 9));
+  });
+
   it('Should vote in favour of the proposal', async function() {
     this.timeout(100000);
     const g3 = await gv.getAllVoteIdsLengthByProposal(pid);
@@ -306,10 +310,10 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     pr[0].should.be.bignumber.eq(e18.div(2.5));
     pr = await pl.getPendingReward(notOwner, 0);
     pr[0].should.be.bignumber.eq(e18.mul(6).div(10));
-    [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
-    await pl.claimReward(owner, ownerProposals, voterProposals);
     [ownerProposals, voterProposals] = await getProposalIds(notOwner, gd, sv);
     await pl.claimReward(notOwner, ownerProposals, voterProposals);
+    [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
+    await pl.claimReward(owner, ownerProposals, voterProposals);
     const b2 = await gbt.balanceOf(owner);
     const g2 = await gv.getMemberDetails(notOwner);
     b2.should.be.bignumber.above(b1);
@@ -317,6 +321,12 @@ contract('Governance', ([owner, notOwner, noStake]) => {
     const pr2 = await pl.getPendingReward(owner, 0);
     pr2[0].should.be.bignumber.eq(0);
     pr2[1].should.be.bignumber.eq(0);
+  });
+
+  it('Should not claim rewards for proposals, in case rewards are already claimed ', async () =>{
+    await catchRevert(
+      pl.claimReward(owner, ownerProposals, voterProposals)
+    );
   });
 
   it('Should close proposal', async () => {

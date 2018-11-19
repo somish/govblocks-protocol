@@ -72,9 +72,9 @@ contract('Governance Data', function([owner, notOwner]) {
     let pl = await gd.getProposalLength();
     let g3 = await gd.getVotingTypeDetailsById(0);
     let g4 = await gd.callProposalVersionEvent(0, 0, 'yo', 0);
-    let g5 = await gd.getProposalDetailsById2(0);
-    let g6 = await gd.getProposalDetailsById3(0, owner);
-    let g7 = await gd.getProposalDetailsById6(0);
+    let g5 = await gd.getProposalVotingDetails(0);
+    let g6 = await gd.getProposalStatusAndVerdict(0, owner);
+    let g7 = await gd.getProposalDetails(0);
     let g9 = await gd.getTotalProposalIncentive();
     let g10 = await gd.getProposalVersion(0);
     let g12 = await gd.getStatusOfProposals();

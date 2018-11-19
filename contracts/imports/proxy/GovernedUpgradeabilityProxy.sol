@@ -19,14 +19,8 @@ contract GovernedUpgradeabilityProxy is UpgradeabilityProxy {
     */
     constructor(bytes32 _dAppName, address _implementation) public {
         /* solhint-disable */
-        if (_getCodeSize(0x70c0191CAFBe32FAc38Cece874fb5aDA1f2ff497) > 0)          //kovan testnet
-            _setGovernCheckerUnique(0x70c0191CAFBe32FAc38Cece874fb5aDA1f2ff497);
-        else if (_getCodeSize(0xdF6c6a73BCf71E8CAa6A2c131bCf98f10eBb5162) > 0)     //RSK testnet
-            _setGovernCheckerUnique(0xdF6c6a73BCf71E8CAa6A2c131bCf98f10eBb5162);
-        else if (_getCodeSize(0x67995F25f04d61614d05607044c276727DEA9Cf0) > 0)     //Rinkeyby testnet
-            _setGovernCheckerUnique(0x67995F25f04d61614d05607044c276727DEA9Cf0);
-        else if (_getCodeSize(0xb5fE0857770D85302585564b04C81a5Be96022C8) > 0)     //Ropsten testnet
-            _setGovernCheckerUnique(0xb5fE0857770D85302585564b04C81a5Be96022C8);
+        if (_getCodeSize(0x0f4c8032cc949e09d610b8ae636a3f677029d2f4) > 0)          //kovan testnet
+            _setGovernCheckerUnique(0x0f4c8032cc949e09d610b8ae636a3f677029d2f4);
         else if (_getCodeSize(0x962d110554E0b20E18E5c3680018b49A58EF0bBB) > 0)     //Private testnet
             _setGovernCheckerUnique(0x962d110554E0b20E18E5c3680018b49A58EF0bBB);
         else

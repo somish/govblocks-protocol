@@ -150,8 +150,16 @@ contract('Proposal, solution and voting', function([
 
   it('Should create an uncategorized proposal', async function() {
     this.timeout(100000);
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     mrLength = await mr.getTotalMemberRoles();
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      0,
+      0
+    );
+    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    await gv.categorizeProposal(p1,1);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -163,12 +171,31 @@ contract('Proposal, solution and voting', function([
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
-  it('Should categorize the proposal and then open it for voting', async function() {
+  it('Should not add solution before proposal is open for solution submission', async function() {
+    this.timeout(100000);
+    let actionHash = encode(
+      'addNewMemberRole(bytes32,string,address,bool)',
+      '0x41647669736f727920426f617265000000000000000000000000000000000000',
+      'New member role',
+      owner,
+      false
+    );
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber();
+    await catchRevert(sv.addSolution(p, owner, 'Addnewmember', actionHash));
+  });
+
+  it('Should categorize the proposal and then open it for solution submission', async function() {
     this.timeout(100000);
     p = await gd.getAllProposalIdsLengthByAddress(owner);
     p = p.toNumber();
     await gv.categorizeProposal(p, 1);
-    await gv.openProposalForVoting(p);
+  });
+
+  it('Should not open the proposal for voting till there are atleast two solutions', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber();
     await catchRevert(gv.openProposalForVoting(p));
   });
 
@@ -186,6 +213,14 @@ contract('Proposal, solution and voting', function([
     await catchRevert(
       sv.addSolution(p1.toNumber(), owner, 'Addnewmember', actionHash)
     );
+  });
+
+  it('Should open the proposal for for voting', async function() {
+    this.timeout(100000);
+    p = await gd.getAllProposalIdsLengthByAddress(owner);
+    p = p.toNumber();
+    await gv.openProposalForVoting(p);
+    await catchRevert(gv.openProposalForVoting(p));
   });
 
   it('Should vote in favour of the proposal', async function() {
@@ -387,11 +422,12 @@ contract('Proposal, solution and voting', function([
     await sv.proposalVoting(p, [0], { from: ab });
     await sv.closeProposalVote(p);
     const ps = await gd.getStatusOfProposals();
-    assert.equal(ps[0].toNumber(), 6);
+    assert.equal(ps[0].toNumber(), 7);
     assert.equal(ps[1].toNumber(), 1);
     assert.equal(ps[2].toNumber(), 1);
-    assert.equal(ps[3].toNumber(), 3);
-    assert.equal(ps[4].toNumber(), 1);
+    assert.equal(ps[3].toNumber(), 1);
+    assert.equal(ps[4].toNumber(), 3);
+    assert.equal(ps[5].toNumber(), 1);
   });
 
   it('Should close the proposal once all members have voted', async function() {

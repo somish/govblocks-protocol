@@ -318,10 +318,10 @@ contract ProposalCategory is Governed {
     /// @param _categoryId Category id
     /// @param _currVotingIndex Current voting Id in voting seqeunce.
     /// @return Next member role to vote with its closing time and majority vote.
-    function getCategoryData3(uint _categoryId, uint _currVotingIndex) 
+    function getCategoryVotingLayerData(uint _categoryId, uint _currVotingIndex) 
         public
         view 
-        returns(uint  rsuence, uint majorityVote, uint closingTime) 
+        returns(uint , uint, uint) 
     {
         return (
             allCategory[_categoryId].memberRoleSequence[_currVotingIndex], 

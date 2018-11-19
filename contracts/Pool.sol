@@ -153,7 +153,7 @@ contract Pool is Upgradeable, Governed {
         for (uint i = _lastRewardProposalId; i < allProposalLength; i++) {
             if (_memberAddress == governanceDat.getProposalOwner(i)) {
                 (rewardClaimed, subCat, proposalStatus, finalVredict) = 
-                    governanceDat.getProposalDetailsById3(i, _memberAddress);
+                    governanceDat.getProposalStatusAndVerdict(i, _memberAddress);
                 if (
                     proposalStatus > 2 && 
                     finalVredict > 0 && 
