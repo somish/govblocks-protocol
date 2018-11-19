@@ -131,18 +131,18 @@ contract SimpleVoting is Upgradeable {
             require(!rewardClaimed[voteId], "Reward already claimed for one of the given proposals");
 
             rewardClaimed[voteId] = true;
-            (, , finalVerdict, , totalReward, category) = 
+            (,, finalVerdict,, totalReward, category) = 
                 getVoteDetailsForReward(voteId, _proposals[i]);
 
             require(governanceDat.getProposalStatus(_proposals[i]) > uint(Governance.ProposalStatus.VotingStarted), "Reward can be claimed only after the proposal is closed");
 
             if(governanceDat.punishVoters()){
                 if((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)){
-                    calcReward = SafeMath.mul(SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, finalVoteValue),100),totalReward);
+                    calcReward = SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, finalVoteValue),totalReward);
                 }
             }
             else if(finalVerdict > 0){
-                calcReward = SafeMath.mul(SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, totalVoteValue),100),totalReward);
+                calcReward = SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, totalVoteValue),totalReward);
             }
             if (proposalCategory.isCategoryExternal(category))
                 pendingGBTReward = pendingGBTReward.add(calcReward);
@@ -302,7 +302,7 @@ contract SimpleVoting is Upgradeable {
 
         for (i = 0; i < voteLen; i++) {
             voteId = proposalRoleVote[_proposalId][i];
-            if(voteId == max){
+            if(allVotes[voteId].solutionChosen == uint(max)){
                 majoritySolutionVoteValue = SafeMath.add(majoritySolutionVoteValue, allVotes[voteId].voteValue);
             }
         }
@@ -379,7 +379,7 @@ contract SimpleVoting is Upgradeable {
         bytes2 contractName;
         address actionAddress;
         (,,_majorityVote,, _closingTime,,) = proposalCategory.getCategoryDetails(category);
-        (actionAddress, contractName,) = proposalCategory.getCategoryActionDetails(category);
+        (,actionAddress, contractName,) = proposalCategory.getCategoryActionDetails(category);
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
                 governanceDat.updateProposalDetails(_proposalId, max);
@@ -414,7 +414,7 @@ contract SimpleVoting is Upgradeable {
         uint categoryQuorumPerc;
         uint _mrSequenceId;
         (,_mrSequenceId,,,,,) = proposalCategory.getCategoryDetails(_category);
-        categoryQuorumPerc = proposalCategory.getCategoryQuorumPercent(_category);
+        (, categoryQuorumPerc) = proposalCategory.getCategoryQuorumPercent(_category);
         if (_mrSequenceId == 2) {
             uint totalTokens;
             address token = governanceDat.getStakeToken(_proposalId);
@@ -456,11 +456,11 @@ contract SimpleVoting is Upgradeable {
         (totalVoteValue,finalVoteValue) = governanceDat.getProposalVoteValue(_proposalId);
         if(governanceDat.punishVoters()){
             if((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)){
-                calcReward = SafeMath.mul(SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, finalVoteValue),100),totalReward);
+                calcReward = SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, finalVoteValue),totalReward);
             }   
         }
         else if(finalVerdict > 0){
-            calcReward = SafeMath.mul(SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, totalVoteValue),100),totalReward);
+            calcReward = SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, totalVoteValue),totalReward);
         }
         if (proposalCategory.isCategoryExternal(category))    
             pendingGBTReward = calcReward;
@@ -529,7 +529,7 @@ contract SimpleVoting is Upgradeable {
         require(addressProposalVote[_voter][_proposalId] == 0);
 
         require (governanceDat.getProposalStatus(_proposalId) == uint(Governance.ProposalStatus.VotingStarted));
-        
+
         require(validateStake(_proposalId, _voter));
 
         uint categoryThenMRSequence;

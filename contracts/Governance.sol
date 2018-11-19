@@ -153,7 +153,7 @@ contract Governance is Upgradeable {
             require(validateStake(_categoryId, token));
             governanceDat.addNewProposal(msg.sender, _categoryId, token);
             uint incentive;
-            (,,incentive) = proposalCategory.getCategoryActionDetails(_categoryId);
+            (,,,incentive) = proposalCategory.getCategoryActionDetails(_categoryId);
             require(incentive <= GBTStandardToken(token).balanceOf(poolAddress));
             governanceDat.setProposalIncentive(_proposalId, incentive); 
             governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
@@ -209,7 +209,7 @@ contract Governance is Upgradeable {
         require(governanceDat.getTotalSolutions(_proposalId) < 2 , "Categorization not possible, since solutions had already been submitted");
 
         uint dappIncentive;
-        (,, dappIncentive) = proposalCategory.getCategoryActionDetails(_categoryId);
+        (,,, dappIncentive) = proposalCategory.getCategoryActionDetails(_categoryId);
         
         // uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
         address tokenAddress;

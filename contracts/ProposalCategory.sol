@@ -130,16 +130,18 @@ contract ProposalCategory is Governed {
         );
     }
 
-    function getCategoryActionDetails(uint _categoryId) public view returns(address, bytes2, uint){
+    function getCategoryActionDetails(uint _categoryId) public view returns(uint, address, bytes2, uint){
         return(
+            _categoryId,
             allCategory[_categoryId].contractAddress,
             allCategory[_categoryId].contractName,
             allCategory[_categoryId].defaultIncentive
         );
     }
 
-    function getCategoryQuorumPercent(uint _categoryId) public view returns(uint){
+    function getCategoryQuorumPercent(uint _categoryId) public view returns(uint, uint){
         return(
+            _categoryId,
             allCategory[_categoryId].quorumPerc
         );
     }

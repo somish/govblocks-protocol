@@ -64,8 +64,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     );
 
     event RewardClaimed(
-        address indexed member, 
-        uint[] ownerProposals, 
+        address indexed member,
         uint[] voterProposals,
         uint gbtReward, 
         uint dAppReward, 
@@ -73,8 +72,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     );
 
     function callRewardClaimed(
-        address _member, 
-        uint[] _ownerProposals, 
+        address _member,
         uint[] _voterProposals,
         uint _gbtReward, 
         uint _dAppReward, 
@@ -84,8 +82,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         onlyInternal 
     {
         emit RewardClaimed(
-            _member, 
-            _ownerProposals, 
+            _member,
             _voterProposals, 
             _gbtReward, 
             _dAppReward, 

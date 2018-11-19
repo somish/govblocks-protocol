@@ -78,7 +78,7 @@ contract Pool is Upgradeable, Governed {
     /// @dev user can calim the tokens rewarded them till now
     /// Index 0 of _ownerProposals, _voterProposals is not parsed. 
     /// proposal arrays of 1 length are treated as empty.
-    function claimReward(address _claimer, uint[] _ownerProposals, uint[] _voterProposals) public noReentrancy {
+    function claimReward(address _claimer, uint[] _voterProposals) public noReentrancy {
         uint pendingGBTReward;
         uint pendingDAppReward;
         uint pendingReputation;
@@ -95,15 +95,14 @@ contract Pool is Upgradeable, Governed {
         }
 
         governanceDat.callRewardClaimed(
-            _claimer, 
-            _ownerProposals, 
+            _claimer,
             _voterProposals,
             pendingGBTReward, 
             pendingDAppReward, 
             pendingReputation
         );
     }
-    
+
     /// @dev Transfer Ether to someone    
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where ether has to be sent

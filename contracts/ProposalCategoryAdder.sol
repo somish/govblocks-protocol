@@ -38,8 +38,8 @@ contract ProposalCategoryAdder {
         alex[0] = 0;
         ct = 72000;
 
-        stakeIncentive[0] = uint256(10) ** 18;
-        stakeIncentive[1] = uint256(10) ** 18;
+        stakeIncentive[0] = 0;
+        stakeIncentive[1] = 0;
         tokenHoldingTime = 604800;
 
         proposalCategory.addInitialCategories(
