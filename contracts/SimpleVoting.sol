@@ -618,7 +618,7 @@ contract SimpleVoting is Upgradeable {
         
         balance = _getLockedBalance(token, _of, tokenHoldingTime);
     
-        balance = SafeMath.div(balance, GBTStandardToken(token).decimals());
+        balance = SafeMath.div(balance, uint256(10) ** GBTStandardToken(token).decimals());
         stakeWeight = SafeMath.mul(SafeMath.add(log(balance), bonusStake), stakeWeight);
         reputationWeight = SafeMath.mul(SafeMath.add(log(memberReputation), bonusReputation), reputationWeight);
         voteValue = SafeMath.add(stakeWeight, reputationWeight);
