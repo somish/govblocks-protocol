@@ -73,7 +73,7 @@ contract ProposalCategory is Governed {
                 _closingTime,
                 _tokenHoldingTime,
                 _incentives[0],
-                _incentives[0],
+                _incentives[1]
                 _contractAddress,
                 _contractName,
                 _quorumPerc
@@ -111,6 +111,7 @@ contract ProposalCategory is Governed {
         allCategory[_categoryId].allowedToCreateProposal = _allowedToCreateProposal; 
         allCategory[_categoryId].tokenHoldingTime = _tokenHoldingTime;
         allCategory[_categoryId].minStake = _incentives[0];
+        allCategory[_categoryId].defaultIncentive = _incentives[1];
         allCategory[_categoryId].contractAddress = _contractAddress;
         allCategory[_categoryId].contractName = _contractName;
         allCategory[_categoryId].quorumPerc =  _quorumPerc;
