@@ -73,7 +73,7 @@ contract ProposalCategory is Governed {
                 _closingTime,
                 _tokenHoldingTime,
                 _incentives[0],
-                _incentives[1]
+                _incentives[1],
                 _contractAddress,
                 _contractName,
                 _quorumPerc
@@ -171,7 +171,7 @@ contract ProposalCategory is Governed {
     ) 
         public 
     {
-        require(allCategory.length <= 21);
+        require(allCategory.length <= 18);
         require(msg.sender == officialPCA || officialPCA == address(0));
         // allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);        
         allCategory.push(Category(

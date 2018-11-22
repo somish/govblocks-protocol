@@ -16,7 +16,21 @@ contract('Proposal Category', function() {
 
   it('Should be initialized', async function() {
     this.timeout(100000);
-    await catchRevert(pc.addInitialCategories("YoYo",1,0,[1],0,"",nullAddress,"EX",0,[0,0],25));
+    await catchRevert(
+      pc.addInitialCategories(
+        'YoYo',
+        1,
+        0,
+        [1],
+        0,
+        '',
+        nullAddress,
+        'EX',
+        0,
+        [0, 0],
+        25
+      )
+    );
     // await catchRevert(pc.proposalCategoryInitiate('0x41'));
     const g3 = await pc.updateDependencyAddresses(); // Just for the interface, shouldn't throw.
     const g4 = await pc.changeMasterAddress(pc.address); // Just for the interface, shouldn't throw.
@@ -35,14 +49,24 @@ contract('Proposal Category', function() {
     const g9 = await pc.isCategoryExternal(10);
     assert.equal(g9, false);
     const g10 = await pc.getCategoryLength();
-    assert.equal(g10.toNumber(), 22);
+    assert.equal(g10.toNumber(), 18);
   });
 
   it('Should not add initial category after initialization', async function() {
     this.timeout(100000);
     await catchRevert(
       pc.addInitialCategories(
-        "Not specified", 1, 0, [1], 0, "", nullAddress, "EX", 0, [0,1], 25
+        'Not specified',
+        1,
+        0,
+        [1],
+        0,
+        '',
+        nullAddress,
+        'EX',
+        0,
+        [0, 1],
+        25
       )
     );
   });
@@ -51,7 +75,19 @@ contract('Proposal Category', function() {
     this.timeout(100000);
     let c1 = await pc.getCategoryLength();
     // will throw once owner's permissions are revoked
-    await pc.addNewCategory('Yo', 1, 1, [1], 1,"", nullAddress, "EX", 0, [0, 0], 0);
+    await pc.addNewCategory(
+      'Yo',
+      1,
+      1,
+      [1],
+      1,
+      '',
+      nullAddress,
+      'EX',
+      0,
+      [0, 0],
+      0
+    );
     const c2 = await pc.getCategoryLength();
     assert.isAbove(c2.toNumber(), c1.toNumber(), 'category not added');
   });
@@ -62,7 +98,20 @@ contract('Proposal Category', function() {
     c1 = c1.toNumber() - 1;
     const cat1 = await pc.getCategoryQuorumPercent(c1);
     // will throw once owner's permissions are revoked
-    await pc.updateCategory(c1, 'YoYo', 1, 1, [1], 0, 1,"", nullAddress, "EX", [0, 0], 20);
+    await pc.updateCategory(
+      c1,
+      'YoYo',
+      1,
+      1,
+      [1],
+      0,
+      1,
+      '',
+      nullAddress,
+      'EX',
+      [0, 0],
+      20
+    );
     let cat2 = await pc.getCategoryQuorumPercent(c1);
     assert.notEqual(cat1, cat2, 'category not updated');
   });

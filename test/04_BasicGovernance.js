@@ -50,35 +50,25 @@ contract('Proposal, solution and voting', function([
   it('Should create a proposal with solution to add new member role', async function() {
     this.timeout(100000);
     let actionHash = encode(
-      'addNewMemberRole(bytes32,string,address,bool)',
+      'addNewMemberRole(bytes32,string,address)',
       '0x41647669736f727920426f617265000000000000000000000000000000000000',
       'New member role',
-      owner,
-      false
+      owner
     );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     mrLength = await mr.getTotalMemberRoles();
     let amount = 50000000000000000000;
     await gbt.lock('GOV', amount, 5468545613353456);
-    await gv.createProposalwithSolution(
+    await gv.createProposalwithVote(
       'Add new member',
       'Add new member',
       'Addnewmember',
-      0,
       1,
       'Add new member',
       actionHash
     );
     p2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
-  });
-
-  it('Should vote in favour of the proposal', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.proposalVoting(p, [1]);
-    await catchRevert(sv.proposalVoting(p, [1]));
   });
 
   it('Should not let initialVote to be used after first vote', async function() {
@@ -86,48 +76,6 @@ contract('Proposal, solution and voting', function([
     p = await gd.getAllProposalIdsLengthByAddress(owner);
     p = p.toNumber();
     await catchRevert(sv.initialVote(p, owner));
-  });
-
-  it('Should close the proposal', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.closeProposalVote(p);
-    await catchRevert(sv.closeProposalVote(p));
-  });
-
-  it('Should have added new member role', async function() {
-    this.timeout(100000);
-    mrLength2 = await mr.getTotalMemberRoles();
-    assert.equal(
-      mrLength.toNumber() + 1,
-      mrLength2.toNumber(),
-      'Member Role Not Added'
-    );
-  });
-
-  it('Should create a proposal with vote to add new member role', async function() {
-    this.timeout(100000);
-    let actionHash = encode(
-      'addNewMemberRole(bytes32,string,address,bool)',
-      '0x41647669736f727920426f617265000000000000000000000000000000000000',
-      'New member role',
-      owner,
-      false
-    );
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    mrLength = await mr.getTotalMemberRoles();
-    await gv.createProposalwithVote(
-      'Add new member',
-      'Add new member',
-      'Addnewmember',
-      0,
-      1,
-      'Add new member',
-      actionHash
-    );
-    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
-    assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
   it('Should close the proposal', async function() {
@@ -159,7 +107,7 @@ contract('Proposal, solution and voting', function([
       0
     );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await gv.categorizeProposal(p1,1);
+    await gv.categorizeProposal(p1, 1);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -209,18 +157,14 @@ contract('Proposal, solution and voting', function([
       false
     );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await sv.addSolution(p1.toNumber(), owner, 'Addnewmember', actionHash);
-    await catchRevert(
-      sv.addSolution(p1.toNumber(), owner, 'Addnewmember', actionHash)
+    await sv.submitProposalWithSolution(
+      p1.toNumber(),
+      'Addnewmember',
+      actionHash
     );
-  });
-
-  it('Should open the proposal for for voting', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await gv.openProposalForVoting(p);
-    await catchRevert(gv.openProposalForVoting(p));
+    await catchRevert(
+      sv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash)
+    );
   });
 
   it('Should vote in favour of the proposal', async function() {
@@ -283,23 +227,6 @@ contract('Proposal, solution and voting', function([
     );
     let c2 = await pc.getCategoryLength();
     assert.isAbove(c2.toNumber(), c1.toNumber(), 'category not added');
-  });
-
-  it('Should add a new proposal sub category', async function() {
-    this.timeout(100000);
-    let c1 = await pc.getSubCategoryLength();
-    let cat = await pc.getCategoryLength();
-    await pc.addNewSubCategory(
-      'New Sub Category',
-      'New Sub Category',
-      cat.toNumber() - 1,
-      sampleAddress,
-      '0x4164',
-      [100, 100, 100],
-      [40, 40, 20]
-    );
-    let c2 = await pc.getSubCategoryLength();
-    assert.isAbove(c2.toNumber(), c1.toNumber(), 'Sub category not added');
   });
 
   it('Should create a proposal with solution', async function() {

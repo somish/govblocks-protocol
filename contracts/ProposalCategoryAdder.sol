@@ -61,7 +61,7 @@ contract ProposalCategoryAdder {
             mv,
             al,
             ct,
-            "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
+            "QmT3sMfqAvTgCkcsdVgiHvMycEWoeoQiD86e4H744pqfhF",
             address(0),
             "MR",
             tokenHoldingTime,
@@ -74,7 +74,7 @@ contract ProposalCategoryAdder {
             mv,
             al,
             ct,
-            "QmZAjwUTsMdhhTHAL87RHFch7nq8op6MnEUXiud8SjecT9",
+            "QmV55gWxnEBF8reTrVKrhbg5QrwqA65kFhMEFWDnnpphrJ",
             address(0),
             "MR",
             tokenHoldingTime,
@@ -87,7 +87,7 @@ contract ProposalCategoryAdder {
             mv,
             al,
             ct,
-            "QmQ9EzwyUsLdkyayJsFU6iig1zPD6FdqLQ3ZF1jETL1tT2",
+            "QmVXcXmr1aXeK3XSvGXAbDmhEQordetU1Z71h1zmbAZXBf",
             address(0),
             "PC",
             tokenHoldingTime,
@@ -100,49 +100,9 @@ contract ProposalCategoryAdder {
             mv,
             al,
             ct,
-            "QmY31mwTHmgd7SL2shQeX9xuhnrNXpNNhTXb3ZyyXJJTWL",
+            "QmXB8fB6LpkWqLjhkNYT3412z439VNyN5tRxPV6JTyEHKu",
             address(0),
             "PC",
-            tokenHoldingTime,
-            stakeIncentive,
-            25
-        );
-        proposalCategory.addInitialCategories(
-            "Add new sub category",
-            rs,
-            mv,
-            al,
-            ct,
-            "QmXX2XxNjZeoEN2iiMdgWY3Xpo1XpGs9opD7SJnuotXyBu",
-            address(0),
-            "PC",
-            tokenHoldingTime,
-            stakeIncentive,
-            25
-        );
-        proposalCategory.addInitialCategories(
-            "Edit sub category",
-            rs,
-            mv,
-            al,
-            ct,
-            "Qmd1yPsk9cfDN447AQVHMEnxTxx693VhnAXFeo3Q3JefHJ",
-            address(0),
-            "PC",
-            tokenHoldingTime,
-            stakeIncentive,
-            25
-        );
-
-        proposalCategory.addInitialCategories(
-            "Configure parameters",
-            rs,
-            mv,
-            al,
-            ct,
-            "QmW9zZAfeaErTNPVcNhiDNEEo4xp4avqnVbS9zez9GV3Ar",
-            address(0),
-            "GD",
             tokenHoldingTime,
             stakeIncentive,
             25
@@ -214,19 +174,6 @@ contract ProposalCategoryAdder {
             "QmWP3P58YcmveHeXqgsBCRmDewTYV1QqeQqBmRkDujrDLR",
             address(0),
             "MS",
-            tokenHoldingTime,
-            stakeIncentive,
-            25
-        );
-        proposalCategory.addInitialCategories(
-            "Add new voting type",
-            rs,
-            mv,
-            al,
-            ct,
-            "QmeWbgsSkeHUL9PWwugnvbnuvSr711CDpmkksB5dEyMFWj",
-            address(0),
-            "SV",
             tokenHoldingTime,
             stakeIncentive,
             25
