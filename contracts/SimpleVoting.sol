@@ -623,7 +623,6 @@ contract SimpleVoting is Upgradeable {
         reputationWeight = SafeMath.mul(SafeMath.add(log(memberReputation), bonusReputation), reputationWeight);
         voteValue = SafeMath.add(stakeWeight, reputationWeight);
     }
-
     /* solhint-disable */
     ///@dev calculates log2. Taken from stackoverflow.
     function log(uint x) internal pure returns (uint y) {

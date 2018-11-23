@@ -14,11 +14,13 @@ contract TokenProxy is ERC1132 {
     string internal constant AMOUNT_ZERO = "Amount can not be 0";
 
     GBTStandardToken public originalToken;
+    uint8 internal tokenDecimals;
 
-    constructor(address _originalToken) public {
+    constructor(address _originalToken, uint8 _decimals) public {
 
         require(_originalToken != address(0));
         
+        tokenDecimals = _decimals;
         originalToken = GBTStandardToken(_originalToken);
     }
 
@@ -39,7 +41,7 @@ contract TokenProxy is ERC1132 {
     }
 
     function decimals() public view returns(uint8) {
-        return originalToken.decimals();
+        return tokenDecimals;
     }
 
     /**
