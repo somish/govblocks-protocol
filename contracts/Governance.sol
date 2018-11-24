@@ -210,7 +210,7 @@ contract Governance is Upgradeable {
 
         uint dappIncentive;
         (,,, dappIncentive) = proposalCategory.getCategoryActionDetails(_categoryId);
-        
+
         // uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
         address tokenAddress;
 

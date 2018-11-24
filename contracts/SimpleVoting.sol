@@ -236,7 +236,7 @@ contract SimpleVoting is Upgradeable {
         return (allVotes[_voteId].solutionChosen);
     }
 
-    /// @dev Gets Vote id Against proposal when passing proposal id and member addresse
+    /// @dev Gets Vote id Against proposal when passing proposal id and member address
     function getVoteIdAgainstMember(address _memberAddress, uint _proposalId) 
         public 
         view 
@@ -390,7 +390,7 @@ contract SimpleVoting is Upgradeable {
                 else if(contractName !="EX")
                     actionAddress = master.getLatestAddress(contractName);
                 /*solhint-enable*/
-                if (actionAddress.call(governanceDat.getSolutionActionByProposalId(_proposalId, max))) { //solhint-disable-line
+                if (actionAddress.call(governanceDat.getSolutionActionByProposalId(_proposalId, uint64(max)))) { //solhint-disable-line
                     eventCaller.callActionSuccess(_proposalId);
                 }
                 eventCaller.callProposalAccepted(_proposalId);
@@ -562,7 +562,7 @@ contract SimpleVoting is Upgradeable {
     }
 
     /// @dev validates that the voter has enough tokens locked for voting
-    function validateStake(uint32 _proposalId, address _of) internal view returns(bool success) {
+    function validateStake(uint32 _proposalId, address _of) internal view returns(bool) {
         address token;
         uint category;
         uint minStake;
@@ -591,10 +591,9 @@ contract SimpleVoting is Upgradeable {
             = governanceDat.getTokenAndCategory(_proposalId);
         (,,,,,tokenHoldingTime,) = proposalCategory.getCategoryDetails(category);
         
-        balance = _getLockedBalance(token, _of, tokenHoldingTime);
+        voteValue = _getLockedBalance(token, _of, tokenHoldingTime);
     
-        balance = SafeMath.div(balance, GBTStandardToken(token).decimals());
-        voteValue = balance;
+        voteValue = SafeMath.div(voteValue, uint256(10) ** GBTStandardToken(token).decimals());
     }
 
     /* solhint-disable */
