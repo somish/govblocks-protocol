@@ -16,6 +16,7 @@ contract('Proposal Category', function() {
 
   it('Should be initialized', async function() {
     this.timeout(100000);
+    console.log(await pc.getCategoryLength());
     await catchRevert(
       pc.addInitialCategories(
         'YoYo',
@@ -39,9 +40,9 @@ contract('Proposal Category', function() {
     const g2 = await pc.getCategoryDetails(1);
     assert.equal(g2[1].toNumber(), 1);
     const g5 = await pc.getCategoryActionDetails(1);
-    assert.equal(g5[1].toString(), '0x4d52');
+    assert.equal(g5[2].toString(), '0x4d52');
     const g6 = await pc.getCategoryQuorumPercent(2);
-    assert.equal(g6.toNumber(), 25);
+    assert.equal(g6[1].toNumber(), 25);
     // const g7 = await pc.getSubCategoryIdAtIndex(0, 0);
     // assert.equal(g7.toNumber(), 0);
     // const g8 = await pc.getAllSubIdsByCategory(0);
@@ -113,6 +114,6 @@ contract('Proposal Category', function() {
       20
     );
     let cat2 = await pc.getCategoryQuorumPercent(c1);
-    assert.notEqual(cat1, cat2, 'category not updated');
+    assert.notEqual(cat1, cat2[1], 'category not updated');
   });
 });

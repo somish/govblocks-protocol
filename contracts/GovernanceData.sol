@@ -202,6 +202,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     
     bool public constructorCheck;
     bool public punishVoters;
+    uint internal minVoteWeight;
 
     ProposalStruct[] internal allProposal;
 
@@ -220,6 +221,15 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         allProposal.push(ProposalStruct(address(0), now)); //solhint-disable-line
         dappName = master.dAppName();
         constructorCheck = true;
+        minVoteWeight = 1;
+    }
+
+    function getMinVoteWeight() public view returns (uint ){
+        return minVoteWeight;
+    }
+
+    function setMinVoteWeight(uint _minVoteWeight) public onlyAuthorizedToGovern {
+        minVoteWeight = _minVoteWeight;
     }
 
     function setPunishVoters(bool _punish) public onlyAuthorizedToGovern {

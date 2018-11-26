@@ -15,7 +15,7 @@
 
 pragma solidity 0.4.24;
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./imports/openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+import "./imports/lockable-token/LockableToken.sol";
 import "./imports/govern/Governed.sol";
 
 
@@ -24,7 +24,7 @@ contract MemberRoles is Governed {
     using SafeMath for uint;
     enum Role { UnAssigned, AdvisoryBoard, TokenHolder }
 
-    StandardToken public dAppToken;
+    LockableToken public dAppToken;
 
     struct MemberRoleDetails {
         uint memberCounter;
@@ -48,7 +48,7 @@ contract MemberRoles is Governed {
     function memberRolesInitiate(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
         require(!constructorCheck);
         dappName = _dAppName;
-        dAppToken = StandardToken(_dAppToken);
+        dAppToken = LockableToken(_dAppToken);
         addInitialMemberRoles(_firstAB);
         constructorCheck = true;
     }
@@ -89,7 +89,7 @@ contract MemberRoles is Governed {
                 j++;
             }
         }
-        if (dAppToken.balanceOf(_memberAddress) > 0) {
+        if (dAppToken.totalBalanceOf(_memberAddress) > 0) {
             assignedRoles[j] = uint(Role.TokenHolder);
         }
 
@@ -104,7 +104,7 @@ contract MemberRoles is Governed {
         if (_roleId == uint(Role.UnAssigned))
             return true;
         else if (_roleId == uint(Role.TokenHolder)) {
-            if (dAppToken.balanceOf(_memberAddress) > 0)
+            if (dAppToken.totalBalanceOf(_memberAddress) > 0)
                 return true;
             else
                 return false;

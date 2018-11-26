@@ -171,7 +171,7 @@ contract ProposalCategory is Governed {
     ) 
         public 
     {
-        require(allCategory.length <= 18);
+        require(allCategory.length < 18);
         require(msg.sender == officialPCA || officialPCA == address(0));
         // allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
         allCategory.push(Category(

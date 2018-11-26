@@ -56,7 +56,7 @@ contract('Proposal, solution and voting', function([
       owner
     );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    mrLength = await mr.getTotalMemberRoles();
+    mrLength = await mr.memberRoleLength();
     let amount = 50000000000000000000;
     await gbt.lock('GOV', amount, 5468545613353456);
     await gv.createProposalwithVote(
@@ -65,7 +65,7 @@ contract('Proposal, solution and voting', function([
       'Addnewmember',
       1,
       'Add new member',
-      actionHash
+      "0x52b38c104d656d62657200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000fda95fe9b72af39cb17f685e0bad59f7b89d1918000000000000000000000000000000000000000000000000000000000000001a41206465736372697074696f6e20666f722074686520726f6c65000000000000"
     );
     p2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
@@ -84,11 +84,21 @@ contract('Proposal, solution and voting', function([
     p = p.toNumber();
     await sv.closeProposalVote(p);
     await catchRevert(sv.closeProposalVote(p));
+    mrLength2 = await mr.memberRoleLength();
+    console.log(mrLength2,mrLength);
+    console.log(await gd.getProposalStatus(p));
+    assert.equal(
+      mrLength.toNumber() + 1,
+      mrLength2.toNumber(),
+      'Member Role Not Added'
+    );
   });
 
   it('Should have added new member role', async function() {
     this.timeout(100000);
-    mrLength2 = await mr.getTotalMemberRoles();
+    mrLength2 = await mr.memberRoleLength();
+    console.log(mrLength2,mrLength);
+    console.log(await gd.getProposalStatus(p));
     assert.equal(
       mrLength.toNumber() + 1,
       mrLength2.toNumber(),
@@ -98,12 +108,11 @@ contract('Proposal, solution and voting', function([
 
   it('Should create an uncategorized proposal', async function() {
     this.timeout(100000);
-    mrLength = await mr.getTotalMemberRoles();
+    mrLength = await mr.memberRoleLength();
     await gv.createProposal(
       'Add new member',
       'Add new member',
       'Addnewmember',
-      0,
       0
     );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
@@ -112,7 +121,6 @@ contract('Proposal, solution and voting', function([
       'Add new member',
       'Add new member',
       'Addnewmember',
-      0,
       0
     );
     p2 = await gd.getAllProposalIdsLengthByAddress(owner);
@@ -185,7 +193,7 @@ contract('Proposal, solution and voting', function([
 
   it('Should have added new member role', async function() {
     this.timeout(100000);
-    mrLength2 = await mr.getTotalMemberRoles();
+    mrLength2 = await mr.memberRoleLength();
     assert.equal(
       mrLength.toNumber() + 1,
       mrLength2.toNumber(),
@@ -195,7 +203,7 @@ contract('Proposal, solution and voting', function([
 
   it('Should show zero pending reward when only rep is to be earned', async function() {
     this.timeout(100000);
-    let reward = await pl.getPendingReward(owner, 0);
+    let reward = await sv.getPendingReward(owner, 0);
     assert.equal(reward[0].toNumber(), 0, 'Incorrect Reward');
   });
 
@@ -336,16 +344,14 @@ contract('Proposal, solution and voting', function([
     this.timeout(100000);
     p = await gd.getProposalLength();
     p = p.toNumber();
-    await gv.createProposalwithSolution(
+    await gv.createProposalwithVote(
       'Add new member',
       'Add new member',
       'Addnewmember',
-      0,
       5,
       'Add new member',
       '0x0'
     );
-    await sv.proposalVoting(p, [0]);
     await sv.proposalVoting(p, [0], { from: ab });
     await sv.closeProposalVote(p);
     const ps = await gd.getStatusOfProposals();
@@ -368,14 +374,13 @@ contract('Proposal, solution and voting', function([
 
   it('Should claim pending reward/reputation', async function() {
     this.timeout(100000);
-    let rep1 = await gd.getMemberReputation(owner);
-    let pr = await pl.getPendingReward(owner, 0);
+    let pr = await sv.getPendingReward(owner, 0);
     assert.equal(pr[1].toNumber(), 0);
     assert.isAtLeast(pr[0].toNumber(), 40);
-    pr = await pl.getPendingReward(ab, 0);
+    pr = await sv.getPendingReward(ab, 0);
     assert.equal(pr[1].toNumber(), 0);
     assert.isAtLeast(pr[0].toNumber(), 40);
-    pr = await pl.getPendingReward(member, 0);
+    pr = await sv.getPendingReward(member, 0);
     assert.equal(pr[1].toNumber(), 0);
     assert.isAtLeast(pr[0].toNumber(), 0);
     [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
@@ -384,7 +389,5 @@ contract('Proposal, solution and voting', function([
     await pl.claimReward(ab, ownerProposals, voterProposals);
     [ownerProposals, voterProposals] = await getProposalIds(member, gd, sv);
     await pl.claimReward(member, ownerProposals, voterProposals);
-    let rep2 = await gd.getMemberReputation(owner);
-    assert.isAbove(rep2.toNumber(), rep1.toNumber(), 'Incorrect Reward');
   });
 });

@@ -23,6 +23,7 @@ import "./GBTStandardToken.sol";
 import "./ProposalCategory.sol";
 import "./Pool.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
 import "./EventCaller.sol";
 import "./imports/govern/Governed.sol";
 
@@ -131,18 +132,18 @@ contract SimpleVoting is Upgradeable {
             require(!rewardClaimed[voteId], "Reward already claimed for one of the given proposals");
 
             rewardClaimed[voteId] = true;
-            (,, finalVerdict,, totalReward, category) = 
+            (finalVerdict, totalReward, category) = 
                 getVoteDetailsForReward(voteId, _proposals[i]);
 
             require(governanceDat.getProposalStatus(_proposals[i]) > uint(Governance.ProposalStatus.VotingStarted), "Reward can be claimed only after the proposal is closed");
 
             if(governanceDat.punishVoters()){
                 if((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)){
-                    calcReward = SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, finalVoteValue),totalReward);
+                    calcReward = SafeMath.div(SafeMath.mul(allVotes[voteId].voteValue, totalReward),finalVoteValue);
                 }
             }
             else if(finalVerdict > 0){
-                calcReward = SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, totalVoteValue),totalReward);
+                calcReward = SafeMath.div(SafeMath.mul(allVotes[voteId].voteValue, totalReward),totalVoteValue);
             }
             if (proposalCategory.isCategoryExternal(category))
                 pendingGBTReward = pendingGBTReward.add(calcReward);
@@ -165,7 +166,7 @@ contract SimpleVoting is Upgradeable {
             voteId = allVotesByMember[_memberAddress][i];
             if (!rewardClaimed[voteId]) {
                 proposalId = allVotes[voteId].proposalId;
-                (tempGBTReward, tempDAppReward) = calculatePendingVoteReward(_memberAddress, i, proposalId);
+                (tempGBTReward, tempDAppReward) = calculatePendingVoteReward(_memberAddress, voteId, proposalId);
                 pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
                 pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppReward);
             }
@@ -415,7 +416,7 @@ contract SimpleVoting is Upgradeable {
         uint _mrSequenceId;
         (,_mrSequenceId,,,,,) = proposalCategory.getCategoryDetails(_category);
         (, categoryQuorumPerc) = proposalCategory.getCategoryQuorumPercent(_category);
-        if (_mrSequenceId == 2) {
+        if (_mrSequenceId == uint(MemberRoles.Role.TokenHolder)) {
             uint totalTokens;
             address token = governanceDat.getStakeToken(_proposalId);
             GBTStandardToken tokenInstance = GBTStandardToken(token);
@@ -428,7 +429,7 @@ contract SimpleVoting is Upgradeable {
             thresHoldValue = SafeMath.div(totalTokens.mul(100), tokenInstance.totalSupply());
             if (thresHoldValue > categoryQuorumPerc)
                 return true;
-        } else if (_mrSequenceId == 0) {
+        } else if (_mrSequenceId == uint(MemberRoles.Role.UnAssigned)) {
             return true;
         } else {
             thresHoldValue = SafeMath.div(SafeMath.mul(getAllVoteIdsLengthByProposal(_proposalId), 100), memberRole.getAllMemberLength(_mrSequenceId));
@@ -437,7 +438,7 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
-    function calculatePendingVoteReward(address _memberAddress, uint _voteNo, uint _proposalId) 
+    function calculatePendingVoteReward(address _memberAddress, uint _voteId, uint _proposalId) 
         internal
         view
         returns (uint pendingGBTReward, uint pendingDAppReward) 
@@ -450,17 +451,16 @@ contract SimpleVoting is Upgradeable {
         uint calcReward;
         uint finalVoteValue;
         uint totalVoteValue;
-        uint voteId = allVotesByMember[_memberAddress][_voteNo];
         (solutionChosen,, finalVerdict, voteValue, totalReward, category) = 
-            getVoteDetailsToCalculateReward(_memberAddress, _voteNo);
+            getVoteDetailsToCalculateReward(_memberAddress, _voteId);
         (totalVoteValue,finalVoteValue) = governanceDat.getProposalVoteValue(_proposalId);
         if(governanceDat.punishVoters()){
-            if((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)){
-                calcReward = SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, finalVoteValue),totalReward);
+            if((finalVerdict > 0 && allVotes[_voteId].solutionChosen == finalVerdict)){
+                calcReward = SafeMath.div(SafeMath.mul(allVotes[_voteId].voteValue, totalReward),finalVoteValue);
             }   
         }
         else if(finalVerdict > 0){
-            calcReward = SafeMath.mul(SafeMath.div(allVotes[voteId].voteValue, totalVoteValue),totalReward);
+            calcReward = SafeMath.div(SafeMath.mul(allVotes[_voteId].voteValue, totalReward),totalVoteValue);
         }
         if (proposalCategory.isCategoryExternal(category))    
             pendingGBTReward = calcReward;
@@ -471,7 +471,7 @@ contract SimpleVoting is Upgradeable {
     /// @dev Gets vote id details when giving member address and proposal id
     function getVoteDetailsToCalculateReward(
         address _memberAddress, 
-        uint _voteNo
+        uint _voteId
     ) 
         internal 
         view 
@@ -484,10 +484,9 @@ contract SimpleVoting is Upgradeable {
             uint category
         ) 
     {
-        uint voteId = allVotesByMember[_memberAddress][_voteNo];
-        uint proposalId = allVotes[voteId].proposalId;
-        voteValue = allVotes[voteId].voteValue;
-        solutionChosen = allVotes[voteId].solutionChosen;
+        uint proposalId = allVotes[_voteId].proposalId;
+        voteValue = allVotes[_voteId].voteValue;
+        solutionChosen = allVotes[_voteId].solutionChosen;
         proposalStatus = governanceDat.getProposalStatus(proposalId);
         finalVerdict = governanceDat.getProposalFinalVerdict(proposalId);
         totalReward = governanceDat.getProposalIncentive(proposalId);
@@ -499,17 +498,11 @@ contract SimpleVoting is Upgradeable {
         internal 
         view 
         returns(
-            uint solutionChosen, 
-            uint proposalStatus, 
             uint finalVerdict, 
-            uint voteValue, 
             uint totalReward, 
             uint category
         ) 
     {
-        voteValue = allVotes[_voteId].voteValue;
-        solutionChosen = allVotes[_voteId].solutionChosen;
-        proposalStatus = governanceDat.getProposalStatus(_proposalId);
         finalVerdict = governanceDat.getProposalFinalVerdict(_proposalId);
         totalReward = governanceDat.getProposalIncentive(_proposalId);
         category = governanceDat.getProposalCategory(_proposalId);
@@ -585,15 +578,15 @@ contract SimpleVoting is Upgradeable {
         address token;
         uint category;
         uint tokenHoldingTime;
-        uint balance;
 
         (token, category) 
             = governanceDat.getTokenAndCategory(_proposalId);
         (,,,,,tokenHoldingTime,) = proposalCategory.getCategoryDetails(category);
-        
+
         voteValue = _getLockedBalance(token, _of, tokenHoldingTime);
-    
-        voteValue = SafeMath.div(voteValue, uint256(10) ** GBTStandardToken(token).decimals());
+
+        voteValue = Math.max((SafeMath.div(voteValue, uint256(10) ** GBTStandardToken(token).decimals())),governanceDat.getMinVoteWeight());
+
     }
 
     /* solhint-disable */
