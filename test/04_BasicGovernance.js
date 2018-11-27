@@ -65,7 +65,7 @@ contract('Proposal, solution and voting', function([
       'Addnewmember',
       1,
       'Add new member',
-      "0x52b38c104d656d62657200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000fda95fe9b72af39cb17f685e0bad59f7b89d1918000000000000000000000000000000000000000000000000000000000000001a41206465736372697074696f6e20666f722074686520726f6c65000000000000"
+      actionHash
     );
     p2 = await gd.getAllProposalIdsLengthByAddress(owner);
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
@@ -130,11 +130,10 @@ contract('Proposal, solution and voting', function([
   it('Should not add solution before proposal is open for solution submission', async function() {
     this.timeout(100000);
     let actionHash = encode(
-      'addNewMemberRole(bytes32,string,address,bool)',
+      'addNewMemberRole(bytes32,string,address)',
       '0x41647669736f727920426f617265000000000000000000000000000000000000',
       'New member role',
-      owner,
-      false
+      owner
     );
     p = await gd.getAllProposalIdsLengthByAddress(owner);
     p = p.toNumber();
@@ -158,20 +157,19 @@ contract('Proposal, solution and voting', function([
   it('Should submit a solution', async function() {
     this.timeout(100000);
     let actionHash = encode(
-      'addNewMemberRole(bytes32,string,address,bool)',
+      'addNewMemberRole(bytes32,string,address)',
       '0x41647669736f727920426f617265000000000000000000000000000000000000',
       'New member role',
-      owner,
-      false
+      owner
     );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await sv.submitProposalWithSolution(
+    await gv.submitProposalWithSolution(
       p1.toNumber(),
       'Addnewmember',
       actionHash
     );
     await catchRevert(
-      sv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash)
+      gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash)
     );
   });
 
@@ -209,135 +207,18 @@ contract('Proposal, solution and voting', function([
 
   it('Should add another person to AB', async function() {
     this.timeout(100000);
-    await mr.updateMemberRole(ab, 1, true, 54565656456);
+    await mr.updateMemberRole(ab, 1, true);
     assert.equal(
       await mr.checkRoleIdByAddress(ab, 1),
       true,
       'user not added to AB'
     );
-    await mr.updateMemberRole(member, 3, true, 54565656456);
+    await mr.updateMemberRole(member, 3, true);
     assert.equal(
       await mr.checkRoleIdByAddress(member, 3),
       true,
       'user not added to member'
     );
-  });
-
-  it('Should add a new category with multiple layers of voting', async function() {
-    this.timeout(100000);
-    let c1 = await pc.getCategoryLength();
-    await pc.addNewCategory(
-      'New Category',
-      [1, 3],
-      [1, 1],
-      [0],
-      [48548564156864, 645564561546]
-    );
-    let c2 = await pc.getCategoryLength();
-    assert.isAbove(c2.toNumber(), c1.toNumber(), 'category not added');
-  });
-
-  it('Should create a proposal with solution', async function() {
-    this.timeout(100000);
-    await gbt.transfer(pl.address, amount);
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    const c = await pc.getSubCategoryLength();
-    await gv.createProposalwithSolution(
-      'Add new member',
-      'Add new member',
-      'Addnewmember',
-      0,
-      c.toNumber() - 1,
-      'Add new member',
-      '0x5465'
-    );
-    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
-    assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
-  });
-
-  it('Should transfer and lock gbt', async function() {
-    let amount = 5000000000;
-    await gbt.transfer(ab, amount);
-    await gbt.transfer(member, amount);
-    await gbt.transfer(pl.address, amount);
-    await gbt.lock('GOV', amount, 5468545613353456, { from: ab });
-    await gbt.lock('GOV', amount, 5468545613353456, { from: member });
-  });
-
-  it('Should submit another solution', async function() {
-    this.timeout(100000);
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    let s1 = await gd.getTotalSolutions(p1.toNumber());
-    await sv.addSolution(p1.toNumber(), ab, 'Addnewmember', '0x41', {
-      from: ab
-    });
-    let s2 = await gd.getTotalSolutions(p1.toNumber());
-    assert.equal(s1.toNumber() + 1, s2.toNumber(), 'Solution not created');
-  });
-
-  it('Should vote in favour of the second solution', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.proposalVoting(p, [2]);
-    let vid = await sv.getVoteIdAgainstMember(owner, p);
-    assert.isAtLeast(vid.toNumber(), 1, 'Vote not added');
-  });
-
-  it('Should not close the proposal before time', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await catchRevert(sv.closeProposalVote(p));
-  });
-
-  it('Should vote in favour of the second solution', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.proposalVoting(p, [2], { from: ab });
-    let vid = await sv.getVoteIdAgainstMember(ab, p);
-    assert.isAtLeast(vid.toNumber(), 1, 'Vote not added');
-  });
-
-  it('Should close the proposal once all members have voted', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.closeProposalVote(p);
-    let iv = await gd.getProposalIntermediateVerdict(p);
-    assert.equal(iv.toNumber(), 2, 'Incorrect intermediate Verdict');
-  });
-
-  it('Should not let initialVote to be used after first layer', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await catchRevert(sv.initialVote(p, nonMember));
-    await catchRevert(sv.initialVote(p, member));
-  });
-
-  it('Should not allow to pick different solution than ab', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await catchRevert(sv.proposalVoting(p, [1], { from: member }));
-  });
-
-  it('Should allow to vote for rejection', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.proposalVoting.call(p, [0], { from: member });
-  });
-
-  it('Should allow to vote for same solution as AB', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.proposalVoting(p, [2], { from: member });
-    let vid = await sv.getVoteIdAgainstMember(member, p);
-    assert.isAtLeast(vid.toNumber(), 2, 'Vote not added');
   });
 
   it('Should get proper proposal status', async function() {
@@ -355,39 +236,30 @@ contract('Proposal, solution and voting', function([
     await sv.proposalVoting(p, [0], { from: ab });
     await sv.closeProposalVote(p);
     const ps = await gd.getStatusOfProposals();
-    assert.equal(ps[0].toNumber(), 7);
+    assert.equal(ps[0].toNumber(), 5);
     assert.equal(ps[1].toNumber(), 1);
     assert.equal(ps[2].toNumber(), 1);
-    assert.equal(ps[3].toNumber(), 1);
+    assert.equal(ps[3].toNumber(), 0);
     assert.equal(ps[4].toNumber(), 3);
-    assert.equal(ps[5].toNumber(), 1);
+    assert.equal(ps[5].toNumber(), 0);
   });
 
-  it('Should close the proposal once all members have voted', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber() - 1;
-    await sv.closeProposalVote(p);
-    let iv = await gd.getProposalFinalVerdict(p);
-    assert.equal(iv.toNumber(), 2, 'Incorrect final Verdict');
-  });
-
-  it('Should claim pending reward/reputation', async function() {
-    this.timeout(100000);
-    let pr = await sv.getPendingReward(owner, 0);
-    assert.equal(pr[1].toNumber(), 0);
-    assert.isAtLeast(pr[0].toNumber(), 40);
-    pr = await sv.getPendingReward(ab, 0);
-    assert.equal(pr[1].toNumber(), 0);
-    assert.isAtLeast(pr[0].toNumber(), 40);
-    pr = await sv.getPendingReward(member, 0);
-    assert.equal(pr[1].toNumber(), 0);
-    assert.isAtLeast(pr[0].toNumber(), 0);
-    [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
-    await pl.claimReward(owner, ownerProposals, voterProposals);
-    [ownerProposals, voterProposals] = await getProposalIds(ab, gd, sv);
-    await pl.claimReward(ab, ownerProposals, voterProposals);
-    [ownerProposals, voterProposals] = await getProposalIds(member, gd, sv);
-    await pl.claimReward(member, ownerProposals, voterProposals);
-  });
+  // it('Should claim pending reward/reputation', async function() {
+  //   this.timeout(100000);
+  //   let pr = await sv.getPendingReward(owner, 0);
+  //   assert.equal(pr[1].toNumber(), 0);
+  //   assert.isAtLeast(pr[0].toNumber(), 40 , "Owner");
+  //   pr = await sv.getPendingReward(ab, 0);
+  //   assert.equal(pr[1].toNumber(), 0);
+  //   assert.isAtLeast(pr[0].toNumber(), 40 , "AB");
+  //   pr = await sv.getPendingReward(member, 0);
+  //   assert.equal(pr[1].toNumber(), 0);
+  //   assert.isAtLeast(pr[0].toNumber(), 0, "Member");
+  //   [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
+  //   await pl.claimReward(owner, ownerProposals, voterProposals);
+  //   [ownerProposals, voterProposals] = await getProposalIds(ab, gd, sv);
+  //   await pl.claimReward(ab, ownerProposals, voterProposals);
+  //   [ownerProposals, voterProposals] = await getProposalIds(member, gd, sv);
+  //   await pl.claimReward(member, ownerProposals, voterProposals);
+  // });
 });

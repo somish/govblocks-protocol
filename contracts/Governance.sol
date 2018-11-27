@@ -235,7 +235,7 @@ contract Governance is Upgradeable {
 
     /// @dev Opens proposal for voting
     function openProposalForVoting(uint _proposalId) 
-        internal onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
+        public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
     {
         uint category = governanceDat.getProposalCategory(_proposalId);
 

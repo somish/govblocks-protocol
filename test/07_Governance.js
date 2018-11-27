@@ -87,10 +87,10 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should not allow unauthorized person to categorize proposal', async function() {
+    await catchRevert(gv.categorizeProposal(pid, 10, { from: notOwner }));
     await dAppToken.lock('GOV', e18.mul(10), 54685456133563456, {
       from: notOwner
     });
-    await catchRevert(gv.categorizeProposal(pid, 10, { from: notOwner }));
   });
 
   it('Should categorize proposal', async function() {
