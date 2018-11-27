@@ -336,7 +336,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Fetch details of proposal when giving proposal id
-    function getProposalStatusAndVerdict(uint _proposalId, address _memberAddress) 
+    function getProposalStatusAndVerdict(uint _proposalId) 
         public 
         view 
         returns(uint, uint8, uint64) 

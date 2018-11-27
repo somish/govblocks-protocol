@@ -128,7 +128,6 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await catchRevert(
       gv.submitProposalWithSolution(pid, '0x0', '0x0', { from: noStake })
     );
-    let solutionId = await gv.getSolutionIdAgainstAddressProposal(noStake,(await gd.getProposalLength())-1);
     await catchRevert(
       gv.submitProposalWithSolution(pid, '0x0', '0x0', { from: notOwner })
     );
@@ -151,6 +150,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   it('Should allow authorized people to submit solution', async () => {
     const initSol = await gd.getTotalSolutions(pid);
     await gv.submitProposalWithSolution(pid, '0x0', '0x0');
+    let solutionId = await gv.getSolutionIdAgainstAddressProposal(owner,(await gd.getProposalLength())-1);
     const finalSol = await gd.getTotalSolutions(pid);
     assert.equal(finalSol.toNumber(), initSol.toNumber() + 1);
   });
@@ -168,6 +168,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should close proposal when voting is completed', async () => {
+    await catchRevert(pl.claimReward(owner, [1]));
     await sv.closeProposalVote(pid);
     await catchRevert(sv.closeProposalVote(pid));
   });
@@ -180,6 +181,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
       (await dAppToken.balanceOf(owner)).toNumber(),
       balance.toNumber()
     );
+    await catchRevert(pl.claimReward(owner, voterProposals));
   });
 
   it('Should check reward distribution when punish voters is true', async () => {
@@ -309,10 +311,9 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     );
     let proposalId = await gd.getProposalLength();
     await gv.submitProposalWithSolution(proposalId.toNumber()-1, '0x0', '0x0');
-    assert.equal(await sv.checkForClosing(proposalId.toNumber()-1, 1),0);
+    assert.equal(await sv.checkForClosing(proposalId.toNumber()-1,1),0);
     await increaseTime(72000);
     await sv.closeProposalVote(proposalId.toNumber()-1);
-    console.log(await gd.getProposalStatus(proposalId.toNumber() - 1));
   });
 
   it('Should create proposal with solution for token holders', async function() {

@@ -133,7 +133,7 @@ contract SimpleVoting is Upgradeable {
 
             rewardClaimed[voteId] = true;
             (finalVerdict, totalReward, category) = 
-                getVoteDetailsForReward(voteId, _proposals[i]);
+                getVoteDetailsForReward(_proposals[i]);
 
             require(governanceDat.getProposalStatus(_proposals[i]) > uint(Governance.ProposalStatus.VotingStarted), "Reward can be claimed only after the proposal is closed");
 
@@ -166,7 +166,7 @@ contract SimpleVoting is Upgradeable {
             voteId = allVotesByMember[_memberAddress][i];
             if (!rewardClaimed[voteId]) {
                 proposalId = allVotes[voteId].proposalId;
-                (tempGBTReward, tempDAppReward) = calculatePendingVoteReward(_memberAddress, voteId, proposalId);
+                (tempGBTReward, tempDAppReward) = calculatePendingVoteReward(voteId, proposalId);
                 pendingGBTReward = SafeMath.add(pendingGBTReward, tempGBTReward);
                 pendingDAppReward = SafeMath.add(pendingDAppReward, tempDAppReward);
             }
@@ -424,7 +424,7 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
-    function calculatePendingVoteReward(address _memberAddress, uint _voteId, uint _proposalId) 
+    function calculatePendingVoteReward(uint _voteId, uint _proposalId) 
         internal
         view
         returns (uint pendingGBTReward, uint pendingDAppReward) 
@@ -438,7 +438,7 @@ contract SimpleVoting is Upgradeable {
         uint finalVoteValue;
         uint totalVoteValue;
         (solutionChosen,, finalVerdict, voteValue, totalReward, category) = 
-            getVoteDetailsToCalculateReward(_memberAddress, _voteId);
+            getVoteDetailsToCalculateReward(_voteId);
         (totalVoteValue,finalVoteValue) = governanceDat.getProposalVoteValue(_proposalId);
         if(governanceDat.punishVoters()){
             if((finalVerdict > 0 && allVotes[_voteId].solutionChosen == finalVerdict)){
@@ -456,7 +456,6 @@ contract SimpleVoting is Upgradeable {
 
     /// @dev Gets vote id details when giving member address and proposal id
     function getVoteDetailsToCalculateReward(
-        address _memberAddress, 
         uint _voteId
     ) 
         internal 
@@ -480,7 +479,7 @@ contract SimpleVoting is Upgradeable {
     }
 
     /// @dev Gets vote id details for reward
-    function getVoteDetailsForReward(uint _voteId, uint _proposalId) 
+    function getVoteDetailsForReward(uint _proposalId) 
         internal 
         view 
         returns(
