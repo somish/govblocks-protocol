@@ -92,6 +92,14 @@ contract('Governance Data', function([owner, notOwner]) {
     assert(pv, true, 'Punish voters not changed');
   });
 
+  it('Should minimum vote weight', async function() {
+    this.timeout(100000);
+    // Will throw once owner's permissions are removed. will need to create proposal then.
+    await gd.setMinVoteWeight(10);
+    let pv = await gd.getMinVoteWeight();
+    assert(pv, 10, 'Minimum vote weight not changed');
+  });
+
   it('Should pause unpause proposal', async function() {
     this.timeout(100000);
     await catchRevert(gd.resumeProposal(0));

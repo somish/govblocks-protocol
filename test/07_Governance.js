@@ -219,6 +219,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await sv.proposalVoting(propId, [1], { from: notOwner });
     await sv.proposalVoting(propId, [2], { from: voter });
     await sv.closeProposalVote(propId);
+    await gd.getProposalDetailsForReward(propId,owner);
     voterProposals = await getProposalIds(owner, gd, sv);
     // await dAppToken.transfer(pl.address, e18.mul(10));
     var balance = (await dAppToken.balanceOf(owner)).toNumber();
@@ -290,6 +291,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await increaseTime(2000);
     await sv.closeProposalVote(propId);
     await catchRevert(sv.closeProposalVote(propId));
+    let memberDetails = await gv.getMemberDetails(owner);
   });
   
 });

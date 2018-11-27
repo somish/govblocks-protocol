@@ -196,10 +196,9 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(uint => bool) public proposalPaused;
-    mapping(address => mapping(uint => bool)) internal rewardClaimed;
     mapping (uint => uint) internal proposalVersion;
-    
-    
+
+
     bool public constructorCheck;
     bool public punishVoters;
     uint internal minVoteWeight;
@@ -340,33 +339,12 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     function getProposalStatusAndVerdict(uint _proposalId, address _memberAddress) 
         public 
         view 
-        returns(bool, uint, uint8, uint64) 
+        returns(uint, uint8, uint64) 
     {
         return (
-            rewardClaimed[_memberAddress][_proposalId], 
             allProposalData[_proposalId].category, 
             allProposalData[_proposalId].propStatus, 
             allProposalData[_proposalId].finalVerdict
-        );
-    }
-
-    function getProposalDetailsForReward(uint _proposalId, address _memberAddress) 
-        public
-        view
-        returns(bool, uint, uint, uint, uint, uint)
-    {
-        uint solutionId = allProposalSolutions[_proposalId].length;
-        for (solutionId--; solutionId > 0; solutionId--) {
-            if (_memberAddress == allProposalSolutions[_proposalId][solutionId].owner)
-                break;
-        }
-        return (
-            rewardClaimed[_memberAddress][_proposalId], 
-            allProposalData[_proposalId].category, 
-            allProposalData[_proposalId].propStatus, 
-            allProposalData[_proposalId].finalVerdict,
-            solutionId,
-            allProposalData[_proposalId].commonIncentive
         );
     }
 
@@ -446,14 +424,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev Gets proposal sub category when given proposal id
     function getProposalCategory(uint _proposalId) public view returns(uint) {
         return allProposalData[_proposalId].category;
-    }
-
-    function setRewardClaimed(uint _proposalId, address _memberAddress) public onlyInternal {
-        rewardClaimed[_memberAddress][_proposalId] = true;
-    }
-
-    function getRewardClaimed(uint _proposalId, address _memberAddress) public view returns(bool) {
-        return (rewardClaimed[_memberAddress][_proposalId]);
     }
 
     /// @dev gets total number of votes by a voter
