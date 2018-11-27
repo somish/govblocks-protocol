@@ -317,11 +317,6 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
-    /// @dev ads an authorized address to goovernChecker
-    function addAuthorized(address _newVotingAddress) public onlySelf {
-        governChecker.addAuthorized(master.dAppName(), _newVotingAddress);
-    }
-
     /// @dev transfers authority and funds to new addresses
     function upgrade() public onlySelf {
         address newSV = master.getLatestAddress("SV");
@@ -363,14 +358,6 @@ contract SimpleVoting is Upgradeable {
         }
     }
 
-    /// @dev Does category specific tasks
-    function finalActions(uint _proposalId) internal {
-        uint category = governanceDat.getProposalCategory(_proposalId); 
-        if (category == 12) { //add new voting type. gives authorization to it.
-            addAuthorized(governanceDat.getLatestVotingAddress());
-        }
-    }
-
     /// @dev This does the remaining functionality of closing proposal vote
     function closeProposalVoteThReached(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64 max) 
         internal 
@@ -395,7 +382,6 @@ contract SimpleVoting is Upgradeable {
                     eventCaller.callActionSuccess(_proposalId);
                 }
                 eventCaller.callProposalAccepted(_proposalId);
-                finalActions(_proposalId);
             } else {
                 governanceDat.updateProposalDetails(_proposalId, max);
                 governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Rejected));

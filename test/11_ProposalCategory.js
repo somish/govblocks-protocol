@@ -47,8 +47,10 @@ contract('Proposal Category', function() {
     // assert.equal(g7.toNumber(), 0);
     // const g8 = await pc.getAllSubIdsByCategory(0);
     // assert.equal(g8[0].toNumber(), 0);
-    const g9 = await pc.isCategoryExternal(10);
+    let g9 = await pc.isCategoryExternal(10);
     assert.equal(g9, false);
+    g9 = await pc.isCategoryExternal(17);
+    assert.equal(g9, true);
     const g10 = await pc.getCategoryLength();
     assert.equal(g10.toNumber(), 18);
   });

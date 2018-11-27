@@ -40,6 +40,8 @@ contract('MemberRoles', function([owner, member, other]) {
 
   it('should add a member to a role', async function() {
     await mr.updateMemberRole(member, 1, true);
+    await catchRevert(mr.updateMemberRole(member, 2, true));
+    await catchRevert(mr.updateMemberRole(member, 2, true, { from: other}));
     assert.equal(
       await mr.checkRoleIdByAddress(member, 1),
       true,

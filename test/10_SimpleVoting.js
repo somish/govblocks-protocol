@@ -31,14 +31,9 @@ contract('Simple Voting', function([owner]) {
     let g10 = await sv.allVotesTotal();
     let g11 = await sv.getSolutionByVoteIdAndIndex(0, 0);
     let g12 = await sv.getVoteDetailById(0);
+    let g13 = await sv.getTotalNumberOfVotesByAddress(owner);
     await catchRevert(sv.getSolutionByVoteIdAndIndex(0, 1));
     assert.equal(g2, true, 'Not initialized');
     // TODO verify the data returned
-  });
-
-  it('Should not allow self function to be called by others', async function() {
-    this.timeout(100000);
-    await catchRevert(sv.addAuthorized(owner));
-    await catchRevert(sv.upgrade());
   });
 });

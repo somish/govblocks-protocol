@@ -23,6 +23,13 @@ let pc;
 let mrLength;
 let gbt;
 
+const BigNumber = web3.BigNumber;
+require('chai')
+  .use(require('chai-bignumber')(BigNumber))
+  .should();
+
+const e18 = new BigNumber(1e18);
+
 contract('Proposal, solution and voting', function([
   owner,
   ab,
@@ -85,8 +92,6 @@ contract('Proposal, solution and voting', function([
     await sv.closeProposalVote(p);
     await catchRevert(sv.closeProposalVote(p));
     mrLength2 = await mr.memberRoleLength();
-    console.log(mrLength2,mrLength);
-    console.log(await gd.getProposalStatus(p));
     assert.equal(
       mrLength.toNumber() + 1,
       mrLength2.toNumber(),
@@ -97,8 +102,6 @@ contract('Proposal, solution and voting', function([
   it('Should have added new member role', async function() {
     this.timeout(100000);
     mrLength2 = await mr.memberRoleLength();
-    console.log(mrLength2,mrLength);
-    console.log(await gd.getProposalStatus(p));
     assert.equal(
       mrLength.toNumber() + 1,
       mrLength2.toNumber(),
@@ -235,13 +238,43 @@ contract('Proposal, solution and voting', function([
     );
     await sv.proposalVoting(p, [0], { from: ab });
     await sv.closeProposalVote(p);
+    await mr.updateMemberRole(member, 1, true);
+    p = await gd.getProposalLength();
+    p = p.toNumber();
+    await gv.createProposalwithVote(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      5,
+      'Add new member',
+      '0x0'
+    );
+    await sv.addSolution(p, ab, '0x0', '0x0' ,{ from: ab});
+    await sv.proposalVoting(p, [2], { from: ab });
+    await sv.proposalVoting(p, [0], { from: member });
+    await sv.closeProposalVote(p);
+    await mr.updateMemberRole(member, 1, false);
+    p = await gd.getProposalLength();
+    p = p.toNumber();
+    await gbt.transfer(pl.address, e18.mul(20));
+    await mr.updateMemberRole(ab, 1, false);
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      17
+    );
+    await gv.submitProposalWithSolution(p, '0x0', '0x0');
+    await catchRevert(gv.categorizeProposal(p,1));
+    await sv.proposalVoting(p, [0]);
+    await sv.closeProposalVote(p);
     const ps = await gd.getStatusOfProposals();
-    assert.equal(ps[0].toNumber(), 5);
+    assert.equal(ps[0].toNumber(), 7);
     assert.equal(ps[1].toNumber(), 1);
     assert.equal(ps[2].toNumber(), 1);
     assert.equal(ps[3].toNumber(), 0);
-    assert.equal(ps[4].toNumber(), 3);
-    assert.equal(ps[5].toNumber(), 0);
+    assert.equal(ps[4].toNumber(), 4);
+    assert.equal(ps[5].toNumber(), 1);
   });
 
   // it('Should claim pending reward/reputation', async function() {
