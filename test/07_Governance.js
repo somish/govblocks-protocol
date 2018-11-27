@@ -150,7 +150,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   it('Should allow authorized people to submit solution', async () => {
     const initSol = await gd.getTotalSolutions(pid);
     await gv.submitProposalWithSolution(pid, '0x0', '0x0');
-    let solutionId = await gv.getSolutionIdAgainstAddressProposal(owner,(await gd.getProposalLength())-1);
+    let solutionId = await gv.getSolutionIdAgainstAddressProposal(owner,pid);
     const finalSol = await gd.getTotalSolutions(pid);
     assert.equal(finalSol.toNumber(), initSol.toNumber() + 1);
   });
