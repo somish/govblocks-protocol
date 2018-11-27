@@ -162,7 +162,7 @@ contract MemberRoles is Governed {
     {
         authorizedAddressAgainstRole[memberRoleLength] = _canAddMembers;
         emit MemberRole(memberRoleLength, _newRoleName, _roleDescription);
-        SafeMath.add(memberRoleLength,1);
+        memberRoleLength = SafeMath.add(memberRoleLength,1);
     }
 
     /// @dev Gets the member addresses assigned by a specific role
