@@ -19,8 +19,8 @@ contract GovernedUpgradeabilityProxy is UpgradeabilityProxy {
     */
     constructor(bytes32 _dAppName, address _implementation) public {
         /* solhint-disable */
-        if (_getCodeSize(0x1D8e4CCf7270F3473922B0E709a5B17Af2965445) > 0)          //kovan testnet
-            _setGovernCheckerUnique(0x1D8e4CCf7270F3473922B0E709a5B17Af2965445);
+        if (_getCodeSize(0x32cdc3789d41b4bbc3aa7975e51deeca6014b1f1) > 0)          //kovan testnet
+            _setGovernCheckerUnique(0x32cdc3789d41b4bbc3aa7975e51deeca6014b1f1);
         else if (_getCodeSize(0x962d110554E0b20E18E5c3680018b49A58EF0bBB) > 0)     //Private testnet
             _setGovernCheckerUnique(0x962d110554E0b20E18E5c3680018b49A58EF0bBB);
         else
