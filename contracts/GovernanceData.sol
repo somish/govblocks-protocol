@@ -429,7 +429,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     /// @dev gets total number of votes by a voter
     function getTotalNumberOfVotesByAddress(address _voter) public view returns(uint totalVotes) {
             VotingType vt = VotingType(master.getLatestAddress("SV"));
-            totalVotes = SafeMath.add(vt.getTotalNumberOfVotesByAddress(_voter), 1);
+            totalVotes = SafeMath.add(vt.getTotalNumberOfVotesByAddress(_voter), totalVotes);
     }
 
     /// @dev Gets Total vote value from all the votes that has been casted against of winning solution
