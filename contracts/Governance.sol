@@ -106,7 +106,7 @@ contract Governance is Upgradeable {
         uint[] memory mrAllowed;
         (,,,mrAllowed,,,) = proposalCategory.getCategoryDetails(category);
         for (uint i = 0; i < mrAllowed.length; i++) {
-            if (mrAllowed[i] == 0 || memberRole.checkRoleIdByAddress(msg.sender, mrAllowed[i]))
+            if (mrAllowed[i] == 0 || memberRole.checkRole(msg.sender, mrAllowed[i]))
                 return true;
         }  
     }
@@ -221,7 +221,7 @@ contract Governance is Upgradeable {
             tokenAddress = dAppLocker;
         /* solhint-enable */
 
-        if (!memberRole.checkRoleIdByAddress(msg.sender, 1)) {
+        if (!memberRole.checkRole(msg.sender, 1)) {
             require(allowedToCreateProposal(_categoryId),"User not authorized to categorize this proposal"); 
             require(validateStake(_categoryId, tokenAddress), "Lock more tokens");
         }

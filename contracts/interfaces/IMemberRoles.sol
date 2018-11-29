@@ -17,9 +17,9 @@ pragma solidity 0.4.24;
 
 contract IMemberRoles {
     /// @dev Adds new member role
-    /// @param _newRoleName New role name
+    /// @param _roleName New role name
     /// @param _roleDescription New description hash
-    /// @param _canAddMembers Authorized member against every role id
+    /// @param _authorized Authorized member against every role id
     function addRole(
         bytes32 _roleName, 
         string _roleDescription, 
@@ -33,24 +33,23 @@ contract IMemberRoles {
     /// @dev Assign or Delete a member from specific role.
     /// @param _memberAddress Address of Member
     /// @param _roleId RoleId to update
-    /// @param _typeOf typeOf is set to be True if we want to assign this role to member, False otherwise!
+    /// @param _active active is set to be True if we want to assign this role to member, False otherwise!
     function updateRole(
         address _memberAddress,
         uint _roleId,
         bool _active
     ) public        
     {
-        
     }
 
     /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
     /// @param _roleId roleId to update its Authorized Address
-    /// @param _newCanAddMember New authorized address against role id
+    /// @param _authorized New authorized address against role id
     function changeAuthorized(uint _roleId, address _authorized) public {
     }
 
     /// @dev Return number of member roles
-    function totalRoles() public view returns(uint256) {        
+    function totalRoles() public view returns(uint256) {
     }
 
     /// @dev Gets the member addresses assigned by a specific role
@@ -58,7 +57,6 @@ contract IMemberRoles {
     /// @return roleId Role id
     /// @return allMemberAddress Member addresses of specified role id
     function members(uint _memberRoleId) public view returns(uint, address[] allMemberAddress) {
-       
     }
 
     /// @dev Gets all members' length

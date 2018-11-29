@@ -14,13 +14,14 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity 0.4.24;
+import "./interfaces/IMemberRoles.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./imports/lockable-token/LockableToken.sol";
 import "./imports/govern/Governed.sol";
 
 
-contract MemberRoles is Governed {
-    event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription);
+
+contract MemberRoles is IMemberRoles, Governed {
     using SafeMath for uint;
     enum Role { UnAssigned, AdvisoryBoard, TokenHolder }
 
@@ -30,16 +31,15 @@ contract MemberRoles is Governed {
         uint memberCounter;
         mapping(address => bool) memberActive;
         address[] memberAddress;
+        address authorized;
     }
 
-    mapping(uint => address) internal authorizedAddressAgainstRole;
-    mapping(uint => MemberRoleDetails) internal memberRoleData;
-    uint public memberRoleLength;
+    MemberRoleDetails[] internal memberRoleData;
     bool internal constructorCheck;
     
     modifier checkRoleAuthority(uint _memberRoleId) {
-        if (authorizedAddressAgainstRole[_memberRoleId] != address(0))
-            require(msg.sender == authorizedAddressAgainstRole[_memberRoleId]);
+        if (memberRoleData[_memberRoleId].authorized != address(0))
+            require(msg.sender == memberRoleData[_memberRoleId].authorized);
         else
             require(isAuthorizedToGovern(msg.sender));
         _;
@@ -55,18 +55,19 @@ contract MemberRoles is Governed {
 
     function addInitialMemberRoles(address _firstAB) internal {
         emit MemberRole(uint(Role.UnAssigned), "Everyone", "Professionals that are a part of the GBT network");
+        memberRoleData.push(MemberRoleDetails(0,new address[](0),address(0)));
         emit MemberRole(
             uint(Role.AdvisoryBoard),
             "Advisory Board",
             "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp."); //solhint-disable-line
+        memberRoleData.push(MemberRoleDetails(0,new address[](0),address(0)));
         emit MemberRole(
             uint(Role.TokenHolder),
             "Token Holder",
             "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default."); //solhint-disable-line
-        memberRoleLength = 3;
-
-        memberRoleData[1].memberCounter++;
+        memberRoleData.push(MemberRoleDetails(0,new address[](0),address(0)));
         memberRoleData[1].memberActive[_firstAB] = true;
+        memberRoleData[1].memberCounter++;
         memberRoleData[1].memberAddress.push(_firstAB);
     }
 
@@ -78,57 +79,37 @@ contract MemberRoles is Governed {
     function changeMasterAddress(address _masterAddress) public pure { //solhint-disable-line
     }
 
-    /// @dev Get All role ids array that has been assigned to a member so far.
-    function getRoleIdByAddress(address _memberAddress) public view returns(uint[] assignedRoles) {
-        uint length = memberRoleLength;
-        uint j = 0;
-        assignedRoles = new uint[](length);
-        for (uint i = 1; i < length; i++) {
-            if (memberRoleData[i].memberActive[_memberAddress]) {
-                assignedRoles[j] = i;
-                j++;
-            }
-        }
-        if (dAppToken.totalBalanceOf(_memberAddress) > 0) {
-            assignedRoles[j] = uint(Role.TokenHolder);
-        }
 
-        return assignedRoles;
-    }
-
-    /// @dev Returns true if the given role id is assigned to a member.
-    /// @param _memberAddress Address of member
-    /// @param _roleId Checks member's authenticity with the roleId.
-    /// i.e. Returns true if this roleId is assigned to member
-    function checkRoleIdByAddress(address _memberAddress, uint _roleId) public view returns(bool) {
-        if (_roleId == uint(Role.UnAssigned))
-            return true;
-        else if (_roleId == uint(Role.TokenHolder)) {
-            if (dAppToken.totalBalanceOf(_memberAddress) > 0)
-                return true;
-            else
-                return false;
-        }
-        else if (memberRoleData[_roleId].memberActive[_memberAddress]) //solhint-disable-line
-            return true;
-        else
-            return false;
+    /// @dev Adds new member role
+    /// @param _roleName New role name
+    /// @param _roleDescription New description hash
+    /// @param _authorized Authorized member against every role id
+    function addRole(
+        bytes32 _roleName, 
+        string _roleDescription, 
+        address _authorized
+    )
+        public
+        onlyAuthorizedToGovern
+    {
+        emit MemberRole(memberRoleData.length, _roleName, _roleDescription);
+        memberRoleData.push(MemberRoleDetails(0,new address[](0),_authorized));
     }
 
     /// @dev Assign or Delete a member from specific role.
     /// @param _memberAddress Address of Member
     /// @param _roleId RoleId to update
-    /// @param _typeOf typeOf is set to be True if we want to assign this role to member, False otherwise!
-    function updateMemberRole(
+    /// @param _active active is set to be True if we want to assign this role to member, False otherwise!
+    function updateRole(
         address _memberAddress,
         uint _roleId,
-        bool _typeOf
+        bool _active
     )
         public
         checkRoleAuthority(_roleId)
     {
         require( _roleId != uint(Role.TokenHolder),"Membership to Token holder is detected automatically");
-        if (_typeOf) {
+        if (_active) {
             if (!memberRoleData[_roleId].memberActive[_memberAddress]) {
                 memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
                 memberRoleData[_roleId].memberActive[_memberAddress] = true;
@@ -141,35 +122,23 @@ contract MemberRoles is Governed {
         }
     }
 
-    /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
-    /// @param _roleId roleId to update its Authorized Address
-    /// @param _newCanAddMember New authorized address against role id
-    function changeCanAddMember(uint _roleId, address _newCanAddMember) public checkRoleAuthority(_roleId) {
-        authorizedAddressAgainstRole[_roleId] = _newCanAddMember;
+    /// @dev Return number of member roles
+    function totalRoles() public view returns(uint256) {
+        return memberRoleData.length;
     }
 
-    /// @dev Adds new member role
-    /// @param _newRoleName New role name
-    /// @param _roleDescription New description hash
-    /// @param _canAddMembers Authorized member against every role id
-    function addNewMemberRole(
-        bytes32 _newRoleName, 
-        string _roleDescription, 
-        address _canAddMembers
-    )
-        public
-        onlyAuthorizedToGovern
-    {
-        authorizedAddressAgainstRole[memberRoleLength] = _canAddMembers;
-        emit MemberRole(memberRoleLength, _newRoleName, _roleDescription);
-        memberRoleLength = SafeMath.add(memberRoleLength,1);
+    /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
+    /// @param _roleId roleId to update its Authorized Address
+    /// @param _newAuthorized New authorized address against role id
+    function changeAuthorized(uint _roleId, address _newAuthorized) public checkRoleAuthority(_roleId) {
+        memberRoleData[_roleId].authorized = _newAuthorized;
     }
 
     /// @dev Gets the member addresses assigned by a specific role
     /// @param _memberRoleId Member role id
     /// @return roleId Role id
     /// @return allMemberAddress Member addresses of specified role id
-    function getAllAddressByRoleId(uint _memberRoleId) public view returns(uint, address[] allMemberAddress) {
+    function members(uint _memberRoleId) public view returns(uint, address[] allMemberAddress) {
         uint length = memberRoleData[_memberRoleId].memberAddress.length;
         uint j;
         uint i;
@@ -191,28 +160,65 @@ contract MemberRoles is Governed {
 
     /// @dev Gets all members' length
     /// @param _memberRoleId Member role id
-    /// @return memberRoleData[_memberRoleId].memberAddress.length Member length
-    function getAllMemberLength(uint _memberRoleId) public view returns(uint) {
+    /// @return memberRoleData[_memberRoleId].memberCounter Member length
+    function numberOfMembers(uint _memberRoleId) public view returns(uint) {
         return memberRoleData[_memberRoleId].memberCounter;
+    }
+
+    /// @dev Return member address who holds the right to add/remove any member from specific role.
+    function authorized(uint _memberRoleId) public view returns(address) {
+        return memberRoleData[_memberRoleId].authorized;
+    }
+
+
+    /// @dev Get All role ids array that has been assigned to a member so far.
+    function roles(address _memberAddress) public view returns(uint[] assignedRoles) {
+        uint length = memberRoleData.length;
+        uint j = 0;
+        assignedRoles = new uint[](length);
+        for (uint i = 1; i < length; i++) {
+            if (memberRoleData[i].memberActive[_memberAddress]) {
+                assignedRoles[j] = i;
+                j++;
+            }
+        }
+        if (dAppToken.totalBalanceOf(_memberAddress) > 0) {
+            assignedRoles[j] = uint(Role.TokenHolder);
+        }
+
+        return assignedRoles;
+    }
+
+    /// @dev Returns true if the given role id is assigned to a member.
+    /// @param _memberAddress Address of member
+    /// @param _roleId Checks member's authenticity with the roleId.
+    /// i.e. Returns true if this roleId is assigned to member
+    function checkRole(address _memberAddress, uint _roleId) public view returns(bool) {
+        if (_roleId == uint(Role.UnAssigned))
+            return true;
+        else if (_roleId == uint(Role.TokenHolder)) {
+            if (dAppToken.totalBalanceOf(_memberAddress) > 0)
+                return true;
+            else
+                return false;
+        }
+        else if (memberRoleData[_roleId].memberActive[_memberAddress]) //solhint-disable-line
+            return true;
+        else
+            return false;
     }
 
     /// @dev Return Member address at specific index against Role id.
     function getMemberAddressByRoleAndIndex(uint _memberRoleId, uint _index) public view returns(address) {
         return memberRoleData[_memberRoleId].memberAddress[_index];
     }
-
-    /// @dev Return member address who holds the right to add/remove any member from specific role.
-    function getAuthrizedMemberAgainstRole(uint _memberRoleId) public view returns(address) {
-        return authorizedAddressAgainstRole[_memberRoleId];
-    }
-
    
     /// @dev Return total number of members assigned against each role id.
     /// @return totalMembers Total members in particular role id
     function getMemberLengthForAllRoles() public view returns(uint[] totalMembers) {
-        totalMembers = new uint[](memberRoleLength);
-        for (uint i = 0; i < memberRoleLength; i++) {
-            totalMembers[i] = getAllMemberLength(i);
+        totalMembers = new uint[](memberRoleData.length);
+        for (uint i = 0; i < memberRoleData.length; i++) {
+            totalMembers[i] = numberOfMembers(i);
         }
     }
     

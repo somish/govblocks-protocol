@@ -345,7 +345,7 @@ contract SimpleVoting is Upgradeable {
         (,_roleId,_majorityVote,, _closingTime,,) = proposalCategory.getCategoryDetails(_category);
         if (pStatus == uint(Governance.ProposalStatus.VotingStarted) && _roleId != uint(MemberRoles.Role.TokenHolder) && _roleId != uint(MemberRoles.Role.UnAssigned)) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now ||  //solhint-disable-line
-                proposalRoleVote[_proposalId].length == memberRole.getAllMemberLength(_roleId)
+                proposalRoleVote[_proposalId].length == memberRole.numberOfMembers(_roleId)
             )
                 closeValue = 1;
         } else if (pStatus == uint(Governance.ProposalStatus.VotingStarted)) {
@@ -418,7 +418,7 @@ contract SimpleVoting is Upgradeable {
         } else if (_mrSequenceId == uint(MemberRoles.Role.UnAssigned)) {
             return true;
         } else {
-            thresHoldValue = SafeMath.div(SafeMath.mul(getAllVoteIdsLengthByProposal(_proposalId), 100), memberRole.getAllMemberLength(_mrSequenceId));
+            thresHoldValue = SafeMath.div(SafeMath.mul(getAllVoteIdsLengthByProposal(_proposalId), 100), memberRole.numberOfMembers(_mrSequenceId));
             if (thresHoldValue > categoryQuorumPerc)
                 return true;
         }
@@ -519,7 +519,7 @@ contract SimpleVoting is Upgradeable {
         (,categoryThenMRSequence,,,,,) = proposalCategory.getCategoryDetails(categoryThenMRSequence);
         //categoryThenMRSequence is now MemberRoleSequence
 
-        require(memberRole.checkRoleIdByAddress(_voter, categoryThenMRSequence));
+        require(memberRole.checkRole(_voter, categoryThenMRSequence));
         require(_solution <= governanceDat.getTotalSolutions(_proposalId));
 
         voteValue = calculateVoteValue(_proposalId, _voter);
@@ -531,7 +531,7 @@ contract SimpleVoting is Upgradeable {
         allVotes.push(ProposalVote(_voter, _solution, _proposalId, voteValue));
 
         if (proposalRoleVote[_proposalId].length
-            == memberRole.getAllMemberLength(categoryThenMRSequence) 
+            == memberRole.numberOfMembers(categoryThenMRSequence) 
             && categoryThenMRSequence != 2
             && categoryThenMRSequence != 0
         ) {
