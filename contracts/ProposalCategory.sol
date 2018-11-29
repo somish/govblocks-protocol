@@ -39,10 +39,6 @@ contract ProposalCategory is Governed {
 
     Category[] public allCategory;
 
-    function callCategoryEvent(uint _categoryId, string _categoryName, string _actionHash) internal{
-        emit CategoryEvent(_categoryId, _categoryName, _actionHash);
-    }
-
     /// @dev Adds new category
     /// @param _name Category name
     /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
@@ -79,7 +75,7 @@ contract ProposalCategory is Governed {
                 _quorumPerc
             ))
         );
-        callCategoryEvent(allCategory.length-1, _name, _actionHash);
+        emit CategoryEvent(allCategory.length-1, _name, _actionHash);
     }
 
     /// @dev Updates category details
@@ -115,7 +111,7 @@ contract ProposalCategory is Governed {
         allCategory[_categoryId].contractAddress = _contractAddress;
         allCategory[_categoryId].contractName = _contractName;
         allCategory[_categoryId].quorumPerc =  _quorumPerc;
-        callCategoryEvent(_categoryId, _name, _actionHash);
+        emit CategoryEvent(_categoryId, _name, _actionHash);
     }
 
     /// @dev gets category details
@@ -187,7 +183,7 @@ contract ProposalCategory is Governed {
                 _quorumPerc
             )
         );
-        callCategoryEvent(allCategory.length-1 , _name, _actionHash);
+        emit CategoryEvent(allCategory.length-1, _name, _actionHash);
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
