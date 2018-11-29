@@ -17,7 +17,9 @@ import "./interfaces/IProposalCategory.sol";
 import "./imports/govern/Governed.sol";
 import "./ProposalCategoryAdder.sol";
 
+
 contract ProposalCategory is IProposalCategory, Governed {
+
     bool public constructorCheck;
     bool public adderCheck;
     address public officialPCA;
@@ -38,7 +40,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         bytes2 contractName;        
     }
 
-    event CategoryEvent(uint indexed categoryId,string categoryName,string actionHash);
+    event CategoryEvent(uint indexed categoryId, string categoryName, string actionHash);
 
     Category[] internal allCategory;
     mapping (uint => CategoryAction) internal categoryActionData;
@@ -125,7 +127,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         allCategory[_categoryId].allowedToCreateProposal = _allowedToCreateProposal;
         allCategory[_categoryId].tokenHoldingTime = _tokenHoldingTime;
         allCategory[_categoryId].minStake = _incentives[0];
-        allCategory[_categoryId].quorumPerc =  _quorumPerc;
+        allCategory[_categoryId].quorumPerc = _quorumPerc;
 
         categoryActionData[_categoryId].defaultIncentive = _incentives[1];
         categoryActionData[_categoryId].contractName = _contractName;
@@ -146,11 +148,11 @@ contract ProposalCategory is IProposalCategory, Governed {
         );
     }
 
-    function categoryQuorum(uint _categoryId) public view returns(uint ,uint){
+    function categoryQuorum(uint _categoryId) public view returns(uint, uint) {
         return (_categoryId, allCategory[_categoryId].quorumPerc);
     }
 
-    function categoryAction(uint _categoryId) public view returns(uint, address, bytes2, uint){
+    function categoryAction(uint _categoryId) public view returns(uint, address, bytes2, uint) {
         return(
             _categoryId,
             categoryActionData[_categoryId].contractAddress,

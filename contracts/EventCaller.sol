@@ -59,7 +59,12 @@ contract EventCaller {
     /// @param _proposalId Id of the created proposal.
     /// @param _dAppName Name of dApp in which proposal is created
     /// @param _proposalDescHash Description hash of created proposal.
-    function callProposalCreated (uint256 _proposalId, uint256 _subCategoryId, bytes32 _dAppName, string _proposalDescHash ) external {
+    function callProposalCreated (
+        uint256 _proposalId,
+        uint256 _subCategoryId,
+        bytes32 _dAppName,
+        string _proposalDescHash
+    ) external {
         emit ProposalCreated(_proposalId, _subCategoryId, _dAppName, _proposalDescHash);
     }
 

@@ -15,7 +15,9 @@
 
 pragma solidity 0.4.24;
 
+
 contract IMemberRoles {
+
     /// @dev Adds new member role
     /// @param _roleName New role name
     /// @param _roleDescription New description hash
@@ -24,8 +26,7 @@ contract IMemberRoles {
         bytes32 _roleName, 
         string _roleDescription, 
         address _authorized
-    )
-        public
+        ) public
     {
         
     }
@@ -38,7 +39,8 @@ contract IMemberRoles {
         address _memberAddress,
         uint _roleId,
         bool _active
-    ) public        
+    )
+        public
     {
     }
 
@@ -62,12 +64,11 @@ contract IMemberRoles {
     /// @dev Gets all members' length
     /// @param _memberRoleId Member role id
     /// @return memberRoleData[_memberRoleId].memberAddress.length Member length
-    function numberOfMembers(uint _memberRoleId) public view returns(uint) {        
+    function numberOfMembers(uint _memberRoleId) public view returns(uint) {
     }
     
     /// @dev Return member address who holds the right to add/remove any member from specific role.
-    function authorized(uint _memberRoleId) public view returns(address) {
-        
+    function authorized(uint _memberRoleId) public view returns(address) {        
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.

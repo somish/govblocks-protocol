@@ -14,9 +14,14 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity 0.4.24;
 
+
 contract IProposalCategory {
 
-    event CategoryEvent(uint indexed categoryId,string categoryName,string actionHash);
+    event CategoryEvent(
+        uint indexed categoryId,
+        string categoryName,
+        string actionHash
+    );
 
     /// @dev Adds new category
     /// @param _name Category name
@@ -75,20 +80,41 @@ contract IProposalCategory {
         uint[2] _incentives
     )
         public
-    { 
+    {
     }
 
     /// @dev gets category details
-    function category(uint _categoryId) public view returns(uint categoryId, uint memberRoleToVote, uint majorityVotePerc, uint[] allowedToCreateProposal, uint closingTime, uint tokenHoldingTime, uint minStake) {     
+    function category(uint _categoryId)
+        public view 
+        returns(
+            uint categoryId,
+            uint memberRoleToVote,
+            uint majorityVotePerc,
+            uint[] allowedToCreateProposal,
+            uint closingTime,
+            uint tokenHoldingTime,
+            uint minStake
+        )
+    {
     }
 
-    function categoryAction(uint _categoryId) public view returns(uint categoryId, address contractAddress, bytes2 contractName, uint defaultIncentive){
+    ///@dev gets category action details
+    function categoryAction(uint _categoryId)
+        public view
+        returns(
+            uint categoryId,
+            address contractAddress,
+            bytes2 contractName,
+            uint defaultIncentive
+        )
+    {
     }
-
     
-   /// @dev Gets Total number of categories added till now
-    function totalCategories() public view returns(uint) {
+    /// @dev Gets Total number of categories added till now
+    function totalCategories() 
+        public view
+        returns(uint numberOfCategories)
+    {
     }
-
 
 }
