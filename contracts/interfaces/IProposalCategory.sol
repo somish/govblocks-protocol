@@ -82,9 +82,6 @@ contract IProposalCategory {
     function category(uint _categoryId) public view returns(uint categoryId, uint memberRoleToVote, uint majorityVotePerc, uint[] allowedToCreateProposal, uint closingTime, uint tokenHoldingTime, uint minStake) {     
     }
 
-    function categoryQuorum(uint _categoryId) public view returns(uint categoryId, uint quorumPerc){        
-    }
-    
     function categoryAction(uint _categoryId) public view returns(uint categoryId, address contractAddress, bytes2 contractName, uint defaultIncentive){
     }
 
