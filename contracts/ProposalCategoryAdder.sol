@@ -30,7 +30,6 @@ contract ProposalCategoryAdder {
         uint mv;
         uint ct;
         uint tokenHoldingTime;
-        
         rs = 1;
         mv = 50;
         al[0] = 1;
@@ -46,80 +45,80 @@ contract ProposalCategoryAdder {
             "Uncategorized",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX",
             address(0),
             "MR",
             0,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Add new member role",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmT3sMfqAvTgCkcsdVgiHvMycEWoeoQiD86e4H744pqfhF",
             address(0),
             "MR",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Update member role",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmV55gWxnEBF8reTrVKrhbg5QrwqA65kFhMEFWDnnpphrJ",
             address(0),
             "MR",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Add new category",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmVXcXmr1aXeK3XSvGXAbDmhEQordetU1Z71h1zmbAZXBf",
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Edit category",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmXB8fB6LpkWqLjhkNYT3412z439VNyN5tRxPV6JTyEHKu",
             address(0),
             "PC",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
 
         proposalCategory.addInitialCategories(
             "Change dApp Token Proxy",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmPR9K6BevCXRVBxWGjF9RV7Pmtxr7D4gE3qsZu5bzi8GK",
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
 
         stakeIncentive[0] = uint256(10) ** 18;
@@ -129,158 +128,158 @@ contract ProposalCategoryAdder {
             "Transfer Ether",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa",
             address(0),
             "PL",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Transfer Token",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB",
             address(0),
             "PL",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
 
         proposalCategory.addInitialCategories(
             "Add new version",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w",
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Add new contract",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmWP3P58YcmveHeXqgsBCRmDewTYV1QqeQqBmRkDujrDLR",
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Add new authorized address",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmRczxM2yN11th3MB8159rm1qAnk4VSrYYmFQCEXXRUf9Z",
             address(0),
             "SV",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Upgrade a contract Implementation",
             rs,
             mv,
+            25,
             al,
             ct,
             "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories( 
             "Upgrade a contract proxy",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmUNGEn7E2csB3YxohDxBKNqvzwa1WfvrSH4TCCFD9DZsg",
             address(0),
             "MS",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories( 
             "Resume Proposal",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1",
             address(0),
             "GD",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories( 
             "Pause Proposal",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk",
             address(0),
             "GD",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories( 
             "Buy GBT in Pool",
             rs,
             mv,
+            25,
             al,
             ct,
             "QmUc6apk3aRoHPaSwafo7RkV4XTJaaWS6Q7MogTMqLDyWs",
             address(0),
             "PL",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "External Proposal", 
             rs,
             mv,
+            25,
             alex,
             ct,
             "", 
             address(0), 
             "EX",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
         proposalCategory.addInitialCategories(
             "Others, not specified",
             rs,
             mv,
+            25,
             alex,
             ct,
             "", 
             address(0), 
             "EX",
             tokenHoldingTime,
-            stakeIncentive,
-            25
+            stakeIncentive
         );
     }
 }

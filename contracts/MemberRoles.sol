@@ -36,7 +36,7 @@ contract MemberRoles is IMemberRoles, Governed {
 
     MemberRoleDetails[] internal memberRoleData;
     bool internal constructorCheck;
-    
+
     modifier checkRoleAuthority(uint _memberRoleId) {
         if (memberRoleData[_memberRoleId].authorized != address(0))
             require(msg.sender == memberRoleData[_memberRoleId].authorized);
@@ -57,7 +57,7 @@ contract MemberRoles is IMemberRoles, Governed {
         _addRole("Unassigned", "Unassigned", address(0));
         _addRole("Advisory Board", "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.", address(0));
         _addRole("Token Holder", "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.", address(0));
-        _updateRole(_firstAB, 1, 1);
+        _updateRole(_firstAB, 1, true);
     }
 
     /// @dev Adds new member role
@@ -110,19 +110,16 @@ contract MemberRoles is IMemberRoles, Governed {
         uint length = memberRoleData[_memberRoleId].memberAddress.length;
         uint j;
         uint i;
-        address[] memory tempAllMemberAddress = new address[](memberRoleData[_memberRoleId].memberCounter);
+        allMemberAddress = new address[](memberRoleData[_memberRoleId].memberCounter);
         for (i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
             if (memberRoleData[_memberRoleId].memberActive[member]) //solhint-disable-line
             {
-                tempAllMemberAddress[j] = member;
+                allMemberAddress[j] = member;
                 j++;
             }
         }
-        allMemberAddress = new address[](j);
-        for (i = 0; i < j; i++) {
-            allMemberAddress[i] = tempAllMemberAddress[i];
-        }
+
         return (_memberRoleId, allMemberAddress);
     }
 
@@ -190,11 +187,10 @@ contract MemberRoles is IMemberRoles, Governed {
         bool _active) internal {
         require( _roleId != uint(Role.TokenHolder),"Membership to Token holder is detected automatically");
         if (_active) {
-            require (!memberRoleData[_roleId].memberActive[_memberAddress]) {
-                memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
-                memberRoleData[_roleId].memberActive[_memberAddress] = true;
-                memberRoleData[_roleId].memberAddress.push(_memberAddress);
-            }
+            require (!memberRoleData[_roleId].memberActive[_memberAddress]);
+            memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
+            memberRoleData[_roleId].memberActive[_memberAddress] = true;
+            memberRoleData[_roleId].memberAddress.push(_memberAddress);
         } else {
             require(memberRoleData[_roleId].memberActive[_memberAddress]);
             memberRoleData[_roleId].memberCounter = SafeMath.sub(memberRoleData[_roleId].memberCounter, 1);

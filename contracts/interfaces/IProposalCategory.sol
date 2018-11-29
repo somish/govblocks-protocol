@@ -17,12 +17,19 @@ pragma solidity 0.4.24;
 contract IProposalCategory {
 
     event CategoryEvent(uint indexed categoryId,string categoryName,string actionHash);
+
     /// @dev Adds new category
     /// @param _name Category name
     /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
     /// @param _allowedToCreateProposal Member roles allowed to create the proposal
     /// @param _majorityVotePerc Majority Vote threshold for Each voting layer
+    /// @param _quorumPerc minimum threshold percentage required in voting to calculate result
     /// @param _closingTime Vote closing time for Each voting layer
+    /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
+    /// @param _contractAddress address of contract to call after proposal is accepted
+    /// @param _contractName name of contract to be called after proposal is accepted
+    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
+    /// @param _incentives rewards to distributed after proposal is accepted
     function addCategory(
         string _name, 
         uint _memberRoleToVote,
@@ -36,21 +43,28 @@ contract IProposalCategory {
         uint _tokenHoldingTime,
         uint[2] _incentives
     ) 
-        public         
-    {        
+        public
+    {
     }
 
     /// @dev Updates category details
     /// @param _categoryId Category id that needs to be updated
-    /// @param _roleName Updated Role sequence to vote i.e. Updated voting layer sequence
-    /// @param _majorityVote Updated Majority threshold value against each voting layer.
+    /// @param _name Category name
+    /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
     /// @param _allowedToCreateProposal Member roles allowed to create the proposal
-    /// @param _closingTime Updated Vote closing time against each voting layer
+    /// @param _majorityVotePerc Majority Vote threshold for Each voting layer
+    /// @param _quorumPerc minimum threshold percentage required in voting to calculate result
+    /// @param _closingTime Vote closing time for Each voting layer
+    /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
+    /// @param _contractAddress address of contract to call after proposal is accepted
+    /// @param _contractName name of contract to be called after proposal is accepted
+    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
+    /// @param _incentives rewards to distributed after proposal is accepted
     function updateCategory(
         uint _categoryId, 
         string _name, 
-        uint _roleName, 
-        uint _majorityVote, 
+        uint _memberRoleToVote, 
+        uint _majorityVotePerc, 
         uint _quorumPerc,
         uint[] _allowedToCreateProposal,
         uint _closingTime,
@@ -58,23 +72,25 @@ contract IProposalCategory {
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[2] _incentives,        
+        uint[2] _incentives
     )
-        public        
+        public
     { 
     }
 
     /// @dev gets category details
-    function category(uint _categoryId) public view returns(uint categoryId, uint memberRoleToVote, uint majorityVotePerc, uint[] allowedToCreateProposal, uint closingTime, uint tokenHoldingTime, uint minStake) {
-     
+    function category(uint _categoryId) public view returns(uint categoryId, uint memberRoleToVote, uint majorityVotePerc, uint[] allowedToCreateProposal, uint closingTime, uint tokenHoldingTime, uint minStake) {     
     }
 
-    function categoryAction(uint _categoryId) public view returns(uint categoryId, address contractAddress, bytes2 contractName, uint defaultIncentive){       
+    function categoryQuorum(uint _categoryId) public view returns(uint categoryId, uint quorumPerc){        
+    }
+    
+    function categoryAction(uint _categoryId) public view returns(uint categoryId, address contractAddress, bytes2 contractName, uint defaultIncentive){
     }
 
     
    /// @dev Gets Total number of categories added till now
-    function totalCategories() public view returns(uint) {       
+    function totalCategories() public view returns(uint) {
     }
 
 

@@ -13,11 +13,11 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity 0.4.24;
+import "./interfaces/IProposalCategory.sol";
 import "./imports/govern/Governed.sol";
 import "./ProposalCategoryAdder.sol";
 
-
-contract ProposalCategory is Governed {
+contract ProposalCategory is IProposalCategory, Governed {
     bool public constructorCheck;
     bool public adderCheck;
     address public officialPCA;
@@ -25,97 +25,116 @@ contract ProposalCategory is Governed {
     struct Category {
         uint memberRoleToVote;
         uint majorityVotePerc;
+        uint quorumPerc;
         uint[] allowedToCreateProposal;
         uint closingTime;
         uint tokenHoldingTime;
         uint minStake;
+    }
+
+    struct CategoryAction {
         uint defaultIncentive;
         address contractAddress;
-        bytes2 contractName;
-        uint quorumPerc;
+        bytes2 contractName;        
     }
 
     event CategoryEvent(uint indexed categoryId,string categoryName,string actionHash);
 
-    Category[] public allCategory;
-
+    Category[] internal allCategory;
+    mapping (uint => CategoryAction) internal categoryActionData;
+    
     /// @dev Adds new category
     /// @param _name Category name
     /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
-    /// @param _allowedToCreateProposal Member roles allowed to create the proposal
     /// @param _majorityVotePerc Majority Vote threshold for Each voting layer
+    /// @param _quorumPerc minimum threshold percentage required in voting to calculate result
+    /// @param _allowedToCreateProposal Member roles allowed to create the proposal
     /// @param _closingTime Vote closing time for Each voting layer
-    function addNewCategory(
+    /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
+    /// @param _contractAddress address of contract to call after proposal is accepted
+    /// @param _contractName name of contract to be called after proposal is accepted
+    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
+    /// @param _incentives rewards to distributed after proposal is accepted
+    function addCategory(
         string _name, 
         uint _memberRoleToVote,
         uint _majorityVotePerc, 
+        uint _quorumPerc,
         uint[] _allowedToCreateProposal,
         uint _closingTime,
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
         uint _tokenHoldingTime,
-        uint[2] _incentives,
-        uint _quorumPerc
+        uint[] _incentives
     ) 
         public
         onlyAuthorizedToGovern 
     {
+        categoryActionData[allCategory.length].defaultIncentive = _incentives[1];        
+        categoryActionData[allCategory.length].contractName = _contractName;
+        categoryActionData[allCategory.length].contractAddress = _contractAddress;        
         allCategory.push((
             Category(
                 _memberRoleToVote,
                 _majorityVotePerc,
+                _quorumPerc,
                 _allowedToCreateProposal,
                 _closingTime,
                 _tokenHoldingTime,
-                _incentives[0],
-                _incentives[1],
-                _contractAddress,
-                _contractName,
-                _quorumPerc
+                _incentives[0]
             ))
         );
+
         emit CategoryEvent(allCategory.length-1, _name, _actionHash);
     }
 
     /// @dev Updates category details
     /// @param _categoryId Category id that needs to be updated
-    /// @param _roleName Updated Role sequence to vote i.e. Updated voting layer sequence
-    /// @param _majorityVote Updated Majority threshold value against each voting layer.
+    /// @param _name Category name
+    /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
     /// @param _allowedToCreateProposal Member roles allowed to create the proposal
-    /// @param _closingTime Updated Vote closing time against each voting layer
+    /// @param _majorityVotePerc Majority Vote threshold for Each voting layer
+    /// @param _quorumPerc minimum threshold percentage required in voting to calculate result
+    /// @param _closingTime Vote closing time for Each voting layer
+    /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
+    /// @param _contractAddress address of contract to call after proposal is accepted
+    /// @param _contractName name of contract to be called after proposal is accepted
+    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
+    /// @param _incentives rewards to distributed after proposal is accepted
     function updateCategory(
         uint _categoryId, 
         string _name, 
-        uint _roleName, 
-        uint _majorityVote, 
+        uint _memberRoleToVote, 
+        uint _majorityVotePerc, 
+        uint _quorumPerc,
         uint[] _allowedToCreateProposal,
         uint _closingTime,
         uint _tokenHoldingTime,
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[2] _incentives,
-        uint _quorumPerc
+        uint[] _incentives
     )
         public
         onlyAuthorizedToGovern
     { 
-        allCategory[_categoryId].memberRoleToVote = _roleName;
-        allCategory[_categoryId].majorityVotePerc = _majorityVote;
+        allCategory[_categoryId].memberRoleToVote = _memberRoleToVote;
+        allCategory[_categoryId].majorityVotePerc = _majorityVotePerc;
         allCategory[_categoryId].closingTime = _closingTime;
-        allCategory[_categoryId].allowedToCreateProposal = _allowedToCreateProposal; 
+        allCategory[_categoryId].allowedToCreateProposal = _allowedToCreateProposal;
         allCategory[_categoryId].tokenHoldingTime = _tokenHoldingTime;
         allCategory[_categoryId].minStake = _incentives[0];
-        allCategory[_categoryId].defaultIncentive = _incentives[1];
-        allCategory[_categoryId].contractAddress = _contractAddress;
-        allCategory[_categoryId].contractName = _contractName;
         allCategory[_categoryId].quorumPerc =  _quorumPerc;
+
+        categoryActionData[_categoryId].defaultIncentive = _incentives[1];
+        categoryActionData[_categoryId].contractName = _contractName;
+        categoryActionData[_categoryId].contractAddress = _contractAddress;
         emit CategoryEvent(_categoryId, _name, _actionHash);
     }
 
     /// @dev gets category details
-    function getCategoryDetails(uint _categoryId) public view returns(uint, uint, uint, uint[], uint, uint, uint) {
+    function category(uint _categoryId) public view returns(uint, uint, uint, uint[], uint, uint, uint) {
         return(
             _categoryId,
             allCategory[_categoryId].memberRoleToVote,
@@ -127,63 +146,55 @@ contract ProposalCategory is Governed {
         );
     }
 
-    function getCategoryActionDetails(uint _categoryId) public view returns(uint, address, bytes2, uint){
-        return(
-            _categoryId,
-            allCategory[_categoryId].contractAddress,
-            allCategory[_categoryId].contractName,
-            allCategory[_categoryId].defaultIncentive
-        );
+    function categoryQuorum(uint _categoryId) public view returns(uint ,uint){
+        return (_categoryId, allCategory[_categoryId].quorumPerc);
     }
 
-    function getCategoryQuorumPercent(uint _categoryId) public view returns(uint, uint){
+    function categoryAction(uint _categoryId) public view returns(uint, address, bytes2, uint){
         return(
             _categoryId,
-            allCategory[_categoryId].quorumPerc
+            categoryActionData[_categoryId].contractAddress,
+            categoryActionData[_categoryId].contractName,
+            categoryActionData[_categoryId].defaultIncentive
         );
-    }
-    
-    function isCategoryExternal(uint _category) public view returns(bool ext) {
-        return _isCategoryExternal(_category);
     }
 
    /// @dev Gets Total number of categories added till now
-    function getCategoryLength() public view returns(uint) {
+    function totalCategories() public view returns(uint) {
         return allCategory.length;
     }
 
     function addInitialCategories(
-        string _name, 
-        uint _roleName, 
-        uint _majorityVote, 
+        string _name,
+        uint _memberRoleToVote,
+        uint _majorityVotePerc, 
+        uint _quorumPerc,
         uint[] _allowedToCreateProposal,
         uint _closingTime,
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
         uint _tokenHoldingTime,
-        uint[] _incentives,
-        uint _quorumPerc
+        uint[] _incentives
     ) 
         public 
     {
         require(allCategory.length < 18);
         require(msg.sender == officialPCA || officialPCA == address(0));
         // allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
-        allCategory.push(Category(
-                _roleName,
-                _majorityVote,
+        addCategory(
+                _name,
+                _memberRoleToVote,
+                _majorityVotePerc,
+                _quorumPerc,
                 _allowedToCreateProposal,
                 _closingTime,
-                _tokenHoldingTime,
-                _incentives[0],
-                _incentives[1],
+                _actionHash,
                 _contractAddress,
                 _contractName,
-                _quorumPerc
-            )
-        );
-        emit CategoryEvent(allCategory.length-1, _name, _actionHash);
+                _tokenHoldingTime,
+                _incentives
+            );
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
@@ -197,24 +208,10 @@ contract ProposalCategory is Governed {
         constructorCheck = true;
     }
 
-    ///@dev just to follow the interface
-    function updateDependencyAddresses() public pure { //solhint-disable-line
-    }
-
-    /// @dev just to adhere to GovBlockss' Upgradeable interface
-    function changeMasterAddress(address _masterAddress) public pure { //solhint-disable-line
-    }
-
     function _getCodeSize(address _addr) internal view returns(uint _size) {
         assembly { //solhint-disable-line
             _size := extcodesize(_addr)
         }
     }
 
-    function _isCategoryExternal(uint _category) internal view returns(bool ext) {
-        for (uint i = 0; i < allCategory[_category].allowedToCreateProposal.length; i++) {
-            if (allCategory[_category].allowedToCreateProposal[i] == 0)
-                ext = true;
-        }        
-    }
 }

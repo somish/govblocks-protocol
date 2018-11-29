@@ -104,7 +104,7 @@ contract Governance is Upgradeable {
         if (category == 0)
             return true;
         uint[] memory mrAllowed;
-        (,,,mrAllowed,,,) = proposalCategory.getCategoryDetails(category);
+        (,,,mrAllowed,,,) = proposalCategory.category(category);
         for (uint i = 0; i < mrAllowed.length; i++) {
             if (mrAllowed[i] == 0 || memberRole.checkRole(msg.sender, mrAllowed[i]))
                 return true;
@@ -142,19 +142,12 @@ contract Governance is Upgradeable {
             _proposalDescHash
         );
         /* solhint-enable */
-        address token;
         if (_categoryId > 0) {
-            /* solhint-disable */
-            if (proposalCategory.isCategoryExternal(_categoryId))
-                token = address(govBlocksToken);
-            else
-                token = dAppLocker;
-            /* solhint-enable */
-            require(validateStake(_categoryId, token));
-            governanceDat.addNewProposal(msg.sender, _categoryId, token);
+            require(validateStake(_categoryId, dAppLocker));
+            governanceDat.addNewProposal(msg.sender, _categoryId, dAppLocker);
             uint incentive;
-            (,,,incentive) = proposalCategory.getCategoryActionDetails(_categoryId);
-            require(incentive <= GBTStandardToken(token).balanceOf(poolAddress));
+            (,,,incentive) = proposalCategory.categoryAction(_categoryId);
+            require(incentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress));
             governanceDat.setProposalIncentive(_proposalId, incentive); 
             governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
         } else
@@ -187,7 +180,7 @@ contract Governance is Upgradeable {
     function validateStake(uint _categoryId, address _token) public view returns(bool) {
         uint minStake;
         uint tokenholdingTime;
-        (,,,,, tokenholdingTime, minStake) = proposalCategory.getCategoryDetails(_categoryId);
+        (,,,,, tokenholdingTime, minStake) = proposalCategory.category(_categoryId);
         if (minStake == 0)
             return true;
         GBTStandardToken tokenInstance = GBTStandardToken(_token);
@@ -209,27 +202,18 @@ contract Governance is Upgradeable {
         require(governanceDat.getTotalSolutions(_proposalId) < 2 , "Categorization not possible, since solutions had already been submitted");
 
         uint dappIncentive;
-        (,,, dappIncentive) = proposalCategory.getCategoryActionDetails(_categoryId);
+        (,,, dappIncentive) = proposalCategory.categoryAction(_categoryId);
 
-        // uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
-        address tokenAddress;
-
-        /* solhint-disable */
-        if (proposalCategory.isCategoryExternal(_categoryId))
-            tokenAddress = address(govBlocksToken);
-        else
-            tokenAddress = dAppLocker;
-        /* solhint-enable */
 
         if (!memberRole.checkRole(msg.sender, 1)) {
             require(allowedToCreateProposal(_categoryId),"User not authorized to categorize this proposal"); 
-            require(validateStake(_categoryId, tokenAddress), "Lock more tokens");
+            require(validateStake(_categoryId, dAppLocker), "Lock more tokens");
         }
 
-        require(dappIncentive <= GBTStandardToken(tokenAddress).balanceOf(poolAddress) , "Less token balance in pool for incentive distribution");
+        require(dappIncentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress) , "Less token balance in pool for incentive distribution");
 
         governanceDat.setProposalIncentive(_proposalId, dappIncentive);
-        governanceDat.setProposalCategory(_proposalId, _categoryId, tokenAddress);
+        governanceDat.setProposalCategory(_proposalId, _categoryId, dAppLocker);
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
     }
 
@@ -244,7 +228,7 @@ contract Governance is Upgradeable {
         require(governanceDat.getTotalSolutions(_proposalId) > 1 , "Proposal should contain atleast two solutions before it is open for voting");
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.VotingStarted));
         uint closingTime;
-        (,,,,closingTime,,) = proposalCategory.getCategoryDetails(category);
+        (,,,,closingTime,,) = proposalCategory.category(category);
         closingTime = SafeMath.add(closingTime, now); // solhint-disable-line
         address votingType = governanceDat.getLatestVotingAddress();
         eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
