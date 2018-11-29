@@ -57,13 +57,13 @@ contract('Proposal, solution and voting', function([
   it('Should create a proposal with solution to add new member role', async function() {
     this.timeout(100000);
     let actionHash = encode(
-      'addNewMemberRole(bytes32,string,address)',
+      'addRole(bytes32,string,address)',
       '0x41647669736f727920426f617265000000000000000000000000000000000000',
       'New member role',
       owner
     );
     p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    mrLength = await mr.memberRoleLength();
+    mrLength = await mr.totalRoles();
     let amount = 50000000000000000000;
     await gbt.lock('GOV', amount, 5468545613353456);
     await gv.createProposalwithVote(
@@ -91,7 +91,7 @@ contract('Proposal, solution and voting', function([
     p = p.toNumber();
     await sv.closeProposalVote(p);
     await catchRevert(sv.closeProposalVote(p));
-    mrLength2 = await mr.memberRoleLength();
+    mrLength2 = await mr.totalRoles();
     assert.equal(
       mrLength.toNumber() + 1,
       mrLength2.toNumber(),
@@ -101,7 +101,7 @@ contract('Proposal, solution and voting', function([
 
   it('Should have added new member role', async function() {
     this.timeout(100000);
-    mrLength2 = await mr.memberRoleLength();
+    mrLength2 = await mr.totalRoles();
     assert.equal(
       mrLength.toNumber() + 1,
       mrLength2.toNumber(),
@@ -111,7 +111,7 @@ contract('Proposal, solution and voting', function([
 
   it('Should create an uncategorized proposal', async function() {
     this.timeout(100000);
-    mrLength = await mr.memberRoleLength();
+    mrLength = await mr.totalRoles();
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -133,7 +133,7 @@ contract('Proposal, solution and voting', function([
   it('Should not add solution before proposal is open for solution submission', async function() {
     this.timeout(100000);
     let actionHash = encode(
-      'addNewMemberRole(bytes32,string,address)',
+      'addRole(bytes32,string,address)',
       '0x41647669736f727920426f617265000000000000000000000000000000000000',
       'New member role',
       owner
@@ -160,7 +160,7 @@ contract('Proposal, solution and voting', function([
   it('Should submit a solution', async function() {
     this.timeout(100000);
     let actionHash = encode(
-      'addNewMemberRole(bytes32,string,address)',
+      'addRole(bytes32,string,address)',
       '0x41647669736f727920426f617265000000000000000000000000000000000000',
       'New member role',
       owner
@@ -194,7 +194,7 @@ contract('Proposal, solution and voting', function([
 
   it('Should have added new member role', async function() {
     this.timeout(100000);
-    mrLength2 = await mr.memberRoleLength();
+    mrLength2 = await mr.totalRoles();
     assert.equal(
       mrLength.toNumber() + 1,
       mrLength2.toNumber(),
@@ -210,15 +210,15 @@ contract('Proposal, solution and voting', function([
 
   it('Should add another person to AB', async function() {
     this.timeout(100000);
-    await mr.updateMemberRole(ab, 1, true);
+    await mr.updateRole(ab, 1, true);
     assert.equal(
-      await mr.checkRoleIdByAddress(ab, 1),
+      await mr.checkRole(ab, 1),
       true,
       'user not added to AB'
     );
-    await mr.updateMemberRole(member, 3, true);
+    await mr.updateRole(member, 3, true);
     assert.equal(
-      await mr.checkRoleIdByAddress(member, 3),
+      await mr.checkRole(member, 3),
       true,
       'user not added to member'
     );
@@ -238,7 +238,7 @@ contract('Proposal, solution and voting', function([
     );
     await sv.proposalVoting(p, [0], { from: ab });
     await sv.closeProposalVote(p);
-    await mr.updateMemberRole(member, 1, true);
+    await mr.updateRole(member, 1, true);
     p = await gd.getProposalLength();
     p = p.toNumber();
     await gv.createProposalwithVote(
@@ -253,11 +253,11 @@ contract('Proposal, solution and voting', function([
     await sv.proposalVoting(p, [2], { from: ab });
     await sv.proposalVoting(p, [0], { from: member });
     await sv.closeProposalVote(p);
-    await mr.updateMemberRole(member, 1, false);
+    await mr.updateRole(member, 1, false);
     p = await gd.getProposalLength();
     p = p.toNumber();
     await gbt.transfer(pl.address, e18.mul(20));
-    await mr.updateMemberRole(ab, 1, false);
+    await mr.updateRole(ab, 1, false);
     await gv.createProposal(
       'Add new member',
       'Add new member',

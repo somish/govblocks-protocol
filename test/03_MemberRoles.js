@@ -15,7 +15,7 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('should have added initial member roles', async function() {
-    const ab = await mr.memberRoleLength.call();
+    const ab = await mr.totalRoles.call();
     assert.equal(
       ab,
       3,
@@ -24,14 +24,14 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('should have added owner to AB', async function() {
-    const roles = await mr.getRoleIdByAddress(owner);
+    const roles = await mr.roles(owner);
     assert.equal(
-      await mr.checkRoleIdByAddress(owner, 1),
+      await mr.checkRole(owner, 1),
       true,
       'Owner not added to AB'
     );
     assert.equal(
-      await mr.checkRoleIdByAddress(member, 1),
+      await mr.checkRole(member, 1),
       false,
       'user added to AB incorrectly'
     );
@@ -39,23 +39,23 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('should add a member to a role', async function() {
-    await mr.updateMemberRole(member, 1, true);
-    await catchRevert(mr.updateMemberRole(member, 2, true));
-    await catchRevert(mr.updateMemberRole(member, 2, true, { from: other}));
+    await mr.updateRole(member, 1, true);
+    await catchRevert(mr.updateRole(member, 2, true));
+    await catchRevert(mr.updateRole(member, 2, false, { from: other}));
     assert.equal(
-      await mr.checkRoleIdByAddress(member, 1),
+      await mr.checkRole(member, 1),
       true,
       'user not added to AB'
     );
   });
 
   it('Should fetch all address by role id', async function() {
-    const g3 = await mr.getAllAddressByRoleId(1);
+    const g3 = await mr.members(1);
     assert.equal(g3[1][0], owner);
   });
 
   it('Should fetch total number of members by role id', async function() {
-    const g4 = await mr.getAllMemberLength(1);
+    const g4 = await mr.numberOfMembers(1);
     assert.equal(g4.toNumber(), 2);
   });
 
@@ -77,64 +77,64 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('Should not list invalid member as valid', async function() {
-    var a = await mr.checkRoleIdByAddress(member, 1);
-    await mr.updateMemberRole(member, 1, false);
+    var a = await mr.checkRole(member, 1);
+    await mr.updateRole(member, 1, false);
     assert.equal(
-      await mr.checkRoleIdByAddress(member, 1),
+      await mr.checkRole(member, 1),
       false,
       'user incorrectly added to AB'
     );
-    await mr.updateMemberRole(member, 1, true);
+    await mr.updateRole(member, 1, true);
     assert.equal(
-      await mr.checkRoleIdByAddress(member, 1),
+      await mr.checkRole(member, 1),
       true,
       'user not added to AB'
     );
   });
 
   it('Should be able to remove member from a role', async function() {
-    await mr.updateMemberRole(member, 1, false);
+    await mr.updateRole(member, 1, false);
     assert.equal(
-      await mr.checkRoleIdByAddress(member, 1),
+      await mr.checkRole(member, 1),
       false,
       'user not removed from AB'
     );
-    catchRevert(mr.updateMemberRole(member, 1, false));
+    catchRevert(mr.updateRole(member, 1, false));
   });
 
   it('Should not allow unauthorized people to update member roles', async function() {
-    await mr.changeCanAddMember(1, owner);
+    await mr.changeAuthorized(1, owner);
     await catchRevert(
-      mr.updateMemberRole(member, 1, true, { from: other })
+      mr.updateRole(member, 1, true, { from: other })
     );
   });
 
   it('Should change authorizedAddress when rquested by authorizedAddress', async function() {
-    await mr.changeCanAddMember(1, member);
+    await mr.changeAuthorized(1, member);
     assert.equal(
-      await mr.getAuthrizedMemberAgainstRole(1),
+      await mr.authorized(1),
       member,
       'Authorized address not changed'
     );
   });
 
   it('Should get proper Roles', async () => {
-    const mrs = await mr.getRoleIdByAddress(owner);
+    const mrs = await mr.roles(owner);
     assert.equal(
-      await mr.checkRoleIdByAddress(owner, 1),
+      await mr.checkRole(owner, 1),
       true,
       'Owner not added to AB'
     );
     assert.equal(mrs[0].toNumber(), 1);
-    const mrs2 = await mr.getRoleIdByAddress(other);
+    const mrs2 = await mr.roles(other);
   });
 
   it('Should allow anyone to be of member role 0', async () => {
-    assert.equal(await mr.checkRoleIdByAddress(owner, 0), true);
+    assert.equal(await mr.checkRole(owner, 0), true);
   });
 
   it('Should check if a user holds dApp token', async () => {
-    assert.equal(await mr.checkRoleIdByAddress(owner, 2), true);
-    assert.equal(await mr.checkRoleIdByAddress(other, 2), false);
+    assert.equal(await mr.checkRole(owner, 2), true);
+    assert.equal(await mr.checkRole(other, 2), false);
   });
 });

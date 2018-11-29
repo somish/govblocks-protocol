@@ -105,7 +105,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should allow authorized people to categorize multiple times', async function() {
-    const a = await mr.memberRoleLength();
+    const a = await mr.totalRoles();
     console.log(a);
     await gv.categorizeProposal(pid, 2);
     assert.equal(
@@ -113,14 +113,14 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
       2,
       'Not categorized'
     );
-    await mr.updateMemberRole(notOwner, 1, true);
+    await mr.updateRole(notOwner, 1, true);
     await gv.categorizeProposal(pid, 11);
     assert.equal(
       (await gd.getProposalCategory(pid)).toNumber(),
       11,
       'Not categorized'
     );
-    await mr.updateMemberRole(notOwner, 1, false);
+    await mr.updateRole(notOwner, 1, false);
   });
 
   it('Should not allow unauthorized people to open proposal for voting and submit solutions', async () => {
@@ -185,8 +185,8 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should check reward distribution when punish voters is true', async () => {
-    await mr.updateMemberRole(notOwner, 1, true);
-    await mr.updateMemberRole(voter, 1, true);
+    await mr.updateRole(notOwner, 1, true);
+    await mr.updateRole(voter, 1, true);
     await gbt.transfer(voter, e18.mul(10));
     await dAppToken.lock('GOV', e18.mul(10), 54685456133563456, {
       from: voter
@@ -213,8 +213,8 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
 
   it('Should give reward to all voters when punish voters is false', async () => {
     gd.setPunishVoters(false);
-    await mr.updateMemberRole(notOwner, 1, true);
-    await mr.updateMemberRole(voter, 1, true);
+    await mr.updateRole(notOwner, 1, true);
+    await mr.updateRole(voter, 1, true);
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
     propId = (await gd.getProposalLength()).toNumber() - 1;
     await gv.categorizeProposal(propId, 14);
@@ -232,8 +232,8 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     balance = (await dAppToken.balanceOf(voter)).toNumber();
     await pl.claimReward(voter, voterProposals , { from:voter });
     assert.isAbove((await dAppToken.balanceOf(owner)).toNumber(), balance);
-    await mr.updateMemberRole(voter, 1, false);
-    await mr.updateMemberRole(notOwner, 1, false);
+    await mr.updateRole(voter, 1, false);
+    await mr.updateRole(notOwner, 1, false);
   });
 
   it('Should not give reward if proposal is rejected', async () => {
