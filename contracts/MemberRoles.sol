@@ -22,9 +22,9 @@ import "./imports/govern/Governed.sol";
 
 
 contract MemberRoles is IMemberRoles, Governed {
+    
     using SafeMath for uint;
     enum Role { UnAssigned, AdvisoryBoard, TokenHolder }
-
     LockableToken public dAppToken;
 
     struct MemberRoleDetails {
@@ -54,31 +54,11 @@ contract MemberRoles is IMemberRoles, Governed {
     }
 
     function addInitialMemberRoles(address _firstAB) internal {
-        emit MemberRole(uint(Role.UnAssigned), "Everyone", "Professionals that are a part of the GBT network");
-        memberRoleData.push(MemberRoleDetails(0,new address[](0),address(0)));
-        emit MemberRole(
-            uint(Role.AdvisoryBoard),
-            "Advisory Board",
-            "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp."); //solhint-disable-line
-        memberRoleData.push(MemberRoleDetails(0,new address[](0),address(0)));
-        emit MemberRole(
-            uint(Role.TokenHolder),
-            "Token Holder",
-            "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default."); //solhint-disable-line
-        memberRoleData.push(MemberRoleDetails(0,new address[](0),address(0)));
-        memberRoleData[1].memberActive[_firstAB] = true;
-        memberRoleData[1].memberCounter++;
-        memberRoleData[1].memberAddress.push(_firstAB);
+        _addRole("Unassigned", "Unassigned", address(0));
+        _addRole("Advisory Board", "Selected few members that are deeply entrusted by the dApp. An ideal advisory board should be a mix of skills of domain, governance,research, technology, consulting etc to improve the performance of the dApp.", address(0));
+        _addRole("Token Holder", "Represents all users who hold dApp tokens. This is the most general category and anyone holding token balance is a part of this category by default.", address(0));
+        _updateRole(_firstAB, 1, 1);
     }
-
-    /// @dev To Initiate default settings whenever the contract is regenerated!
-    function updateDependencyAddresses() public pure { //solhint-disable-line
-    }
-
-    /// @dev just to adhere to GovBlockss' Upgradeable interface
-    function changeMasterAddress(address _masterAddress) public pure { //solhint-disable-line
-    }
-
 
     /// @dev Adds new member role
     /// @param _roleName New role name
@@ -92,8 +72,7 @@ contract MemberRoles is IMemberRoles, Governed {
         public
         onlyAuthorizedToGovern
     {
-        emit MemberRole(memberRoleData.length, _roleName, _roleDescription);
-        memberRoleData.push(MemberRoleDetails(0,new address[](0),_authorized));
+        _addRole(_roleName, _roleDescription, _authorized);
     }
 
     /// @dev Assign or Delete a member from specific role.
@@ -108,18 +87,7 @@ contract MemberRoles is IMemberRoles, Governed {
         public
         checkRoleAuthority(_roleId)
     {
-        require( _roleId != uint(Role.TokenHolder),"Membership to Token holder is detected automatically");
-        if (_active) {
-            if (!memberRoleData[_roleId].memberActive[_memberAddress]) {
-                memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
-                memberRoleData[_roleId].memberActive[_memberAddress] = true;
-                memberRoleData[_roleId].memberAddress.push(_memberAddress);
-            }
-        } else {
-            require(memberRoleData[_roleId].memberActive[_memberAddress]);
-            memberRoleData[_roleId].memberCounter = SafeMath.sub(memberRoleData[_roleId].memberCounter, 1);
-            delete memberRoleData[_roleId].memberActive[_memberAddress];
-        }
+        _updateRole(_memberAddress, _roleId, _active);
     }
 
     /// @dev Return number of member roles
@@ -207,11 +175,6 @@ contract MemberRoles is IMemberRoles, Governed {
         else
             return false;
     }
-
-    /// @dev Return Member address at specific index against Role id.
-    function getMemberAddressByRoleAndIndex(uint _memberRoleId, uint _index) public view returns(address) {
-        return memberRoleData[_memberRoleId].memberAddress[_index];
-    }
    
     /// @dev Return total number of members assigned against each role id.
     /// @return totalMembers Total members in particular role id
@@ -221,5 +184,37 @@ contract MemberRoles is IMemberRoles, Governed {
             totalMembers[i] = numberOfMembers(i);
         }
     }
+
+    function _updateRole (address _memberAddress,
+        uint _roleId,
+        bool _active) internal {
+        require( _roleId != uint(Role.TokenHolder),"Membership to Token holder is detected automatically");
+        if (_active) {
+            require (!memberRoleData[_roleId].memberActive[_memberAddress]) {
+                memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
+                memberRoleData[_roleId].memberActive[_memberAddress] = true;
+                memberRoleData[_roleId].memberAddress.push(_memberAddress);
+            }
+        } else {
+            require(memberRoleData[_roleId].memberActive[_memberAddress]);
+            memberRoleData[_roleId].memberCounter = SafeMath.sub(memberRoleData[_roleId].memberCounter, 1);
+            delete memberRoleData[_roleId].memberActive[_memberAddress];
+        }
+    }
+
+    /// @dev Adds new member role
+    /// @param _roleName New role name
+    /// @param _roleDescription New description hash
+    /// @param _authorized Authorized member against every role id
+    function _addRole(
+        bytes32 _roleName, 
+        string _roleDescription, 
+        address _authorized
+    ) internal       
+    {
+        emit MemberRole(memberRoleData.length, _roleName, _roleDescription);
+        memberRoleData.push(MemberRoleDetails(0,new address[](0),_authorized));
+    }
+    
     
 }
