@@ -15,14 +15,10 @@
 pragma solidity 0.4.24;
 import "./interfaces/IProposalCategory.sol";
 import "./imports/govern/Governed.sol";
-import "./ProposalCategoryAdder.sol";
-
 
 contract ProposalCategory is IProposalCategory, Governed {
 
     bool public constructorCheck;
-    bool public adderCheck;
-    address public officialPCA;
 
     struct Category {
         uint memberRoleToVote;
@@ -66,22 +62,21 @@ contract ProposalCategory is IProposalCategory, Governed {
         bytes2 _contractName,
         uint[] _incentives
     ) 
-        public
+        external
         onlyAuthorizedToGovern 
     {
-        allCategory.push((
-            Category(
-                _memberRoleToVote,
-                _majorityVotePerc,
-                _quorumPerc,
-                _allowedToCreateProposal,
-                _closingTime,
-                _incentives[0]
-            ))
+        _addCategory(
+        _name, 
+        _memberRoleToVote,
+        _majorityVotePerc, 
+        _quorumPerc,
+        _allowedToCreateProposal,
+        _closingTime,
+        _actionHash,
+        _contractAddress,
+        _contractName,
+        _incentives
         );
-        uint categoryId = allCategory.length - 1;
-        categoryActionData[categoryId] = CategoryAction(_incentives[1], _contractName, _contractAddress);
-        emit Category(categoryId, _name, _actionHash);
     }
 
     /// @dev Updates category details
@@ -110,7 +105,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         bytes2 _contractName,
         uint[] _incentives
     )
-        public
+        external
         onlyAuthorizedToGovern
     { 
         allCategory[_categoryId].memberRoleToVote = _memberRoleToVote;
@@ -126,7 +121,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     /// @dev gets category details
-    function category(uint _categoryId) public view returns(uint, uint, uint, uint, uint[], uint, uint) {
+    function category(uint _categoryId) external view returns(uint, uint, uint, uint, uint[], uint, uint) {
         return(
             _categoryId,
             allCategory[_categoryId].memberRoleToVote,
@@ -138,7 +133,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         );
     }
 
-    function categoryAction(uint _categoryId) public view returns(uint, address, bytes2, uint) {
+    function categoryAction(uint _categoryId) external view returns(uint, address, bytes2, uint) {
         return(
             _categoryId,
             categoryActionData[_categoryId].contractAddress,
@@ -148,8 +143,58 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
    /// @dev Gets Total number of categories added till now
-    function totalCategories() public view returns(uint) {
+    function totalCategories() external view returns(uint) {
         return allCategory.length;
+    }
+
+    /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
+    function proposalCategoryInitiate(bytes32 _dAppName) external {
+        require(!constructorCheck);
+        dappName = _dAppName;
+        addInitialCategories("Uncategorized","QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX","MR");
+
+        constructorCheck = true;
+    }
+
+    /// @dev Adds new category
+    /// @param _name Category name
+    /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
+    /// @param _majorityVotePerc Majority Vote threshold for Each voting layer
+    /// @param _quorumPerc minimum threshold percentage required in voting to calculate result
+    /// @param _allowedToCreateProposal Member roles allowed to create the proposal
+    /// @param _closingTime Vote closing time for Each voting layer
+    /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
+    /// @param _contractAddress address of contract to call after proposal is accepted
+    /// @param _contractName name of contract to be called after proposal is accepted
+    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
+    /// @param _incentives rewards to distributed after proposal is accepted
+    function _addCategory(
+        string _name, 
+        uint _memberRoleToVote,
+        uint _majorityVotePerc, 
+        uint _quorumPerc,
+        uint[] _allowedToCreateProposal,
+        uint _closingTime,
+        string _actionHash,
+        address _contractAddress,
+        bytes2 _contractName,
+        uint[] _incentives
+    ) 
+        internal
+    {
+        allCategory.push((
+            Category(
+                _memberRoleToVote,
+                _majorityVotePerc,
+                _quorumPerc,
+                _allowedToCreateProposal,
+                _closingTime,
+                _incentives[0]
+            ))
+        );
+        uint categoryId = allCategory.length - 1;
+        categoryActionData[categoryId] = CategoryAction(_incentives[1], _contractName, _contractAddress);
+        emit Category(categoryId, _name, _actionHash);
     }
 
     function addInitialCategories(
@@ -159,7 +204,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     ) 
         internal 
     {
-        addCategory(
+        _addCategory(
                 _name,
                 1,
                 50,
@@ -171,15 +216,6 @@ contract ProposalCategory is IProposalCategory, Governed {
                 _contractName,
                 [0,0]
             );
-    }
-
-    /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
-    function proposalCategoryInitiate(bytes32 _dAppName) public {
-        require(!constructorCheck);
-        dappName = _dAppName;
-        addInitialCategories("Uncategorized","QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX","MR");
-
-        constructorCheck = true;
     }
 
 
