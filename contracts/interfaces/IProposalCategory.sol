@@ -17,7 +17,7 @@ pragma solidity 0.4.24;
 
 contract IProposalCategory {
 
-    event CategoryEvent(
+    event Category(
         uint indexed categoryId,
         string categoryName,
         string actionHash
@@ -45,7 +45,6 @@ contract IProposalCategory {
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint _tokenHoldingTime,
         uint[2] _incentives
     ) 
         public
@@ -73,7 +72,6 @@ contract IProposalCategory {
         uint _quorumPerc,
         uint[] _allowedToCreateProposal,
         uint _closingTime,
-        uint _tokenHoldingTime,
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
@@ -90,9 +88,9 @@ contract IProposalCategory {
             uint categoryId,
             uint memberRoleToVote,
             uint majorityVotePerc,
+            uint quorumPerc,
             uint[] allowedToCreateProposal,
             uint closingTime,
-            uint tokenHoldingTime,
             uint minStake
         )
     {

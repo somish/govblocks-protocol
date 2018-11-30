@@ -30,7 +30,6 @@ contract ProposalCategory is IProposalCategory, Governed {
         uint quorumPerc;
         uint[] allowedToCreateProposal;
         uint closingTime;
-        uint tokenHoldingTime;
         uint minStake;
     }
 
@@ -39,9 +38,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         address contractAddress;
         bytes2 contractName;        
     }
-
-    event CategoryEvent(uint indexed categoryId, string categoryName, string actionHash);
-
+    
     Category[] internal allCategory;
     mapping (uint => CategoryAction) internal categoryActionData;
     
@@ -67,15 +64,11 @@ contract ProposalCategory is IProposalCategory, Governed {
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint _tokenHoldingTime,
         uint[] _incentives
     ) 
         public
         onlyAuthorizedToGovern 
     {
-        categoryActionData[allCategory.length].defaultIncentive = _incentives[1];        
-        categoryActionData[allCategory.length].contractName = _contractName;
-        categoryActionData[allCategory.length].contractAddress = _contractAddress;        
         allCategory.push((
             Category(
                 _memberRoleToVote,
@@ -83,12 +76,12 @@ contract ProposalCategory is IProposalCategory, Governed {
                 _quorumPerc,
                 _allowedToCreateProposal,
                 _closingTime,
-                _tokenHoldingTime,
                 _incentives[0]
             ))
         );
-
-        emit CategoryEvent(allCategory.length-1, _name, _actionHash);
+        uint categoryId = allCategory.length - 1;
+        categoryActionData[categoryId] = CategoryAction(_incentives[1], _contractName, _contractAddress);
+        emit Category(categoryId, _name, _actionHash);
     }
 
     /// @dev Updates category details
@@ -112,7 +105,6 @@ contract ProposalCategory is IProposalCategory, Governed {
         uint _quorumPerc,
         uint[] _allowedToCreateProposal,
         uint _closingTime,
-        uint _tokenHoldingTime,
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
@@ -125,31 +117,25 @@ contract ProposalCategory is IProposalCategory, Governed {
         allCategory[_categoryId].majorityVotePerc = _majorityVotePerc;
         allCategory[_categoryId].closingTime = _closingTime;
         allCategory[_categoryId].allowedToCreateProposal = _allowedToCreateProposal;
-        allCategory[_categoryId].tokenHoldingTime = _tokenHoldingTime;
         allCategory[_categoryId].minStake = _incentives[0];
         allCategory[_categoryId].quorumPerc = _quorumPerc;
-
         categoryActionData[_categoryId].defaultIncentive = _incentives[1];
         categoryActionData[_categoryId].contractName = _contractName;
         categoryActionData[_categoryId].contractAddress = _contractAddress;
-        emit CategoryEvent(_categoryId, _name, _actionHash);
+        emit Category(_categoryId, _name, _actionHash);
     }
 
     /// @dev gets category details
-    function category(uint _categoryId) public view returns(uint, uint, uint, uint[], uint, uint, uint) {
+    function category(uint _categoryId) public view returns(uint, uint, uint, uint, uint[], uint, uint) {
         return(
             _categoryId,
             allCategory[_categoryId].memberRoleToVote,
             allCategory[_categoryId].majorityVotePerc,
+            allCategory [_categoryId].quorumPerc,
             allCategory[_categoryId].allowedToCreateProposal,
             allCategory[_categoryId].closingTime,
-            allCategory[_categoryId].tokenHoldingTime,
             allCategory[_categoryId].minStake
         );
-    }
-
-    function categoryQuorum(uint _categoryId) public view returns(uint, uint) {
-        return (_categoryId, allCategory[_categoryId].quorumPerc);
     }
 
     function categoryAction(uint _categoryId) public view returns(uint, address, bytes2, uint) {
@@ -168,34 +154,22 @@ contract ProposalCategory is IProposalCategory, Governed {
 
     function addInitialCategories(
         string _name,
-        uint _memberRoleToVote,
-        uint _majorityVotePerc, 
-        uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
-        uint _closingTime,
         string _actionHash,
-        address _contractAddress,
         bytes2 _contractName,
-        uint _tokenHoldingTime,
-        uint[] _incentives
     ) 
-        public 
+        internal 
     {
-        require(allCategory.length < 18);
-        require(msg.sender == officialPCA || officialPCA == address(0));
-        // allSubIdByCategory[_mainCategoryId].push(allSubCategory.length);
         addCategory(
                 _name,
-                _memberRoleToVote,
-                _majorityVotePerc,
-                _quorumPerc,
-                _allowedToCreateProposal,
-                _closingTime,
+                1,
+                50,
+                25,
+                [1,2],
+                1 * days,
                 _actionHash,
-                _contractAddress,
+                address(0),
                 _contractName,
-                _tokenHoldingTime,
-                _incentives
+                [0,0]
             );
     }
 
@@ -203,17 +177,10 @@ contract ProposalCategory is IProposalCategory, Governed {
     function proposalCategoryInitiate(bytes32 _dAppName) public {
         require(!constructorCheck);
         dappName = _dAppName;
-
-        if (_getCodeSize(0xe57f3ffb5febc1c1a3b880ed5692e1ead1493d9c) > 0)        //kovan testnet
-            officialPCA = 0xe57f3ffb5febc1c1a3b880ed5692e1ead1493d9c;
+        addInitialCategories("Uncategorized","QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX","MR");
 
         constructorCheck = true;
     }
 
-    function _getCodeSize(address _addr) internal view returns(uint _size) {
-        assembly { //solhint-disable-line
-            _size := extcodesize(_addr)
-        }
-    }
 
 }
