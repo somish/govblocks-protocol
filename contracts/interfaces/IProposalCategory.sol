@@ -33,7 +33,6 @@ contract IProposalCategory {
     /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
     /// @param _contractAddress address of contract to call after proposal is accepted
     /// @param _contractName name of contract to be called after proposal is accepted
-    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
     /// @param _incentives rewards to distributed after proposal is accepted
     function addCategory(
         string _name, 
@@ -47,9 +46,7 @@ contract IProposalCategory {
         bytes2 _contractName,
         uint[2] _incentives
     ) 
-        external
-    {
-    }
+        external;
 
     /// @dev Updates category details
     /// @param _categoryId Category id that needs to be updated
@@ -62,7 +59,6 @@ contract IProposalCategory {
     /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
     /// @param _contractAddress address of contract to call after proposal is accepted
     /// @param _contractName name of contract to be called after proposal is accepted
-    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
     /// @param _incentives rewards to distributed after proposal is accepted
     function updateCategory(
         uint _categoryId, 
@@ -77,9 +73,7 @@ contract IProposalCategory {
         bytes2 _contractName,
         uint[2] _incentives
     )
-        external
-    {
-    }
+        public;
 
     /// @dev gets category details
     function category(uint _categoryId)
@@ -92,9 +86,7 @@ contract IProposalCategory {
             uint[] allowedToCreateProposal,
             uint closingTime,
             uint minStake
-        )
-    {
-    }
+        );
 
     ///@dev gets category action details
     function categoryAction(uint _categoryId)
@@ -104,15 +96,11 @@ contract IProposalCategory {
             address contractAddress,
             bytes2 contractName,
             uint defaultIncentive
-        )
-    {
-    }
+        );
     
     /// @dev Gets Total number of categories added till now
     function totalCategories() 
         external view
-        returns(uint numberOfCategories)
-    {
-    }
+        returns(uint numberOfCategories);
 
 }

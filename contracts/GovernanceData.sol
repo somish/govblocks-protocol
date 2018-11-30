@@ -202,6 +202,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     bool public constructorCheck;
     bool public punishVoters;
     uint internal minVoteWeight;
+    uint internal tokenHoldingTime;    
 
     ProposalStruct[] internal allProposal;
 
@@ -221,6 +222,7 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
         dappName = master.dAppName();
         constructorCheck = true;
         minVoteWeight = 1;
+        tokenHoldingTime = 604800;
     }
 
     function getMinVoteWeight() public view returns (uint) {
@@ -229,6 +231,16 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     function setMinVoteWeight(uint _minVoteWeight) public onlyAuthorizedToGovern {
         minVoteWeight = _minVoteWeight;
+    }
+
+    ///@dev get minimum amout of time tokens to be held after locking
+    function getTokenHoldingTime() public view returns (uint) {
+        return tokenHoldingTime;
+    }
+
+    ///@dev set minimum amout of time tokens to be held after locking
+    function setTokenHoldingTime(uint _tokenHoldingTime) public onlyAuthorizedToGovern {
+        tokenHoldingTime = _tokenHoldingTime;
     }
 
     function setPunishVoters(bool _punish) public onlyAuthorizedToGovern {

@@ -16,7 +16,7 @@ contract('Proposal Category', function() {
 
   it('Should be initialized', async function() {
     this.timeout(100000);
-    console.log(await pc.getCategoryLength());
+    console.log(await pc.totalCategories());
     await catchRevert(
       pc.addInitialCategories(
         'YoYo',
@@ -37,21 +37,17 @@ contract('Proposal Category', function() {
     const g4 = await pc.changeMasterAddress(pc.address); // Just for the interface, shouldn't throw.
     // const g1 = await pc.allSubCategory(0);
     // assert.equal(g1[6].toNumber(), 0);
-    const g2 = await pc.getCategoryDetails(1);
+    const g2 = await pc.category(1);
     assert.equal(g2[1].toNumber(), 1);
-    const g5 = await pc.getCategoryActionDetails(1);
+    const g5 = await pc.categoryAction(1);
     assert.equal(g5[2].toString(), '0x4d52');
-    const g6 = await pc.getCategoryQuorumPercent(2);
+    const g6 = await pc.categoryQuorum(2);
     assert.equal(g6[1].toNumber(), 25);
     // const g7 = await pc.getSubCategoryIdAtIndex(0, 0);
     // assert.equal(g7.toNumber(), 0);
     // const g8 = await pc.getAllSubIdsByCategory(0);
     // assert.equal(g8[0].toNumber(), 0);
-    let g9 = await pc.isCategoryExternal(10);
-    assert.equal(g9, false);
-    g9 = await pc.isCategoryExternal(17);
-    assert.equal(g9, true);
-    const g10 = await pc.getCategoryLength();
+    const g10 = await pc.totalCategories();
     assert.equal(g10.toNumber(), 18);
   });
 

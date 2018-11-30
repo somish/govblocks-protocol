@@ -105,7 +105,7 @@ contract Governance is Upgradeable {
         if (category == 0)
             return true;
         uint[] memory mrAllowed;
-        (, , , mrAllowed, , , ) = proposalCategory.category(category);
+        (, , , , mrAllowed, , ) = proposalCategory.category(category);
         for (uint i = 0; i < mrAllowed.length; i++) {
             if (mrAllowed[i] == 0 || memberRole.checkRole(msg.sender, mrAllowed[i]))
                 return true;
@@ -181,7 +181,8 @@ contract Governance is Upgradeable {
     function validateStake(uint _categoryId, address _token) public view returns(bool) {
         uint minStake;
         uint tokenholdingTime;
-        (, , , , , tokenholdingTime, minStake) = proposalCategory.category(_categoryId);
+        (, , , , , , minStake) = proposalCategory.category(_categoryId);
+        tokenholdingTime = governanceDat.getTokenHoldingTime();
         if (minStake == 0)
             return true;
         GBTStandardToken tokenInstance = GBTStandardToken(_token);
@@ -238,7 +239,7 @@ contract Governance is Upgradeable {
         );
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.VotingStarted));
         uint closingTime;
-        (, , , , closingTime, , ) = proposalCategory.category(category);
+        (, , , , , closingTime, ) = proposalCategory.category(category);
         closingTime = SafeMath.add(closingTime, now); // solhint-disable-line
         address votingType = governanceDat.getLatestVotingAddress();
         eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);

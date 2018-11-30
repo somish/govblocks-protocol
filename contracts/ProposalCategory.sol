@@ -21,7 +21,7 @@ contract ProposalCategory is IProposalCategory, Governed {
 
     bool public constructorCheck;
 
-    struct Category {
+    struct CategoryStruct {
         uint memberRoleToVote;
         uint majorityVotePerc;
         uint quorumPerc;
@@ -33,10 +33,10 @@ contract ProposalCategory is IProposalCategory, Governed {
     struct CategoryAction {
         uint defaultIncentive;
         address contractAddress;
-        bytes2 contractName;        
+        bytes2 contractName;
     }
     
-    Category[] internal allCategory;
+    CategoryStruct[] internal allCategory;
     mapping (uint => CategoryAction) internal categoryActionData;
     
     /// @dev Adds new category
@@ -49,7 +49,6 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
     /// @param _contractAddress address of contract to call after proposal is accepted
     /// @param _contractName name of contract to be called after proposal is accepted
-    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
     /// @param _incentives rewards to distributed after proposal is accepted
     function addCategory(
         string _name, 
@@ -91,7 +90,6 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
     /// @param _contractAddress address of contract to call after proposal is accepted
     /// @param _contractName name of contract to be called after proposal is accepted
-    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
     /// @param _incentives rewards to distributed after proposal is accepted
     function updateCategory(
         uint _categoryId, 
@@ -106,7 +104,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         bytes2 _contractName,
         uint[] _incentives
     )
-        external
+        public
         onlyAuthorizedToGovern
     { 
         allCategory[_categoryId].memberRoleToVote = _memberRoleToVote;
@@ -149,10 +147,10 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
-    function proposalCategoryInitiate(bytes32 _dAppName) external { //solhint-diable-line
+    function proposalCategoryInitiate(bytes32 _dAppName) external { //solhint-disable-line
         require(!constructorCheck);
         dappName = _dAppName;
-        addInitialCategories("Uncategorized","QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX","MR");
+        addInitialCategories("Uncategorized", "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX", "MR");
         addInitialCategories("Add new member role", "QmT3sMfqAvTgCkcsdVgiHvMycEWoeoQiD86e4H744pqfhF", "MR");
         addInitialCategories("Update member role", "QmV55gWxnEBF8reTrVKrhbg5QrwqA65kFhMEFWDnnpphrJ", "MR");
         addInitialCategories("Add new category", "QmVXcXmr1aXeK3XSvGXAbDmhEQordetU1Z71h1zmbAZXBf", "PC");
@@ -163,8 +161,16 @@ contract ProposalCategory is IProposalCategory, Governed {
         addInitialCategories("Add new version", "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w", "MS");
         addInitialCategories("Add new contract", "QmWP3P58YcmveHeXqgsBCRmDewTYV1QqeQqBmRkDujrDLR", "MS");
         addInitialCategories("Add new authorized address", "QmRczxM2yN11th3MB8159rm1qAnk4VSrYYmFQCEXXRUf9Z", "SV");
-        addInitialCategories("Upgrade a contract Implementation", "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh", "MS");
-        addInitialCategories("Upgrade a contract proxy", "QmUNGEn7E2csB3YxohDxBKNqvzwa1WfvrSH4TCCFD9DZsg", "MS");
+        addInitialCategories(
+            "Upgrade a contract Implementation",
+            "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
+            "MS"
+        );
+        addInitialCategories(
+            "Upgrade a contract proxy",
+            "QmUNGEn7E2csB3YxohDxBKNqvzwa1WfvrSH4TCCFD9DZsg",
+            "MS"
+        );
         addInitialCategories("Resume Proposal", "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1", "GD");
         addInitialCategories("Pause Proposal", "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk", "GD");
         addInitialCategories("Buy GBT in Pool", "QmUc6apk3aRoHPaSwafo7RkV4XTJaaWS6Q7MogTMqLDyWs", "PL");
@@ -182,7 +188,6 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
     /// @param _contractAddress address of contract to call after proposal is accepted
     /// @param _contractName name of contract to be called after proposal is accepted
-    /// @param _tokenHoldingTime minimum time that user need to lock tokens to create proposal under this category
     /// @param _incentives rewards to distributed after proposal is accepted
     function _addCategory(
         string _name, 
@@ -199,7 +204,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         internal
     {
         allCategory.push((
-            Category(
+            CategoryStruct(
                 _memberRoleToVote,
                 _majorityVotePerc,
                 _quorumPerc,
@@ -209,28 +214,34 @@ contract ProposalCategory is IProposalCategory, Governed {
             ))
         );
         uint categoryId = allCategory.length - 1;
-        categoryActionData[categoryId] = CategoryAction(_incentives[1], _contractName, _contractAddress);
+        categoryActionData[categoryId] = CategoryAction(_incentives[1], _contractAddress, _contractName);
         emit Category(categoryId, _name, _actionHash);
     }
 
     function addInitialCategories(
         string _name,
         string _actionHash,
-        bytes2 _contractName,
+        bytes2 _contractName
     ) 
         internal 
     {
+        uint[] memory allowedToCreateProposal = new uint[](2);
+        uint[] memory stake_incentive = new uint[](2);        
+        allowedToCreateProposal[0] = 1;
+        allowedToCreateProposal[1] = 2;
+        stake_incentive[0] = 0;
+        stake_incentive[1] = 0;
         _addCategory(
                 _name,
                 1,
                 50,
                 25,
-                [1,2],
-                1 * days,
+                allowedToCreateProposal,
+                72000,
                 _actionHash,
                 address(0),
                 _contractName,
-                [0,0]
+                stake_incentive
             );
     }
 

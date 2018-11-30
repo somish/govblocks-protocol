@@ -346,7 +346,7 @@ contract SimpleVoting is Upgradeable {
         require(!governanceDat.proposalPaused(_proposalId));
         
         (, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById(_proposalId);
-        (, _roleId, _majorityVote, , _closingTime, , ) = proposalCategory.category(_category);
+        (, _roleId, _majorityVote, , , _closingTime, ) = proposalCategory.category(_category);
         if (
             pStatus == uint(Governance.ProposalStatus.VotingStarted) &&
             _roleId != uint(MemberRoles.Role.TokenHolder) &&
@@ -374,7 +374,7 @@ contract SimpleVoting is Upgradeable {
         uint _majorityVote;
         bytes2 contractName;
         address actionAddress;
-        (, , _majorityVote, , _closingTime, , ) = proposalCategory.category(category);
+        (, , _majorityVote, , , _closingTime, ) = proposalCategory.category(category);
         (, actionAddress, contractName, ) = proposalCategory.categoryAction(category);
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
@@ -408,8 +408,7 @@ contract SimpleVoting is Upgradeable {
         uint thresHoldValue;
         uint categoryQuorumPerc;
         uint _mrSequenceId;
-        (, _mrSequenceId, , , , , ) = proposalCategory.category(_category);
-        (, categoryQuorumPerc) = proposalCategory.categoryQuorum(_category);
+        (, _mrSequenceId, , categoryQuorumPerc, , , ) = proposalCategory.category(_category);
         if (_mrSequenceId == uint(MemberRoles.Role.TokenHolder)) {
             uint totalTokens;
             address token = governanceDat.getStakeToken(_proposalId);
@@ -558,11 +557,12 @@ contract SimpleVoting is Upgradeable {
         uint minStake;
         uint tokenHoldingTime;
         (token, category) = governanceDat.getTokenAndCategory(_proposalId);
-        (, , , , , tokenHoldingTime, minStake) = proposalCategory.category(category);
+        (, , , , , , minStake) = proposalCategory.category(category);
+        tokenHoldingTime = governanceDat.getTokenHoldingTime();
 
         if (minStake == 0)
             return true; 
-        
+
         if (_getLockedBalance(token, _of, tokenHoldingTime) >= minStake)
             return true;
     }
@@ -578,7 +578,7 @@ contract SimpleVoting is Upgradeable {
 
         (token, category) 
             = governanceDat.getTokenAndCategory(_proposalId);
-        (, , , , , tokenHoldingTime, ) = proposalCategory.category(category);
+        tokenHoldingTime = governanceDat.getTokenHoldingTime();
 
         voteValue = _getLockedBalance(token, _of, tokenHoldingTime);
 
