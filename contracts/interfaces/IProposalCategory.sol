@@ -47,7 +47,7 @@ contract IProposalCategory {
         bytes2 _contractName,
         uint[2] _incentives
     ) 
-        public
+        external
     {
     }
 
@@ -77,13 +77,13 @@ contract IProposalCategory {
         bytes2 _contractName,
         uint[2] _incentives
     )
-        public
+        external
     {
     }
 
     /// @dev gets category details
     function category(uint _categoryId)
-        public view 
+        external view 
         returns(
             uint categoryId,
             uint memberRoleToVote,
@@ -98,7 +98,7 @@ contract IProposalCategory {
 
     ///@dev gets category action details
     function categoryAction(uint _categoryId)
-        public view
+        external view
         returns(
             uint categoryId,
             address contractAddress,
@@ -110,7 +110,7 @@ contract IProposalCategory {
     
     /// @dev Gets Total number of categories added till now
     function totalCategories() 
-        public view
+        external view
         returns(uint numberOfCategories)
     {
     }
