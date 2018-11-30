@@ -27,7 +27,6 @@ contract GovBlocksMaster is Ownable {
     address[] public implementations;
     bool public initialized;
     GovernChecker internal governChecker;
-    string constant dAppNotRegistered = "DApp not registered in GovBlocks network";
 
     struct GBDapps {
         address masterAddress;
@@ -204,7 +203,7 @@ contract GovBlocksMaster is Ownable {
     {
         address masterAddress = govBlocksDapps[_gbDAppName].masterAddress;
 
-        require (masterAddress != address(0), dAppNotRegistered);
+        require(masterAddress != address(0), "DApp not registered in GovBlocks network");
             
         Master master = Master(masterAddress);
         versionNo = master.getCurrentVersion();

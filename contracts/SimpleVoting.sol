@@ -71,12 +71,16 @@ contract SimpleVoting is Upgradeable {
     ) 
         external 
     {   
-        require(governanceDat.getProposalStatus(_proposalId) >= uint(Governance.ProposalStatus.AwaitingSolution) , "Proposal should be open for solution submission");
+        require(
+            governanceDat.getProposalStatus(_proposalId) >= uint(Governance.ProposalStatus.AwaitingSolution),
+            "Proposal should be open for solution submission"
+        );
+
         if (msg.sender == _memberAddress) {
-            require(validateStake(_proposalId, _memberAddress),"Lock more tokens");
+            require(validateStake(_proposalId, _memberAddress), "Lock more tokens");
         } else
-            require(master.isInternal(msg.sender),"Not authorized");
-        require(!alreadyAdded(_proposalId, _memberAddress),"User already added a solution for this proposal");
+            require(master.isInternal(msg.sender), "Not authorized");
+        require(!alreadyAdded(_proposalId, _memberAddress), "User already added a solution for this proposal");
         governanceDat.setSolutionAdded(_proposalId, _memberAddress, _action);
         uint solutionId = governanceDat.getTotalSolutions(_proposalId);
         governanceDat.callSolutionEvent(_proposalId, _memberAddress, solutionId - 1, _solutionHash, now); //solhint-disable-line
@@ -135,15 +139,17 @@ contract SimpleVoting is Upgradeable {
             (finalVerdict, totalReward, category) = 
                 getVoteDetailsForReward(_proposals[i]);
 
-            require(governanceDat.getProposalStatus(_proposals[i]) > uint(Governance.ProposalStatus.VotingStarted), "Reward can be claimed only after the proposal is closed");
+            require(
+                governanceDat.getProposalStatus(_proposals[i]) > uint(Governance.ProposalStatus.VotingStarted),
+                "Reward can be claimed only after the proposal is closed"
+            );
 
-            if(governanceDat.punishVoters()){
-                if((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)){
-                    calcReward = SafeMath.div(SafeMath.mul(allVotes[voteId].voteValue, totalReward),finalVoteValue);
+            if (governanceDat.punishVoters()) {
+                if ((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)) {
+                    calcReward = SafeMath.div(SafeMath.mul(allVotes[voteId].voteValue, totalReward), finalVoteValue);
                 }
-            }
-            else if(finalVerdict > 0){
-                calcReward = SafeMath.div(SafeMath.mul(allVotes[voteId].voteValue, totalReward),totalVoteValue);
+            } else if (finalVerdict > 0) {
+                calcReward = SafeMath.div(SafeMath.mul(allVotes[voteId].voteValue, totalReward), totalVoteValue);
             }
             
             pendingDAppReward = pendingDAppReward.add(calcReward);
@@ -301,7 +307,7 @@ contract SimpleVoting is Upgradeable {
 
         for (i = 0; i < voteLen; i++) {
             voteId = proposalRoleVote[_proposalId][i];
-            if(allVotes[voteId].solutionChosen == uint(max)){
+            if (allVotes[voteId].solutionChosen == uint(max)) {
                 majoritySolutionVoteValue = SafeMath.add(majoritySolutionVoteValue, allVotes[voteId].voteValue);
             }
         }
@@ -340,8 +346,12 @@ contract SimpleVoting is Upgradeable {
         require(!governanceDat.proposalPaused(_proposalId));
         
         (, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById(_proposalId);
-        (,_roleId,_majorityVote,, _closingTime,,) = proposalCategory.category(_category);
-        if (pStatus == uint(Governance.ProposalStatus.VotingStarted) && _roleId != uint(MemberRoles.Role.TokenHolder) && _roleId != uint(MemberRoles.Role.UnAssigned)) {
+        (, _roleId, _majorityVote, , _closingTime, , ) = proposalCategory.category(_category);
+        if (
+            pStatus == uint(Governance.ProposalStatus.VotingStarted) &&
+            _roleId != uint(MemberRoles.Role.TokenHolder) &&
+            _roleId != uint(MemberRoles.Role.UnAssigned)
+        ) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now ||  //solhint-disable-line
                 proposalRoleVote[_proposalId].length == memberRole.numberOfMembers(_roleId)
             )
@@ -357,15 +367,15 @@ contract SimpleVoting is Upgradeable {
     }
 
     /// @dev This does the remaining functionality of closing proposal vote
-    function closeProposalVoteThReached(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64 max) 
+    function closeProposalVoteThReached(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64 max)  //solhint-disable-line
         internal 
     {
         uint _closingTime;
         uint _majorityVote;
         bytes2 contractName;
         address actionAddress;
-        (,,_majorityVote,, _closingTime,,) = proposalCategory.category(category);
-        (,actionAddress, contractName,) = proposalCategory.categoryAction(category);
+        (, , _majorityVote, , _closingTime, , ) = proposalCategory.category(category);
+        (, actionAddress, contractName, ) = proposalCategory.categoryAction(category);
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
                 governanceDat.updateProposalDetails(_proposalId, max);
@@ -389,7 +399,7 @@ contract SimpleVoting is Upgradeable {
                 _proposalId, 
                 max
             );
-            governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Majority_Not_Reached_But_Accepted));
+            governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Majority_Not_Reached_But_Accepted)); //solhint-disable-line
         }
     }
 
@@ -398,8 +408,8 @@ contract SimpleVoting is Upgradeable {
         uint thresHoldValue;
         uint categoryQuorumPerc;
         uint _mrSequenceId;
-        (,_mrSequenceId,,,,,) = proposalCategory.category(_category);
-        (,categoryQuorumPerc) = proposalCategory.categoryQuorum(_category);
+        (, _mrSequenceId, , , , , ) = proposalCategory.category(_category);
+        (, categoryQuorumPerc) = proposalCategory.categoryQuorum(_category);
         if (_mrSequenceId == uint(MemberRoles.Role.TokenHolder)) {
             uint totalTokens;
             address token = governanceDat.getStakeToken(_proposalId);
@@ -416,7 +426,14 @@ contract SimpleVoting is Upgradeable {
         } else if (_mrSequenceId == uint(MemberRoles.Role.UnAssigned)) {
             return true;
         } else {
-            thresHoldValue = SafeMath.div(SafeMath.mul(getAllVoteIdsLengthByProposal(_proposalId), 100), memberRole.numberOfMembers(_mrSequenceId));
+            thresHoldValue = 
+                SafeMath.div(
+                    SafeMath.mul(
+                        getAllVoteIdsLengthByProposal(_proposalId),
+                        100
+                    ),
+                    memberRole.numberOfMembers(_mrSequenceId)
+                );
             if (thresHoldValue > categoryQuorumPerc)
                 return true;
         }
@@ -435,16 +452,15 @@ contract SimpleVoting is Upgradeable {
         uint calcReward;
         uint finalVoteValue;
         uint totalVoteValue;
-        (solutionChosen,, finalVerdict, voteValue, totalReward, category) = 
+        (solutionChosen, , finalVerdict, voteValue, totalReward, category) = 
             getVoteDetailsToCalculateReward(_voteId);
-        (totalVoteValue,finalVoteValue) = governanceDat.getProposalVoteValue(_proposalId);
-        if(governanceDat.punishVoters()){
-            if((finalVerdict > 0 && allVotes[_voteId].solutionChosen == finalVerdict)){
-                calcReward = SafeMath.div(SafeMath.mul(allVotes[_voteId].voteValue, totalReward),finalVoteValue);
+        (totalVoteValue, finalVoteValue) = governanceDat.getProposalVoteValue(_proposalId);
+        if (governanceDat.punishVoters()) {
+            if ((finalVerdict > 0 && allVotes[_voteId].solutionChosen == finalVerdict)) {
+                calcReward = SafeMath.div(SafeMath.mul(allVotes[_voteId].voteValue, totalReward), finalVoteValue);
             }   
-        }
-        else if(finalVerdict > 0){
-            calcReward = SafeMath.div(SafeMath.mul(allVotes[_voteId].voteValue, totalReward),totalVoteValue);
+        } else if (finalVerdict > 0) {
+            calcReward = SafeMath.div(SafeMath.mul(allVotes[_voteId].voteValue, totalReward), totalVoteValue);
         }
 
         pendingDAppReward = calcReward;
@@ -502,7 +518,7 @@ contract SimpleVoting is Upgradeable {
         //where gas usage should be optimized as much as possible. voters should not feel burdened while voting.
         require(addressProposalVote[_voter][_proposalId] == 0);
 
-        require (governanceDat.getProposalStatus(_proposalId) == uint(Governance.ProposalStatus.VotingStarted));
+        require(governanceDat.getProposalStatus(_proposalId) == uint(Governance.ProposalStatus.VotingStarted));
 
         require(validateStake(_proposalId, _voter));
 
@@ -512,7 +528,7 @@ contract SimpleVoting is Upgradeable {
         (categoryThenMRSequence) 
             = governanceDat.getProposalCategory(_proposalId);
 
-        (,categoryThenMRSequence,,,,,) = proposalCategory.category(categoryThenMRSequence);
+        (, categoryThenMRSequence, , , , , ) = proposalCategory.category(categoryThenMRSequence);
         //categoryThenMRSequence is now MemberRoleSequence
 
         require(memberRole.checkRole(_voter, categoryThenMRSequence));
@@ -542,7 +558,7 @@ contract SimpleVoting is Upgradeable {
         uint minStake;
         uint tokenHoldingTime;
         (token, category) = governanceDat.getTokenAndCategory(_proposalId);
-        (,,,,, tokenHoldingTime, minStake) = proposalCategory.category(category);
+        (, , , , , tokenHoldingTime, minStake) = proposalCategory.category(category);
 
         if (minStake == 0)
             return true; 
@@ -562,11 +578,17 @@ contract SimpleVoting is Upgradeable {
 
         (token, category) 
             = governanceDat.getTokenAndCategory(_proposalId);
-        (,,,,,tokenHoldingTime,) = proposalCategory.category(category);
+        (, , , , , tokenHoldingTime, ) = proposalCategory.category(category);
 
         voteValue = _getLockedBalance(token, _of, tokenHoldingTime);
 
-        voteValue = Math.max((SafeMath.div(voteValue, uint256(10) ** GBTStandardToken(token).decimals())),governanceDat.getMinVoteWeight());
+        voteValue = 
+            Math.max(
+                SafeMath.div(
+                    voteValue, uint256(10) ** GBTStandardToken(token).decimals()
+                ),
+                governanceDat.getMinVoteWeight()
+            );
 
     }
     

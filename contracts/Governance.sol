@@ -29,6 +29,7 @@ import "./EventCaller.sol";
 contract Governance is Upgradeable {
 
     using SafeMath for uint;
+
     enum ProposalStatus { 
         Draft,
         AwaitingSolution,
@@ -104,7 +105,7 @@ contract Governance is Upgradeable {
         if (category == 0)
             return true;
         uint[] memory mrAllowed;
-        (,,,mrAllowed,,,) = proposalCategory.category(category);
+        (, , , mrAllowed, , , ) = proposalCategory.category(category);
         for (uint i = 0; i < mrAllowed.length; i++) {
             if (mrAllowed[i] == 0 || memberRole.checkRole(msg.sender, mrAllowed[i]))
                 return true;
@@ -124,7 +125,7 @@ contract Governance is Upgradeable {
     {
         // uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
 
-        require(allowedToCreateProposal(_categoryId) , "User not authorized to create proposal under this category");
+        require(allowedToCreateProposal(_categoryId), "User not authorized to create proposal under this category");
         uint _proposalId = governanceDat.getProposalLength();
         /* solhint-disable */
         governanceDat.callProposalEvent(
@@ -146,7 +147,7 @@ contract Governance is Upgradeable {
             require(validateStake(_categoryId, dAppLocker));
             governanceDat.addNewProposal(msg.sender, _categoryId, dAppLocker);
             uint incentive;
-            (,,,incentive) = proposalCategory.categoryAction(_categoryId);
+            (, , , incentive) = proposalCategory.categoryAction(_categoryId);
             require(incentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress));
             governanceDat.setProposalIncentive(_proposalId, incentive); 
             governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
@@ -180,7 +181,7 @@ contract Governance is Upgradeable {
     function validateStake(uint _categoryId, address _token) public view returns(bool) {
         uint minStake;
         uint tokenholdingTime;
-        (,,,,, tokenholdingTime, minStake) = proposalCategory.category(_categoryId);
+        (, , , , , tokenholdingTime, minStake) = proposalCategory.category(_categoryId);
         if (minStake == 0)
             return true;
         GBTStandardToken tokenInstance = GBTStandardToken(_token);
@@ -195,22 +196,28 @@ contract Governance is Upgradeable {
         uint _proposalId, 
         uint _categoryId
     ) 
+        public
         checkProposalValidity(_proposalId)
-        public  
     {
 
-        require(governanceDat.getTotalSolutions(_proposalId) < 2 , "Categorization not possible, since solutions had already been submitted");
+        require(
+            governanceDat.getTotalSolutions(_proposalId) < 2,
+            "Categorization not possible, since solutions had already been submitted"
+        );
 
         uint dappIncentive;
-        (,,, dappIncentive) = proposalCategory.categoryAction(_categoryId);
+        (, , , dappIncentive) = proposalCategory.categoryAction(_categoryId);
 
 
         if (!memberRole.checkRole(msg.sender, 1)) {
-            require(allowedToCreateProposal(_categoryId),"User not authorized to categorize this proposal"); 
+            require(allowedToCreateProposal(_categoryId), "User not authorized to categorize this proposal"); 
             require(validateStake(_categoryId, dAppLocker), "Lock more tokens");
         }
 
-        require(dappIncentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress) , "Less token balance in pool for incentive distribution");
+        require(
+            dappIncentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress),
+            "Less token balance in pool for incentive distribution"
+        );
 
         governanceDat.setProposalIncentive(_proposalId, dappIncentive);
         governanceDat.setProposalCategory(_proposalId, _categoryId, dAppLocker);
@@ -223,12 +230,15 @@ contract Governance is Upgradeable {
     {
         uint category = governanceDat.getProposalCategory(_proposalId);
 
-        require (category!=0 , "Proposal category should be greater than 0");
+        require(category != 0, "Proposal category should be greater than 0");
 
-        require(governanceDat.getTotalSolutions(_proposalId) > 1 , "Proposal should contain atleast two solutions before it is open for voting");
+        require(
+            governanceDat.getTotalSolutions(_proposalId) > 1,
+            "Proposal should contain atleast two solutions before it is open for voting"
+        );
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.VotingStarted));
         uint closingTime;
-        (,,,,closingTime,,) = proposalCategory.category(category);
+        (, , , , closingTime, , ) = proposalCategory.category(category);
         closingTime = SafeMath.add(closingTime, now); // solhint-disable-line
         address votingType = governanceDat.getLatestVotingAddress();
         eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
