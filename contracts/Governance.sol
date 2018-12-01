@@ -60,34 +60,6 @@ contract Governance is Upgradeable {
         _;
     }
 
-    /// @dev Creates a new proposal with solution and votes for the solution
-    /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
-    /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
-    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
-    function createProposalwithVote(
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash,
-        uint _categoryId, 
-        string _solutionHash, 
-        bytes _action
-    ) 
-        external
-    {
-        uint proposalId = governanceDat.getProposalLength();
-        _createProposalwithSolution(
-            _proposalTitle, 
-            _proposalSD, 
-            _proposalDescHash,
-            _categoryId,
-            _solutionHash,
-            _action,
-            proposalId
-        );
-        VotingType votingType = VotingType(governanceDat.getLatestVotingAddress());
-        votingType.initialVote(uint32(proposalId), msg.sender);
-    }
-
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public {
         dAppLocker = master.dAppLocker();
@@ -125,9 +97,8 @@ contract Governance is Upgradeable {
     {
         // uint category = proposalCategory.getCategoryIdBySubId(_subCategoryId);
 
-        require(allowedToCreateProposal(_categoryId), "User not authorized to create proposal under this category");
         uint _proposalId = governanceDat.getProposalLength();
-        /* solhint-disable */
+
         governanceDat.callProposalEvent(
             msg.sender, 
             _proposalId, 
@@ -142,54 +113,8 @@ contract Governance is Upgradeable {
             master.dAppName(),
             _proposalDescHash
         );
-        /* solhint-enable */
-        if (_categoryId > 0) {
-            require(validateStake(_categoryId, dAppLocker));
-            governanceDat.addNewProposal(msg.sender, _categoryId, dAppLocker);
-            uint incentive;
-            (, , , incentive) = proposalCategory.categoryAction(_categoryId);
-            require(incentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress));
-            governanceDat.setProposalIncentive(_proposalId, incentive); 
-            governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
-        } else
-            governanceDat.createProposal(msg.sender);
-    }
-
-    /// @dev Submit proposal with solution
-    /// @param _proposalId Proposal id
-    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
-    function submitProposalWithSolution(
-        uint _proposalId, 
-        string _solutionHash, 
-        bytes _action
-    ) 
-        public 
-        onlyProposalOwner(_proposalId) 
-    {
-        submitSolution(
-            _proposalId, 
-            _solutionHash, 
-            _action
-        );
-
-        openProposalForVoting(
-            _proposalId
-        );
-    }
-
-    /// @dev checks if the msg.sender has enough tokens locked for creating a proposal or solution
-    function validateStake(uint _categoryId, address _token) public view returns(bool) {
-        uint minStake;
-        uint tokenholdingTime;
-        (, , , , , , minStake) = proposalCategory.category(_categoryId);
-        tokenholdingTime = governanceDat.getTokenHoldingTime();
-        if (minStake == 0)
-            return true;
-        GBTStandardToken tokenInstance = GBTStandardToken(_token);
-        tokenholdingTime = SafeMath.add(tokenholdingTime, now); // solhint-disable-line
-        uint lockedTokens = tokenInstance.tokensLockedAtTime(msg.sender, "GOV", tokenholdingTime);
-        if (lockedTokens >= minStake)
-            return true;
+        
+        governanceDat.addNewProposal(msg.sender);
     }
 
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
@@ -206,8 +131,8 @@ contract Governance is Upgradeable {
             "Categorization not possible, since solutions had already been submitted"
         );
 
-        uint dappIncentive;
-        (, , , dappIncentive) = proposalCategory.categoryAction(_categoryId);
+        uint dafaultIncentive;
+        (, , , dafaultIncentive) = proposalCategory.categoryAction(_categoryId);
 
 
         if (!memberRole.checkRole(msg.sender, 1)) {
@@ -216,13 +141,104 @@ contract Governance is Upgradeable {
         }
 
         require(
-            dappIncentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress),
+            dafaultIncentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress),
             "Less token balance in pool for incentive distribution"
         );
 
-        governanceDat.setProposalIncentive(_proposalId, dappIncentive);
-        governanceDat.setProposalCategory(_proposalId, _categoryId, dAppLocker);
+        governanceDat.setProposalCategory_Incentive(_proposalId, _categoryId, dafaultIncentive);
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
+    }
+
+    /// @dev Initiates add solution 
+    /// @param _memberAddress Address of member who is adding the solution
+    /// @param _solutionHash Solution hash having required data against adding solution
+    function addSolution(
+        uint32 _proposalId,
+        address _memberAddress, 
+        string _solutionHash, 
+        bytes _action
+    ) 
+        external 
+    {
+        require(
+            governanceDat.getProposalStatus(_proposalId) >= uint(Governance.ProposalStatus.AwaitingSolution),
+            "Proposal should be open for solution submission"
+        );
+        require(validateStake(_proposalId, msg.sender), "Lock more tokens");
+
+        _addSolution( _proposalId, _memberAddress, _action, _solutionHash);
+    }
+
+    function _addSolution(uint _proposalId, address _memberAddress, bytes _action, string _solutionHash)
+        internal
+    {
+        require(!alreadyAdded(_proposalId, _memberAddress), "User already added a solution for this proposal");
+        governanceDat.setSolutionAdded(_proposalId, _memberAddress, _action, _solutionHash);
+    }
+
+    /// @dev Submit proposal with solution
+    /// @param _proposalId Proposal id
+    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
+    function submitProposalWithSolution(
+        uint _proposalId, 
+        string _solutionHash, 
+        bytes _action
+    ) 
+        public 
+        onlyProposalOwner(_proposalId) 
+    {
+        proposalSubmission(_proposalId, msg.sender, _solutionHash, _action);
+    }
+
+
+    /// @dev Creates a new proposal with solution and votes for the solution
+    /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
+    /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
+    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
+    function createProposalwithSolution(
+        string _proposalTitle, 
+        string _proposalSD, 
+        string _proposalDescHash,
+        uint _categoryId, 
+        string _solutionHash, 
+        bytes _action
+    ) 
+        external
+    {
+        require(allowedToCreateProposal(_categoryId), "User not authorized to create proposal under this category");
+        uint proposalId = governanceDat.getProposalLength();
+
+        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _categoryId);
+
+        categorizeProposal(proposalId, _categoryId);
+        
+        proposalSubmission(
+            _proposalId,
+            msg.sender,
+            _solutionHash, 
+            _action
+        );
+
+        _addVote(uint32(proposalId), 1, msg.sender);
+    }
+
+
+
+
+
+    /// @dev checks if the msg.sender has enough tokens locked for creating a proposal or solution
+    function validateStake(uint _categoryId, address _token) public view returns(bool) {
+        uint minStake;
+        uint tokenholdingTime;
+        (, , , , , , minStake) = proposalCategory.category(_categoryId);
+        tokenholdingTime = governanceDat.getTokenHoldingTime();
+        if (minStake == 0)
+            return true;
+        GBTStandardToken tokenInstance = GBTStandardToken(_token);
+        tokenholdingTime = SafeMath.add(tokenholdingTime, now); // solhint-disable-line
+        uint lockedTokens = tokenInstance.tokensLockedAtTime(msg.sender, "GOV", tokenholdingTime);
+        if (lockedTokens >= minStake)
+            return true;
     }
 
     /// @dev Opens proposal for voting
@@ -244,6 +260,44 @@ contract Governance is Upgradeable {
         address votingType = governanceDat.getLatestVotingAddress();
         eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, votingType, closingTime);
     }
+
+    function _addVote(uint32 _proposalId, uint64 _solution, address _voter) internal {
+        //Variables are reused to save gas. We know that this reduces code readability but proposalVoting is
+        //where gas usage should be optimized as much as possible. voters should not feel burdened while voting.
+        require(addressProposalVote[_voter][_proposalId] == 0);
+
+        require(governanceDat.getProposalStatus(_proposalId) == uint(Governance.ProposalStatus.VotingStarted));
+
+        require(validateStake(_proposalId, _voter));
+
+        uint categoryThenMRSequence;
+        uint voteValue;
+
+        (categoryThenMRSequence) 
+            = governanceDat.getProposalCategory(_proposalId);
+
+        (, categoryThenMRSequence, , , , , ) = proposalCategory.category(categoryThenMRSequence);
+        //categoryThenMRSequence is now MemberRoleSequence
+
+        require(memberRole.checkRole(_voter, categoryThenMRSequence));
+        require(_solution <= governanceDat.getTotalSolutions(_proposalId));
+
+        voteValue = calculateVoteValue(_proposalId, _voter);
+
+        proposalRoleVote[_proposalId].push(allVotes.length);
+        allVotesByMember[_voter].push(allVotes.length);
+        addressProposalVote[_voter][_proposalId] = allVotes.length;
+        governanceDat.callVoteEvent(_voter, _proposalId, now, allVotes.length); //solhint-disable-line
+        allVotes.push(ProposalVote(_voter, _solution, _proposalId, voteValue));
+
+        if (proposalRoleVote[_proposalId].length
+            == memberRole.numberOfMembers(categoryThenMRSequence) 
+            && categoryThenMRSequence != 2
+            && categoryThenMRSequence != 0
+        ) {
+            eventCaller.callVoteCast(_proposalId);
+        }
+    }    
 
     /// @dev Gets member details
     /// @param _memberAddress Member address
@@ -298,64 +352,25 @@ contract Governance is Upgradeable {
 
     /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
     function proposalSubmission( 
-        uint _proposalId,  
-        string _solutionHash, 
+        uint _proposalId,
+        address _ownerAddress,
+        string _solutionHash,
         bytes _action
     ) 
-        internal 
+        internal
     {
 
         governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
 
-        submitSolution(
-            _proposalId, 
-            _solutionHash, 
+        _addSolution(
+            _proposalId,
+            _ownerAddress,
+            _solutionHash,
             _action
         );
 
         openProposalForVoting(
             _proposalId
-        );
-    }
-
-    /// @dev When creating proposal with solution, it adds solution details against proposal
-    function submitSolution(
-        uint _proposalId, 
-        string _solutionHash, 
-        bytes _action
-    ) 
-        internal  
-    {
-        VotingType votingType = VotingType(governanceDat.getLatestVotingAddress());
-        votingType.addSolution(
-            uint32(_proposalId), 
-            msg.sender, 
-            _solutionHash, 
-            _action
-        );
-    }
-
-    /// @dev Creates a new proposal
-    /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
-    /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
-    /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
-    function _createProposalwithSolution(
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash,
-        uint _categoryId, 
-        string _solutionHash, 
-        bytes _action,
-        uint _proposalId
-    ) 
-        internal
-    {
-        createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _categoryId);
-
-        proposalSubmission(
-            _proposalId, 
-            _solutionHash, 
-            _action
         );
     }
 

@@ -260,8 +260,10 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Sets the address of member as solution owner whosoever provided the solution
-    function setSolutionAdded(uint _proposalId, address _memberAddress, bytes _action) public onlyInternal {
+    function setSolutionAdded(uint _proposalId, address _memberAddress, bytes _action, string _solutionHash) public onlyInternal {
         allProposalSolutions[_proposalId].push(SolutionStruct(_memberAddress, _action));
+        uint solutionId = allProposalSolutions[_proposalId].length - 1;
+        callSolutionEvent(_proposalId, _memberAddress, solutionId, _solutionHash, now);
     }
 
     /// @dev Gets The Address of Solution owner By solution sequence index 
@@ -280,14 +282,9 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     }
 
     /// @dev Sets proposal category
-    function setProposalCategory(uint _proposalId, uint _categoryId, address _stakeToken) public onlyInternal {
+    function setProposalCategory_Incentive(uint _proposalId, uint _categoryId, uint _incentive) public onlyInternal {
         allProposalData[_proposalId].category = _categoryId;
-        allProposalData[_proposalId].stakeToken = _stakeToken;
-    }
-
-    /// @dev Sets proposal incentive/reward that needs to be distributed at the end of proposal closing
-    function setProposalIncentive(uint _proposalId, uint _reward) public onlyInternal {
-        allProposalData[_proposalId].commonIncentive = _reward;
+        allProposalData[_proposalId].commonIncentive = _incentive;
     }
 
     /// @dev Changes the status of a given proposal.
@@ -477,16 +474,13 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
 
     /// @dev Adds new proposal
     function addNewProposal( 
-        address _memberAddress, 
-        uint _categoryId, 
-        address _stakeToken
+        address _memberAddress
     ) 
         public 
         onlyInternal 
     {
-        allProposalData[allProposal.length].category = _categoryId;
-        allProposalData[allProposal.length].stakeToken = _stakeToken;
-        _createProposal(_memberAddress);
+        allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
+        allProposal.push(ProposalStruct(_memberAddress, now)); //solhint-disable-line
     }
 
     /// @dev Updates proposal's major details (Called from close proposal vote)
@@ -501,14 +495,6 @@ contract GovernanceData is Upgradeable, Governed { //solhint-disable-line
     {
         setProposalFinalVerdict(_proposalId, _finalVerdict);
         setProposalDateUpd(_proposalId);
-    }
-
-    /// @dev Creates a proposal
-    function createProposal(address _memberAddress) 
-        public 
-        onlyInternal 
-    {
-        _createProposal(_memberAddress);
     }
 
     /// @dev Gets final solution index won after majority voting.

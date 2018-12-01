@@ -27,22 +27,17 @@ contract IGovernance{
         string _proposalSD, 
         string _proposalDescHash, 
         uint _categoryId
-    ) 
-        public 
+    ) public 
     {
-       
     }
 
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
     function categorizeProposal(
         uint _proposalId, 
         uint _categoryId
-    ) 
-        public
-        checkProposalValidity(_proposalId)
+    ) public checkProposalValidity(_proposalId)
     {
-
-         }
+    }
 
     /// @dev Initiates add solution 
     /// @param _memberAddress Address of member who is adding the solution
@@ -73,8 +68,7 @@ contract IGovernance{
     ) 
         public 
         onlyProposalOwner(_proposalId) 
-    {
-        
+    {   
     }
 
 
@@ -92,8 +86,7 @@ contract IGovernance{
         bytes _action
     ) 
         external
-    {
-        
+    {   
     }    
 
     /// @dev Casts vote
@@ -120,7 +113,6 @@ contract IGovernance{
 
     function pauseProposal(uint _proposalId)
     {
-
     }
 
     function resumeProposal(uint _proposalId)
@@ -129,9 +121,6 @@ contract IGovernance{
 
     function proposal(uint _propoosalId) returns()
     {
-
     }
-
-
          
 }
