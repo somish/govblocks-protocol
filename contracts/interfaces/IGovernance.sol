@@ -44,6 +44,25 @@ contract IGovernance{
 
          }
 
+    /// @dev Initiates add solution 
+    /// @param _memberAddress Address of member who is adding the solution
+    /// @param _solutionHash Solution hash having required data against adding solution
+    function addSolution(
+        uint32 _proposalId,
+        address _memberAddress, 
+        string _solutionHash, 
+        bytes _action
+    ) 
+        external 
+    {
+    }
+
+    /// @dev Opens proposal for voting
+    function openProposalForVoting(uint _proposalId) 
+        public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
+    {
+    }
+
     /// @dev Submit proposal with solution
     /// @param _proposalId Proposal id
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
@@ -58,17 +77,13 @@ contract IGovernance{
         
     }
 
-    /// @dev Opens proposal for voting
-    function openProposalForVoting(uint _proposalId) 
-        public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
-    {
-    }
+
 
     /// @dev Creates a new proposal with solution and votes for the solution
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
-    function createProposalwithVote(
+    function createProposalwithSolution(
         string _proposalTitle, 
         string _proposalSD, 
         string _proposalDescHash,
@@ -79,20 +94,7 @@ contract IGovernance{
         external
     {
         
-    }
-
-    /// @dev Initiates add solution 
-    /// @param _memberAddress Address of member who is adding the solution
-    /// @param _solutionHash Solution hash having required data against adding solution
-    function addSolution(
-        uint32 _proposalId,
-        address _memberAddress, 
-        string _solutionHash, 
-        bytes _action
-    ) 
-        external 
-    {
-    }
+    }    
 
     /// @dev Casts vote
     /// @param _proposalId Proposal id
@@ -101,18 +103,27 @@ contract IGovernance{
         _addVote(_proposalId, _solutionChosen[0], msg.sender);
     } 
 
-    function claimVoteReward(address _memberAddress, uint[] _proposals) 
+    function canCloseProposal(uint _proposalId) 
+        public 
+        view 
+        returns(uint8 closeValue) 
+    {
+    }
+
+    function closeProposal(uint _proposalId) public {
+    }
+
+    function claimReward(address _memberAddress, uint[] _proposals) 
         public onlyInternal returns(uint pendingGBTReward, uint pendingDAppReward) 
     {
     }
 
-    function closeProposalVote(uint _proposalId) public {
+    function pauseProposal(uint _proposalId)
+    {
+
     }
 
-    function checkForClosing(uint _proposalId, uint _category) 
-        public 
-        view 
-        returns(uint8 closeValue) 
+    function resumeProposal(uint _proposalId)
     {
     }
 
@@ -120,5 +131,7 @@ contract IGovernance{
     {
 
     }
+
+
          
 }
