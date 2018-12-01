@@ -20,14 +20,8 @@ async function initializeContracts() {
   const ms = await gbm.getDappMasterAddress(dAppName);
   const master = await Master.at(ms);
   const pc = await master.getLatestAddress('PC');
-  const pca = await ProposalCategoryAdder.deployed();
   const mr = await master.getLatestAddress('MR');
   const mri = await MemberRoles.at(mr);
-  try {
-    await pca.addCat(pc);
-  } catch (exception) {
-    console.log(exception);
-  }
 }
 
 module.exports = { getAddress, initializeContracts };

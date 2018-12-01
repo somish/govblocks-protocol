@@ -9,7 +9,6 @@ const ProposalCategory = artifacts.require('ProposalCategory');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const EventCaller = artifacts.require('EventCaller');
 const GovernCheckerContract = artifacts.require('GovernCheckerContract');
-const ProposalCategoryAdder = artifacts.require('ProposalCategoryAdder');
 
 module.exports = function(deployer) {
   deployer.deploy(EventCaller);
@@ -24,5 +23,4 @@ module.exports = function(deployer) {
   deployer.deploy(MemberRoles);
   deployer.deploy(Master);
   deployer.deploy(GovernCheckerContract);
-  deployer.deploy(ProposalCategoryAdder);
 };
