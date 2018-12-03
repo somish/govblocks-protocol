@@ -94,7 +94,7 @@ contract Pool is Upgradeable, Governed {
             dAppToken.transfer(_claimer, pendingDAppReward);
         }
 
-        governanceDat.callRewardClaimed(
+        gov.callRewardClaimed(
             _claimer,
             _voterProposals,
             pendingGBTReward, 

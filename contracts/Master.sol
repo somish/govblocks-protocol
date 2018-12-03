@@ -74,8 +74,8 @@ contract Master is Ownable {
         govern = new Governed();
         GovernChecker governChecker = GovernChecker(govern.governChecker());
         if (address(governChecker) != address(0)) {
-            if (governChecker.authorizedAddressNumber(_gbUserName, contractsAddress["SV"]) == 0)
-                governChecker.initializeAuthorized(_gbUserName, contractsAddress["SV"]);
+            if (governChecker.authorizedAddressNumber(_gbUserName, contractsAddress["GV"]) == 0)
+                governChecker.initializeAuthorized(_gbUserName, contractsAddress["GV"]);
         }
 
         _changeMasterAddress(address(this));

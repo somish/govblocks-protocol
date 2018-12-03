@@ -27,7 +27,20 @@ contract IGovernance{
         string _proposalSD, 
         string _proposalDescHash, 
         uint _categoryId
-    ) public 
+    ) external 
+    {
+    }
+
+    /// @dev Edits the details of an existing proposal and creates new version
+    /// @param _proposalId Proposal id that details needs to be updated
+    /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
+    function updateProposal(
+        uint _proposalId, 
+        string _proposalTitle, 
+        string _proposalSD, 
+        string _proposalDescHash
+    ) 
+        external
     {
     }
 
@@ -35,7 +48,7 @@ contract IGovernance{
     function categorizeProposal(
         uint _proposalId, 
         uint _categoryId
-    ) public checkProposalValidity(_proposalId)
+    ) external
     {
     }
 
@@ -54,7 +67,7 @@ contract IGovernance{
 
     /// @dev Opens proposal for voting
     function openProposalForVoting(uint _proposalId) 
-        public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId) 
+        public
     {
     }
 
@@ -66,8 +79,7 @@ contract IGovernance{
         string _solutionHash, 
         bytes _action
     ) 
-        public 
-        onlyProposalOwner(_proposalId) 
+        external 
     {   
     }
 
@@ -93,7 +105,6 @@ contract IGovernance{
     /// @param _proposalId Proposal id
     /// @param _solutionChosen solution chosen while voting. _solutionChosen[0] is the chosen solution
     function submitVote(uint32 _proposalId, uint64[] _solutionChosen) external {
-        _addVote(_proposalId, _solutionChosen[0], msg.sender);
     } 
 
     function canCloseProposal(uint _proposalId) 
@@ -103,11 +114,11 @@ contract IGovernance{
     {
     }
 
-    function closeProposal(uint _proposalId) public {
+    function closeProposal(uint _proposalId) external {
     }
 
     function claimReward(address _memberAddress, uint[] _proposals) 
-        public onlyInternal returns(uint pendingGBTReward, uint pendingDAppReward) 
+        public returns(uint pendingDAppReward) 
     {
     }
 
@@ -119,8 +130,40 @@ contract IGovernance{
     {
     }
 
-    function proposal(uint _propoosalId) returns()
+    function proposal(uint _proposalId) external returns(uint proposalId, uint category, uint status, uint version, uint finalVerdict, uint totalReward)
     {
     }
-         
+
+    event Proposal(
+        address indexed proposalOwner,
+        uint256 indexed proposalId,
+        uint256 dateAdd,
+        string proposalTitle,
+        string proposalSD,
+        string proposalDescHash
+    );
+
+    event Solution(
+        uint256 indexed proposalId,
+        address indexed solutionOwner,
+        uint256 indexed solutionId,
+        string solutionDescHash,
+        uint256 dateAdd
+    );
+
+    event Vote(
+        address indexed from,
+        uint256 indexed proposalId,
+        uint256 dateAdd,
+        uint256 voteId
+    );
+
+    event RewardClaimed(
+        address indexed member,
+        uint[] voterProposals,
+        uint gbtReward,
+        uint dAppReward,
+        uint reputation
+    );
+
 }
