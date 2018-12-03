@@ -112,31 +112,31 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev Edits the details of an existing proposal and creates new version
     /// @param _proposalId Proposal id that details needs to be updated
     /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
-    function updateProposal(
-        uint _proposalId, 
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash
-    ) 
-        external onlyProposalOwner(_proposalId)
-    {
-        require(
-            governanceDat.getTotalSolutions(_proposalId) < 2,
-            "Cannot update proposal, since solutions had already been submitted"
-        );
-        governanceDat.storeProposalVersion(_proposalId, _proposalDescHash);
-        governanceDat.setProposalDateUpd(_proposalId);
-        governanceDat.changeProposalStatus(_proposalId, 0);
-        governanceDat.setProposalCategory_Incentive(_proposalId, 0, 0);
-        emit Proposal(
-            governanceDat.getProposalOwner(_proposalId), 
-            _proposalId, 
-            now, 
-            _proposalTitle, 
-            _proposalSD, 
-            _proposalDescHash
-        );
-    }
+    // function updateProposal(
+    //     uint _proposalId, 
+    //     string _proposalTitle, 
+    //     string _proposalSD, 
+    //     string _proposalDescHash
+    // ) 
+    //     external onlyProposalOwner(_proposalId)
+    // {
+    //     require(
+    //         governanceDat.getTotalSolutions(_proposalId) < 2,
+    //         "Cannot update proposal, since solutions had already been submitted"
+    //     );
+    //     governanceDat.storeProposalVersion(_proposalId, _proposalDescHash);
+    //     governanceDat.setProposalDateUpd(_proposalId);
+    //     governanceDat.changeProposalStatus(_proposalId, 0);
+    //     governanceDat.setProposalCategory_Incentive(_proposalId, 0, 0);
+    //     emit Proposal(
+    //         governanceDat.getProposalOwner(_proposalId), 
+    //         _proposalId, 
+    //         now, 
+    //         _proposalTitle, 
+    //         _proposalSD, 
+    //         _proposalDescHash
+    //     );
+    // }
 
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
     function categorizeProposal(
