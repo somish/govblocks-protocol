@@ -19,10 +19,8 @@ import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./imports/govern/Governed.sol";
 import "./GBTStandardToken.sol";
 import "./Upgradeable.sol";
-import "./Governance.sol";
-import "./GovernanceData.sol";
+import "./interfaces/IGovernance.sol";
 import "./ProposalCategory.sol";
-import "./VotingType.sol";
 
 
 contract Pool is Upgradeable, Governed {
@@ -30,8 +28,7 @@ contract Pool is Upgradeable, Governed {
 
     GBTStandardToken public gbt;
     GBTStandardToken public dAppToken;
-    Governance public gov;
-    GovernanceData public governanceDat;
+    IGovernance public gov;
     ProposalCategory public proposalCategory;
     bool internal locked;
     
@@ -47,8 +44,7 @@ contract Pool is Upgradeable, Governed {
     /// @dev just to adhere to the interface
     function updateDependencyAddresses() public {
         gbt = GBTStandardToken(master.gbt());
-        gov = Governance(master.getLatestAddress("GV"));
-        governanceDat = GovernanceData(master.getLatestAddress("GD"));
+        gov = IGovernance(master.getLatestAddress("GV"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
         dAppToken = GBTStandardToken(master.dAppToken());
         dappName = master.dAppName();
@@ -80,25 +76,18 @@ contract Pool is Upgradeable, Governed {
     /// proposal arrays of 1 length are treated as empty.
     function claimReward(address _claimer, uint[] _voterProposals) public noReentrancy {
         uint pendingGBTReward;
-        uint pendingDAppReward;
         uint pendingReputation;
-
-        VotingType votingType = VotingType(governanceDat.getLatestVotingAddress());
-        (pendingGBTReward, pendingDAppReward) = 
-            votingType.claimVoteReward(_claimer, _voterProposals);
+        
+        pendingGBTReward = gov.claimReward(_claimer, _voterProposals);
 
         if (pendingGBTReward != 0) {
             gbt.transfer(_claimer, pendingGBTReward);
-        }
-        if (pendingDAppReward != 0) {
-            dAppToken.transfer(_claimer, pendingDAppReward);
         }
 
         gov.callRewardClaimed(
             _claimer,
             _voterProposals,
             pendingGBTReward, 
-            pendingDAppReward, 
             pendingReputation
         );
     }

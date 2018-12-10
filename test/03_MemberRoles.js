@@ -59,11 +59,6 @@ contract('MemberRoles', function([owner, member, other]) {
     assert.equal(g4.toNumber(), 2);
   });
 
-  it('Should fetch address by role id and index', async function() {
-    const g5 = await mr.getMemberAddressByRoleAndIndex(1, 0);
-    assert.equal(g5, owner);
-  });
-
   it('Should fetch member count of all roles', async function() {
     const g6 = await mr.getMemberLengthForAllRoles();
     assert.equal(g6.length, 3);

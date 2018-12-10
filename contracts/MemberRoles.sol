@@ -52,6 +52,14 @@ contract MemberRoles is IMemberRoles, Governed {
         _;
     }
 
+    /// @dev To Initiate default settings whenever the contract is regenerated!
+    function updateDependencyAddresses() public pure { //solhint-disable-line
+    }
+
+    /// @dev just to adhere to GovBlockss' Upgradeable interface
+    function changeMasterAddress(address _masterAddress) public pure { //solhint-disable-line
+    }
+
     function memberRolesInitiate(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
         require(!constructorCheck);
         dappName = _dAppName;

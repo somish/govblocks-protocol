@@ -1,5 +1,4 @@
 const Governance = artifacts.require('Governance');
-const GovernanceData = artifacts.require('GovernanceData');
 const MemberRoles = artifacts.require('MemberRoles');
 const SimpleVoting = artifacts.require('SimpleVoting');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
@@ -15,7 +14,6 @@ const sampleAddress = 0x0000000000000000000000000000000000000001;
 const amount = 500000000000000;
 
 let gv;
-let gd;
 let mr;
 let sv;
 let pl;
@@ -40,10 +38,6 @@ contract('Proposal, solution and voting', function([
     await initializeContracts();
     address = await getAddress('GV');
     gv = await Governance.at(address);
-    address = await getAddress('GD');
-    gd = await GovernanceData.at(address);
-    address = await getAddress('SV');
-    sv = await SimpleVoting.at(address);
     address = await getAddress('MR');
     mr = await MemberRoles.at(address);
     address = await getAddress('GBT');
@@ -62,11 +56,11 @@ contract('Proposal, solution and voting', function([
       'New member role',
       owner
     );
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
     mrLength = await mr.totalRoles();
+    console.log("p2.args");
     let amount = 50000000000000000000;
     await gbt.lock('GOV', amount, 5468545613353456);
-    await gv.createProposalwithVote(
+    await gv.createProposalwithSolution(
       'Add new member',
       'Add new member',
       'Addnewmember',
@@ -74,8 +68,11 @@ contract('Proposal, solution and voting', function([
       'Add new member',
       actionHash
     );
-    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
-    assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
+    await gv.Proposal({proposalOwner:null},{fromBlock:0,toBlock:'latest'}).get((error,result) =>{
+      console.log(result);
+    });
+    // p2 = await gd.getAllProposalIdsLengthByAddress(owner);
+    // assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
   it('Should not let initialVote to be used after first vote', async function() {

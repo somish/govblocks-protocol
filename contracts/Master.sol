@@ -19,7 +19,6 @@ import "./Upgradeable.sol";
 import "./GovBlocksMaster.sol";
 import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./imports/proxy/OwnedUpgradeabilityProxy.sol";
-import "./GovernanceData.sol";
 import "./imports/govern/Governed.sol";
 import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
@@ -54,7 +53,6 @@ contract Master is Ownable {
 
     function initMaster(address _ownerAddress, bytes32 _gbUserName, address[] _implementations) external {
         require(address(gbm) == address(0));
-
         _addContractNames();
         require(allContractNames.length == _implementations.length);
         
@@ -197,10 +195,8 @@ contract Master is Ownable {
 
     /// @dev Save the initials of all the contracts
     function _addContractNames() internal {
-        allContractNames.push("GD");
         allContractNames.push("MR");
         allContractNames.push("PC");
-        allContractNames.push("SV");
         allContractNames.push("GV");
         allContractNames.push("PL");
     }

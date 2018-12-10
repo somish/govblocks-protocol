@@ -108,7 +108,7 @@ contract IGovernance{
     } 
 
     function canCloseProposal(uint _proposalId) 
-        public 
+        internal 
         view 
         returns(uint8 closeValue) 
     {
@@ -134,6 +134,11 @@ contract IGovernance{
     {
     }
 
+    function callRewardClaimed(address _member, uint[] _voterProposals, uint _gbtReward, uint _reputation)
+    external
+    {
+    }
+
     event Proposal(
         address indexed proposalOwner,
         uint256 indexed proposalId,
@@ -155,14 +160,14 @@ contract IGovernance{
         address indexed from,
         uint256 indexed proposalId,
         uint256 dateAdd,
-        uint256 voteId
+        uint256 voteId,
+        uint256 solutionChosen
     );
 
     event RewardClaimed(
         address indexed member,
         uint[] voterProposals,
         uint gbtReward,
-        uint dAppReward,
         uint reputation
     );
 
