@@ -127,20 +127,18 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @param _memberRoleId Member role id
     /// @return roleId Role id
     /// @return allMemberAddress Member addresses of specified role id
-    function members(uint _memberRoleId) public view returns(uint, address[] allMemberAddress) { //solhint-disable-line
+    function members(uint _memberRoleId) public view returns(uint, address[]) { //solhint-disable-line
         uint length = memberRoleData[_memberRoleId].memberAddress.length;
-        uint j;
         uint i;
-        allMemberAddress = new address[](memberRoleData[_memberRoleId].memberCounter);
+        address[] memberArray;
         for (i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
             if (memberRoleData[_memberRoleId].memberActive[member]) { //solhint-disable-line
-                allMemberAddress[j] = member;
-                j++;
+                memberArray.push(member);
             }
         }
 
-        return (_memberRoleId, allMemberAddress);
+        return (_memberRoleId, memberArray);
     }
 
     /// @dev Gets all members' length

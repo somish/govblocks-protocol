@@ -19,7 +19,7 @@ import "./imports/govern/Governed.sol";
 
 contract ProposalCategory is IProposalCategory, Governed {
 
-    bool public constructorCheck;
+    bool internal constructorCheck;
 
     struct CategoryStruct {
         uint memberRoleToVote;
@@ -211,7 +211,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     ) 
         internal
     {
-        allCategory.push((
+        allCategory.push(
             CategoryStruct(
                 _memberRoleToVote,
                 _majorityVotePerc,
@@ -219,7 +219,7 @@ contract ProposalCategory is IProposalCategory, Governed {
                 _allowedToCreateProposal,
                 _closingTime,
                 _incentives[0]
-            ))
+            )
         );
         uint categoryId = allCategory.length - 1;
         categoryActionData[categoryId] = CategoryAction(_incentives[1], _contractAddress, _contractName);

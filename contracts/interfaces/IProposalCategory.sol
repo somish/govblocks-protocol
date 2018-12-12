@@ -44,7 +44,7 @@ contract IProposalCategory {
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[2] _incentives
+        uint[] _incentives
     ) 
         external{
 
@@ -73,7 +73,7 @@ contract IProposalCategory {
         string _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[2] _incentives
+        uint[] _incentives
     )
         public{
 

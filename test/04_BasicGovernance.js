@@ -56,8 +56,8 @@ contract('Proposal, solution and voting', function([
       'New member role',
       owner
     );
+    p1 = await gv.getProposalLength();
     mrLength = await mr.totalRoles();
-    console.log("p2.args");
     let amount = 50000000000000000000;
     await gbt.lock('GOV', amount, 5468545613353456);
     await gv.createProposalwithSolution(
@@ -68,26 +68,16 @@ contract('Proposal, solution and voting', function([
       'Add new member',
       actionHash
     );
-    await gv.Proposal({proposalOwner:null},{fromBlock:0,toBlock:'latest'}).get((error,result) =>{
-      console.log(result);
-    });
-    // p2 = await gd.getAllProposalIdsLengthByAddress(owner);
-    // assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
-  });
-
-  it('Should not let initialVote to be used after first vote', async function() {
-    this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await catchRevert(sv.initialVote(p, owner));
+    p2 = await gv.getProposalLength();
+    assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
   it('Should close the proposal', async function() {
     this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.closeProposalVote(p);
-    await catchRevert(sv.closeProposalVote(p));
+    p = await gv.getProposalLength();
+    p = p.toNumber() - 1;
+    await gv.closeProposal(p);
+    await catchRevert(gv.closeProposal(p));
     mrLength2 = await mr.totalRoles();
     assert.equal(
       mrLength.toNumber() + 1,
@@ -115,15 +105,15 @@ contract('Proposal, solution and voting', function([
       'Addnewmember',
       0
     );
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
-    await gv.categorizeProposal(p1, 1);
+    p1 = await gv.getProposalLength();
+    await gv.categorizeProposal(p1.toNumber() -1 , 1);
     await gv.createProposal(
       'Add new member',
       'Add new member',
       'Addnewmember',
       0
     );
-    p2 = await gd.getAllProposalIdsLengthByAddress(owner);
+    p2 = await gv.getProposalLength();
     assert.equal(p1.toNumber() + 1, p2.toNumber(), 'Proposal not created');
   });
 
@@ -135,22 +125,22 @@ contract('Proposal, solution and voting', function([
       'New member role',
       owner
     );
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await catchRevert(sv.addSolution(p, owner, 'Addnewmember', actionHash));
+    p = await gv.getProposalLength();
+    p = p.toNumber() - 1;
+    await catchRevert(gv.addSolution(p, 'Addnewmember', actionHash));
   });
 
   it('Should categorize the proposal and then open it for solution submission', async function() {
     this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
+    p = await gv.getProposalLength();
+    p = p.toNumber() - 1;
     await gv.categorizeProposal(p, 1);
   });
 
   it('Should not open the proposal for voting till there are atleast two solutions', async function() {
     this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
+    p = await gv.getProposalLength()
+    p = p.toNumber() - 1;
     await catchRevert(gv.openProposalForVoting(p));
   });
 
@@ -162,31 +152,32 @@ contract('Proposal, solution and voting', function([
       'New member role',
       owner
     );
-    p1 = await gd.getAllProposalIdsLengthByAddress(owner);
+    p1 = await gv.getProposalLength();
+    p1 = p1.toNumber() - 1;
     await gv.submitProposalWithSolution(
-      p1.toNumber(),
+      p1,
       'Addnewmember',
       actionHash
     );
     await catchRevert(
-      gv.submitProposalWithSolution(p1.toNumber(), 'Addnewmember', actionHash)
+      gv.submitProposalWithSolution(p1, 'Addnewmember', actionHash)
     );
   });
 
   it('Should vote in favour of the proposal', async function() {
     this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.proposalVoting(p, [1]);
-    await catchRevert(sv.proposalVoting(p, [1]));
+    p = await gv.getProposalLength();
+    p = p.toNumber() - 1;
+    await gv.submitVote(p, [1]);
+    await catchRevert(gv.submitVote(p, [1]));
   });
 
   it('Should close the proposal', async function() {
     this.timeout(100000);
-    p = await gd.getAllProposalIdsLengthByAddress(owner);
-    p = p.toNumber();
-    await sv.closeProposalVote(p);
-    await catchRevert(sv.closeProposalVote(p));
+    p = await gv.getProposalLength();
+    p = p.toNumber() - 1;
+    await gv.closeProposal(p);
+    await catchRevert(gv.closeProposal(p));
   });
 
   it('Should have added new member role', async function() {
@@ -201,8 +192,8 @@ contract('Proposal, solution and voting', function([
 
   it('Should show zero pending reward when only rep is to be earned', async function() {
     this.timeout(100000);
-    let reward = await sv.getPendingReward(owner, 0);
-    assert.equal(reward[0].toNumber(), 0, 'Incorrect Reward');
+    let reward = await gv.getPendingReward(owner, 0);
+    assert.equal(reward.toNumber(), 0, 'Incorrect Reward');
   });
 
   it('Should add another person to AB', async function() {
@@ -223,9 +214,9 @@ contract('Proposal, solution and voting', function([
 
   it('Should get proper proposal status', async function() {
     this.timeout(100000);
-    p = await gd.getProposalLength();
+    p = await gv.getProposalLength();
     p = p.toNumber();
-    await gv.createProposalwithVote(
+    await gv.createProposalwithSolution(
       'Add new member',
       'Add new member',
       'Addnewmember',
@@ -233,12 +224,12 @@ contract('Proposal, solution and voting', function([
       'Add new member',
       '0x0'
     );
-    await sv.proposalVoting(p, [0], { from: ab });
-    await sv.closeProposalVote(p);
+    await gv.submitVote(p, [0], { from: ab });
+    await gv.closeProposal(p);
     await mr.updateRole(member, 1, true);
-    p = await gd.getProposalLength();
+    p = await gv.getProposalLength();
     p = p.toNumber();
-    await gv.createProposalwithVote(
+    await gv.createProposalwithSolution(
       'Add new member',
       'Add new member',
       'Addnewmember',
@@ -246,12 +237,12 @@ contract('Proposal, solution and voting', function([
       'Add new member',
       '0x0'
     );
-    await sv.addSolution(p, ab, '0x0', '0x0' ,{ from: ab});
-    await sv.proposalVoting(p, [2], { from: ab });
-    await sv.proposalVoting(p, [0], { from: member });
-    await sv.closeProposalVote(p);
+    await gv.addSolution(p, '0x0', '0x0' ,{ from: ab});
+    await gv.submitVote(p, [2], { from: ab });
+    await gv.submitVote(p, [0], { from: member });
+    await gv.closeProposal(p);
     await mr.updateRole(member, 1, false);
-    p = await gd.getProposalLength();
+    p = await gv.getProposalLength();
     p = p.toNumber();
     await gbt.transfer(pl.address, e18.mul(20));
     await mr.updateRole(ab, 1, false);
@@ -259,13 +250,13 @@ contract('Proposal, solution and voting', function([
       'Add new member',
       'Add new member',
       'Addnewmember',
-      17
+      16
     );
     await gv.submitProposalWithSolution(p, '0x0', '0x0');
     await catchRevert(gv.categorizeProposal(p,1));
-    await sv.proposalVoting(p, [0]);
-    await sv.closeProposalVote(p);
-    const ps = await gd.getStatusOfProposals();
+    await gv.submitVote(p, [0]);
+    await gv.closeProposal(p);
+    const ps = await gv.getStatusOfProposals();
     assert.equal(ps[0].toNumber(), 7);
     assert.equal(ps[1].toNumber(), 1);
     assert.equal(ps[2].toNumber(), 1);

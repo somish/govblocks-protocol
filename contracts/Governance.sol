@@ -70,7 +70,7 @@ contract Governance is IGovernance, Upgradeable {
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
     mapping(uint => uint) internal proposalVersion;
-    mapping(address => mapping(uint => uint)) internal addressProposalVote;
+    mapping(address => mapping(uint => uint)) public addressProposalVote;
     mapping(uint => uint[]) internal proposalVote;
     mapping(address => uint[]) internal allVotesByMember;
     mapping(uint => bool) public proposalPaused;
@@ -108,6 +108,8 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public {
+        allVotes.push(ProposalVote(address(0), 0, 0, 1));
+        allProposal.push(ProposalStruct(address(0), now));
         dAppLocker = master.dAppLocker();
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
@@ -264,54 +266,27 @@ contract Governance is IGovernance, Upgradeable {
 
         _createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _categoryId);
 
-        _categorizeProposal(proposalId, _categoryId);
-
         _proposalSubmission(
             proposalId,
             _solutionHash,
             _action
         );
 
-        submitVote(uint32(proposalId), 1);
+        _submitVote(uint32(proposalId), 1);
     }
 
 
-    function submitVote(uint32 _proposalId, uint64 _solution) public {
-        //Variables are reused to save gas. We know that this reduces code readability but proposalVoting is
-        //where gas usage should be optimized as much as possible. voters should not feel burdened while voting.
-        require(addressProposalVote[msg.sender][_proposalId] == 0);
+    function submitVote(uint32 _proposalId, uint64 _solution) external {
+        require(addressProposalVote[msg.sender][_proposalId] == 0, "Already voted");
 
-        require(allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.VotingStarted));
+        require(allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.VotingStarted), "Not allowed");
 
-        uint categoryThenMRSequence;
-        uint voteValue;
+        uint category;
 
-        (categoryThenMRSequence) 
-            = allProposalData[_proposalId].category;
+        require(_solution <= allProposalSolutions[_proposalId].length, "Solution doesn't exist");
 
-        require(validateStake(categoryThenMRSequence, msg.sender));
-
-        (, categoryThenMRSequence, , , , , ) = proposalCategory.category(categoryThenMRSequence);
-        //categoryThenMRSequence is now MemberRoleSequence
-
-        require(memberRole.checkRole(msg.sender, categoryThenMRSequence));
-        require(_solution <= allProposalSolutions[_proposalId].length);
-
-        voteValue = calculateVoteValue(msg.sender);
-
-        // governanceDat.setProposalVote(_proposalId, msg.sender, _solution, voteValue);
-        proposalVote[_proposalId].push(allVotes.length);
-        allVotesByMember[msg.sender].push(allVotes.length);
-        addressProposalVote[msg.sender][_proposalId] = allVotes.length;
-        allVotes.push(ProposalVote(msg.sender, uint64(_solution), uint32(_proposalId), voteValue));
-        emit Vote(msg.sender, _proposalId, now, proposalVote[_proposalId].length - 1, _solution);
-        if (proposalVote[_proposalId].length == memberRole.numberOfMembers(categoryThenMRSequence) &&
-            categoryThenMRSequence != 2 &&
-            categoryThenMRSequence != 0
-        ) {
-            eventCaller.callVoteCast(_proposalId);
-        }
-    }    
+        _submitVote(_proposalId, _solution);
+    }
 
     /// @dev Checks If the proposal voting time is up and it's ready to close 
     ///      i.e. Closevalue is 1 if proposal is ready to be closed, 2 if already closed, 0 otherwise!
@@ -359,12 +334,14 @@ contract Governance is IGovernance, Upgradeable {
         uint solutionId;
         uint voteValue;
 
-        require(canCloseProposal(_proposalId) == 1);
+
+        require (canCloseProposal(_proposalId) == 1, "Cannot close");
+        
         uint[] memory voteIds = proposalVote[_proposalId];
         uint[] memory finalVoteValues = new uint[](allProposalSolutions[_proposalId].length);
         for (i = 0; i < voteIds.length; i++) {
-            solutionId = allVotes[i].solutionChosen;
-            voteValue = allVotes[i].voteValue;
+            solutionId = allVotes[voteIds[i]].solutionChosen;
+            voteValue = allVotes[voteIds[i]].voteValue;
             // (, solutionId, , voteValue) = governanceDat.getVoteData(voteIds[i]);
             totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
             finalVoteValues[solutionId] = finalVoteValues[solutionId].add(voteValue);
@@ -405,7 +382,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     function claimReward(address _memberAddress, uint[] _proposals) 
-        public onlyInternal returns(uint pendingDAppReward) 
+        external onlyInternal returns(uint pendingDAppReward) 
     {
         uint voteIdThenVoteValue;
         uint finalVerdict;
@@ -461,7 +438,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
 
-    function proposal(uint _proposalId) external returns(uint, uint, uint, uint, uint, uint)
+    function proposal(uint _proposalId) external view returns(uint, uint, uint, uint, uint, uint)
     {
         return(
             _proposalId,
@@ -470,6 +447,14 @@ contract Governance is IGovernance, Upgradeable {
             proposalVersion[_proposalId],
             allProposalData[_proposalId].finalVerdict,
             allProposalData[_proposalId].commonIncentive
+        );
+    }
+
+    function proposalDetails(uint _proposalId) external view returns(uint, uint, uint){
+        return(
+            _proposalId,
+            allProposalSolutions[_proposalId].length,
+            proposalVote[_proposalId].length
         );
     }
 
@@ -523,6 +508,9 @@ contract Governance is IGovernance, Upgradeable {
         allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
         allProposal.push(ProposalStruct(msg.sender, now));
 
+        if(_categoryId >0){
+            _categorizeProposal(_proposalId, _categoryId);
+        }
 
         emit Proposal(
             msg.sender,
@@ -591,6 +579,39 @@ contract Governance is IGovernance, Upgradeable {
         openProposalForVoting(
             _proposalId
         );
+    }
+
+    function _submitVote(uint _proposalId, uint64 _solution) internal{
+        //Variables are reused to save gas. We know that this reduces code readability but proposalVoting is
+        //where gas usage should be optimized as much as possible. voters should not feel burdened while voting.
+
+        uint categoryThenMRSequence;
+        uint voteValue;
+
+        (categoryThenMRSequence) 
+            = allProposalData[_proposalId].category;
+
+        require(validateStake(categoryThenMRSequence, msg.sender));
+
+        (, categoryThenMRSequence, , , , , ) = proposalCategory.category(categoryThenMRSequence);
+        //categoryThenMRSequence is now MemberRoleSequence
+
+        require(memberRole.checkRole(msg.sender, categoryThenMRSequence));
+
+        voteValue = calculateVoteValue(msg.sender);
+
+        // governanceDat.setProposalVote(_proposalId, msg.sender, _solution, voteValue);
+        proposalVote[_proposalId].push(allVotes.length);
+        allVotesByMember[msg.sender].push(allVotes.length);
+        addressProposalVote[msg.sender][_proposalId] = allVotes.length;
+        allVotes.push(ProposalVote(msg.sender, uint64(_solution), uint32(_proposalId), voteValue));
+        emit Vote(msg.sender, _proposalId, now, allVotes.length - 1, _solution);
+        if (proposalVote[_proposalId].length == memberRole.numberOfMembers(categoryThenMRSequence) &&
+            categoryThenMRSequence != 2 &&
+            categoryThenMRSequence != 0
+        ) {
+            eventCaller.callVoteCast(_proposalId);
+        }
     }
 
     /// @dev Checks if the vote count against any solution passes the threshold value or not.
@@ -741,7 +762,7 @@ contract Governance is IGovernance, Upgradeable {
         }
     }
 
-    function setPunishVoters(bool _punish) internal {
+    function setPunishVoters(bool _punish) public onlyInternal {
         punishVoters = _punish;
     }
 
@@ -798,7 +819,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     function getProposalLength() external view returns(uint){
-        allProposal.length;
+        return (allProposal.length);
     }
 
 

@@ -104,7 +104,7 @@ contract IGovernance{
     /// @dev Casts vote
     /// @param _proposalId Proposal id
     /// @param _solutionChosen solution chosen while voting. _solutionChosen[0] is the chosen solution
-    function submitVote(uint32 _proposalId, uint64[] _solutionChosen) external {
+    function submitVote(uint32 _proposalId, uint64 _solutionChosen) external {
     } 
 
     function canCloseProposal(uint _proposalId) 
@@ -118,7 +118,7 @@ contract IGovernance{
     }
 
     function claimReward(address _memberAddress, uint[] _proposals) 
-        public returns(uint pendingDAppReward) 
+        external returns(uint pendingDAppReward) 
     {
     }
 
@@ -130,7 +130,7 @@ contract IGovernance{
     {
     }
 
-    function proposal(uint _proposalId) external returns(uint proposalId, uint category, uint status, uint version, uint finalVerdict, uint totalReward)
+    function proposal(uint _proposalId) external view returns(uint proposalId, uint category, uint status, uint version, uint finalVerdict, uint totalReward)
     {
     }
 

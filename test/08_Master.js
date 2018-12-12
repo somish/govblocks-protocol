@@ -16,21 +16,21 @@ const EventCaller = artifacts.require('EventCaller');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 let gbm;
 let temp;
-let sv;
+let pc;
 let add = [];
 let ms;
 
 contract('Master', function([owner, notOwner]) {
   it('Should fetch addresses from master', async function() {
     await initializeContracts();
-    address = await getAddress('SV');
-    sv = await SimpleVoting.at(address);
     address = await getAddress('GBT');
     gbt = await GBTStandardToken.at(address);
     address = await getAddress('MS');
     ms = await Master.at(address);
     address = await getAddress('EC');
     ec = await EventCaller.at(address);
+    address = await getAddress('PC');
+    pc = await Master.at(address);
     address = await getAddress('GBM');
     gbm = await GovBlocksMaster.at(address);
   });
@@ -69,14 +69,10 @@ contract('Master', function([owner, notOwner]) {
 
   it('Should add new version', async function() {
     this.timeout(100000);
-    temp = await GovernanceData.new();
-    add.push(temp.address);
     temp = await MemberRoles.new();
     add.push(temp.address);
     temp = await ProposalCategory.new();
     add.push(temp.address);
-    const svad = await SimpleVoting.new();
-    add.push(svad.address);
     temp = await Governance.new();
     add.push(temp.address);
     temp = await Pool.new();
@@ -84,13 +80,13 @@ contract('Master', function([owner, notOwner]) {
 
     await ms.addNewVersion(add);
     await catchRevert(ms.addNewVersion(add, { from: notOwner }));
-    const g6 = await ms.getLatestAddress('SV');
-    assert.equal(g6, sv.address, 'SV proxy address incorrect');
+    const g6 = await ms.getLatestAddress('PC');
+    assert.equal(g6, pc.address, 'PC proxy address incorrect');
     g7 = await OwnedUpgradeabilityProxy.at(g6);
     assert.equal(
       await g7.implementation(),
-      svad.address,
-      'SV implementation address incorrect'
+      add[1],
+      'PC implementation address incorrect'
     );
   });
 
