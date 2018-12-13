@@ -268,22 +268,4 @@ contract('Proposal, solution and voting', function([
     assert.equal(ps[5].toNumber(), 1);
   });
 
-  // it('Should claim pending reward/reputation', async function() {
-  //   this.timeout(100000);
-  //   let pr = await sv.getPendingReward(owner, 0);
-  //   assert.equal(pr[1].toNumber(), 0);
-  //   assert.isAtLeast(pr[0].toNumber(), 40 , "Owner");
-  //   pr = await sv.getPendingReward(ab, 0);
-  //   assert.equal(pr[1].toNumber(), 0);
-  //   assert.isAtLeast(pr[0].toNumber(), 40 , "AB");
-  //   pr = await sv.getPendingReward(member, 0);
-  //   assert.equal(pr[1].toNumber(), 0);
-  //   assert.isAtLeast(pr[0].toNumber(), 0, "Member");
-  //   [ownerProposals, voterProposals] = await getProposalIds(owner, gd, sv);
-  //   await pl.claimReward(owner, ownerProposals, voterProposals);
-  //   [ownerProposals, voterProposals] = await getProposalIds(ab, gd, sv);
-  //   await pl.claimReward(ab, ownerProposals, voterProposals);
-  //   [ownerProposals, voterProposals] = await getProposalIds(member, gd, sv);
-  //   await pl.claimReward(member, ownerProposals, voterProposals);
-  // });
 });
