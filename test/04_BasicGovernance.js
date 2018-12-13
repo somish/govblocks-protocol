@@ -129,6 +129,10 @@ contract('Proposal, solution and voting', function([
     await catchRevert(gv.addSolution(p, 'Addnewmember', actionHash));
   });
 
+  it('Should not open the proposal for voting when it is not categorized', async function() {
+    await catchRevert(gv.openProposalForVoting(p));
+  });
+
   it('Should categorize the proposal and then open it for solution submission', async function() {
     this.timeout(100000);
     p = await gv.getProposalLength();

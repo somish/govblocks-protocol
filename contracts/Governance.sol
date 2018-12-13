@@ -81,7 +81,7 @@ contract Governance is IGovernance, Upgradeable {
 
     bool internal punishVoters;
     uint internal minVoteWeight;
-    uint internal tokenHoldingTime;
+    uint public tokenHoldingTime;
 
 
     address internal poolAddress;
@@ -432,7 +432,7 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev resume a proposal
     function resumeProposal(uint _proposalId) public onlyInternal {
-        require(!proposalPaused[_proposalId]);
+        require(proposalPaused[_proposalId]);
         proposalPaused[_proposalId] = false;
         allProposal[_proposalId].dateUpd = now;
     }
@@ -764,14 +764,6 @@ contract Governance is IGovernance, Upgradeable {
 
     function setPunishVoters(bool _punish) public onlyInternal {
         punishVoters = _punish;
-    }
-
-    function getGlobalParameters() view external returns(uint, uint, bool) {
-        return(
-            minVoteWeight,
-            tokenHoldingTime,
-            punishVoters
-        );
     }
 
     function getSolutionAction(uint _proposalId, uint _solution) view external returns(uint, bytes){

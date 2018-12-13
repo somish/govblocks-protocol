@@ -64,6 +64,9 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0, {
       from: notOwner
     });
+    await catchRevert(gv.createProposal('Add new member', 'Add new member', 'hash', 6, {
+      from: noStake
+    }));
     assert.equal(
       pid.toNumber() + 2,
       (await gv.getProposalLength()).toNumber(),
@@ -116,6 +119,14 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     );
   });
 
+  it('Should update proposal', async function() {
+    let proposalData = await gv.proposal(pid);
+    await gv.updateProposal(pid,"Addnewmember","AddnewmemberSD","AddnewmemberDescription");
+    let proposalDataUpdated = await gv.proposal(pid);
+    assert.isAbove(proposalDataUpdated[3].toNumber(),proposalData[3].toNumber(),"Proposal not updated");
+    assert.equal(proposalDataUpdated[1].toNumber(),0,"Category not reset");
+  });
+
   it('Should allow authorized people to categorize multiple times', async function() {
     await gv.categorizeProposal(pid, 2);
     let proposalData = await gv.proposal(pid);
@@ -148,7 +159,8 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should allow anyone to submit solution', async () => {
-    gv.addSolution(pid, '0x0', '0x0', { from: notOwner });
+    await gv.addSolution(pid, '0x0', '0x0', { from: notOwner });
+    await catchRevert(gv.addSolution(pid, '0x0', '0x0', { from: noStake }));
   });
 
   it('Should not allow to categorize if there are solutions', async () => {
@@ -166,6 +178,10 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     assert.equal(finalSol[1].toNumber(), initSol[1].toNumber() + 1);
   });
 
+  it('Should not allow to update proposal when there are solutions', async () =>{
+    await catchRevert(gv.updateProposal(pid,"","",""));
+  });
+
   it('Should not allow voting for non existent solution', async () => {
     await catchRevert(gv.submitVote(pid, [5]));
   });
@@ -176,6 +192,12 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
 
   it('Should allow voting', async () => {
     await gv.submitVote(pid, [2]);
+  });
+
+  it('Should not close a paused proposal', async() =>{
+    await gv.pauseProposal(pid);
+    await catchRevert(gv.closeProposal(pid));
+    await gv.resumeProposal(pid);
   });
 
   it('Should close proposal when voting is completed', async () => {
