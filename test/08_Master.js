@@ -11,7 +11,6 @@ const Governance = artifacts.require('Governance');
 const GovernanceData = artifacts.require('GovernanceData');
 const Pool = artifacts.require('Pool');
 const ProposalCategory = artifacts.require('ProposalCategory');
-const SimpleVoting = artifacts.require('SimpleVoting');
 const EventCaller = artifacts.require('EventCaller');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 let gbm;

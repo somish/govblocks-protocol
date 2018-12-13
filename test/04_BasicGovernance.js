@@ -1,6 +1,5 @@
 const Governance = artifacts.require('Governance');
 const MemberRoles = artifacts.require('MemberRoles');
-const SimpleVoting = artifacts.require('SimpleVoting');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const encode = require('../helpers/encoder.js').encode;
 const getProposalIds = require('../helpers/reward.js').getProposalIds;
