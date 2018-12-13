@@ -92,9 +92,9 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gbt.transfer(pl.address, e18.mul(20));
   });
 
-  // it('Should not allow to categorize if tokens are not locked', async function() { /*******************/**
-  //   await catchRevert(gv.categorizeProposal(pid, 7, { from: notOwner }));
-  // });
+  it('Should not allow to categorize if tokens are not locked', async function() {
+    await catchRevert(gv.categorizeProposal(pid, 7, { from: notOwner }));
+  });
 
   it('Should not allow unauthorized person to categorize proposal', async function() {
     await catchRevert(gv.categorizeProposal(pid, 7, { from: notOwner }));
@@ -104,8 +104,8 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should categorize proposal', async function() {
-    // await dAppToken.lock('GOV', e18.mul(10), 54685456133563456);
-    // await gv.createProposal('Add new member', 'Add new member', 'hash', 12);
+    await dAppToken.lock('GOV', e18.mul(10), 54685456133563456);
+    await gv.createProposal('Add new member', 'Add new member', 'hash', 12);
     await gv.categorizeProposal(pid, 1);
     let proposalData = await gv.proposal(pid);
     //check proposal category
