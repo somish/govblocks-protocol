@@ -1,7 +1,6 @@
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const MemberRoles = artifacts.require('MemberRoles');
 const Master = artifacts.require('Master');
-const ProposalCategoryAdder = artifacts.require('ProposalCategoryAdder');
 const dAppName = '0x41';
 
 async function getAddress(name) {
