@@ -8,7 +8,6 @@ const OwnedUpgradeabilityProxy = artifacts.require('OwnedUpgradeabilityProxy');
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const Master = artifacts.require('Master');
 const Governance = artifacts.require('Governance');
-const GovernanceData = artifacts.require('GovernanceData');
 const Pool = artifacts.require('Pool');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const EventCaller = artifacts.require('EventCaller');
