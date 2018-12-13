@@ -79,6 +79,7 @@ contract Governance is IGovernance, Upgradeable {
     ProposalStruct[] internal allProposal;
     ProposalVote[] internal allVotes;
 
+    bool internal constructorCheck;
     bool internal punishVoters;
     uint internal minVoteWeight;
     uint public tokenHoldingTime;
@@ -106,10 +107,18 @@ contract Governance is IGovernance, Upgradeable {
         _;
     }
 
-    /// @dev updates all dependency addresses to latest ones from Master
-    function updateDependencyAddresses() public {
+    function initiateGovernance() internal {
         allVotes.push(ProposalVote(address(0), 0, 0, 1));
         allProposal.push(ProposalStruct(address(0), now));
+        tokenHoldingTime = 604800;
+        constructorCheck = true;
+    }
+
+    /// @dev updates all dependency addresses to latest ones from Master
+    function updateDependencyAddresses() public {
+        if(!constructorCheck){
+            initiateGovernance();
+        }
         dAppLocker = master.dAppLocker();
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
@@ -753,7 +762,7 @@ contract Governance is IGovernance, Upgradeable {
         allProposalData[_proposalId].propStatus = _status;
     }
 
-    function configureGlobalParameters(bytes8 _typeOf, uint _value) internal {
+    function configureGlobalParameters(bytes8 _typeOf, uint _value) public onlyInternal {
         if(_typeOf == "MV"){
             minVoteWeight = _value;
         }

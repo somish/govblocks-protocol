@@ -18,7 +18,6 @@ const nullAddress = 0x0000000000000000000000000000000000000000;
 let gbt;
 let sv;
 let pl;
-let gd;
 let gv;
 let ms;
 let mr;
@@ -57,7 +56,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should create an uncategorized proposal', async function() {
-    gv.setPunishVoters(true);
+    await gv.setPunishVoters(true);
     pid = await gv.getProposalLength();
     await gbt.transfer(notOwner, e18.mul(10));
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
@@ -233,6 +232,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.submitVote(propId, [1], { from: notOwner });
     await gv.submitVote(propId, [2], { from: voter });
     await gv.closeProposal(propId);
+    await gv.getSolutionAction(propId, 1);
     await gv.getPendingReward(owner, 0);
     voterProposals = await getProposalIds(owner, gv);
     var balance = await dAppToken.balanceOf(owner);
@@ -390,6 +390,12 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await increaseTime(2000);
     await gv.closeProposal(propId);
     await catchRevert(gv.closeProposal(propId));
+  });
+
+  it('Should configure global paramters', async function() {
+    await catchRevert(gv.configureGlobalParameters("0x5448", 10 ,{from:noStake}));
+    await gv.configureGlobalParameters("0x5448", 704400);
+    await gv.configureGlobalParameters("0x4d56", 10);
   });
   
 });

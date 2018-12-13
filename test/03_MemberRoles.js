@@ -41,6 +41,7 @@ contract('MemberRoles', function([owner, member, other]) {
   it('should add a member to a role', async function() {
     await mr.updateRole(member, 1, true);
     await catchRevert(mr.updateRole(member, 2, true));
+    await catchRevert(mr.updateRole(member, 1, true));
     await catchRevert(mr.updateRole(member, 2, false, { from: other}));
     assert.equal(
       await mr.checkRole(member, 1),
@@ -94,11 +95,13 @@ contract('MemberRoles', function([owner, member, other]) {
       false,
       'user not removed from AB'
     );
+    const g3 = await mr.members(1);
     catchRevert(mr.updateRole(member, 1, false));
   });
 
   it('Should not allow unauthorized people to update member roles', async function() {
     await mr.changeAuthorized(1, owner);
+    await catchRevert(mr.changeAuthorized(1, owner, { from: other }));
     await catchRevert(
       mr.updateRole(member, 1, true, { from: other })
     );
