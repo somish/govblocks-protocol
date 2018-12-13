@@ -5,7 +5,6 @@ const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Governance = artifacts.require('Governance');
 const Pool = artifacts.require('Pool');
 const ProposalCategory = artifacts.require('ProposalCategory');
-const SimpleVoting = artifacts.require('SimpleVoting');
 const EventCaller = artifacts.require('EventCaller');
 
 let gbt;

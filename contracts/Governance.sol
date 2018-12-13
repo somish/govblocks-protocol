@@ -14,8 +14,6 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity 0.4.24;
-import "./ProposalCategory.sol";
-import "./MemberRoles.sol";
 import "./Upgradeable.sol";
 import "./Master.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -24,6 +22,8 @@ import "./GBTStandardToken.sol";
 import "./EventCaller.sol";
 
 import "./interfaces/IGovernance.sol";
+import "./interfaces/IProposalCategory.sol";
+import "./interfaces/IMemberRoles.sol";
 
 
 

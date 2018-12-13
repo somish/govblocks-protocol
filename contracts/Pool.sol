@@ -20,7 +20,7 @@ import "./imports/govern/Governed.sol";
 import "./GBTStandardToken.sol";
 import "./Upgradeable.sol";
 import "./interfaces/IGovernance.sol";
-import "./ProposalCategory.sol";
+import "./interfaces/IProposalCategory.sol";
 
 
 contract Pool is Upgradeable, Governed {
@@ -29,7 +29,7 @@ contract Pool is Upgradeable, Governed {
     GBTStandardToken public gbt;
     GBTStandardToken public dAppToken;
     IGovernance public gov;
-    ProposalCategory public proposalCategory;
+    IProposalCategory public proposalCategory;
     bool internal locked;
     
     function () public payable {} //solhint-disable-line
@@ -45,7 +45,7 @@ contract Pool is Upgradeable, Governed {
     function updateDependencyAddresses() public {
         gbt = GBTStandardToken(master.gbt());
         gov = IGovernance(master.getLatestAddress("GV"));
-        proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
+        proposalCategory = IProposalCategory(master.getLatestAddress("PC"));
         dAppToken = GBTStandardToken(master.dAppToken());
         dappName = master.dAppName();
     }
