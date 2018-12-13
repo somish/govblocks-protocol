@@ -29,8 +29,6 @@ import "./interfaces/IMemberRoles.sol";
 
 contract Governance is IGovernance, Upgradeable {
 
-    using SafeMath for uint;
-
     enum ProposalStatus { 
         Draft,
         AwaitingSolution,
@@ -301,7 +299,7 @@ contract Governance is IGovernance, Upgradeable {
     ///      i.e. Closevalue is 1 if proposal is ready to be closed, 2 if already closed, 0 otherwise!
     /// @param _proposalId Proposal id to which closing value is being checked
     function canCloseProposal(uint _proposalId) 
-        internal 
+        public 
         view 
         returns(uint8 closeValue)
     {
@@ -353,7 +351,7 @@ contract Governance is IGovernance, Upgradeable {
             voteValue = allVotes[voteIds[i]].voteValue;
             // (, solutionId, , voteValue) = governanceDat.getVoteData(voteIds[i]);
             totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
-            finalVoteValues[solutionId] = finalVoteValues[solutionId].add(voteValue);
+            finalVoteValues[solutionId] = SafeMath.add(finalVoteValues[solutionId],voteValue);
             if (finalVoteValues[max] < finalVoteValues[solutionId]) {
                 max = uint64(solutionId);
             }
@@ -428,7 +426,7 @@ contract Governance is IGovernance, Upgradeable {
                 calcReward = SafeMath.div(SafeMath.mul(voteIdThenVoteValue, totalReward), totalVoteValue);
             }
             
-            pendingDAppReward = pendingDAppReward.add(calcReward);
+            pendingDAppReward = SafeMath.add(pendingDAppReward,calcReward);
         }
 
     }
@@ -470,7 +468,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev Checks if the solution is already added by a member against specific proposal
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
-    function alreadyAdded(uint _proposalId, address _memberAddress) public view returns(bool) {
+    function alreadyAdded(uint _proposalId, address _memberAddress) internal view returns(bool) {
         for (uint i = 1; i < allProposalSolutions[_proposalId].length; i++) {
             if (allProposalSolutions[_proposalId][i].owner == _memberAddress)
                 return true;
@@ -633,10 +631,10 @@ contract Governance is IGovernance, Upgradeable {
             uint totalTokens;
             GBTStandardToken tokenInstance = GBTStandardToken(dAppLocker);
             for (uint i = 0; i < proposalVote[_proposalId].length; i++) {
-                totalTokens = totalTokens.add(tokenInstance.balanceOf(allVotes[proposalVote[_proposalId][i]].voter));
+                totalTokens = SafeMath.add(totalTokens, tokenInstance.balanceOf(allVotes[proposalVote[_proposalId][i]].voter));
             }
 
-            thresHoldValue = SafeMath.div(totalTokens.mul(100), tokenInstance.totalSupply());
+            thresHoldValue = SafeMath.div(SafeMath.mul(totalTokens, 100), tokenInstance.totalSupply());
             if (thresHoldValue > categoryQuorumPerc)
                 return true;
         } else if (_mrSequenceId == uint(MemberRoles.Role.UnAssigned)) {
@@ -779,7 +777,7 @@ contract Governance is IGovernance, Upgradeable {
         return (
             _solution,
             allProposalSolutions[_proposalId][_solution].action
-            );
+        );
     }
 
     /// @dev Gets statuses of proposals

@@ -22,10 +22,6 @@ import "./imports/govern/Governed.sol";
 
 contract MemberRoles is IMemberRoles, Governed {
 
-    using SafeMath
-
-    for uint;
-
     enum Role {
         UnAssigned,
         AdvisoryBoard,

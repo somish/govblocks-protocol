@@ -108,7 +108,7 @@ contract IGovernance{
     } 
 
     function canCloseProposal(uint _proposalId) 
-        internal 
+        public 
         view 
         returns(uint8 closeValue) 
     {
