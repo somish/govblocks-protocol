@@ -81,6 +81,8 @@ contract('MemberRoles', function([owner, member, other]) {
       'user incorrectly added to AB'
     );
     await mr.updateRole(member, 1, true);
+    let members = await mr.members(1);
+    assert.equal(members[1].length, 2);
     assert.equal(
       await mr.checkRole(member, 1),
       true,
