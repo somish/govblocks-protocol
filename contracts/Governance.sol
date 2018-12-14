@@ -67,7 +67,6 @@ contract Governance is IGovernance, Upgradeable {
 
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => SolutionStruct[]) internal allProposalSolutions;
-    mapping(uint => uint) internal proposalVersion;
     mapping(address => mapping(uint => uint)) public addressProposalVote;
     mapping(uint => uint[]) internal proposalVote;
     mapping(address => uint[]) internal allVotesByMember;
@@ -81,6 +80,7 @@ contract Governance is IGovernance, Upgradeable {
     bool internal punishVoters;
     uint internal minVoteWeight;
     uint public tokenHoldingTime;
+    uint public allowedToCatgorize;
 
 
     address internal poolAddress;
@@ -94,7 +94,7 @@ contract Governance is IGovernance, Upgradeable {
         _;
     }
 
-    modifier checkProposalValidity(uint _proposalId) {
+    modifier voteNotStarted(uint _proposalId) {
         require(allProposalData[_proposalId].propStatus < uint(ProposalStatus.VotingStarted));
         _;
     }
@@ -104,6 +104,13 @@ contract Governance is IGovernance, Upgradeable {
         require(validateStake(_categoryId, msg.sender), "Lock more tokens");
         _;
     }
+
+    modifier isAllowedToCategorize(){
+        require(memberRole.checkRole(msg.sender, allowedToCatgorize), "Not authorized");
+        _;
+    }
+
+
 
     function initiateGovernance() internal {
         allVotes.push(ProposalVote(address(0), 0, 0, 1));
@@ -156,7 +163,7 @@ contract Governance is IGovernance, Upgradeable {
         _createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _categoryId);
     }
 
-    /// @dev Edits the details of an existing proposal and creates new version
+    /// @dev Edits the details of an existing proposal
     /// @param _proposalId Proposal id that details needs to be updated
     /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
     function updateProposal(
@@ -169,10 +176,9 @@ contract Governance is IGovernance, Upgradeable {
     {
         require(
             allProposalSolutions[_proposalId].length < 2,
-            "Solutions had already been submitted"
+            "Solution submitted"
         );
-        proposalVersion[_proposalId] = SafeMath.add(proposalVersion[_proposalId], 1);
-        updateProposalStatus(_proposalId, uint8(ProposalStatus.Draft));
+        _updateProposalStatus(_proposalId, uint8(ProposalStatus.Draft));
         allProposalData[_proposalId].category = 0;
         allProposalData[_proposalId].commonIncentive = 0;
         emit Proposal(
@@ -188,10 +194,11 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
     function categorizeProposal(
         uint _proposalId,
-        uint _categoryId
+        uint _categoryId,
+        uitn _incentive
     )
         external
-        checkProposalValidity(_proposalId) isAllowed(_categoryId)
+        voteNotStarted(_proposalId) isAllowedToCategorize
     {
 
         require(
@@ -199,7 +206,7 @@ contract Governance is IGovernance, Upgradeable {
             "Solutions had already been submitted"
         );
 
-        _categorizeProposal(_proposalId, _categoryId);
+        _categorizeProposal(_proposalId, _categoryId, _incentive);
     }
 
     /// @dev Initiates add solution
@@ -212,8 +219,8 @@ contract Governance is IGovernance, Upgradeable {
         external 
     {
         require(
-            allProposalData[_proposalId].propStatus >= uint(Governance.ProposalStatus.AwaitingSolution),
-            "Open proposal for solution submission"
+            allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.AwaitingSolution),
+            "Not in solutioning phase"
         );
         require(validateStake(allProposalData[_proposalId].category, msg.sender), "Lock more tokens");
 
@@ -222,7 +229,7 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev Opens proposal for voting
     function openProposalForVoting(uint _proposalId)
-        public onlyProposalOwner(_proposalId) checkProposalValidity(_proposalId)
+        public onlyProposalOwner(_proposalId) voteNotStarted(_proposalId)
     {
         uint category = allProposalData[_proposalId].category;
 
@@ -232,7 +239,7 @@ contract Governance is IGovernance, Upgradeable {
             allProposalSolutions[_proposalId].length > 1,
             "Add more solutions"
         );
-        updateProposalStatus(_proposalId, uint8(ProposalStatus.VotingStarted));
+        _updateProposalStatus(_proposalId, uint8(ProposalStatus.VotingStarted));
         uint closingTime;
         (, , , , , closingTime, ) = proposalCategory.category(category);
         closingTime = SafeMath.add(closingTime, now); // solhint-disable-line
@@ -288,8 +295,6 @@ contract Governance is IGovernance, Upgradeable {
 
         require(allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.VotingStarted), "Not allowed");
 
-        uint category;
-
         require(_solution <= allProposalSolutions[_proposalId].length, "Solution doesn't exist");
 
         _submitVote(_proposalId, _solution);
@@ -335,7 +340,7 @@ contract Governance is IGovernance, Upgradeable {
 
     function closeProposal(uint _proposalId) external {
         uint category = allProposalData[_proposalId].category;
-        uint64 max;
+        uint max;
         uint totalVoteValue;
         uint i;
         uint solutionId;
@@ -353,22 +358,19 @@ contract Governance is IGovernance, Upgradeable {
             totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
             finalVoteValues[solutionId] = SafeMath.add(finalVoteValues[solutionId],voteValue);
             if (finalVoteValues[max] < finalVoteValues[solutionId]) {
-                max = uint64(solutionId);
+                max = solutionId;
             }
         }
-        voteValue = allProposalData[_proposalId].totalVoteValue;
-        // (voteValue,) = governanceDat.getProposalVoteValue(_proposalId);
-        totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
-
+        
         allProposalData[_proposalId].totalVoteValue = totalVoteValue;
         allProposalData[_proposalId].majVoteValue = finalVoteValues[max];
         // governanceDat.setProposalVoteValue(_proposalId, totalVoteValue, finalVoteValues[max]);
 
         if (checkForThreshold(_proposalId, category)) {
-            closeProposalVoteThReached(finalVoteValues[max], totalVoteValue, category, _proposalId, max);
+            closeProposalVoteThReached(finalVoteValues[max], totalVoteValue, category, _proposalId, uint64(max));
         } else {
             allProposalData[_proposalId].finalVerdict = max;
-            updateProposalStatus(_proposalId, uint8(ProposalStatus.Denied));
+            _updateProposalStatus(_proposalId, uint8(ProposalStatus.Denied));
             // governanceDat.updateProposalDetails(_proposalId, max);
             // governanceDat.changeProposalStatus(_proposalId, uint8(Governance.ProposalStatus.Denied));
         }
@@ -445,13 +447,12 @@ contract Governance is IGovernance, Upgradeable {
     }
 
 
-    function proposal(uint _proposalId) external view returns(uint, uint, uint, uint, uint, uint)
+    function proposal(uint _proposalId) external view returns(uint, uint, uint, uint, uint)
     {
         return(
             _proposalId,
             allProposalData[_proposalId].category,
             allProposalData[_proposalId].propStatus,
-            proposalVersion[_proposalId],
             allProposalData[_proposalId].finalVerdict,
             allProposalData[_proposalId].commonIncentive
         );
@@ -538,22 +539,20 @@ contract Governance is IGovernance, Upgradeable {
 
     function _categorizeProposal(
         uint _proposalId,
-        uint _categoryId
+        uint _categoryId,
+        uint _incentive
     ) 
         internal
     {
-        uint defaultIncentive;
-        (, , , defaultIncentive) = proposalCategory.categoryAction(_categoryId);
-
         require(
-            defaultIncentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress),
+            _incentive <= GBTStandardToken(dAppLocker).balanceOf(poolAddress),
             "Less token balance in pool for incentive distribution"
         );
 
         allProposalData[_proposalId].category = _categoryId;
-        allProposalData[_proposalId].commonIncentive = defaultIncentive;
-        updateProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
-        // governanceDat.setProposalCategory_Incentive(_proposalId, _categoryId, defaultIncentive);
+        allProposalData[_proposalId].commonIncentive = _incentive;
+        _updateProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
+        // governanceDat.setProposalCategory_Incentive(_proposalId, _categoryId, _incentive);
         // governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.AwaitingSolution));
     }
 
@@ -666,7 +665,7 @@ contract Governance is IGovernance, Upgradeable {
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
                 // allProposalData[_proposalId].propStatus = uint8(ProposalStatus.Accepted);
-                updateProposalStatus(_proposalId, uint8(ProposalStatus.Accepted));
+                _updateProposalStatus(_proposalId, uint8(ProposalStatus.Accepted));
                 // governanceDat.updateProposalDetails(_proposalId, max);
                 // governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.Accepted));
                 /*solhint-disable*/
@@ -681,13 +680,13 @@ contract Governance is IGovernance, Upgradeable {
                 eventCaller.callProposalAccepted(_proposalId);
             } else {
                 // allProposalData[_proposalId].propStatus = uint8(ProposalStatus.Rejected);
-                updateProposalStatus(_proposalId, uint8(ProposalStatus.Rejected));
+                _updateProposalStatus(_proposalId, uint8(ProposalStatus.Rejected));
                 // governanceDat.updateProposalDetails(_proposalId, max);
                 // governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.Rejected));
             }
         } else {
             // allProposalData[_proposalId].propStatus = uint8(ProposalStatus.Majority_Not_Reached_But_Accepted);
-            updateProposalStatus(_proposalId, uint8(ProposalStatus.Majority_Not_Reached_But_Accepted));
+            _updateProposalStatus(_proposalId, uint8(ProposalStatus.Majority_Not_Reached_But_Accepted));
             // governanceDat.updateProposalDetails(
             //     _proposalId, 
             //     max
@@ -755,10 +754,7 @@ contract Governance is IGovernance, Upgradeable {
         pendingDAppReward = calcReward;
     }
 
-    function updateProposalStatus(uint _proposalId,uint8 _status) internal{
-        allProposal[_proposalId].dateUpd = now;
-        allProposalData[_proposalId].propStatus = _status;
-    }
+    
 
     function configureGlobalParameters(bytes8 _typeOf, uint _value) public onlyInternal {
         if(_typeOf == "MV"){
@@ -819,6 +815,11 @@ contract Governance is IGovernance, Upgradeable {
 
     function getProposalLength() external view returns(uint){
         return (allProposal.length);
+    }
+
+    function _updateProposalStatus(uint _proposalId,uint8 _status) internal{
+        allProposal[_proposalId].dateUpd = now;
+        allProposalData[_proposalId].propStatus = _status;
     }
 
 

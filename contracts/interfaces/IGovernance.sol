@@ -139,6 +139,11 @@ contract IGovernance{
     {
     }
 
+    function  allowedToCatgorize() returns(uint roleId) public {
+        
+    }
+    
+
     event Proposal(
         address indexed proposalOwner,
         uint256 indexed proposalId,
