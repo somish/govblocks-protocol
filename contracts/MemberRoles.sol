@@ -44,7 +44,7 @@ contract MemberRoles is IMemberRoles, Governed {
         if (memberRoleData[_memberRoleId].authorized != address(0))
             require(msg.sender == memberRoleData[_memberRoleId].authorized);
         else
-            require(isAuthorizedToGovern(msg.sender));
+            require(isAuthorizedToGovern(msg.sender), "Not Authorized");
         _;
     }
 
@@ -129,7 +129,7 @@ contract MemberRoles is IMemberRoles, Governed {
         address[] memberArray;
         for (i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
-            if (memberRoleData[_memberRoleId].memberActive[member]) { //solhint-disable-line
+            if (memberRoleData[_memberRoleId].memberActive[member] && !checkMemberInArray(member, memberArray)) { //solhint-disable-line
                 memberArray.push(member);
             }
         }
@@ -222,6 +222,16 @@ contract MemberRoles is IMemberRoles, Governed {
     ) internal {
         emit MemberRole(memberRoleData.length, _roleName, _roleDescription);
         memberRoleData.push(MemberRoleDetails(0, new address[](0), _authorized));
+    }
+
+    function checkMemberInArray(address _memberAddress, address[] memberArray) internal view returns(bool memberExists){
+        uint i;
+        for(i = 0; i<memberArray.length; i++){
+            if(memberArray[i] == _memberAddress){
+                memberExists = true;
+                break;
+            }
+        }
     }
 
 }
