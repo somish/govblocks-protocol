@@ -139,7 +139,7 @@ contract IGovernance{
     {
     }
 
-    function  allowedToCatgorize() returns(uint roleId) public {
+    function  allowedToCatgorize() public returns(uint roleId) {
     }
     
 
