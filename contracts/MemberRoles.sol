@@ -22,12 +22,6 @@ import "./imports/govern/Governed.sol";
 
 contract MemberRoles is IMemberRoles, Governed {
 
-    enum Role {
-        UnAssigned,
-        AdvisoryBoard,
-        TokenHolder
-    }
-
     LockableToken public dAppToken;
 
     struct MemberRoleDetails {

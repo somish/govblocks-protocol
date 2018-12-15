@@ -84,10 +84,10 @@ contract Governance is IGovernance, Upgradeable {
 
 
     address internal poolAddress;
-    MemberRoles internal memberRole;
-    ProposalCategory internal proposalCategory;
+    IMemberRoles internal memberRole;
+    IProposalCategory internal proposalCategory;
+    LockableToken internal tokenInstance;
     EventCaller internal eventCaller;
-    address internal dAppLocker;
 
     modifier onlyProposalOwner(uint _proposalId) {
         require(msg.sender == allProposal[_proposalId].owner, "Not authorized");
@@ -129,13 +129,12 @@ contract Governance is IGovernance, Upgradeable {
         if(!constructorCheck){
             initiateGovernance();
         }
-        dAppLocker = master.dAppLocker();
-        memberRole = MemberRoles(master.getLatestAddress("MR"));
-        proposalCategory = ProposalCategory(master.getLatestAddress("PC"));
+        tokenInstance = LockableToken(master.dAppLocker());
+        memberRole = IMemberRoles(master.getLatestAddress("MR"));
+        proposalCategory = IProposalCategory(master.getLatestAddress("PC"));
         poolAddress = master.getLatestAddress("PL");
         eventCaller = EventCaller(master.getEventCallerAddress());
     }
-
 
     function callRewardClaimed(
         address _member,
@@ -200,7 +199,7 @@ contract Governance is IGovernance, Upgradeable {
     function categorizeProposal(
         uint _proposalId,
         uint _categoryId,
-        uitn _incentive
+        uint _incentive
     )
         external
         voteNotStarted(_proposalId) isAllowedToCategorize
@@ -297,7 +296,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
 
-    function submitVote(uint32 _proposalId, uint64 _solution) external validateStake(_proposalId) {
+    function submitVote(uint32 _proposalId, uint64 _solution) external isStakeValidated(_proposalId) {
         require(addressProposalVote[msg.sender][_proposalId] == 0, "Already voted");
 
         require(allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.VotingStarted), "Not allowed");
@@ -319,17 +318,15 @@ contract Governance is IGovernance, Upgradeable {
         uint pStatus;
         uint _closingTime;
         uint _roleId;
-        uint _category;
         require(!proposalPaused[_proposalId]);
-        _category = allProposalData[_proposalId].category;
         pStatus = allProposalData[_proposalId].propStatus;
         dateUpdate =  allProposal[_proposalId].dateUpd;
         // (, _category, , dateUpdate, , pStatus) = governanceDat.getProposalDetailsById(_proposalId);
-        (, _roleId, , , , _closingTime, ) = proposalCategory.category(_category);
+        (, _roleId, , , , _closingTime, ) = proposalCategory.category(allProposalData[_proposalId].category);
         if (
             pStatus == uint(ProposalStatus.VotingStarted) &&
-            _roleId != uint(MemberRoles.Role.TokenHolder) &&
-            _roleId != uint(MemberRoles.Role.UnAssigned)
+            _roleId != uint(IMemberRoles.Role.TokenHolder) &&
+            _roleId != uint(IMemberRoles.Role.UnAssigned)
         ) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now ||  //solhint-disable-line
                 proposalVote[_proposalId].length == memberRole.numberOfMembers(_roleId)
@@ -345,52 +342,30 @@ contract Governance is IGovernance, Upgradeable {
         }
     }
 
-    function closeProposal(uint _proposalId) external {
-        uint category = allProposalData[_proposalId].category;
-        uint max;
-        uint totalVoteValue;
-        uint i;
-
-
-        require (canCloseProposal(_proposalId) == 1, "Cannot close");
-
-        for (i = 0; i < proposalVote[_proposalId].length; i++) {
-            allProposalSolutions[_proposalId][allVotes[proposalVote[_proposalId]].solutionChosen] = SafeMath.add(allProposalSolutions[_proposalId][allVotes[proposalVote[_proposalId]].solutionChosen],voteValue);
-            if (allProposalSolutions[_proposalId][max] < allProposalSolutions[_proposalId][allVotes[proposalVote[_proposalId]].solutionChosen]) {
-                max = allVotes[proposalVote[_proposalId]].solutionChosen;
-            }
-        }
-
-        allProposalData[_proposalId].totalVoteValue = totalVoteValue;
-        allProposalData[_proposalId].majVoteValue = allProposalSolutions[_proposalId][max];
-
-        if (checkForThreshold(_proposalId, category)) {
-            closeProposalVoteThReached(allProposalSolutions[_proposalId][max], totalVoteValue, category, _proposalId, uint64(max));
-        } else {
-            allProposalData[_proposalId].finalVerdict = max;
-            _updateProposalStatus(_proposalId, uint8(ProposalStatus.Denied));
-        }
-    }
-
     // function closeProposal(uint _proposalId) external {
     //     uint category = allProposalData[_proposalId].category;
     //     uint max;
     //     uint totalVoteValue;
     //     uint i;
-    //     uint solutionId;
-    //     uint voteValue;
 
     //     require (canCloseProposal(_proposalId) == 1, "Cannot close");
 
-    //     uint[] memory voteIds = proposalVote[_proposalId];
     //     uint[] memory finalVoteValues = new uint[](allProposalSolutions[_proposalId].length);
-    //     for (i = 0; i < voteIds.length; i++) {
-    //         solutionId = allVotes[voteIds[i]].solutionChosen;
-    //         voteValue = allVotes[voteIds[i]].voteValue;
-    //         totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
-    //         finalVoteValues[solutionId] = SafeMath.add(finalVoteValues[solutionId],voteValue);
-    //         if (finalVoteValues[max] < finalVoteValues[solutionId]) {
-    //             max = solutionId;
+    //     for (i = 0; i < proposalVote[_proposalId].length; i++) {
+    //         totalVoteValue = SafeMath.add(
+    //                             totalVoteValue,
+    //                             allVotes[proposalVote[_proposalId][i]].voteValue
+    //                          );
+    //         finalVoteValues[allVotes[proposalVote[_proposalId][i]].solutionChosen] =
+    //             SafeMath.add(
+    //                 finalVoteValues[allVotes[proposalVote[_proposalId][i]].solutionChosen],
+    //                 allVotes[proposalVote[_proposalId][i]].voteValue
+    //             );
+    //         if (
+    //             finalVoteValues[max] <
+    //             finalVoteValues[allVotes[proposalVote[_proposalId][i]].solutionChosen]
+    //         ) {
+    //             max = allVotes[proposalVote[_proposalId][i]].solutionChosen;
     //         }
     //     }
 
@@ -398,18 +373,60 @@ contract Governance is IGovernance, Upgradeable {
     //     allProposalData[_proposalId].majVoteValue = finalVoteValues[max];
 
     //     if (checkForThreshold(_proposalId, category)) {
-    //         closeProposalVoteThReached(finalVoteValues[max], totalVoteValue, category, _proposalId, uint64(max));
+    //         closeProposalVoteThReached(
+    //             finalVoteValues[max],
+    //             totalVoteValue,
+    //             category,
+    //             _proposalId,
+    //             uint64(max)
+    //         );
     //     } else {
-    //         allProposalData[_proposalId].finalVerdict = max;
+    //         allProposalData[_proposalId].finalVerdict = uint64(max);
     //         _updateProposalStatus(_proposalId, uint8(ProposalStatus.Denied));
     //     }
     // }
+
+    function closeProposal(uint _proposalId) external {
+        uint category = allProposalData[_proposalId].category;
+        uint max;
+        uint totalVoteValue;
+        uint i;
+        uint solutionId;
+        uint voteValue;
+        uint totalTokens;
+        require (canCloseProposal(_proposalId) == 1, "Cannot close");
+
+        uint[] memory finalVoteValues = new uint[](allProposalSolutions[_proposalId].length);
+        for (i = 0; i < proposalVote[_proposalId].length; i++) {
+            solutionId = allVotes[proposalVote[_proposalId][i]].solutionChosen;
+            voteValue = allVotes[proposalVote[_proposalId][i]].voteValue;
+            totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
+            finalVoteValues[solutionId] = SafeMath.add(finalVoteValues[solutionId],voteValue);
+            totalTokens = SafeMath.add(
+                            totalTokens,
+                            tokenInstance.totalBalanceOf(allVotes[proposalVote[_proposalId][i]].voter)
+                          );
+            if (finalVoteValues[max] < finalVoteValues[solutionId]) {
+                max = solutionId;
+            }
+        }
+
+        allProposalData[_proposalId].totalVoteValue = totalVoteValue;
+        allProposalData[_proposalId].majVoteValue = finalVoteValues[max];
+
+        if (checkForThreshold(_proposalId, category, totalTokens)) {
+            closeProposalVoteThReached(finalVoteValues[max], totalVoteValue, category, _proposalId, uint64(max));
+        } else {
+            allProposalData[_proposalId].finalVerdict = uint64(max);
+            _updateProposalStatus(_proposalId, uint8(ProposalStatus.Denied));
+        }
+    }
 
     function getPendingReward(address _memberAddress, uint _lastRewardVoteId)
         public view returns(uint pendingDAppReward)
     {
         uint i;
-        uint[] memory votesByMember = allVotesByMember[_memberAddress];
+        uint[] votesByMember = allVotesByMember[_memberAddress];
         uint proposalId;
         for (i = _lastRewardVoteId; i < votesByMember.length; i++) {
             if (!rewardClaimed[votesByMember[i]]) {
@@ -422,41 +439,45 @@ contract Governance is IGovernance, Upgradeable {
     function claimReward(address _memberAddress, uint[] _proposals) 
         external onlyInternal returns(uint pendingDAppReward) 
     {
-        uint voteIdThenVoteValue;
-        uint finalVerdict;
-        uint totalReward;
-        uint solutionId;
         uint calcReward;
-        uint totalVoteValue;
-        uint finalVoteValue;
+        uint finalVerdict;
+        uint voteId;
+        
         for (uint i = 0; i < _proposals.length; i++) {
-            voteIdThenVoteValue = addressProposalVote[_memberAddress][_proposals[i]];
-            totalVoteValue = allProposalData[_proposals[i]].totalVoteValue;
-            finalVoteValue = allProposalData[_proposals[i]].majVoteValue;
-            totalReward = allProposalData[_proposals[i]].commonIncentive;
-            finalVerdict = allProposalData[_proposals[i]].finalVerdict;
-            // (, , totalVoteValue, finalVoteValue, , totalReward, finalVerdict) = governanceDat.getProposalDetails(_proposals[i]);
-            require(!rewardClaimed[voteIdThenVoteValue], "Reward already claimed");
-            rewardClaimed[voteIdThenVoteValue] = true;
-            // governanceDat.setRewardClaimed(voteIdThenVoteValue);
 
-            solutionId = allVotes[voteIdThenVoteValue].solutionChosen;
-            voteIdThenVoteValue = allVotes[voteIdThenVoteValue].voteValue;
-            // (, solutionId, , voteIdThenVoteValue) = governanceDat.getVoteData(voteIdThenVoteValue);
-            //voteIdThenVoteValue holds voteValue
+            voteId = addressProposalVote[_memberAddress][_proposals[i]];
+            require(
+                !rewardClaimed[voteId],
+                "Reward already claimed"
+            );
+            rewardClaimed[voteId] = true;
+
+            finalVerdict = allProposalData[_proposals[i]].finalVerdict;
             require(
                 allProposalData[_proposals[i]].propStatus > uint(ProposalStatus.VotingStarted),
                 "Reward can be claimed only after the proposal is closed"
             );
 
             if (punishVoters) {
-                if ((finalVerdict > 0 && solutionId == finalVerdict)) {
-                    calcReward = SafeMath.div(SafeMath.mul(voteIdThenVoteValue, totalReward), finalVoteValue);
+                if ((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)) { //solhint-disable-line
+                    calcReward = SafeMath.div(
+                                    SafeMath.mul(
+                                        allVotes[voteId].voteValue,
+                                        allProposalData[_proposals[i]].commonIncentive
+                                    ),
+                                    allProposalData[_proposals[i]].majVoteValue
+                                 );
                 }
             } else if (finalVerdict > 0) {
-                calcReward = SafeMath.div(SafeMath.mul(voteIdThenVoteValue, totalReward), totalVoteValue);
+                calcReward = SafeMath.div(
+                                SafeMath.mul(
+                                    allVotes[voteId].voteValue,
+                                    allProposalData[_proposals[i]].commonIncentive
+                                ),
+                                allProposalData[_proposals[i]].totalVoteValue
+                             );
             }
-            
+
             pendingDAppReward = SafeMath.add(pendingDAppReward,calcReward);
         }
 
@@ -560,8 +581,9 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
     function alreadyAdded(uint _proposalId, address _memberAddress) internal view returns(bool) {
-        for (uint i = 1; i < allProposalSolutions[_proposalId].length; i++) {
-            if (allProposalSolutions[_proposalId][i].owner == _memberAddress)
+        SolutionStruct[] solutions = allProposalSolutions[_proposalId];
+        for (uint i = 1; i < solutions.length; i++) {
+            if (solutions[i].owner == _memberAddress)
                 return true;
         }
     }
@@ -607,7 +629,9 @@ contract Governance is IGovernance, Upgradeable {
         allProposal.push(ProposalStruct(msg.sender, now));
 
         if(_categoryId >0){
-            _categorizeProposal(_proposalId, _categoryId);
+            uint defaultIncentive;
+            (, , , defaultIncentive) = proposalCategory.categoryAction(_categoryId);
+            _categorizeProposal(_proposalId, _categoryId, defaultIncentive);
         }
 
         emit Proposal(
@@ -635,7 +659,12 @@ contract Governance is IGovernance, Upgradeable {
         internal
     {
         require(
-            _incentive <= LockableToken(dAppLocker).balanceOf(poolAddress),
+            _categoryId > 0 && _categoryId < proposalCategory.totalCategories(),
+            "Invalid category"
+        );
+
+        require(
+            _incentive <= tokenInstance.balanceOf(poolAddress),
             "Less token balance in pool for incentive distribution"
         );
 
@@ -662,7 +691,7 @@ contract Governance is IGovernance, Upgradeable {
         uint _proposalId,
         string _solutionHash,
         bytes _action
-    ) 
+    )
         internal
     {
 
@@ -680,43 +709,40 @@ contract Governance is IGovernance, Upgradeable {
     function _submitVote(uint _proposalId, uint64 _solution) internal{
 
         uint mrSequence;
-
+        uint totalVotes = allVotes.length;
         (, mrSequence, , , , , ) = proposalCategory.category(allProposalData[_proposalId].category);
 
         require(memberRole.checkRole(msg.sender, mrSequence));
 
-        proposalVote[_proposalId].push(allVotes.length);
-        allVotesByMember[msg.sender].push(allVotes.length);
-        addressProposalVote[msg.sender][_proposalId] = allVotes.length;
+        proposalVote[_proposalId].push(totalVotes);
+        allVotesByMember[msg.sender].push(totalVotes);
+        addressProposalVote[msg.sender][_proposalId] = totalVotes;
         allVotes.push(ProposalVote(msg.sender, _solution, uint32(_proposalId), calculateVoteValue(msg.sender)));
-        
-        emit Vote(msg.sender, _proposalId, now, allVotes.length - 1, _solution);
+
+        emit Vote(msg.sender, _proposalId, now, totalVotes - 1, _solution);
 
         if (proposalVote[_proposalId].length == memberRole.numberOfMembers(mrSequence) &&
-            mrSequence != uint(memberRole.Role.TokenHolder) &&
-            mrSequence != uint(memberRole.Role.UnAssigned)
+            mrSequence != uint(IMemberRoles.Role.TokenHolder) &&
+            mrSequence != uint(IMemberRoles.Role.UnAssigned)
         ) {
             eventCaller.callVoteCast(_proposalId);
         }
     }
 
     /// @dev Checks if the vote count against any solution passes the threshold value or not.
-    function checkForThreshold(uint _proposalId, uint _category) internal view returns(bool) {
+    function checkForThreshold(uint _proposalId, uint _category, uint _totalTokens) internal view returns(bool) {
         uint thresHoldValue;
         uint categoryQuorumPerc;
         uint _mrSequenceId;
         (, _mrSequenceId, , categoryQuorumPerc, , , ) = proposalCategory.category(_category);
-        if (_mrSequenceId == uint(MemberRoles.Role.TokenHolder)) {
-            uint totalTokens;
-            LockableToken tokenInstance = LockableToken(dAppLocker);
-            for (uint i = 0; i < proposalVote[_proposalId].length; i++) {
-                totalTokens = SafeMath.add(totalTokens, tokenInstance.totalBalanceOf(allVotes[proposalVote[_proposalId][i]].voter));
-            }
-
-            thresHoldValue = SafeMath.div(SafeMath.mul(totalTokens, 100), tokenInstance.totalSupply());
+        if (_mrSequenceId == uint(IMemberRoles.Role.TokenHolder)) {
+            thresHoldValue = SafeMath.div(
+                                SafeMath.mul(_totalTokens, 100),
+                                tokenInstance.totalSupply()
+                             );
             if (thresHoldValue > categoryQuorumPerc)
                 return true;
-        } else if (_mrSequenceId == uint(MemberRoles.Role.UnAssigned)) {
+        } else if (_mrSequenceId == uint(IMemberRoles.Role.UnAssigned)) {
             return true;
         } else {
             thresHoldValue =
@@ -734,7 +760,7 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev This does the remaining functionality of closing proposal vote
     function closeProposalVoteThReached(uint maxVoteValue, uint totalVoteValue, uint category, uint _proposalId, uint64 max)  //solhint-disable-line
-        internal 
+        internal
     {
         uint _majorityVote;
         bytes2 contractName;
@@ -744,34 +770,22 @@ contract Governance is IGovernance, Upgradeable {
         (, actionAddress, contractName, ) = proposalCategory.categoryAction(category);
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
-                // allProposalData[_proposalId].propStatus = uint8(ProposalStatus.Accepted);
                 _updateProposalStatus(_proposalId, uint8(ProposalStatus.Accepted));
-                // governanceDat.updateProposalDetails(_proposalId, max);
-                // governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.Accepted));
                 /*solhint-disable*/
                 if (contractName == "MS")
                     actionAddress = address(master);
                 else if(contractName !="EX")
                     actionAddress = master.getLatestAddress(contractName);
                 /*solhint-enable*/
-                if (actionAddress.call(allProposalSolutions[_proposalId][uint64(max)].action)) { //solhint-disable-line
+                if (actionAddress.call(allProposalSolutions[_proposalId][uint64(max)].action)) {
                     eventCaller.callActionSuccess(_proposalId);
                 }
                 eventCaller.callProposalAccepted(_proposalId);
             } else {
-                // allProposalData[_proposalId].propStatus = uint8(ProposalStatus.Rejected);
                 _updateProposalStatus(_proposalId, uint8(ProposalStatus.Rejected));
-                // governanceDat.updateProposalDetails(_proposalId, max);
-                // governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.Rejected));
             }
         } else {
-            // allProposalData[_proposalId].propStatus = uint8(ProposalStatus.Majority_Not_Reached_But_Accepted);
             _updateProposalStatus(_proposalId, uint8(ProposalStatus.Majority_Not_Reached_But_Accepted));
-            // governanceDat.updateProposalDetails(
-            //     _proposalId, 
-            //     max
-            // );
-            // governanceDat.changeProposalStatus(_proposalId, uint8(ProposalStatus.Majority_Not_Reached_But_Accepted)); //solhint-disable-line
         }
     }
 
@@ -787,7 +801,7 @@ contract Governance is IGovernance, Upgradeable {
         voteValue = 
             Math.max(
                 SafeMath.div(
-                    voteValue, uint256(10) ** LockableToken(dAppLocker).decimals()
+                    voteValue, uint256(10) ** tokenInstance.decimals()
                 ),
                 minVoteWeight
             );
@@ -796,7 +810,6 @@ contract Governance is IGovernance, Upgradeable {
     function _getLockedBalance(address _of, uint _time)
         internal view returns(uint lockedTokens)
     {
-        LockableToken tokenInstance = LockableToken(dAppLocker);
         _time += now; //solhint-disable-line
         lockedTokens = tokenInstance.tokensLockedAtTime(_of, "GOV", _time);
     }
@@ -838,6 +851,5 @@ contract Governance is IGovernance, Upgradeable {
         allProposal[_proposalId].dateUpd = now;
         allProposalData[_proposalId].propStatus = _status;
     }
-
 
 }

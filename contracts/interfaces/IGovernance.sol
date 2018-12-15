@@ -130,7 +130,7 @@ contract IGovernance{
     {
     }
 
-    function proposal(uint _proposalId) external view returns(uint proposalId, uint category, uint status, uint version, uint finalVerdict, uint totalReward)
+    function proposal(uint _proposalId) external view returns(uint proposalId, uint category, uint status, uint finalVerdict, uint totalReward)
     {
     }
 
