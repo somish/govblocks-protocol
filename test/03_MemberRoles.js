@@ -39,7 +39,8 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('should add a member to a role', async function() {
-    await mr.updateRole(member, 1, true);
+    var transaction = await mr.updateRole(member, 1, true);
+    console.log(transaction.reciept.gasUsed);
     await catchRevert(mr.updateRole(member, 2, true));
     await catchRevert(mr.updateRole(member, 1, true));
     await catchRevert(mr.updateRole(member, 2, false, { from: other}));

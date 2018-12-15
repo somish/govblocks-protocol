@@ -67,7 +67,7 @@ contract IGovernance{
 
     /// @dev Opens proposal for voting
     function openProposalForVoting(uint _proposalId) 
-        public
+        external
     {
     }
 
@@ -140,7 +140,6 @@ contract IGovernance{
     }
 
     function  allowedToCatgorize() returns(uint roleId) public {
-        
     }
     
 
