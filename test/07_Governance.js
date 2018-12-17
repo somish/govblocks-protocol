@@ -27,6 +27,7 @@ let propId;
 let pid;
 let ownerProposals;
 let voterProposals;
+let incentive = Math.pow(10,18);
 
 const BigNumber = web3.BigNumber;
 require('chai')
@@ -58,7 +59,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   it('Should create an uncategorized proposal', async function() {
     await gv.setPunishVoters(true);
     pid = await gv.getProposalLength();
-    await gbt.transfer(notOwner, e18.mul(10));
+    await dAppToken.transfer(notOwner, e18.mul(10));
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0, {
       from: notOwner
@@ -90,17 +91,16 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
       [stake, incentive]
     );
     await dAppToken.lock('GOV', e18.mul(10), 54685456133563456);
-    await catchRevert(gv.categorizeProposal(pid, 7));
+    await catchRevert(gv.categorizeProposal(pid, 7, incentive));
     await dAppToken.transfer(pl.address, e18.mul(20));
-    await gbt.transfer(pl.address, e18.mul(20));
   });
 
   it('Should not allow to categorize if tokens are not locked', async function() {
-    await catchRevert(gv.categorizeProposal(pid, 7, { from: notOwner }));
+    await catchRevert(gv.categorizeProposal(pid, 7, incentive, { from: notOwner }));
   });
 
   it('Should not allow unauthorized person to categorize proposal', async function() {
-    await catchRevert(gv.categorizeProposal(pid, 7, { from: notOwner }));
+    await catchRevert(gv.categorizeProposal(pid, 7, incentive, { from: notOwner }));
     await dAppToken.lock('GOV', e18.mul(10), 54685456133563456, {
       from: notOwner
     });
@@ -108,7 +108,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
 
   it('Should categorize proposal', async function() {
     await gv.createProposal('Add new member', 'Add new member', 'hash', 12);
-    await gv.categorizeProposal(pid, 1);
+    await gv.categorizeProposal(pid, 1, 0);
     assert.equal(await gv.canCloseProposal(pid), 0);
     let proposalData = await gv.proposal(pid);
     //check proposal category
@@ -120,15 +120,13 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should update proposal', async function() {
-    let proposalData = await gv.proposal(pid);
     await gv.updateProposal(pid,"Addnewmember","AddnewmemberSD","AddnewmemberDescription");
-    let proposalDataUpdated = await gv.proposal(pid);
-    assert.isAbove(proposalDataUpdated[3].toNumber(),proposalData[3].toNumber(),"Proposal not updated");
+    var proposalDataUpdated = await  gv.proposal(pid);
     assert.equal(proposalDataUpdated[1].toNumber(),0,"Category not reset");
   });
 
   it('Should allow authorized people to categorize multiple times', async function() {
-    await gv.categorizeProposal(pid, 2);
+    await gv.categorizeProposal(pid, 2, 0);
     let proposalData = await gv.proposal(pid);
     assert.equal(
       proposalData[1].toNumber(),
@@ -136,7 +134,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
       'Not categorized'
     );
     await mr.updateRole(notOwner, 1, true);
-    await gv.categorizeProposal(pid, 7);
+    await gv.categorizeProposal(pid, 7, incentive);
     proposalData = await gv.proposal(pid);
     assert.equal(
       proposalData[1].toNumber(),
@@ -164,7 +162,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should not allow to categorize if there are solutions', async () => {
-    await catchRevert(gv.categorizeProposal(pid, 7));
+    await catchRevert(gv.categorizeProposal(pid, 7, incentive));
   });
 
   it('Should not allow voting before proposal is open for voting', async () => {
@@ -223,11 +221,11 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await mr.updateRole(notOwner, 1, true);
     await mr.updateRole(voter, 1, true);
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
-    await gbt.transfer(voter, e18.mul(10));
+    await dAppToken.transfer(voter, e18.mul(10));
     propId = (await gv.getProposalLength()).toNumber() - 1;
-    await gv.categorizeProposal(propId, 7);
-    await gv.submitProposalWithSolution(propId, '0x0', '0xf213d00c0000000000000000000000000000000000000000000000000000000000000001');
+    await gv.categorizeProposal(propId, 7, incentive);
     await gv.addSolution(propId, '0x0', '0xf213d00c0000000000000000000000000000000000000000000000000000000000000001', { from:notOwner });
+    await gv.submitProposalWithSolution(propId, '0x0', '0xf213d00c0000000000000000000000000000000000000000000000000000000000000001');
     await gv.submitVote(propId, [1]);
     await gv.submitVote(propId, [1], { from: notOwner });
     await catchRevert(gv.submitVote(propId, [2], { from: voter }));
@@ -252,9 +250,9 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.setPunishVoters(false);
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
     propId = (await gv.getProposalLength()).toNumber() - 1;
-    await gv.categorizeProposal(propId, 7);
-    await gv.submitProposalWithSolution(propId, '0x0', '0xf213d00c0000000000000000000000000000000000000000000000000000000000000001');
+    await gv.categorizeProposal(propId, 7, incentive);
     await gv.addSolution(propId, '0x0', '0xf213d00c0000000000000000000000000000000000000000000000000000000000000001', { from:notOwner });
+    await gv.submitProposalWithSolution(propId, '0x0', '0xf213d00c0000000000000000000000000000000000000000000000000000000000000001');
     await gv.submitVote(propId, [1]);
     await gv.submitVote(propId, [1], { from: notOwner });
     await gv.submitVote(propId, [2], { from: voter });
@@ -274,7 +272,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   it('Should not give reward if proposal is rejected', async () => {
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
     propId = (await gv.getProposalLength()).toNumber() - 1;
-    await gv.categorizeProposal(propId, 7);
+    await gv.categorizeProposal(propId, 7, incentive);
     await gv.submitProposalWithSolution(propId, '0x0', '0xf213d00c0000000000000000000000000000000000000000000000000000000000000001');
     await gv.submitVote(propId, [0]);
     await gv.closeProposal(propId);

@@ -105,7 +105,7 @@ contract('Proposal, solution and voting', function([
       0
     );
     p1 = await gv.getProposalLength();
-    await gv.categorizeProposal(p1.toNumber() -1 , 1);
+    await gv.categorizeProposal(p1.toNumber() -1 , 1, 0);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -137,7 +137,7 @@ contract('Proposal, solution and voting', function([
     this.timeout(100000);
     p = await gv.getProposalLength();
     p = p.toNumber() - 1;
-    await gv.categorizeProposal(p, 1);
+    await gv.categorizeProposal(p, 1, 0);
   });
 
   it('Should not open the proposal for voting till there are atleast two solutions', async function() {
@@ -232,15 +232,12 @@ contract('Proposal, solution and voting', function([
     await mr.updateRole(member, 1, true);
     p = await gv.getProposalLength();
     p = p.toNumber();
-    await gv.createProposalwithSolution(
-      'Add new member',
-      'Add new member',
-      'Addnewmember',
-      5,
-      'Add new member',
-      '0x0'
-    );
+    await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 5);
+    await gv.addSolution(p, 'Add new member', "0x0");
     await gv.addSolution(p, '0x0', '0x0' ,{ from: ab});
+    await gv.openProposalForVoting(p);
+    await catchRevert(gv.addSolution(p, '0x0', '0x0' ,{ from: member}));
+    await gv.submitVote(p, [1]);
     await gv.submitVote(p, [2], { from: ab });
     await gv.submitVote(p, [0], { from: member });
     await gv.closeProposal(p);
@@ -256,7 +253,7 @@ contract('Proposal, solution and voting', function([
       16
     );
     await gv.submitProposalWithSolution(p, '0x0', '0x0');
-    await catchRevert(gv.categorizeProposal(p,1));
+    await catchRevert(gv.categorizeProposal(p, 1, 0));
     await gv.submitVote(p, [0]);
     await gv.closeProposal(p);
     const ps = await gv.getStatusOfProposals();

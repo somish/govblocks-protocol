@@ -54,10 +54,10 @@ contract Pool is Upgradeable, Governed {
     function transferAssets() public {
         address newPool = master.getLatestAddress("PL");
         if (address(this) != newPool) {
-            uint gbtBal = gbt.balanceOf(address(this));
+            uint tokenBal = dAppToken.balanceOf(address(this));
             uint ethBal = address(this).balance;
-            if (gbtBal > 0)
-                gbt.transfer(newPool, gbtBal);
+            if (tokenBal > 0)
+                dAppToken.transfer(newPool, tokenBal);
             if (ethBal > 0)
                 newPool.transfer(ethBal);
         }
@@ -75,20 +75,18 @@ contract Pool is Upgradeable, Governed {
     /// Index 0 of _ownerProposals, _voterProposals is not parsed. 
     /// proposal arrays of 1 length are treated as empty.
     function claimReward(address _claimer, uint[] _voterProposals) public noReentrancy {
-        uint pendingGBTReward;
-        uint pendingReputation;
+        uint pendingDAppReward;
         
-        pendingGBTReward = gov.claimReward(_claimer, _voterProposals);
+        pendingDAppReward = gov.claimReward(_claimer, _voterProposals);
 
-        if (pendingGBTReward != 0) {
-            gbt.transfer(_claimer, pendingGBTReward);
+        if (pendingDAppReward != 0) {
+            dAppToken.transfer(_claimer, pendingDAppReward);
         }
 
         gov.callRewardClaimed(
             _claimer,
             _voterProposals,
-            pendingGBTReward, 
-            pendingReputation
+            pendingDAppReward
         );
     }
 

@@ -47,17 +47,16 @@ contract IGovernance{
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
     function categorizeProposal(
         uint _proposalId, 
-        uint _categoryId
+        uint _categoryId,
+        uint _incentives
     ) external
     {
     }
 
     /// @dev Initiates add solution 
-    /// @param _memberAddress Address of member who is adding the solution
     /// @param _solutionHash Solution hash having required data against adding solution
     function addSolution(
-        uint32 _proposalId,
-        address _memberAddress, 
+        uint _proposalId,
         string _solutionHash, 
         bytes _action
     ) 
@@ -104,13 +103,13 @@ contract IGovernance{
     /// @dev Casts vote
     /// @param _proposalId Proposal id
     /// @param _solutionChosen solution chosen while voting. _solutionChosen[0] is the chosen solution
-    function submitVote(uint32 _proposalId, uint64 _solutionChosen) external {
+    function submitVote(uint _proposalId, uint _solutionChosen) external {
     } 
 
     function canCloseProposal(uint _proposalId) 
         public 
         view 
-        returns(uint8 closeValue) 
+        returns(uint closeValue) 
     {
     }
 
@@ -134,7 +133,7 @@ contract IGovernance{
     {
     }
 
-    function callRewardClaimed(address _member, uint[] _voterProposals, uint _gbtReward, uint _reputation)
+    function callRewardClaimed(address _member, uint[] _voterProposals, uint _gbtReward)
     external
     {
     }
@@ -171,8 +170,7 @@ contract IGovernance{
     event RewardClaimed(
         address indexed member,
         uint[] voterProposals,
-        uint gbtReward,
-        uint reputation
+        uint gbtReward
     );
 
 }

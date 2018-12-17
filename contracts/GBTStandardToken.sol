@@ -20,7 +20,7 @@ import "./imports/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol"
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 
 
-contract GBTStandardToken is LockableToken, MintableToken, DetailedERC20 {
+contract GBTStandardToken is MintableToken, DetailedERC20, LockableToken {
     uint public tokenPrice;
 
     /// @dev constructor
