@@ -162,8 +162,8 @@ contract IGovernance{
     event Vote(
         address indexed from,
         uint256 indexed proposalId,
+        uint256 indexed voteId,
         uint256 dateAdd,
-        uint256 voteId,
         uint256 solutionChosen
     );
 

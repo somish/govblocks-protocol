@@ -18,12 +18,6 @@ pragma solidity 0.4.24;
 
 contract IMemberRoles {
 
-    enum Role {
-        UnAssigned,
-        AdvisoryBoard,
-        TokenHolder
-    }
-
     /// @dev Adds new member role
     /// @param _roleName New role name
     /// @param _roleDescription New description hash
@@ -69,5 +63,4 @@ contract IMemberRoles {
 
     event MemberRole(uint256 indexed roleId, bytes32 roleName, string roleDescription);
 
-    
 }
