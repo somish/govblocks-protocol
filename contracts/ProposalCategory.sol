@@ -158,11 +158,11 @@ contract ProposalCategory is IProposalCategory, Governed {
     function proposalCategoryInitiate(bytes32 _dAppName) external { //solhint-disable-line
         require(!constructorCheck);
         dappName = _dAppName;
-        addInitialCategories("Uncategorized", "QmRnwMshX2L6hTv3SgB6J6uahK7tRgPNfkt91siznLqzQX", "MR");
+        addInitialCategories("Uncategorized", "", "EX");
         addInitialCategories("Add new member role", "QmQFnBep7AyMYU3LJDuHSpTYatnw65XjHzzirrghtZoR8U", "MR");
-        addInitialCategories("Update member role", "QmNMQQHnnZQce43ys3E5vEenbVRkcJwFRCQ6oTcP2ZNntY", "MR");
-        addInitialCategories("Add new category", "QmUq9Rb6rWFHZXjVtyzh7AWGDeyVFtDHKiP5fJpgnuinQ7", "PC");
-        addInitialCategories("Edit category", "QmQmvfBiCLfe5jPdq69iRBRRdnSHSroJQ4SG8DhtkXcLfQ", "PC");
+        addInitialCategories("Update member role", "QmXMzSViLBJ22P9oj51Zz7isKTRnXWPHZcQ5hzGvvWD3UV", "MR");
+        addInitialCategories("Add new category", "QmYzBtW5mRMwHwKQUmRnwdXgq733WNzN5fo2yNPpkVG9Ng", "PC");
+        addInitialCategories("Edit category", "QmcVNykyhjni7GFk8x1GrL3idzc6vxz4vNJLHPS9vJ79Qc", "PC");
         addInitialCategories("Change dApp Token Proxy", "QmPR9K6BevCXRVBxWGjF9RV7Pmtxr7D4gE3qsZu5bzi8GK", "MS");
         addInitialCategories("Transfer Ether", "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa", "PL");
         addInitialCategories("Transfer Token", "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB", "PL");

@@ -22,6 +22,12 @@ import "./imports/govern/Governed.sol";
 
 contract MemberRoles is IMemberRoles, Governed {
 
+    enum Role {
+        UnAssigned,
+        AdvisoryBoard,
+        TokenHolder
+    }
+
     LockableToken public dAppToken;
 
     struct MemberRoleDetails {
@@ -146,18 +152,16 @@ contract MemberRoles is IMemberRoles, Governed {
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.
-    function roles(address _memberAddress) public view returns(uint[] assignedRoles) { //solhint-disable-line
+    function roles(address _memberAddress) public view returns(uint[]) { //solhint-disable-line
         uint length = memberRoleData.length;
-        uint j = 0;
-        assignedRoles = new uint[](length);
+        uint[] assignedRoles;
         for (uint i = 1; i < length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress]) {
-                assignedRoles[j] = i;
-                j++;
+                assignedRoles.push(i);
             }
         }
         if (dAppToken.totalBalanceOf(_memberAddress) > 0) {
-            assignedRoles[j] = uint(Role.TokenHolder);
+            assignedRoles.push(uint(Role.TokenHolder));
         }
 
         return assignedRoles;

@@ -42,7 +42,7 @@ contract Master is Ownable {
     
     // Owner is just for testing, will be removed before launch.
     modifier authorizedOnly() {
-        require(owner == msg.sender || contractsAddress["SV"] == msg.sender);
+        require(owner == msg.sender || contractsAddress["GV"] == msg.sender);
         _;
     }
 
@@ -157,7 +157,7 @@ contract Master is Ownable {
     /// @dev Checks if the address is authorized to make changes.
     ///     owner allowed for debugging only, will be removed before launch.
     function isAuth() public view returns(bool check) {
-        if (owner == msg.sender || contractsAddress["SV"] == msg.sender)
+        if (owner == msg.sender || contractsAddress["GV"] == msg.sender)
             check = true;
     }
 

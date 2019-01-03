@@ -21,9 +21,9 @@ import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
 import "./imports/lockable-token/LockableToken.sol";
 import "./EventCaller.sol";
 
+import "./MemberRoles.sol";
 import "./interfaces/IGovernance.sol";
 import "./interfaces/IProposalCategory.sol";
-import "./interfaces/IMemberRoles.sol";
 
 
 
@@ -36,7 +36,8 @@ contract Governance is IGovernance, Upgradeable {
         Accepted,
         Rejected,
         Majority_Not_Reached_But_Accepted,
-        Denied
+        Denied,
+        Majority_Not_Reached_But_Rejected
     }
 
     struct ProposalStruct {
@@ -84,7 +85,7 @@ contract Governance is IGovernance, Upgradeable {
 
 
     address internal poolAddress;
-    IMemberRoles internal memberRole;
+    MemberRoles internal memberRole;
     IProposalCategory internal proposalCategory;
     LockableToken internal tokenInstance;
     EventCaller internal eventCaller;
@@ -118,7 +119,7 @@ contract Governance is IGovernance, Upgradeable {
 
 
     function initiateGovernance() internal {
-        allowedToCatgorize = uint(IMemberRoles.Role.AdvisoryBoard);
+        allowedToCatgorize = uint(MemberRoles.Role.AdvisoryBoard);
         allVotes.push(ProposalVote(address(0), 0, 0, 1));
         allProposal.push(ProposalStruct(address(0), now));
         tokenHoldingTime = 604800;
@@ -131,7 +132,7 @@ contract Governance is IGovernance, Upgradeable {
             initiateGovernance();
         }
         tokenInstance = LockableToken(master.dAppLocker());
-        memberRole = IMemberRoles(master.getLatestAddress("MR"));
+        memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = IProposalCategory(master.getLatestAddress("PC"));
         poolAddress = master.getLatestAddress("PL");
         eventCaller = EventCaller(master.getEventCallerAddress());
@@ -324,8 +325,8 @@ contract Governance is IGovernance, Upgradeable {
         (, _roleId, , , , _closingTime, ) = proposalCategory.category(allProposalData[_proposalId].category);
         if (
             pStatus == uint(ProposalStatus.VotingStarted) &&
-            _roleId != uint(IMemberRoles.Role.TokenHolder) &&
-            _roleId != uint(IMemberRoles.Role.UnAssigned)
+            _roleId != uint(MemberRoles.Role.TokenHolder) &&
+            _roleId != uint(MemberRoles.Role.UnAssigned)
         ) {
             if (SafeMath.add(dateUpdate, _closingTime) <= now ||  //solhint-disable-line
                 proposalVote[_proposalId].length == memberRole.numberOfMembers(_roleId)
@@ -716,11 +717,11 @@ contract Governance is IGovernance, Upgradeable {
         addressProposalVote[msg.sender][_proposalId] = totalVotes;
         allVotes.push(ProposalVote(msg.sender, _solution, _proposalId, calculateVoteValue(msg.sender)));
 
-        emit Vote(msg.sender, _proposalId, now, totalVotes, _solution);
+        emit Vote(msg.sender, _proposalId, totalVotes, now, _solution);
 
         if (proposalVote[_proposalId].length == memberRole.numberOfMembers(mrSequence) &&
-            mrSequence != uint(IMemberRoles.Role.TokenHolder) &&
-            mrSequence != uint(IMemberRoles.Role.UnAssigned)
+            mrSequence != uint(MemberRoles.Role.TokenHolder) &&
+            mrSequence != uint(MemberRoles.Role.UnAssigned)
         ) {
             eventCaller.callVoteCast(_proposalId);
         }
@@ -732,14 +733,14 @@ contract Governance is IGovernance, Upgradeable {
         uint categoryQuorumPerc;
         uint _mrSequenceId;
         (, _mrSequenceId, , categoryQuorumPerc, , , ) = proposalCategory.category(_category);
-        if (_mrSequenceId == uint(IMemberRoles.Role.TokenHolder)) {
+        if (_mrSequenceId == uint(MemberRoles.Role.TokenHolder)) {
             thresHoldValue = SafeMath.div(
                                 SafeMath.mul(_totalTokens, 100),
                                 tokenInstance.totalSupply()
                              );
             if (thresHoldValue > categoryQuorumPerc)
                 return true;
-        } else if (_mrSequenceId == uint(IMemberRoles.Role.UnAssigned)) {
+        } else if (_mrSequenceId == uint(MemberRoles.Role.UnAssigned)) {
             return true;
         } else {
             thresHoldValue =
@@ -782,7 +783,12 @@ contract Governance is IGovernance, Upgradeable {
                 _updateProposalStatus(_proposalId, uint(ProposalStatus.Rejected));
             }
         } else {
-            _updateProposalStatus(_proposalId, uint(ProposalStatus.Majority_Not_Reached_But_Accepted));
+            if(max > 0){
+                _updateProposalStatus(_proposalId, uint(ProposalStatus.Majority_Not_Reached_But_Accepted));
+            }
+            else{
+                _updateProposalStatus(_proposalId, uint(ProposalStatus.Majority_Not_Reached_But_Rejected));
+            }
         }
     }
 

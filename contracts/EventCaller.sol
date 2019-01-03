@@ -43,8 +43,8 @@ contract EventCaller {
     /// @dev CloseProposalOnTime event is called whenever a proposal is created or updated to close it on time. 
     ///      closeProposalAddress is used to call closeProposal(proposalId) if proposal is ready to be closed.
     event CloseProposalOnTime (
-        uint256 proposalId,
-        address closeProposalAddress,
+        uint256 indexed proposalId,
+        address indexed closeProposalAddress,
         uint256 time
     );
 
