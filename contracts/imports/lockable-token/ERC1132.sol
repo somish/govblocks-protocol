@@ -29,7 +29,7 @@ contract ERC1132 {
     /**
      * @dev Records data of all the tokens Locked
      */
-    event Lock(
+    event Locked(
         address indexed _of,
         bytes32 indexed _reason,
         uint256 _amount,
@@ -39,7 +39,7 @@ contract ERC1132 {
     /**
      * @dev Records data of all the tokens unlocked
      */
-    event Unlock(
+    event Unlocked(
         address indexed _of,
         bytes32 indexed _reason,
         uint256 _amount
