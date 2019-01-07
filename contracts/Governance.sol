@@ -20,12 +20,9 @@ import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
 import "./imports/lockable-token/LockableToken.sol";
 import "./EventCaller.sol";
-
 import "./MemberRoles.sol";
 import "./interfaces/IGovernance.sol";
 import "./interfaces/IProposalCategory.sol";
-
-
 
 contract Governance is IGovernance, Upgradeable {
 
@@ -82,6 +79,7 @@ contract Governance is IGovernance, Upgradeable {
     uint internal minVoteWeight;
     uint public tokenHoldingTime;
     uint public allowedToCatgorize;
+    bool internal locked;
 
 
     address internal poolAddress;
@@ -135,23 +133,9 @@ contract Governance is IGovernance, Upgradeable {
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = IProposalCategory(master.getLatestAddress("PC"));
         poolAddress = master.getLatestAddress("PL");
-        eventCaller = EventCaller(master.getEventCallerAddress());
+        eventCaller = EventCaller(master.eventCaller());
     }
 
-    function callRewardClaimed(
-        address _member,
-        uint[] _voterProposals,
-        uint _gbtReward
-    ) 
-        external
-        onlyInternal 
-    {
-        emit RewardClaimed(
-            _member,
-            _voterProposals, 
-            _gbtReward
-        );
-    }
 
     /// @dev Creates a new proposal
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
@@ -436,67 +420,22 @@ contract Governance is IGovernance, Upgradeable {
         }
     }
 
-    function claimReward(address _memberAddress, uint[] _proposals) 
-        external onlyInternal returns(uint pendingDAppReward) 
-    {
-        uint calcReward;
-        uint finalVerdict;
-        uint voteId;
-        
-        for (uint i = 0; i < _proposals.length; i++) {
-
-            voteId = addressProposalVote[_memberAddress][_proposals[i]];
-            require(
-                !rewardClaimed[voteId],
-                "Reward already claimed"
-            );
-            rewardClaimed[voteId] = true;
-
-            finalVerdict = allProposalData[_proposals[i]].finalVerdict;
-            require(
-                allProposalData[_proposals[i]].propStatus > uint(ProposalStatus.VotingStarted),
-                "Reward can be claimed only after the proposal is closed"
-            );
-
-            if (punishVoters) {
-                if ((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)) { //solhint-disable-line
-                    calcReward = SafeMath.div(
-                                    SafeMath.mul(
-                                        allVotes[voteId].voteValue,
-                                        allProposalData[_proposals[i]].commonIncentive
-                                    ),
-                                    allProposalData[_proposals[i]].majVoteValue
-                                 );
-                }
-            } else if (finalVerdict > 0) {
-                calcReward = SafeMath.div(
-                                SafeMath.mul(
-                                    allVotes[voteId].voteValue,
-                                    allProposalData[_proposals[i]].commonIncentive
-                                ),
-                                allProposalData[_proposals[i]].totalVoteValue
-                             );
-            }
-
-            pendingDAppReward = SafeMath.add(pendingDAppReward,calcReward);
-        }
-
-    }
+    
 
     /// @dev pause a proposal
-    function pauseProposal(uint _proposalId) public onlyInternal {
+    function pauseProposal(uint _proposalId) internal {
         proposalPaused[_proposalId] = true;
         allProposal[_proposalId].dateUpd = now;
     }
 
     /// @dev resume a proposal
-    function resumeProposal(uint _proposalId) public onlyInternal {
+    function resumeProposal(uint _proposalId) internal {
         require(proposalPaused[_proposalId]);
         proposalPaused[_proposalId] = false;
         allProposal[_proposalId].dateUpd = now;
     }
 
-    function configureGlobalParameters(bytes8 _typeOf, uint _value) public onlyInternal {
+    function configureGlobalParameters(bytes8 _typeOf, uint _value) internal {
         if(_typeOf == "MV"){
             minVoteWeight = _value;
         }
@@ -505,7 +444,7 @@ contract Governance is IGovernance, Upgradeable {
         }
     }
 
-    function setPunishVoters(bool _punish) public onlyInternal {
+    function setPunishVoters(bool _punish) internal {
         punishVoters = _punish;
     }
 
@@ -612,6 +551,64 @@ contract Governance is IGovernance, Upgradeable {
             if (mrAllowed[i] == 0 || memberRole.checkRole(msg.sender, mrAllowed[i]))
                 return true;
         }
+    }
+
+    function () public payable {} //solhint-disable-line
+
+    modifier noReentrancy() {
+        require(!locked, "Reentrant call.");
+        locked = true;
+        _;
+        locked = false;
+    }  
+
+    /// @dev transfers its assets to latest addresses
+    function transferAssets() public {
+        address newPool = master.getLatestAddress("PL");
+        if (address(this) != newPool) {
+            uint tokenBal = LockableToken.balanceOf(address(this));
+            uint ethBal = address(this).balance;
+            if (tokenBal > 0)
+                LockableToken.transfer(newPool, tokenBal);
+            if (ethBal > 0)
+                newPool.transfer(ethBal);
+        }
+    }
+
+
+    /// @dev user can calim the tokens rewarded them till now
+    /// Index 0 of _ownerProposals, _voterProposals is not parsed. 
+    /// proposal arrays of 1 length are treated as empty.
+    function claimReward(address _claimer, uint[] _voterProposals) public noReentrancy {
+        uint pendingDAppReward;
+        
+        pendingDAppReward = _claimReward(_claimer, _voterProposals);
+
+        if (pendingDAppReward != 0) {
+            LockableToken.transfer(_claimer, pendingDAppReward);
+        }
+
+       emit RewardClaimed(
+            _claimer,
+            _voterProposals, 
+            pendingDAppReward
+        );
+    }
+
+    /// @dev Transfer Ether to someone    
+    /// @param _amount Amount to be transferred back
+    /// @param _receiverAddress address where ether has to be sent
+    function transferEther(address _receiverAddress, uint256 _amount) internal {
+        _receiverAddress.transfer(_amount);
+    }
+
+    /// @dev Transfer token to someone    
+    /// @param _amount Amount to be transferred back
+    /// @param _receiverAddress address where tokens have to be sent
+    /// @param _token address of token to transfer
+    function transferToken(address _token, address _receiverAddress, uint256 _amount) internal {
+        LockableToken token = LockableToken(_token);
+        token.transfer(_receiverAddress, _amount);
     }
 
 
@@ -853,6 +850,53 @@ contract Governance is IGovernance, Upgradeable {
     function _updateProposalStatus(uint _proposalId,uint _status) internal{
         allProposal[_proposalId].dateUpd = now;
         allProposalData[_proposalId].propStatus = _status;
+    }
+
+    function _claimReward(address _memberAddress, uint[] _proposals) 
+        internal returns(uint pendingDAppReward) 
+    {
+        uint calcReward;
+        uint finalVerdict;
+        uint voteId;
+        
+        for (uint i = 0; i < _proposals.length; i++) {
+
+            voteId = addressProposalVote[_memberAddress][_proposals[i]];
+            require(
+                !rewardClaimed[voteId],
+                "Reward already claimed"
+            );
+            rewardClaimed[voteId] = true;
+
+            finalVerdict = allProposalData[_proposals[i]].finalVerdict;
+            require(
+                allProposalData[_proposals[i]].propStatus > uint(ProposalStatus.VotingStarted),
+                "Reward can be claimed only after the proposal is closed"
+            );
+
+            if (punishVoters) {
+                if ((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)) { //solhint-disable-line
+                    calcReward = SafeMath.div(
+                                    SafeMath.mul(
+                                        allVotes[voteId].voteValue,
+                                        allProposalData[_proposals[i]].commonIncentive
+                                    ),
+                                    allProposalData[_proposals[i]].majVoteValue
+                                 );
+                }
+            } else if (finalVerdict > 0) {
+                calcReward = SafeMath.div(
+                                SafeMath.mul(
+                                    allVotes[voteId].voteValue,
+                                    allProposalData[_proposals[i]].commonIncentive
+                                ),
+                                allProposalData[_proposals[i]].totalVoteValue
+                             );
+            }
+
+            pendingDAppReward = SafeMath.add(pendingDAppReward,calcReward);
+        }
+
     }
 
 }

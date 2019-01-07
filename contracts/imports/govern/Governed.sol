@@ -16,62 +16,27 @@
 pragma solidity 0.4.24;
 
 
-contract GovernChecker {
-    function authorizedAddressNumber(bytes32 _dAppName, address _authorizedAddress) public view returns(uint);
-    function initializeAuthorized(bytes32 _dAppName, address _authorizedAddress) public;
-    function updateGBMAdress(address _govBlockMaster) public;
-    function updateAuthorized(bytes32 _dAppName, address _authorizedAddress) public;
-    function addAuthorized(bytes32 _dAppName, address _authorizedAddress) public;
-}
+contract IMaster {
+    function contractAddress(bytes32 _module) public view returns(address);
+    }
 
 
 contract Governed {
 
-    GovernChecker public governChecker; // Instance of governCheckerContract
+    address public masterAddress; // Name of the dApp, needs to be set by contracts inheriting this contract
 
-    bytes32 public dappName; // Name of the dApp, needs to be set by contracts inheriting this contract
 
     /// @dev modifier that allows only the authorized addresses to execute the function
     modifier onlyAuthorizedToGovern() {
-        if (address(governChecker) != address(0))
-            require(governChecker.authorizedAddressNumber(dappName, msg.sender) > 0);
-        else {
-            setGovernChecker();
-            require(_isAuthToGovern(msg.sender));
-        }
+        IMaster ms = IMaster(masterAddress);
+        require(ms.contractAddress('GV') == msg.sender);        
         _;
-    }
-
-    constructor() public {
-        setGovernChecker();
     }
 
     /// @dev checks if an address is authorized to govern
     function isAuthorizedToGovern(address _toCheck) public view returns(bool) {
-        return _isAuthToGovern(_toCheck);
-    }
+        IMaster ms = IMaster(masterAddress);
+        return (ms.contractAddress('GV') == msg.sender);
+    } 
 
-    /// @dev sets the address of governChecker based on the network being used.
-    function setGovernChecker() public {
-        /* solhint-disable */
-        if (getCodeSize(0x1520421BcC0528945Fcf5DB5ee207D54fE7C0Ea9) > 0)        //kovan testnet
-            governChecker = GovernChecker(0x1520421BcC0528945Fcf5DB5ee207D54fE7C0Ea9);
-        else if (getCodeSize(0xD6De03F547FDA283b5119c6d8CA672DBE5C3F631) > 0)   //Private testnet
-            governChecker = GovernChecker(0xD6De03F547FDA283b5119c6d8CA672DBE5C3F631);
-        /* solhint-enable */
-    }
-
-    /// @dev returns the code size at an address, used to confirm that a contract exisits at an address.
-    function getCodeSize(address _addr) internal view returns(uint _size) {
-        //solhint-disable-next-line
-        assembly {
-            _size := extcodesize(_addr)
-        }
-    }
-
-    function _isAuthToGovern(address _toCheck) internal view returns(bool auth) {
-        if (address(governChecker) == address(0) || 
-                governChecker.authorizedAddressNumber(dappName, _toCheck) > 0)
-            return true;
-    }
 }

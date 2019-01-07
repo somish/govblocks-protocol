@@ -155,9 +155,8 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
-    function proposalCategoryInitiate(bytes32 _dAppName) external { //solhint-disable-line
+    function proposalCategoryInitiate() external { //solhint-disable-line
         require(!constructorCheck);
-        dappName = _dAppName;
         addInitialCategories("Uncategorized", "", "EX");
         addInitialCategories("Add new member role", "QmQFnBep7AyMYU3LJDuHSpTYatnw65XjHzzirrghtZoR8U", "MR");
         addInitialCategories("Update member role", "QmXMzSViLBJ22P9oj51Zz7isKTRnXWPHZcQ5hzGvvWD3UV", "MR");

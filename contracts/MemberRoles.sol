@@ -56,9 +56,8 @@ contract MemberRoles is IMemberRoles, Governed {
     function changeMasterAddress(address _masterAddress) public pure { //solhint-disable-line
     }
 
-    function memberRolesInitiate(bytes32 _dAppName, address _dAppToken, address _firstAB) public {
+    function memberRolesInitiate(address _dAppToken, address _firstAB) public {
         require(!constructorCheck);
-        dappName = _dAppName;
         dAppToken = LockableToken(_dAppToken);
         addInitialMemberRoles(_firstAB);
         constructorCheck = true;

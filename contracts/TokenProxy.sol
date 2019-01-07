@@ -69,7 +69,7 @@ contract TokenProxy is ERC1132 {
 
         locked[msg.sender][_reason] = lockToken(_amount, validUntil, false);
 
-        emit Lock(msg.sender, _reason, _amount, validUntil);
+        emit Locked(msg.sender, _reason, _amount, validUntil);
         return true;
     }
     
@@ -98,7 +98,7 @@ contract TokenProxy is ERC1132 {
 
         locked[_to][_reason] = lockToken(_amount, validUntil, false);
         
-        emit Lock(_to, _reason, _amount, validUntil);
+        emit Locked(_to, _reason, _amount, validUntil);
         return true;
     }
 
@@ -164,7 +164,7 @@ contract TokenProxy is ERC1132 {
 
         locked[msg.sender][_reason].validity = locked[msg.sender][_reason].validity.add(_time);
 
-        emit Lock(msg.sender, _reason, locked[msg.sender][_reason].amount, locked[msg.sender][_reason].validity);
+        emit Locked(msg.sender, _reason, locked[msg.sender][_reason].amount, locked[msg.sender][_reason].validity);
         return true;
     }
     
@@ -182,7 +182,7 @@ contract TokenProxy is ERC1132 {
 
         locked[msg.sender][_reason].amount = locked[msg.sender][_reason].amount.add(_amount);
 
-        emit Lock(msg.sender, _reason, locked[msg.sender][_reason].amount, locked[msg.sender][_reason].validity);
+        emit Locked(msg.sender, _reason, locked[msg.sender][_reason].amount, locked[msg.sender][_reason].validity);
         return true;
     }
 
@@ -215,7 +215,7 @@ contract TokenProxy is ERC1132 {
             if (lockedTokens > 0) {
                 unlockableTokens = unlockableTokens.add(lockedTokens);
                 locked[_of][lockReason[_of][i]].claimed = true;
-                emit Unlock(_of, lockReason[_of][i], lockedTokens);
+                emit Unlocked(_of, lockReason[_of][i], lockedTokens);
             }
         }  
 

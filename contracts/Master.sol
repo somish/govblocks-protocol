@@ -24,71 +24,49 @@ import "./ProposalCategory.sol";
 import "./MemberRoles.sol";
 
 
-contract Master is Ownable {
+contract Master is Ownable,Governed {
 
     uint[] public versionDates;
-    bytes32 public dAppName;
     bytes2[] public allContractNames;
 
     mapping(address => bool) public contractsActive;
-    mapping(bytes2 => address) public contractsAddress;
+    mapping(bytes2 => address) public contractAddress;
 
     address public dAppLocker;
-    address public gbt;
     address public dAppToken;
+    address public eventCaller;
 
-    GovBlocksMaster public gbm;
     Governed internal govern;
     
-    // Owner is just for testing, will be removed before launch.
-    modifier authorizedOnly() {
-        require(owner == msg.sender || contractsAddress["GV"] == msg.sender);
-        _;
-    }
-
-    modifier govBlocksMasterOnly() {
-        require(owner == msg.sender || msg.sender == address(gbm));
-        _;
-    }
-
-    function initMaster(address _ownerAddress, bytes32 _gbUserName, address[] _implementations) external {
-        require(address(gbm) == address(0));
+    function initMaster(address _ownerAddress, address _token, address _lockableToken, address _eventCaller, address[] _implementations) external {
+       
         _addContractNames();
-        require(allContractNames.length == _implementations.length);
-        
+        masterAddress = address(this);
+        require(allContractNames.length == _implementations.length);        
         contractsActive[address(this)] = true;
-        gbm = GovBlocksMaster(msg.sender);
-        gbt = gbm.gbtAddress();
-        dAppToken = gbm.getDappTokenAddress(_gbUserName);
-        dAppLocker = gbm.getDappTokenProxyAddress(_gbUserName);
-        dAppName = _gbUserName;
+        dAppToken = _token;
+        dAppLocker = _lockableToken;
         owner = _ownerAddress;
+        eventCaller = _eventCaller;
         versionDates.push(now); //solhint-disable-line
 
         for (uint i = 0; i < allContractNames.length; i++) {
             _generateProxy(allContractNames[i], _implementations[i]);
         }
 
-        govern = new Governed();
-        GovernChecker governChecker = GovernChecker(govern.governChecker());
-        if (address(governChecker) != address(0)) {
-            if (governChecker.authorizedAddressNumber(_gbUserName, contractsAddress["GV"]) == 0)
-                governChecker.initializeAuthorized(_gbUserName, contractsAddress["GV"]);
-        }
-
         _changeMasterAddress(address(this));
         _changeAllAddress();
 
-        ProposalCategory pc = ProposalCategory(contractsAddress["PC"]);
-        pc.proposalCategoryInitiate(_gbUserName);
+        ProposalCategory pc = ProposalCategory(contractAddress["PC"]);
+        pc.proposalCategoryInitiate();
 
-        MemberRoles mr = MemberRoles(contractsAddress["MR"]);
-        mr.memberRolesInitiate(_gbUserName, dAppToken, _ownerAddress);
+        MemberRoles mr = MemberRoles(contractAddress["MR"]);
+        mr.memberRolesInitiate(dAppToken, _ownerAddress);
     }
 
     /// @dev Creates a new version of contract addresses
     /// @param _contractAddresses Array of contract implementations
-    function addNewVersion(address[] _contractAddresses) external authorizedOnly {
+    function addNewVersion(address[] _contractAddresses) external onlyAuthorizedToGovern {
         for (uint i = 0; i < allContractNames.length; i++) {
             _replaceImplementation(allContractNames[i], _contractAddresses[i]);
         }
@@ -97,7 +75,7 @@ contract Master is Ownable {
     }
 
     /// @dev adds a new contract type to master
-    function addNewContract(bytes2 _contractName, address _contractAddress) external authorizedOnly {
+    function addNewContract(bytes2 _contractName, address _contractAddress) external onlyAuthorizedToGovern {
         allContractNames.push(_contractName);
         _generateProxy(_contractName, _contractAddress);
         _changeMasterAddress(address(this));
@@ -105,60 +83,43 @@ contract Master is Ownable {
     }
 
     /// @dev upgrades a single contract
-    function upgradeContractImplementation(bytes2 _contractsName, address _contractsAddress) 
-        external authorizedOnly 
+    function upgradeContractImplementation(bytes2 _contractsName, address _contractAddress) 
+        external onlyAuthorizedToGovern 
     {
-        _replaceImplementation(_contractsName, _contractsAddress);
+        _replaceImplementation(_contractsName, _contractAddress);
         versionDates.push(now);  //solhint-disable-line
     }
 
     /// @dev upgrades a single contract
-    function upgradeContractProxy(bytes2 _contractsName, address _contractsAddress) 
-        external authorizedOnly 
+    function upgradeContractProxy(bytes2 _contractsName, address _contractAddress) 
+        external onlyAuthorizedToGovern 
     {
-        contractsActive[contractsAddress[_contractsName]] = false;
-        _generateProxy(_contractsName, _contractsAddress);
+        contractsActive[contractAddress[_contractsName]] = false;
+        _generateProxy(_contractsName, _contractAddress);
         _changeMasterAddress(address(this));
         _changeAllAddress();
     }
 
     /// @dev sets dAppTokenProxy address
     /// @param _locker address where tokens are locked
-    function setDAppLocker(address _locker) external authorizedOnly {
+    function setDAppLocker(address _locker) external onlyAuthorizedToGovern {
         dAppLocker = _locker;
         _changeAllAddress();
     }
-
-    /// @dev changeGBTSAddress. Refreshes all addresses including GBT.
-    function changeGBTSAddress() external govBlocksMasterOnly {
-        gbt = gbm.gbtAddress();
-        _changeAllAddress();
-    }
+  
 
     /// @dev Changes Master contract address
     /// To be called only when proxy is being changed
     /// To update implementation, use voting to call upgradeTo of the proxy.
-    function changeMasterAddress(address _masterAddress) external authorizedOnly {
+    function changeMasterAddress(address _masterAddress) external onlyAuthorizedToGovern {
         _changeMasterAddress(_masterAddress);
     }
 
-    /// @dev Changes GovBlocks Master address
-    /// @param _gbmNewAddress New GovBlocks master address
-    function changeGBMAddress(address _gbmNewAddress) external govBlocksMasterOnly {
-        gbm = GovBlocksMaster(_gbmNewAddress);
-    }
-
+    
     /// @dev Gets current version amd its master address
     /// @return versionNo Current version number that is active
     function getCurrentVersion() public view returns(uint versionNo) {
         return versionDates.length;
-    }
-
-    /// @dev Checks if the address is authorized to make changes.
-    ///     owner allowed for debugging only, will be removed before launch.
-    function isAuth() public view returns(bool check) {
-        if (owner == msg.sender || contractsAddress["GV"] == msg.sender)
-            check = true;
     }
 
     /// @dev Checks if the caller address is either one of its active contract address or owner.
@@ -174,7 +135,7 @@ contract Master is Ownable {
         address[] memory contractAddresses = new address[](allContractNames.length);
 
         for (uint i = 0; i < allContractNames.length; i++)
-            contractAddresses[i] = contractsAddress[allContractNames[i]];
+            contractAddresses[i] = contractAddress[allContractNames[i]];
 
         return(versionDates.length, allContractNames, contractAddresses);
     }
@@ -182,15 +143,7 @@ contract Master is Ownable {
     /// @dev Gets latest contract address
     /// @param _contractName Contract name to fetch
     function getLatestAddress(bytes2 _contractName) public view returns(address) {
-        return contractsAddress[_contractName];
-    }
-
-    function getEventCallerAddress() public view returns(address) {
-        return gbm.eventCaller();
-    }
-
-    function getGovernCheckerAddress() public view returns(address) {
-        return govern.governChecker();
+        return contractAddress[_contractName];
     }
 
     /// @dev Save the initials of all the contracts
@@ -204,7 +157,7 @@ contract Master is Ownable {
     /// @dev Sets the older versions of contract addresses as inactive and the latest one as active.
     function _changeAllAddress() internal {
         for (uint i = 0; i < allContractNames.length; i++) {
-            Upgradeable up = Upgradeable(contractsAddress[allContractNames[i]]);
+            Upgradeable up = Upgradeable(contractAddress[allContractNames[i]]);
             up.updateDependencyAddresses();
         }
     }
@@ -212,20 +165,20 @@ contract Master is Ownable {
     /// @dev Changes Master contract address
     function _changeMasterAddress(address _masterAddress) internal {
         for (uint i = 0; i < allContractNames.length; i++) {
-            Upgradeable up = Upgradeable(contractsAddress[allContractNames[i]]);
+            Upgradeable up = Upgradeable(contractAddress[allContractNames[i]]);
             up.changeMasterAddress(_masterAddress);
         }
     }
 
-    function _replaceImplementation(bytes2 _contractsName, address _contractsAddress) internal {
+    function _replaceImplementation(bytes2 _contractsName, address _contractAddress) internal {
         OwnedUpgradeabilityProxy tempInstance 
-                = OwnedUpgradeabilityProxy(contractsAddress[_contractsName]);
-        tempInstance.upgradeTo(_contractsAddress);
+                = OwnedUpgradeabilityProxy(contractAddress[_contractsName]);
+        tempInstance.upgradeTo(_contractAddress);
     }
 
     function _generateProxy(bytes2 _contractName, address _contractAddress) internal {
         OwnedUpgradeabilityProxy tempInstance = new OwnedUpgradeabilityProxy(_contractAddress);
-        contractsAddress[_contractName] = address(tempInstance);
+        contractAddress[_contractName] = address(tempInstance);
         contractsActive[address(tempInstance)] = true;
     }
 }
