@@ -22,7 +22,7 @@ contract EventCaller {
     event ProposalCreated (
         uint256 proposalId,
         uint256 subCategoryId,
-        bytes32 dAppName,
+        address master,
         string proposalDescHash
     );
 
@@ -57,15 +57,15 @@ contract EventCaller {
 
     /// @dev calls ProposalCreated event
     /// @param _proposalId Id of the created proposal.
-    /// @param _dAppName Name of dApp in which proposal is created
+    /// @param _master master address of dApp in which proposal is created
     /// @param _proposalDescHash Description hash of created proposal.
     function callProposalCreated (
         uint256 _proposalId,
         uint256 _subCategoryId,
-        bytes32 _dAppName,
+        address _master,
         string _proposalDescHash
     ) external {
-        emit ProposalCreated(_proposalId, _subCategoryId, _dAppName, _proposalDescHash);
+        emit ProposalCreated(_proposalId, _subCategoryId, _master, _proposalDescHash);
     }
 
     /// @dev calls VoteCast event

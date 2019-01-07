@@ -3,7 +3,6 @@ const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const Master = artifacts.require('Master');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Governance = artifacts.require('Governance');
-const Pool = artifacts.require('Pool');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const EventCaller = artifacts.require('EventCaller');
 
@@ -14,7 +13,6 @@ let gd;
 let mr;
 let sv;
 let gv;
-let pl;
 let ms;
 
 module.exports = deployer => {
@@ -50,17 +48,13 @@ module.exports = deployer => {
     })
     .then(function(instance) {
       gv = instance;
-      return Pool.deployed();
-    })
-    .then(function(instance) {
-      pl = instance;
+      return Governance.deployed();
     })
     .then(function() {
       const addr = [
         mr.address,
         pc.address,
-        gv.address,
-        pl.address
+        gv.address
       ];
       return gbm.setImplementations(addr);
     })

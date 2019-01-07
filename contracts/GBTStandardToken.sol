@@ -17,14 +17,13 @@ pragma solidity 0.4.24;
 
 import "./imports/lockable-token/LockableToken.sol";
 import "./imports/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
-import "./imports/openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 
 
-contract GBTStandardToken is MintableToken, DetailedERC20, LockableToken {
+contract GBTStandardToken is MintableToken, LockableToken {
     uint public tokenPrice;
 
     /// @dev constructor
-    constructor() public LockableToken(10 ** 20) DetailedERC20("GovBlocks Standard Token", "GBT", 18) {
+    constructor() public LockableToken(10 ** 20, "GovBlocks Standard Token", "GBT", 18) {
         owner = msg.sender;
         tokenPrice = 10 ** 15;
     }

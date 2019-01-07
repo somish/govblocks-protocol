@@ -117,15 +117,7 @@ contract IGovernance{
     }
 
     function claimReward(address _memberAddress, uint[] _proposals) 
-        external returns(uint pendingDAppReward) 
-    {
-    }
-
-    function pauseProposal(uint _proposalId)
-    {
-    }
-
-    function resumeProposal(uint _proposalId)
+        external 
     {
     }
 

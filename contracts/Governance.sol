@@ -566,10 +566,10 @@ contract Governance is IGovernance, Upgradeable {
     function transferAssets() public {
         address newPool = master.getLatestAddress("PL");
         if (address(this) != newPool) {
-            uint tokenBal = LockableToken.balanceOf(address(this));
+            uint tokenBal = tokenInstance.balanceOf(address(this));
             uint ethBal = address(this).balance;
             if (tokenBal > 0)
-                LockableToken.transfer(newPool, tokenBal);
+                tokenInstance.transfer(newPool, tokenBal);
             if (ethBal > 0)
                 newPool.transfer(ethBal);
         }
@@ -579,13 +579,13 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev user can calim the tokens rewarded them till now
     /// Index 0 of _ownerProposals, _voterProposals is not parsed. 
     /// proposal arrays of 1 length are treated as empty.
-    function claimReward(address _claimer, uint[] _voterProposals) public noReentrancy {
+    function claimReward(address _claimer, uint[] _voterProposals) external noReentrancy {
         uint pendingDAppReward;
         
         pendingDAppReward = _claimReward(_claimer, _voterProposals);
 
         if (pendingDAppReward != 0) {
-            LockableToken.transfer(_claimer, pendingDAppReward);
+            tokenInstance.transfer(_claimer, pendingDAppReward);
         }
 
        emit RewardClaimed(
@@ -642,7 +642,7 @@ contract Governance is IGovernance, Upgradeable {
         eventCaller.callProposalCreated(
             _proposalId,
             _categoryId,
-            master.dAppName(),
+            address(master),
             _proposalDescHash
         );
     }
