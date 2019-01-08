@@ -155,8 +155,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
-    function proposalCategoryInitiate() external { //solhint-disable-line
-        require(!constructorCheck);
+    constructor() public { //solhint-disable-line
         addInitialCategories("Uncategorized", "", "EX");
         addInitialCategories("Add new member role", "QmQFnBep7AyMYU3LJDuHSpTYatnw65XjHzzirrghtZoR8U", "MR");
         addInitialCategories("Update member role", "QmXMzSViLBJ22P9oj51Zz7isKTRnXWPHZcQ5hzGvvWD3UV", "MR");
@@ -167,7 +166,6 @@ contract ProposalCategory is IProposalCategory, Governed {
         addInitialCategories("Transfer Token", "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB", "PL");
         addInitialCategories("Add new version", "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w", "MS");
         addInitialCategories("Add new contract", "QmWP3P58YcmveHeXqgsBCRmDewTYV1QqeQqBmRkDujrDLR", "MS");
-        addInitialCategories("Add new authorized address", "QmNTYRfNCYxdnGjYxzd8epUsLNbnkREffJpcwqugoQPDXN", "GV");
         addInitialCategories(
             "Upgrade a contract Implementation",
             "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
@@ -182,7 +180,6 @@ contract ProposalCategory is IProposalCategory, Governed {
         addInitialCategories("Pause Proposal", "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk", "GV");
         addInitialCategories("Buy GBT in Pool", "QmUc6apk3aRoHPaSwafo7RkV4XTJaaWS6Q7MogTMqLDyWs", "PL");
         addInitialCategories("Others, not specified", "", "EX");
-        constructorCheck = true;
     }
 
     /// @dev Adds new category

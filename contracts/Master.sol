@@ -20,7 +20,7 @@ import "./GovBlocksMaster.sol";
 import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./imports/proxy/OwnedUpgradeabilityProxy.sol";
 import "./imports/govern/Governed.sol";
-import "./ProposalCategory.sol";
+import "./Governance.sol";
 import "./MemberRoles.sol";
 
 
@@ -38,8 +38,7 @@ contract Master is Ownable,Governed {
 
     Governed internal govern;
     
-    function initMaster(address _ownerAddress, address _token, address _lockableToken, address _eventCaller, address[] _implementations) external {
-       
+    function initMaster(address _ownerAddress, bool _punishVoters, address _token, address _lockableToken, address _eventCaller, address[] _implementations) external {
         _addContractNames();
         masterAddress = address(this);
         require(allContractNames.length == _implementations.length);
@@ -57,8 +56,8 @@ contract Master is Ownable,Governed {
         _changeMasterAddress(address(this));
         _changeAllAddress();
 
-        ProposalCategory pc = ProposalCategory(contractAddress["PC"]);
-        pc.proposalCategoryInitiate();
+        Governance gv = Governance(contractAddress["PC"]);
+        gv.initiateGovernance(_punishVoters);
 
         MemberRoles mr = MemberRoles(contractAddress["MR"]);
         mr.memberRolesInitiate(dAppToken, _ownerAddress);
@@ -86,7 +85,12 @@ contract Master is Ownable,Governed {
     function upgradeContractImplementation(bytes2 _contractsName, address _contractAddress) 
         external onlyAuthorizedToGovern 
     {
-        _replaceImplementation(_contractsName, _contractAddress);
+        if(_contractsName == 'MS') {
+            _changeMasterAddress(_contractAddress);
+        }
+        else {
+            _replaceImplementation(_contractsName, _contractAddress);
+        }
         versionDates.push(now);  //solhint-disable-line
     }
 
@@ -106,15 +110,6 @@ contract Master is Ownable,Governed {
         dAppLocker = _locker;
         _changeAllAddress();
     }
-  
-
-    /// @dev Changes Master contract address
-    /// To be called only when proxy is being changed
-    /// To update implementation, use voting to call upgradeTo of the proxy.
-    function changeMasterAddress(address _masterAddress) external onlyAuthorizedToGovern {
-        _changeMasterAddress(_masterAddress);
-    }
-
     
     /// @dev Gets current version amd its master address
     /// @return versionNo Current version number that is active

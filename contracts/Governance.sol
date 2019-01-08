@@ -115,20 +115,20 @@ contract Governance is IGovernance, Upgradeable {
     }
 
 
-
-    function initiateGovernance() internal {
-        allowedToCatgorize = uint(MemberRoles.Role.AdvisoryBoard);
-        allVotes.push(ProposalVote(address(0), 0, 0, 1));
-        allProposal.push(ProposalStruct(address(0), now));
-        tokenHoldingTime = 604800;
-        constructorCheck = true;
+    function initiateGovernance(bool _punishVoters) external {
+        if(!constructorCheck){
+            allowedToCatgorize = uint(MemberRoles.Role.AdvisoryBoard);
+            allVotes.push(ProposalVote(address(0), 0, 0, 1));
+            allProposal.push(ProposalStruct(address(0), now));
+            tokenHoldingTime = 604800;
+            punishVoters = _punishVoters;
+            minVoteWeight = 1;
+            constructorCheck = true;
+        }
     }
 
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public {
-        if(!constructorCheck){
-            initiateGovernance();
-        }
         tokenInstance = LockableToken(master.dAppLocker());
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = IProposalCategory(master.getLatestAddress("PC"));
@@ -390,20 +390,6 @@ contract Governance is IGovernance, Upgradeable {
         proposalPaused[_proposalId] = false;
         allProposal[_proposalId].dateUpd = now;
     }
-
-    function configureGlobalParameters(bytes8 _typeOf, uint _value) internal {
-        if(_typeOf == "MV"){
-            minVoteWeight = _value;
-        }
-        else if(_typeOf == "TH"){
-            tokenHoldingTime = _value;
-        }
-    }
-
-    function setPunishVoters(bool _punish) internal {
-        punishVoters = _punish;
-    }
-
 
     function proposal(uint _proposalId) external view returns(uint, uint, uint, uint, uint)
     {

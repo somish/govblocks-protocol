@@ -38,10 +38,11 @@ contract GovBlocksMaster is Ownable {
     function addGovBlocksDapp(
         bytes32 _gbDAppName, 
         address _dappTokenAddress, 
-        address _tokenProxy
+        address _tokenProxy,
+        bool _punishVoters
     ) external {
         Master ms = new Master();
-        ms.initMaster(msg.sender, _dappTokenAddress, _tokenProxy, eventCaller, implementations);
+        ms.initMaster(msg.sender, _punishVoters, _dappTokenAddress, _tokenProxy, eventCaller, implementations);
         emit OnBoarded(_gbDAppName, address(ms));
     }  
 
