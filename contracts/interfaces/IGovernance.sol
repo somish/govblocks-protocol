@@ -27,7 +27,9 @@ contract IGovernance{
         string _proposalSD, 
         string _proposalDescHash, 
         uint _categoryId
-    ) external ;
+    ) external 
+    {
+    }
 
     /// @dev Edits the details of an existing proposal and creates new version
     /// @param _proposalId Proposal id that details needs to be updated
@@ -37,14 +39,19 @@ contract IGovernance{
         string _proposalTitle, 
         string _proposalSD, 
         string _proposalDescHash
-    ) external ;
+    ) 
+        external
+    {
+    }
 
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
     function categorizeProposal(
         uint _proposalId, 
         uint _categoryId,
         uint _incentives
-    ) external ;
+    ) external
+    {
+    }
 
     /// @dev Initiates add solution 
     /// @param _solutionHash Solution hash having required data against adding solution
@@ -52,11 +59,16 @@ contract IGovernance{
         uint _proposalId,
         string _solutionHash, 
         bytes _action
-    ) external ;
+    ) 
+        external 
+    {
+    }
 
     /// @dev Opens proposal for voting
     function openProposalForVoting(uint _proposalId) 
-        external ;
+        external
+    {
+    }
 
     /// @dev Submit proposal with solution
     /// @param _proposalId Proposal id
@@ -65,7 +77,10 @@ contract IGovernance{
         uint _proposalId, 
         string _solutionHash, 
         bytes _action
-    ) external ;
+    ) 
+        external 
+    {   
+    }
 
 
 
@@ -80,29 +95,38 @@ contract IGovernance{
         uint _categoryId, 
         string _solutionHash, 
         bytes _action
-    ) external ;
+    ) 
+        external
+    {   
+    }    
 
     /// @dev Casts vote
     /// @param _proposalId Proposal id
     /// @param _solutionChosen solution chosen while voting. _solutionChosen[0] is the chosen solution
-    function submitVote(uint _proposalId, uint _solutionChosen) external ;
+    function submitVote(uint _proposalId, uint _solutionChosen) external {
+    } 
 
     function canCloseProposal(uint _proposalId) 
         public 
         view 
-        returns(uint closeValue) ;
+        returns(uint closeValue) 
+    {
+    }
 
-    function closeProposal(uint _proposalId) external ;
+    function closeProposal(uint _proposalId) external {
+    }
 
     function claimReward(address _memberAddress, uint[] _proposals) 
-        external ;
+        external 
+    {
+    }
 
-    function proposal(uint _proposalId) external view returns(uint proposalId, uint category, uint status, uint finalVerdict, uint totalReward);
+    function proposal(uint _proposalId) external view returns(uint proposalId, uint category, uint status, uint finalVerdict, uint totalReward)
+    {
+    }
 
-    function callRewardClaimed(address _member, uint[] _voterProposals, uint _gbtReward)
-    external ;
-
-    function  allowedToCatgorize() public returns(uint roleId) ;
+    function  allowedToCatgorize() public returns(uint roleId) {
+    }
     
 
     event Proposal(

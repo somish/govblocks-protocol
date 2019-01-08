@@ -326,50 +326,6 @@ contract Governance is IGovernance, Upgradeable {
         }
     }
 
-    // function closeProposal(uint _proposalId) external {
-    //     uint category = allProposalData[_proposalId].category;
-    //     uint max;
-    //     uint totalVoteValue;
-    //     uint i;
-
-    //     require (canCloseProposal(_proposalId) == 1, "Cannot close");
-
-    //     uint[] memory finalVoteValues = new uint[](allProposalSolutions[_proposalId].length);
-    //     for (i = 0; i < proposalVote[_proposalId].length; i++) {
-    //         totalVoteValue = SafeMath.add(
-    //                             totalVoteValue,
-    //                             allVotes[proposalVote[_proposalId][i]].voteValue
-    //                          );
-    //         finalVoteValues[allVotes[proposalVote[_proposalId][i]].solutionChosen] =
-    //             SafeMath.add(
-    //                 finalVoteValues[allVotes[proposalVote[_proposalId][i]].solutionChosen],
-    //                 allVotes[proposalVote[_proposalId][i]].voteValue
-    //             );
-    //         if (
-    //             finalVoteValues[max] <
-    //             finalVoteValues[allVotes[proposalVote[_proposalId][i]].solutionChosen]
-    //         ) {
-    //             max = allVotes[proposalVote[_proposalId][i]].solutionChosen;
-    //         }
-    //     }
-
-    //     allProposalData[_proposalId].totalVoteValue = totalVoteValue;
-    //     allProposalData[_proposalId].majVoteValue = finalVoteValues[max];
-
-    //     if (checkForThreshold(_proposalId, category)) {
-    //         closeProposalVoteThReached(
-    //             finalVoteValues[max],
-    //             totalVoteValue,
-    //             category,
-    //             _proposalId,
-    //             uint64(max)
-    //         );
-    //     } else {
-    //         allProposalData[_proposalId].finalVerdict = uint64(max);
-    //         _updateProposalStatus(_proposalId, uint8(ProposalStatus.Denied));
-    //     }
-    // }
-
     function closeProposal(uint _proposalId) external {
         uint category = allProposalData[_proposalId].category;
         uint max;
