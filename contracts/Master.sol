@@ -56,11 +56,11 @@ contract Master is Ownable,Governed {
         _changeMasterAddress(address(this));
         _changeAllAddress();
 
-        Governance gv = Governance(contractAddress["PC"]);
-        gv.initiateGovernance(_punishVoters);
-
         MemberRoles mr = MemberRoles(contractAddress["MR"]);
         mr.memberRolesInitiate(dAppToken, _ownerAddress);
+
+        Governance gv = Governance(contractAddress["GV"]);
+        gv.initiateGovernance(_punishVoters);
     }
 
     /// @dev Creates a new version of contract addresses

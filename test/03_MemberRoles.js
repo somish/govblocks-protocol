@@ -1,17 +1,34 @@
 const MemberRoles = artifacts.require('MemberRoles');
+const Governance = artifacts.require('Governance');
+const ProposalCategory = artifacts.require('ProposalCategory');
+const GBTStandardToken = artifacts.require('GBTStandardToken');
 const getAddress = require('../helpers/getAddress.js').getAddress;
 const initializeContracts = require('../helpers/getAddress.js')
   .initializeContracts;
+const encode = require('../helpers/encoder.js').encode;
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 let mr;
+let gv;
+let pc;
+let gbt;
 let address;
+let p1;
+let mrLength
+let p2;
+let mrLength1;
 
 contract('MemberRoles', function([owner, member, other]) {
   it('should be initialized', async function() {
     await initializeContracts(owner);
     address = await getAddress('MR');
     mr = await MemberRoles.at(address);
-    await catchRevert(mr.memberRolesInitiate('0x41', owner, owner));
+    address = await getAddress('GV');
+    gv = await Governance.at(address);
+    address = await getAddress('GBT');
+    gbt = await GBTStandardToken.at(address);
+    address = await getAddress('PC');
+    pc = await ProposalCategory.at(address);
+    await catchRevert(mr.memberRolesInitiate(owner, owner));
   });
 
   it('should have added initial member roles', async function() {
@@ -38,7 +55,35 @@ contract('MemberRoles', function([owner, member, other]) {
     assert.equal(roles[0].toNumber(), 1, 'Owner added to AB');
   });
 
+  it('should add new role', async function() {
+    let actionHash = encode(
+      'addRole(bytes32,string,address)',
+      '0x41647669736f727920426f617265000000000000000000000000000000000000',
+      'New member role',
+      owner
+    );
+    console.log(await pc.totalCategories());
+    p1 = await gv.getProposalLength();
+    mrLength = await mr.totalRoles();
+    let amount = 50000000000000000000;
+    await gbt.lock('GOV', amount, 5468545613353456);
+    await gv.createProposalwithSolution(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      1,
+      'Add new member',
+      actionHash
+    );
+    p2 = await gv.getProposalLength();
+    await gv.closeProposal(p1.toNumber());
+    mrLength1 = await mr.totalRoles();
+    console.log(mrLength1.toNumber(), mrLength.toNumber());
+    assert.isAbove(mrLength1.toNumber(), mrLength.toNumber(), "Role not added");
+  });
+
   it('should add a member to a role', async function() {
+    await gv.createProposalwithSolution()
     var transaction = await mr.updateRole(member, 1, true);
     await catchRevert(mr.updateRole(member, 2, true));
     await catchRevert(mr.updateRole(member, 1, true));
@@ -63,8 +108,8 @@ contract('MemberRoles', function([owner, member, other]) {
   it('Should fetch member count of all roles', async function() {
     const g6 = await mr.getMemberLengthForAllRoles();
     assert.equal(g6.length, 3);
-    assert.equal(g6[0],0);
-    assert.equal(g6[1],2);
+    assert.equal(g6[0].toNumber(),0);
+    assert.equal(g6[1].toNumber(),2);
   });
 
   it('Should follow the upgradable interface', async function() {

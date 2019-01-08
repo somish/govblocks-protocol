@@ -1,4 +1,3 @@
-const Pool = artifacts.require('Pool');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Master = artifacts.require('Master');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
@@ -10,7 +9,7 @@ let ms;
 // getPendingReward and claim reward tested already
 contract('Pool', function([owner, taker]) {
   it('Should fetch addresses from master', async function() {
-    address = await getAddress('PL');
+    address = await getAddress('GV');
     pl = await Pool.at(address);
     address = await getAddress('MS');
     ms = await Master.at(address);

@@ -115,7 +115,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
 
-    function initiateGovernance(bool _punishVoters) external {
+    function initiateGovernance(bool _punishVoters) public {
         if(!constructorCheck){
             allowedToCatgorize = uint(MemberRoles.Role.AdvisoryBoard);
             allVotes.push(ProposalVote(address(0), 0, 0, 1));
@@ -489,6 +489,7 @@ contract Governance is IGovernance, Upgradeable {
             return true;
         uint[] memory mrAllowed;
         (, , , , mrAllowed, , ) = proposalCategory.category(category);
+
         for (uint i = 0; i < mrAllowed.length; i++) {
             if (mrAllowed[i] == 0 || memberRole.checkRole(msg.sender, mrAllowed[i]))
                 return true;
@@ -506,7 +507,7 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev transfers its assets to latest addresses
     function transferAssets() public {
-        address newPool = master.getLatestAddress("PL");
+        address newPool = master.getLatestAddress("GV");
         if (address(this) != newPool) {
             uint tokenBal = tokenInstance.balanceOf(address(this));
             uint ethBal = address(this).balance;

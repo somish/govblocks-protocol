@@ -40,7 +40,8 @@ contract ProposalCategory is IProposalCategory, Governed {
     mapping (uint => CategoryAction) internal categoryActionData;
 
     ///@dev just to follow the interface
-    function updateDependencyAddresses() public pure { //solhint-disable-line
+    function updateDependencyAddresses() public { //solhint-disable-line
+        proposalCategoryInitiate();
     }
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
@@ -155,7 +156,8 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
-    constructor() public { //solhint-disable-line
+    function proposalCategoryInitiate() internal { //solhint-disable-line
+        require(!constructorCheck);
         addInitialCategories("Uncategorized", "", "EX");
         addInitialCategories("Add new member role", "QmQFnBep7AyMYU3LJDuHSpTYatnw65XjHzzirrghtZoR8U", "MR");
         addInitialCategories("Update member role", "QmXMzSViLBJ22P9oj51Zz7isKTRnXWPHZcQ5hzGvvWD3UV", "MR");
@@ -180,6 +182,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         addInitialCategories("Pause Proposal", "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk", "GV");
         addInitialCategories("Buy GBT in Pool", "QmUc6apk3aRoHPaSwafo7RkV4XTJaaWS6Q7MogTMqLDyWs", "PL");
         addInitialCategories("Others, not specified", "", "EX");
+        constructorCheck = true;
     }
 
     /// @dev Adds new category

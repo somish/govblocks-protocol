@@ -5,6 +5,7 @@ const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Governance = artifacts.require('Governance');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const EventCaller = artifacts.require('EventCaller');
+const setMasterAddress = require('../helpers/masterAddress.js').setMasterAddress;
 
 let gbt;
 let ec;
@@ -25,17 +26,10 @@ module.exports = deployer => {
     })
     .then(function(instance) {
       ec = instance;
-      return Master.deployed();
+      return GovBlocksMaster.deployed(ec.address);
     })
     .then(function(instance) {
-      ms = instance;
-      return GovBlocksMaster.deployed();
-    })
-    .then(function(instance) {
-      gbm = instance;
-      return gbm.govBlocksMasterInit(gbt.address, ec.address, ms.address);
-    })
-    .then(function(instance) {
+      gbm = instance
       return MemberRoles.deployed();
     })
     .then(function(instance) {
@@ -48,9 +42,6 @@ module.exports = deployer => {
     })
     .then(function(instance) {
       gv = instance;
-      return Governance.deployed();
-    })
-    .then(function() {
       const addr = [
         mr.address,
         pc.address,
@@ -59,9 +50,12 @@ module.exports = deployer => {
       return gbm.setImplementations(addr);
     })
     .then(function() {
-      return gbm.addGovBlocksDapp('0x41', gbt.address, gbt.address, 'descHash');
+      var result = gbm.addGovBlocksDapp('0x41', gbt.address, gbt.address, false);
+      return result;
     })
-    .then(function() {
+    .then(function(result) {
+      console.log(result.logs[0].args);
+      setMasterAddress(result.logs[0].args.masterAddress);
       console.log(
         'GovBlocks Initialization completed, GBM Address: ',
         gbm.address

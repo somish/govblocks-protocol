@@ -9,7 +9,7 @@ contract('new dApp', function() {
       '0x42',
       SampleAddress,
       SampleAddress,
-      'yo'
+      true
     );
     console.log('Gas used in deploying dApp: ', rc.receipt.gasUsed);
   });

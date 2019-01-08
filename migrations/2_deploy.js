@@ -5,16 +5,15 @@ const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Governance = artifacts.require('Governance');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const EventCaller = artifacts.require('EventCaller');
-const GovernCheckerContract = artifacts.require('GovernCheckerContract');
 
 module.exports = function(deployer) {
-  deployer.deploy(EventCaller);
-  deployer.deploy(GBTStandardToken);
-  deployer.deploy(EventCaller);
-  deployer.deploy(GovBlocksMaster);
-  deployer.deploy(Governance);
-  deployer.deploy(ProposalCategory);
-  deployer.deploy(MemberRoles);
-  deployer.deploy(Master);
-  deployer.deploy(GovernCheckerContract);
+  deployer.then(async () => {
+    ec = await deployer.deploy(EventCaller);
+    await deployer.deploy(GBTStandardToken);
+    await deployer.deploy(GovBlocksMaster,ec.address);
+    await deployer.deploy(Governance);
+    await deployer.deploy(ProposalCategory);
+    await deployer.deploy(MemberRoles);
+    await deployer.deploy(Master);
+  });
 };
