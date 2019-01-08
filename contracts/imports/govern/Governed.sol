@@ -29,7 +29,7 @@ contract Governed {
     /// @dev modifier that allows only the authorized addresses to execute the function
     modifier onlyAuthorizedToGovern() {
         IMaster ms = IMaster(masterAddress);
-        require(ms.contractAddress('GV') == msg.sender);        
+        require(ms.contractAddress('GV') == msg.sender);
         _;
     }
 

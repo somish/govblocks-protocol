@@ -42,7 +42,7 @@ contract Master is Ownable,Governed {
        
         _addContractNames();
         masterAddress = address(this);
-        require(allContractNames.length == _implementations.length);        
+        require(allContractNames.length == _implementations.length);
         contractsActive[address(this)] = true;
         dAppToken = _token;
         dAppLocker = _lockableToken;
@@ -151,7 +151,6 @@ contract Master is Ownable,Governed {
         allContractNames.push("MR");
         allContractNames.push("PC");
         allContractNames.push("GV");
-        allContractNames.push("PL");
     }
 
     /// @dev Sets the older versions of contract addresses as inactive and the latest one as active.

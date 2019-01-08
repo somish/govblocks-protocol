@@ -46,9 +46,7 @@ contract IProposalCategory {
         bytes2 _contractName,
         uint[] _incentives
     ) 
-        external{
-
-        }
+        external ;
 
     /// @dev Updates category details
     /// @param _categoryId Category id that needs to be updated
@@ -75,9 +73,7 @@ contract IProposalCategory {
         bytes2 _contractName,
         uint[] _incentives
     )
-        public{
-
-        }
+        public ;
 
     /// @dev gets category details
     function category(uint _categoryId)
@@ -90,9 +86,7 @@ contract IProposalCategory {
             uint[] allowedToCreateProposal,
             uint closingTime,
             uint minStake
-        ){
-
-        }
+        ) ;
 
     ///@dev gets category action details
     function categoryAction(uint _categoryId)
@@ -102,15 +96,11 @@ contract IProposalCategory {
             address contractAddress,
             bytes2 contractName,
             uint defaultIncentive
-        ){
-
-        }
+        ) ;
     
     /// @dev Gets Total number of categories added till now
     function totalCategories() 
         external view
-        returns(uint numberOfCategories){
-            
-        }
+        returns(uint numberOfCategories) ;
 
 }

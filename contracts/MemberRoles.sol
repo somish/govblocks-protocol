@@ -114,7 +114,7 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
     /// @param _roleId roleId to update its Authorized Address
     /// @param _newAuthorized New authorized address against role id
-    function changeAuthorized(uint _roleId, address _newAuthorized) public checkRoleAuthority(_roleId) { //solhint-disable-line
+    function changeAuthorized(uint _roleId, address _newAuthorized) external checkRoleAuthority(_roleId) { //solhint-disable-line
         memberRoleData[_roleId].authorized = _newAuthorized;
     }
 
@@ -134,7 +134,7 @@ contract MemberRoles is IMemberRoles, Governed {
                 j++;
             }
         }
-
+        
         return (_memberRoleId, memberArray);
     }
 
