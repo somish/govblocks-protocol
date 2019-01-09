@@ -6,7 +6,6 @@ const getProposalIds = require('../helpers/reward.js').getProposalIds;
 const getAddress = require('../helpers/getAddress.js').getAddress;
 const initializeContracts = require('../helpers/getAddress.js')
   .initializeContracts;
-const Pool = artifacts.require('Pool');
 const Master = artifacts.require('Master');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const ProposalCategory = artifacts.require('ProposalCategory');
@@ -27,7 +26,7 @@ let propId;
 let pid;
 let ownerProposals;
 let voterProposals;
-let incentive = Math.pow(10,18);
+let incentive = Math.pow(10,17);
 
 const BigNumber = web3.BigNumber;
 require('chai')
@@ -38,26 +37,26 @@ const e18 = new BigNumber(1e18);
 
 contract('Governance', ([owner, notOwner, voter, noStake]) => {
   it('Should fetch addresses from master', async function() {
-    await initializeContracts();
-    address = await getAddress('GV');
+    let punishVoters = false
+    await initializeContracts(punishVoters);
+    address = await getAddress('GV', punishVoters);
     gv = await Governance.at(address);
-    address = await getAddress('MR');
+    address = await getAddress('MR', punishVoters);
     mr = await MemberRoles.at(address);
-    address = await getAddress('GBT');
+    address = await getAddress('GBT', punishVoters);
     gbt = await GBTStandardToken.at(address);
-    address = await getAddress('PC');
+    address = await getAddress('PC', punishVoters);
     pc = await ProposalCategory.at(address);
-    address = await getAddress('PL');
-    pl = await Pool.at(address);
+    address = await getAddress('GV', punishVoters);
+    pl = await Governance.at(address);
     tp = await TokenProxy.new(gbt.address,18);
-    address = await getAddress('MS');
+    address = await getAddress('MS', punishVoters);
     ms = await Master.at(address);
     address = await ms.dAppLocker();
     dAppToken = await GBTStandardToken.at(address);
   });
 
   it('Should create an uncategorized proposal', async function() {
-    await gv.setPunishVoters(true);
     pid = await gv.getProposalLength();
     await dAppToken.transfer(notOwner, e18.mul(10));
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
@@ -75,22 +74,48 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should not categorize if pool balance is less than category default incentive', async function() {
-    var stake = Math.pow(10,18);
-    var incentive = Math.pow(10,18);
-    await pc.updateCategory(
-      7,
-      'Transfer Ether',
-      1,
-      50,
-      25,
-      [1,2],
-      72000,
-      'QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa',
-      nullAddress,
-      'PL',
-      [stake, incentive]
-    );
+    var stake = Math.pow(10,17);
+    var incentive = Math.pow(10,17);
+    // await pc.updateCategory(
+    //   7,
+    //   'Transfer Ether',
+    //   1,
+    //   50,
+    //   25,
+    //   [1,2],
+    //   72000,
+    //   'QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa',
+    //   nullAddress,
+    //   'PL',
+    //   [stake, incentive]
+    // );
     await dAppToken.lock('GOV', e18.mul(10), 54685456133563456);
+    //proposal to update category
+      let actionHash = encode(
+        'updateCategory(uint,string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
+        7,
+        'Transfer Ether',
+        1,
+        50,
+        25,
+        [1,2],
+        72000,
+        'QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa',
+        nullAddress,
+        '0x4756',
+        [stake.toString(), incentive.toString()]
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        4,
+        'Add new member',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
     await catchRevert(gv.categorizeProposal(pid, 7, incentive));
     await dAppToken.transfer(pl.address, e18.mul(20));
   });
@@ -133,15 +158,50 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
       2,
       'Not categorized'
     );
-    await mr.updateRole(notOwner, 1, true);
-    await gv.categorizeProposal(pid, 7, incentive);
+    //proposal to add member to AB
+      let actionHash = encode(
+        'updateRole(address,uint,bool)',
+        notOwner,
+        1,
+        true
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        2,
+        'Add new member',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
+    await gv.categorizeProposal(pid, 7, Math.pow(10,15));
     proposalData = await gv.proposal(pid);
     assert.equal(
       proposalData[1].toNumber(),
       7,
       'Not categorized'
     );
-    await mr.updateRole(notOwner, 1, false);
+    //proposal to add member to AB
+      actionHash = encode(
+        'updateRole(address,uint,bool)',
+        notOwner,
+        1,
+        false
+      );
+      p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        2,
+        'Add new member',
+        actionHash
+      );
+      await gv.submitVote(p1.toNumber(), [1], { from: notOwner });
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
   });
 
   it('Should not allow unauthorized people to open proposal for voting and submit solutions', async () => {
@@ -194,10 +254,41 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should not close a paused proposal', async() =>{
-    await catchRevert(gv.resumeProposal(pid));
-    await gv.pauseProposal(pid);
+    //proposal to pause proposal
+    let actionHash = encode(
+      'pauseProposal(uint)',
+      pid.toNumber()
+    );
+    let p1 = await gv.getProposalLength();
+    await gv.createProposalwithSolution(
+      'Pause',
+      'Pause',
+      'pauseProposal',
+      13,
+      'pause',
+      actionHash
+    );
+    await gv.closeProposal(p1.toNumber());
+    console.log(await gv.proposalPaused(pid));
+    //proposal closed
     await catchRevert(gv.closeProposal(pid));
-    await gv.resumeProposal(pid);
+    //proposal to resume proposal
+    actionHash = encode(
+      'resumeProposal(uint)',
+      pid.toNumber()
+    );
+    p1 = await gv.getProposalLength();
+    await gv.createProposalwithSolution(
+      'Resume',
+      'Resume',
+      'Resume',
+      12,
+      'Resume',
+      actionHash
+    );
+    await gv.closeProposal(p1.toNumber());
+    //proposal closed
+    console.log(await gv.proposalPaused(pid));
   });
 
   it('Should close proposal when voting is completed', async () => {
@@ -218,8 +309,76 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should check reward distribution when punish voters is true', async () => {
-    await mr.updateRole(notOwner, 1, true);
-    await mr.updateRole(voter, 1, true);
+    let punishVoters = true;
+    await initializeContracts(punishVoters);
+    let gvAddress = await getAddress('GV', punishVoters);
+    gv = await Governance.at(gvAddress);
+    await dAppToken.transfer(gvAddress, e18.mul(10));
+    var stake = Math.pow(10,17);
+    var incentive = Math.pow(10,17);
+    //proposal to update category
+      let actionHash = encode(
+        'updateCategory(uint,string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
+        7,
+        'Transfer Ether',
+        1,
+        50,
+        25,
+        [1,2],
+        72000,
+        'QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa',
+        nullAddress,
+        '0x4756',
+        [stake.toString(), incentive.toString()]
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        4,
+        'Add new member',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
+    //proposal to add member to AB
+      actionHash = encode(
+        'updateRole(address,uint,bool)',
+        notOwner,
+        1,
+        true
+      );
+      p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        2,
+        'Add new member',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
+    //proposal to add member to AB
+      actionHash = encode(
+        'updateRole(address,uint,bool)',
+        voter,
+        1,
+        true
+      );
+      p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        2,
+        'Add new member',
+        actionHash
+      );
+      await gv.submitVote(p1.toNumber(), [1], { from: notOwner });
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
     await dAppToken.transfer(voter, e18.mul(10));
     propId = (await gv.getProposalLength()).toNumber() - 1;
@@ -238,16 +397,55 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.getPendingReward(owner, 0);
     voterProposals = await getProposalIds(owner, gv);
     var balance = await dAppToken.balanceOf(owner);
-    await pl.claimReward(owner, voterProposals);
+    await gv.claimReward(owner, voterProposals);
     assert.isAbove((await dAppToken.balanceOf(owner)).toNumber(), balance.toNumber());
     voterProposals = await getProposalIds(voter, gv);
     balance = await dAppToken.balanceOf(voter);
-    await pl.claimReward(voter, voterProposals , { from:voter });
+    await gv.claimReward(voter, voterProposals , { from:voter });
     assert.equal((await dAppToken.balanceOf(voter)).toNumber(), balance.toNumber());
   });
 
   it('Should give reward to all voters when punish voters is false', async () => {
-    await gv.setPunishVoters(false);
+    let punishVoters = false;
+    address = await getAddress('GV', punishVoters);
+    gv = await Governance.at(address);
+    //proposal to add member to AB
+      let actionHash = encode(
+        'updateRole(address,uint,bool)',
+        notOwner,
+        1,
+        true
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        2,
+        'Add new member',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
+    //proposal to add member to AB
+      actionHash = encode(
+        'updateRole(address,uint,bool)',
+        voter,
+        1,
+        true
+      );
+      p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        2,
+        'Add new member',
+        actionHash
+      );
+      await gv.submitVote(p1.toNumber(), [1], { from: notOwner });
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
     propId = (await gv.getProposalLength()).toNumber() - 1;
     await gv.categorizeProposal(propId, 7, incentive);
@@ -257,8 +455,45 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.submitVote(propId, [1], { from: notOwner });
     await gv.submitVote(propId, [2], { from: voter });
     await gv.closeProposal(propId);
-    await mr.updateRole(voter, 1, false);
-    await mr.updateRole(notOwner, 1, false);
+    //proposal to remove member from AB
+    actionHash = encode(
+      'updateRole(address,uint,bool)',
+      voter,
+      1,
+      false
+    );
+    p1 = await gv.getProposalLength();
+    await gv.createProposalwithSolution(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      2,
+      'Add new member',
+      actionHash
+    );
+    await gv.submitVote(p1.toNumber(), [1], { from: notOwner });
+    await gv.submitVote(p1.toNumber(), [1], { from: voter });
+    await gv.closeProposal(p1.toNumber());
+    //proposal closed
+    //proposal to remove member from AB
+    actionHash = encode(
+      'updateRole(address,uint,bool)',
+      notOwner,
+      1,
+      false
+    );
+    p1 = await gv.getProposalLength();
+    await gv.createProposalwithSolution(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      2,
+      'Add new member',
+      actionHash
+    );
+    await gv.submitVote(p1.toNumber(), [1], { from: notOwner });
+    await gv.closeProposal(p1.toNumber());
+    //proposal closed
     voterProposals = await getProposalIds(owner, gv);
     var balance = (await dAppToken.balanceOf(owner)).toNumber();
     await pl.claimReward(owner, voterProposals);
@@ -287,18 +522,43 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
 
   it('Should check voting process when anyone is allowed to vote', async () => {
     let c1 = await pc.totalCategories();
-    await pc.addCategory(
-      'New Category',
-      2,
-      20,
-      0,
-      [1,2],
-      1000,
-      'New Sub Category',
-      0x0000000000000000000000000000000000000001,
-      '0x4164',
-      [0, 100000]
-    );
+    //proposal to add category
+      let actionHash = encode(
+        'addCategory(string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
+        'New Category',
+        2,
+        20,
+        0,
+        [1,2],
+        1000,
+        'New Sub Category',
+        0x0000000000000000000000000000000000000001,
+        '0x4164',
+        [0, 100000]
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        4,
+        'Add new member',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
+    // await pc.addCategory(
+    //   'New Category',
+    //   2,
+    //   20,
+    //   0,
+    //   [1,2],
+    //   1000,
+    //   'New Sub Category',
+    //   0x0000000000000000000000000000000000000001,
+    //   '0x4164',
+    //   [0, 100000]
+    // );
     let c2 = await pc.totalCategories();
     assert.equal(c2.toNumber(), c1.toNumber() + 1, 'category not added');
     await gv.createProposal(
@@ -317,18 +577,43 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
 
   it('should add new category with token holder as voters', async () => {
     let c1 = await pc.totalCategories();
-    await pc.addCategory(
-      'New Category',
-      2,
-      20,
-      0,
-      [1,2],
-      1000,
-      'New Sub Category',
-      0x0000000000000000000000000000000000000001,
-      '0x4164',
-      [0, 100000]
-    );
+    //proposal to add category
+      let actionHash = encode(
+        'addCategory(string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
+        'New Category',
+        2,
+        20,
+        0,
+        [1,2],
+        1000,
+        'New Sub Category',
+        0x0000000000000000000000000000000000000001,
+        '0x4164',
+        [0, 100000]
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'Add new member',
+        'Add new member',
+        'Addnewmember',
+        4,
+        'Add new member',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed
+    // await pc.addCategory(
+    //   'New Category',
+    //   2,
+    //   20,
+    //   0,
+    //   [1,2],
+    //   1000,
+    //   'New Sub Category',
+    //   0x0000000000000000000000000000000000000001,
+    //   '0x4164',
+    //   [0, 100000]
+    // );
     let c2 = await pc.totalCategories();
     assert.equal(c2.toNumber(), c1.toNumber() + 1, 'category not added');
   });
@@ -392,12 +677,6 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await increaseTime(2000);
     await gv.closeProposal(propId);
     await catchRevert(gv.closeProposal(propId));
-  });
-
-  it('Should configure global paramters', async function() {
-    await catchRevert(gv.configureGlobalParameters("0x5448", 10 ,{from:noStake}));
-    await gv.configureGlobalParameters("0x5448", 704400);
-    await gv.configureGlobalParameters("0x4d56", 10);
   });
   
 });

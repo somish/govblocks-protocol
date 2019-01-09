@@ -1,5 +1,7 @@
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
+const setMasterAddress = require('../helpers/masterAddress.js').setMasterAddress;
 const SampleAddress = 0x0000000000000000000000000000000000000001;
+
 let gbm;
 
 contract('new dApp', function() {

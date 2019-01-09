@@ -7,158 +7,31 @@ let address;
 let gbm;
 const sampleBytes32 =
   '0x41647669736f727920426f617264000000000000000000000000000000000000';
-const sampleAddress = '0x0000000000000000000000000000000000000001';
+const sampleAddress = '0x0000000000000000000000000000000000000002';
 
 // addGovBlocksUser, setMasterByteCode already tested earlier
 contract('GovBlocksMaster', function([owner, notOwner]) {
   it('Should fetch addresses for testing', async function() {
-    address = await getAddress('GBM');
+    address = await getAddress('GBM',false);
     gbm = await GovBlocksMaster.at(address);
-    address = await getAddress('EC');
+    address = await getAddress('EC',false);
     ec = await EventCaller.at(address);
   });
 
   it('should be initialized', async function() {
     this.timeout(100000);
     assert.equal(await gbm.owner(), owner, 'owner was not set properly');
-    assert.notEqual(
-      await gbm.eventCaller(),
-      sampleAddress,
-      'eventCaller was not set properly'
-    );
-    assert.notEqual(
-      await gbm.gbtAddress(),
-      sampleAddress,
-      'gbtAddress was not set properly'
-    );
-    assert.equal(await gbm.initialized(), true, 'initialized bool not set');
-    await catchRevert(
-      gbm.govBlocksMasterInit(sampleAddress, sampleAddress, sampleAddress)
-    );
-    let temp = await gbm.getGovBlocksDappDetails('0x41');
   });
 
-  it('should change dapp master', async function() {
-    this.timeout(100000);
-    let masterAddress = await gbm.getDappMasterAddress('0x41');
-    await gbm.changeDappMasterAddress('0x41', sampleAddress);
-    assert.equal(
-      await gbm.getDappMasterAddress('0x41'),
-      sampleAddress,
-      'dApp Master not changed'
-    );
-    await gbm.changeDappMasterAddress('0x41', masterAddress);
-    await catchRevert(
-      gbm.changeDappMasterAddress('0x41', sampleAddress, { from: notOwner })
-    );
-  });
-
-  it('should change sample master', async function() {
-    this.timeout(100000);
-    let masterAddress = await gbm.masterAdd();
-    await gbm.updateMasterAddress(sampleAddress);
-    assert.equal(
-      await gbm.masterAdd(),
-      sampleAddress,
-      'Sample Master not changed'
-    );
-    await catchRevert(
-      gbm.updateMasterAddress(sampleAddress, { from: notOwner })
-    );
-    await gbm.updateMasterAddress(masterAddress);
-  });
-
-  it('should not allow to add dApp with same name', async function() {
-    this.timeout(100000);
-    await catchRevert(
-      gbm.addGovBlocksDapp('0x41', sampleAddress, sampleAddress, 'yo')
-    );
-  });
-
-  it('should change dapp desc hash', async function() {
-    this.timeout(100000);
-    let desc = await gbm.getDappDescHash('0x41');
-    await gbm.changeDappDescHash('0x41', 'some random string');
-    assert.equal(
-      await gbm.getDappDescHash('0x41'),
-      'some random string',
-      'dApp desc not changed'
-    );
-    await gbm.changeDappDescHash('0x41', desc);
-    await catchRevert(gbm.changeDappDescHash('0x41', desc, { from: notOwner }));
-  });
-
-  it('should change dapp token', async function() {
-    this.timeout(100000);
-    let tokenAddress = await gbm.getDappTokenAddress('0x41');
-    await gbm.changeDappTokenAddress('0x41', sampleAddress);
-    assert.equal(
-      await gbm.getDappTokenAddress('0x41'),
-      sampleAddress,
-      'dApp token not changed'
-    );
-    await gbm.changeDappTokenAddress('0x41', tokenAddress);
-    await catchRevert(
-      gbm.changeDappTokenAddress('0x41', sampleAddress, { from: notOwner })
-    );
-  });
-
-  it('should change gbt address', async function() {
-    this.timeout(100000);
-    let tokenAddress = await gbm.gbtAddress();
-    await gbm.updateGBTAddress(sampleAddress);
-    assert.equal(await gbm.gbtAddress(), sampleAddress, 'gbt not changed');
-    await gbm.updateGBTAddress(tokenAddress);
-  });
-
-  it('should change gbm address', async function() {
-    this.timeout(100000);
-    await gbm.updateGBMAddress(gbm.address);
-    assert.equal(1, 1, 'GBM address change threw');
-  });
-
-  it('should set abi and bc hash', async function() {
-    this.timeout(100000);
-    await gbm.setByteCodeAndAbi(sampleBytes32, sampleBytes32);
-    result = await gbm.getByteCodeAndAbi();
-    assert.equal(result[0], sampleBytes32, 'BC hash not set properly');
-    assert.equal(result[1], sampleBytes32, 'ABI hash not set properly');
-  });
-
-  // Removed this case as it is not being used anywhere 
-  // it('should set dapp user', async function() {
-  //   this.timeout(100000);
-  //   await gbm.setDappUser('yo');
-  //   assert.equal(await gbm.getDappUser(), 'yo', 'dApp user not set properly');
-  // });
-
-  it('should change eventCaller address', async function() {
-    this.timeout(100000);
-    let ecAddress = await gbm.eventCaller();
+  it('should set eventCaller address', async function() {
+    await catchRevert( gbm.setEventCallerAddress(sampleAddress, {from: notOwner}));
+    await catchRevert( gbm.setImplementations([], {from: notOwner}));
     await gbm.setEventCallerAddress(sampleAddress);
     assert.equal(
       await gbm.eventCaller(),
       sampleAddress,
-      'event caller not changed'
+      'eventCaller was not set properly'
     );
-    await gbm.setEventCallerAddress(ecAddress);
   });
 
-  it('should check getters', async function() {
-    this.timeout(100000);
-    // TODO check all the data returned by getters
-    let g1 = await gbm.getGovBlocksDappDetails('0x41');
-    await catchRevert(
-      gbm.getGovBlocksDappDetails('0x51')
-    );
-    let g2 = await gbm.getGovBlocksDappDetailsByIndex(0);
-    let g4 = await gbm.getDappDetailsByAddress(gbm.address);
-    let dAppLength = await gbm.getAllDappLength();
-    let dAppName = await gbm.getAllDappById(0);
-    let allDappNameArray = await gbm.getAllDappArray();
-    let getDappNameByAddress = await gbm.getDappNameByAddress(gbm.address);
-    await ec.callCloseProposalOnTime(1, 1); // for coverage
-    assert.isAtLeast(dAppLength.toNumber(), 1, 'dApp Length not proper');
-    assert.equal(dAppName, allDappNameArray[0], 'dApp name not consistent');
-  });
 });

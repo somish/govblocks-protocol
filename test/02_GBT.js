@@ -15,7 +15,7 @@ const nullAddress = 0x0000000000000000000000000000000000000000;
 
 contract('GBTStandardToken', function([owner, receiver, spender]) {
   before(function() {
-    getAddress('GBT').then(function(address) {
+    getAddress('GBT',false).then(function(address) {
       gbts = GBTStandardToken.at(address);
     });
   });
