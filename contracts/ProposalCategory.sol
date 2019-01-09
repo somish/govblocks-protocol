@@ -41,11 +41,21 @@ contract ProposalCategory is IProposalCategory, Governed {
 
     ///@dev just to follow the interface
     function updateDependencyAddresses() public { //solhint-disable-line
-        proposalCategoryInitiate();
+        if(!constructorCheck) {
+            proposalCategoryInitiate();
+            constructorCheck = true;
+        }
     }
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
-    function changeMasterAddress(address _masterAddress) public pure { //solhint-disable-line
+    function changeMasterAddress(address _masterAddress) public { //solhint-disable-line
+        masterAddress = _masterAddress;
+        if (address(masterAddress) == address(0))
+            masterAddress = _masterAddress;
+        else {
+            require(msg.sender == address(masterAddress));
+            masterAddress = _masterAddress;
+        }
     }
     
     /// @dev Adds new category
@@ -157,15 +167,14 @@ contract ProposalCategory is IProposalCategory, Governed {
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
     function proposalCategoryInitiate() internal { //solhint-disable-line
-        require(!constructorCheck);
         addInitialCategories("Uncategorized", "", "EX");
         addInitialCategories("Add new member role", "QmQFnBep7AyMYU3LJDuHSpTYatnw65XjHzzirrghtZoR8U", "MR");
         addInitialCategories("Update member role", "QmXMzSViLBJ22P9oj51Zz7isKTRnXWPHZcQ5hzGvvWD3UV", "MR");
         addInitialCategories("Add new category", "QmYzBtW5mRMwHwKQUmRnwdXgq733WNzN5fo2yNPpkVG9Ng", "PC");
         addInitialCategories("Edit category", "QmcVNykyhjni7GFk8x1GrL3idzc6vxz4vNJLHPS9vJ79Qc", "PC");
         addInitialCategories("Change dApp Token Proxy", "QmPR9K6BevCXRVBxWGjF9RV7Pmtxr7D4gE3qsZu5bzi8GK", "MS");
-        addInitialCategories("Transfer Ether", "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa", "PL");
-        addInitialCategories("Transfer Token", "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB", "PL");
+        addInitialCategories("Transfer Ether", "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa", "GV");
+        addInitialCategories("Transfer Token", "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB", "GV");
         addInitialCategories("Add new version", "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w", "MS");
         addInitialCategories("Add new contract", "QmWP3P58YcmveHeXqgsBCRmDewTYV1QqeQqBmRkDujrDLR", "MS");
         addInitialCategories(
@@ -180,9 +189,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         );
         addInitialCategories("Resume Proposal", "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1", "GV");
         addInitialCategories("Pause Proposal", "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk", "GV");
-        addInitialCategories("Buy GBT in Pool", "QmUc6apk3aRoHPaSwafo7RkV4XTJaaWS6Q7MogTMqLDyWs", "PL");
         addInitialCategories("Others, not specified", "", "EX");
-        constructorCheck = true;
     }
 
     /// @dev Adds new category

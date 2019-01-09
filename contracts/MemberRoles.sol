@@ -53,7 +53,13 @@ contract MemberRoles is IMemberRoles, Governed {
     }
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
-    function changeMasterAddress(address _masterAddress) public pure { //solhint-disable-line
+    function changeMasterAddress(address _masterAddress) public { //solhint-disable-line
+        if(masterAddress == address(0))
+            masterAddress = _masterAddress;
+        else{
+            require(msg.sender == masterAddress);
+            masterAddress = _masterAddress;
+        }
     }
 
     function memberRolesInitiate(address _dAppToken, address _firstAB) public {
@@ -151,18 +157,25 @@ contract MemberRoles is IMemberRoles, Governed {
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.
-    function roles(address _memberAddress) public view returns(uint[]) { //solhint-disable-line
+    function roles(address _memberAddress) public view returns(uint[] assignedRoles) { //solhint-disable-line
         uint length = memberRoleData.length;
-        uint[] assignedRoles;
-        for (uint i = 1; i < length; i++) {
+        uint j = 0;
+        uint i;
+        uint[] memory tempAllMemberAddress = new uint[](length);
+        for (i = 1; i < length; i++) {
             if (memberRoleData[i].memberActive[_memberAddress]) {
-                assignedRoles.push(i);
+                tempAllMemberAddress[j] = i;
+                j++;
             }
         }
         if (dAppToken.totalBalanceOf(_memberAddress) > 0) {
-            assignedRoles.push(uint(Role.TokenHolder));
+            tempAllMemberAddress[j] = uint(Role.TokenHolder);
         }
 
+        assignedRoles = new uint[](j);
+        for (i = 0; i < j; i++) {
+            assignedRoles[i] = tempAllMemberAddress[i];
+        }
         return assignedRoles;
     }
 

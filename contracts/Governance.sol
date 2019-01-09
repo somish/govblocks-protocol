@@ -81,8 +81,6 @@ contract Governance is IGovernance, Upgradeable {
     uint public allowedToCatgorize;
     bool internal locked;
 
-
-    address internal poolAddress;
     MemberRoles internal memberRole;
     IProposalCategory internal proposalCategory;
     LockableToken internal tokenInstance;
@@ -132,7 +130,6 @@ contract Governance is IGovernance, Upgradeable {
         tokenInstance = LockableToken(master.dAppLocker());
         memberRole = MemberRoles(master.getLatestAddress("MR"));
         proposalCategory = IProposalCategory(master.getLatestAddress("PC"));
-        poolAddress = master.getLatestAddress("PL");
         eventCaller = EventCaller(master.eventCaller());
     }
 
@@ -376,17 +373,15 @@ contract Governance is IGovernance, Upgradeable {
         }
     }
 
-    
 
     /// @dev pause a proposal
-    function pauseProposal(uint _proposalId) internal {
+    function pauseProposal(uint _proposalId) public{
         proposalPaused[_proposalId] = true;
         allProposal[_proposalId].dateUpd = now;
     }
 
     /// @dev resume a proposal
-    function resumeProposal(uint _proposalId) internal {
-        require(proposalPaused[_proposalId]);
+    function resumeProposal(uint _proposalId) public {
         proposalPaused[_proposalId] = false;
         allProposal[_proposalId].dateUpd = now;
     }
@@ -541,7 +536,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev Transfer Ether to someone    
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where ether has to be sent
-    function transferEther(address _receiverAddress, uint256 _amount) internal {
+    function transferEther(address _receiverAddress, uint256 _amount) public {
         _receiverAddress.transfer(_amount);
     }
 
@@ -549,7 +544,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where tokens have to be sent
     /// @param _token address of token to transfer
-    function transferToken(address _token, address _receiverAddress, uint256 _amount) internal {
+    function transferToken(address _token, address _receiverAddress, uint256 _amount) public {
         LockableToken token = LockableToken(_token);
         token.transfer(_receiverAddress, _amount);
     }
@@ -604,7 +599,7 @@ contract Governance is IGovernance, Upgradeable {
         );
 
         require(
-            _incentive <= tokenInstance.balanceOf(poolAddress),
+            _incentive <= tokenInstance.balanceOf(address(this)),
             "Less token balance in pool for incentive distribution"
         );
 
