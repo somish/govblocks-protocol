@@ -2,6 +2,7 @@ const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const getAddress = require('../helpers/getAddress.js').getAddress;
 const initializeContracts = require('../helpers/getAddress.js')
   .initializeContracts;
+const encode = require('../helpers/encoder.js').encode;
 const sampleAddress = '0x0000000000000000000000000000000000000001';
 const MemberRoles = artifacts.require('MemberRoles');
 const OwnedUpgradeabilityProxy = artifacts.require('OwnedUpgradeabilityProxy');
@@ -16,6 +17,7 @@ let temp;
 let pc;
 let add = [];
 let ms;
+let gv;
 
 contract('Master', function([owner, notOwner]) {
   it('Should fetch addresses from master', async function() {
@@ -27,6 +29,8 @@ contract('Master', function([owner, notOwner]) {
     ms = await Master.at(address);
     address = await getAddress('EC', false);
     ec = await EventCaller.at(address);
+    address = await getAddress('GV', false);
+    gv = await Governance.at(address);
     address = await getAddress('PC', false);
     pc = await Master.at(address);
     address = await getAddress('GBM', false);
@@ -51,13 +55,28 @@ contract('Master', function([owner, notOwner]) {
 
   it('Should set dAppTokenProxy', async function() {
     this.timeout(100000);
-    await ms.setDAppLocker(sampleAddress);
+    let temp = await GBTStandardToken.new();
+    //proposal
+      let actionHash = encode(
+        'setDAppLocker(address)',
+        temp.address
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'setDAppLocker',
+        'Change dApp token proxy',
+        'setDAppLocker',
+        5,
+        'setDAppLocker',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed 
     const tp = await ms.dAppLocker();
-    assert.equal(tp, sampleAddress, 'Token Proxy not set');
+    assert.equal(tp, temp.address, 'Token Proxy not set');
   });
 
   it('Should add new version', async function() {
-    this.timeout(100000);
     temp = await MemberRoles.new();
     add.push(temp.address);
     temp = await ProposalCategory.new();
@@ -66,8 +85,23 @@ contract('Master', function([owner, notOwner]) {
     add.push(temp.address);
     temp = await Governance.new();
     add.push(temp.address);
-
-    await ms.addNewVersion(add);
+    this.timeout(100000);
+    //proposal
+      let actionHash = encode(
+        'addNewVersion(address[])',
+        add
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'addNewVersion',
+        'addNewVersion',
+        'addNewVersion',
+        8,
+        'addNewVersion',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed 
     await catchRevert(ms.addNewVersion(add, { from: notOwner }));
     const g6 = await ms.getLatestAddress('PC');
     assert.equal(g6, pc.address, 'PC proxy address incorrect');
@@ -87,32 +121,80 @@ contract('Master', function([owner, notOwner]) {
     this.timeout(100000);
     // Will throw once owner's permissions are removed. will need to create proposal then.
     const newContract = await Governance.new();
-    await ms.addNewContract('QP', newContract.address);
+    //proposal 
+      let actionHash = encode(
+        'addNewContract(bytes2,address)',
+        'QP',
+        newContract.address
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'addNewContract',
+        'Add new contractAddress',
+        'addNewContract',
+        9,
+        'addNewContract',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed 
     const QPproxy = await ms.getLatestAddress('QP');
     await catchRevert(ms.addNewContract('yo', owner, { from: notOwner }));
   });
 
   it('Should update implementation', async function() {
-    const poolProxyAddress = await ms.contractAddress('GV');
+    const poolProxyAddress = await ms.contractAddress('QP');
     const poolProxy = await OwnedUpgradeabilityProxy.at(poolProxyAddress);
     const newPool = await Governance.new();
-    await ms.upgradeContractImplementation('GV', newPool.address);
+    //proposal 
+      let actionHash = encode(
+        'upgradeContractImplementation(bytes2,address)',
+        'QP',
+        newPool.address
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'upgradeContractImplementation',
+        'upgradeContractImplementation',
+        'upgradeContractImplementation',
+        10,
+        'upgradeContractImplementation',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed 
     const newPoolAddress = await poolProxy.implementation();
     assert.equal(newPoolAddress, newPool.address);
   });
 
   it('Should update proxy', async function() {
-    const poolProxyAddress = await ms.contractAddress('GV');
+    const poolProxyAddress = await ms.contractAddress('QP');
     const poolProxy = await OwnedUpgradeabilityProxy.at(poolProxyAddress);
     const poolAddress = await poolProxy.implementation();
-    await ms.upgradeContractProxy('GV', poolAddress);
+    //proposal
+      let actionHash = encode(
+        'upgradeContractProxy(bytes2,address)',
+        'QP',
+        poolAddress
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'upgradeContractProxy',
+        'upgradeContractProxy',
+        'upgradeContractProxy',
+        11,
+        'upgradeContractProxy',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed 
     const pool = await Governance.at(poolProxyAddress);
     await pool.transferAssets();
     await pool.transferAssets();
     await gbt.transfer(poolProxyAddress, 10000);
     await pool.sendTransaction({ value: 1000000000 });
     await pool.transferAssets();
-    const newPoolProxyAddress = await ms.contractAddress('GV');
+    const newPoolProxyAddress = await ms.contractAddress('QP');
     const newPoolProxy = await OwnedUpgradeabilityProxy.at(newPoolProxyAddress);
     const newPoolAddress = await newPoolProxy.implementation();
     assert.equal(newPoolAddress, poolAddress);
@@ -120,12 +202,26 @@ contract('Master', function([owner, notOwner]) {
   });
 
   it('Should change master address', async function() {
-    const poolProxyAddress = await ms.contractAddress('GV');
-    const pool = await Governance.at(poolProxyAddress);
     const newMaster = await Master.new();
-    await ms.upgradeContractImplementation('MS',newMaster.address);
-    assert.equal(await pool.master(), newMaster.address);
-    await catchRevert(pool.changeMasterAddress(newMaster.address));
+    //proposal
+      let actionHash = encode(
+        'upgradeContractImplementation(bytes2,address)',
+        'MS',
+        newMaster.address
+      );
+      let p1 = await gv.getProposalLength();
+      await gv.createProposalwithSolution(
+        'upgradeContractImplementation',
+        'upgradeContractImplementation',
+        'upgradeContractImplementation',
+        10,
+        'upgradeContractImplementation',
+        actionHash
+      );
+      await gv.closeProposal(p1.toNumber());
+    //proposal closed 
+    assert.equal(await gv.master(), newMaster.address);
+    await catchRevert(gv.changeMasterAddress(newMaster.address));
   });
 
   it('Should not get initiazlized with incorrect params', async function() {

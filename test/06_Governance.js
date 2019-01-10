@@ -269,7 +269,6 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
       actionHash
     );
     await gv.closeProposal(p1.toNumber());
-    console.log(await gv.proposalPaused(pid));
     //proposal closed
     await catchRevert(gv.closeProposal(pid));
     //proposal to resume proposal
@@ -288,7 +287,6 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     );
     await gv.closeProposal(p1.toNumber());
     //proposal closed
-    console.log(await gv.proposalPaused(pid));
   });
 
   it('Should close proposal when voting is completed', async () => {

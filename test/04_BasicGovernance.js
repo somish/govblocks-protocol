@@ -319,7 +319,7 @@ contract('Proposal, solution and voting', function([
       'Add new member',
       'Add new member',
       'Addnewmember',
-      15
+      14
     );
     await gv.submitProposalWithSolution(p, '0x0', '0x0');
     await catchRevert(gv.categorizeProposal(p, 1, 0));

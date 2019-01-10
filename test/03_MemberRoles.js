@@ -114,7 +114,7 @@ contract('MemberRoles', function([owner, member, other]) {
   });
 
   it('Should follow the upgradable interface', async function() {
-    await mr.changeMasterAddress(owner); // just for interface, they do nothing
+    await catchRevert(mr.changeMasterAddress(owner)); // just for interface, they do nothing
     await mr.updateDependencyAddresses(); // just for interface, they do nothing
   });
 
