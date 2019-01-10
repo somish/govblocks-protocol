@@ -86,6 +86,11 @@ contract Governance is IGovernance, Upgradeable {
     LockableToken internal tokenInstance;
     EventCaller internal eventCaller;
 
+    modifier onlySelf() {
+        require(msg.sender == address(this));
+        _;
+    }
+
     modifier onlyProposalOwner(uint _proposalId) {
         require(msg.sender == allProposal[_proposalId].owner, "Not authorized");
         _;
@@ -135,10 +140,12 @@ contract Governance is IGovernance, Upgradeable {
 
 
     /// @dev Creates a new proposal
+    /// @param _proposalTitle Title of the proposal
+    /// @param _proposalSD Proposal short description
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     function createProposal(
-        string _proposalTitle, 
+        string _proposalTitle,
         string _proposalSD, 
         string _proposalDescHash, 
         uint _categoryId
@@ -375,13 +382,13 @@ contract Governance is IGovernance, Upgradeable {
 
 
     /// @dev pause a proposal
-    function pauseProposal(uint _proposalId) public{
+    function pauseProposal(uint _proposalId) public onlySelf {
         proposalPaused[_proposalId] = true;
         allProposal[_proposalId].dateUpd = now;
     }
 
     /// @dev resume a proposal
-    function resumeProposal(uint _proposalId) public {
+    function resumeProposal(uint _proposalId) public onlySelf {
         proposalPaused[_proposalId] = false;
         allProposal[_proposalId].dateUpd = now;
     }
@@ -533,10 +540,10 @@ contract Governance is IGovernance, Upgradeable {
         );
     }
 
-    /// @dev Transfer Ether to someone    
+    /// @dev Transfer Ether to someone
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where ether has to be sent
-    function transferEther(address _receiverAddress, uint256 _amount) public {
+    function transferEther(address _receiverAddress, uint256 _amount) public onlySelf {
         _receiverAddress.transfer(_amount);
     }
 
@@ -544,7 +551,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where tokens have to be sent
     /// @param _token address of token to transfer
-    function transferToken(address _token, address _receiverAddress, uint256 _amount) public {
+    function transferToken(address _token, address _receiverAddress, uint256 _amount) public onlySelf {
         LockableToken token = LockableToken(_token);
         token.transfer(_receiverAddress, _amount);
     }

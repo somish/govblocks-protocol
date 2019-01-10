@@ -49,11 +49,10 @@ contract ProposalCategory is IProposalCategory, Governed {
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
     function changeMasterAddress(address _masterAddress) public { //solhint-disable-line
-        masterAddress = _masterAddress;
         if (address(masterAddress) == address(0))
             masterAddress = _masterAddress;
         else {
-            require(msg.sender == address(masterAddress));
+            require(msg.sender == masterAddress);
             masterAddress = _masterAddress;
         }
     }
