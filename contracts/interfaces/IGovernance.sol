@@ -14,12 +14,13 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
 pragma solidity 0.4.24;
-contract IGovernance{
 
 
-
+contract IGovernance {
 
     /// @dev Creates a new proposal
+    /// @param _proposalTitle Title of the proposal
+    /// @param _proposalSD Proposal short description
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     function createProposal(
@@ -31,8 +32,10 @@ contract IGovernance{
     {
     }
 
-    /// @dev Edits the details of an existing proposal and creates new version
+    /// @dev Edits the details of an existing proposal
     /// @param _proposalId Proposal id that details needs to be updated
+    /// @param _proposalTitle Title of the proposal
+    /// @param _proposalSD Proposal short description    
     /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
     function updateProposal(
         uint _proposalId, 
@@ -45,6 +48,9 @@ contract IGovernance{
     }
 
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
+    /// @param _proposalId Proposal id
+    /// @param _categoryId Category id
+    /// @param _incentives Number of tokens to be distributed, if proposal is passed
     function categorizeProposal(
         uint _proposalId, 
         uint _categoryId,
@@ -53,8 +59,10 @@ contract IGovernance{
     {
     }
 
-    /// @dev Initiates add solution 
+    /// @dev Initiates add solution
+    /// @param _proposalId Proposal id
     /// @param _solutionHash Solution hash having required data against adding solution
+    /// @param _action encoded hash of the action to call, if solution is choosen
     function addSolution(
         uint _proposalId,
         string _solutionHash, 
@@ -65,6 +73,7 @@ contract IGovernance{
     }
 
     /// @dev Opens proposal for voting
+    /// @param _proposalId Proposal id
     function openProposalForVoting(uint _proposalId) 
         external
     {
@@ -73,6 +82,7 @@ contract IGovernance{
     /// @dev Submit proposal with solution
     /// @param _proposalId Proposal id
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
+    /// @param _action encoded hash of the action to call, if solution is choosen
     function submitProposalWithSolution(
         uint _proposalId, 
         string _solutionHash, 
@@ -82,12 +92,13 @@ contract IGovernance{
     {   
     }
 
-
-
     /// @dev Creates a new proposal with solution and votes for the solution
+    /// @param _proposalTitle Title of the proposal
+    /// @param _proposalSD Proposal short description    
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
+    /// @param _action encoded hash of the action to call, if solution is choosen
     function createProposalwithSolution(
         string _proposalTitle, 
         string _proposalSD, 
@@ -100,12 +111,32 @@ contract IGovernance{
     {   
     }    
 
-    /// @dev Casts vote
+    /// @dev Submits a vote to solution of a proposal
     /// @param _proposalId Proposal id
-    /// @param _solutionChosen solution chosen while voting. _solutionChosen[0] is the chosen solution
+    /// @param _solutionChosen Solution id
     function submitVote(uint _proposalId, uint _solutionChosen) external {
     } 
 
+    /// @dev Close proposal for voting, calculate the result and perform defined action
+    function closeProposal(uint _proposalId) external {
+    }
+
+    /// @dev user can calim the tokens rewarded them till now
+    /// Index 0 of _ownerProposals, _voterProposals is not parsed. 
+    /// proposal arrays of 1 length are treated as empty.
+    function claimReward(address _memberAddress, uint[] _proposals) 
+        external 
+    {
+    }
+
+    /// @dev Get proposal details
+    function proposal(uint _proposalId) external view returns(uint proposalId, uint category, uint status, uint finalVerdict, uint totalReward)
+    {
+    }
+
+    /// @dev Checks If the proposal voting time is up and it's ready to close 
+    ///      i.e. Closevalue is 1 if proposal is ready to be closed, 2 if already closed, 0 otherwise!
+    /// @param _proposalId Proposal id to which closing value is being checked
     function canCloseProposal(uint _proposalId) 
         public 
         view 
@@ -113,21 +144,17 @@ contract IGovernance{
     {
     }
 
-    function closeProposal(uint _proposalId) external {
+    /// @dev Returns id of the role authorized to categorize proposals in dApp 
+    function allowedToCatgorize() public returns(uint roleId) {
     }
 
-    function claimReward(address _memberAddress, uint[] _proposals) 
-        external 
-    {
+    /// @dev pause a proposal
+    function pauseProposal(uint _proposalId) public {
     }
 
-    function proposal(uint _proposalId) external view returns(uint proposalId, uint category, uint status, uint finalVerdict, uint totalReward)
-    {
+    /// @dev resume a proposal
+    function resumeProposal(uint _proposalId) public {
     }
-
-    function  allowedToCatgorize() public returns(uint roleId) {
-    }
-    
 
     event Proposal(
         address indexed proposalOwner,

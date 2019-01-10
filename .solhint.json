@@ -1,0 +1,11 @@
+{
+  "extends": "default",
+  "rules": {
+    "max-line-length": ["error", 150],
+    "max-states-count": ["error", 36],
+    "not-rely-on-time": false,
+    "avoid-low-level-calls": false,
+    "no-empty-blocks": false,
+    "no-simple-event-func-name": false
+  }
+}

@@ -46,8 +46,7 @@ contract IProposalCategory {
         bytes2 _contractName,
         uint[] _incentives
     ) 
-        external{
-
+        external {
         }
 
     /// @dev Updates category details
@@ -74,13 +73,12 @@ contract IProposalCategory {
         address _contractAddress,
         bytes2 _contractName,
         uint[] _incentives
-    )
-        public{
-
-        }
+    ) public
+    {
+    }
 
     /// @dev gets category details
-    function category(uint _categoryId)
+    function category(uint _categoryId) //solhint-disable-line
         external view 
         returns(
             uint categoryId,
@@ -90,27 +88,22 @@ contract IProposalCategory {
             uint[] allowedToCreateProposal,
             uint closingTime,
             uint minStake
-        ){
-
+        ) {
         }
 
     ///@dev gets category action details
-    function categoryAction(uint _categoryId)
+    function categoryAction(uint _categoryId) //solhint-disable-line
         external view
         returns(
             uint categoryId,
             address contractAddress,
             bytes2 contractName,
             uint defaultIncentive
-        ){
-
+        ) {
         }
     
     /// @dev Gets Total number of categories added till now
-    function totalCategories() 
-        external view
-        returns(uint numberOfCategories){
-            
-        }
+    function totalCategories() external view returns(uint numberOfCategories) { //solhint-disable-line
+    }
 
 }

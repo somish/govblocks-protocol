@@ -33,19 +33,19 @@ contract('Proposal, solution and voting', function([
   nonMember
 ]) {
   it('Should fetch addresses from master', async function() {
-    let punishVoters = false
+    let punishVoters = false;
     await initializeContracts(punishVoters);
-    punishVoters = true
+    punishVoters = true;
     await initializeContracts(punishVoters);
-    address = await getAddress('GV',false);
+    address = await getAddress('GV', false);
     gv = await Governance.at(address);
-    address = await getAddress('MR',false);
+    address = await getAddress('MR', false);
     mr = await MemberRoles.at(address);
-    address = await getAddress('GBT',false);
+    address = await getAddress('GBT', false);
     gbt = await GBTStandardToken.at(address);
-    address = await getAddress('PC',false);
+    address = await getAddress('PC', false);
     pc = await ProposalCategory.at(address);
-    address = await getAddress('GV',false);
+    address = await getAddress('GV', false);
     pl = await Governance.at(address);
   });
 
@@ -107,7 +107,7 @@ contract('Proposal, solution and voting', function([
       0
     );
     p1 = await gv.getProposalLength();
-    await gv.categorizeProposal(p1.toNumber() -1 , 1, 0);
+    await gv.categorizeProposal(p1.toNumber() - 1, 1, 0);
     await gv.createProposal(
       'Add new member',
       'Add new member',
@@ -144,7 +144,7 @@ contract('Proposal, solution and voting', function([
 
   it('Should not open the proposal for voting till there are atleast two solutions', async function() {
     this.timeout(100000);
-    p = await gv.getProposalLength()
+    p = await gv.getProposalLength();
     p = p.toNumber() - 1;
     await catchRevert(gv.openProposalForVoting(p));
   });
@@ -159,11 +159,7 @@ contract('Proposal, solution and voting', function([
     );
     p1 = await gv.getProposalLength();
     p1 = p1.toNumber() - 1;
-    await gv.submitProposalWithSolution(
-      p1,
-      'Addnewmember',
-      actionHash
-    );
+    await gv.submitProposalWithSolution(p1, 'Addnewmember', actionHash);
     await catchRevert(
       gv.submitProposalWithSolution(p1, 'Addnewmember', actionHash)
     );
@@ -197,19 +193,14 @@ contract('Proposal, solution and voting', function([
 
   it('Should show zero pending reward when only rep is to be earned', async function() {
     this.timeout(100000);
-    let reward = await gv.getPendingReward(owner, 0);
+    let reward = await gv.getPendingReward(owner);
     assert.equal(reward.toNumber(), 0, 'Incorrect Reward');
   });
 
   it('Should add another person to member role', async function() {
     this.timeout(100000);
     //proposal to add member to AB
-    let actionHash = encode(
-      'updateRole(address,uint,bool)',
-      ab,
-      1,
-      true
-    );
+    let actionHash = encode('updateRole(address,uint,bool)', ab, 1, true);
     let p1 = await gv.getProposalLength();
     await gv.createProposalwithSolution(
       'Add new member',
@@ -244,12 +235,7 @@ contract('Proposal, solution and voting', function([
     await gv.submitVote(p, [0], { from: ab });
     await gv.closeProposal(p);
     //proposal to add member to AB
-    let actionHash = encode(
-      'updateRole(address,uint,bool)',
-      member,
-      1,
-      true
-    );
+    let actionHash = encode('updateRole(address,uint,bool)', member, 1, true);
     let p1 = await gv.getProposalLength();
     await gv.createProposalwithSolution(
       'Add new member',
@@ -264,22 +250,22 @@ contract('Proposal, solution and voting', function([
     //proposal closed
     p = await gv.getProposalLength();
     p = p.toNumber();
-    await gv.createProposal('Add new member', 'Add new member', 'Addnewmember', 5);
-    await gv.addSolution(p, 'Add new member', "0x0");
-    await gv.addSolution(p, '0x0', '0x0' ,{ from: ab});
+    await gv.createProposal(
+      'Add new member',
+      'Add new member',
+      'Addnewmember',
+      5
+    );
+    await gv.addSolution(p, 'Add new member', '0x0');
+    await gv.addSolution(p, '0x0', '0x0', { from: ab });
     await gv.openProposalForVoting(p);
-    await catchRevert(gv.addSolution(p, '0x0', '0x0' ,{ from: member}));
+    await catchRevert(gv.addSolution(p, '0x0', '0x0', { from: member }));
     await gv.submitVote(p, [1]);
     await gv.submitVote(p, [2], { from: ab });
     await gv.submitVote(p, [0], { from: member });
     await gv.closeProposal(p);
     //proposal to remove member from AB
-    actionHash = encode(
-      'updateRole(address,uint,bool)',
-      member,
-      1,
-      false
-    );
+    actionHash = encode('updateRole(address,uint,bool)', member, 1, false);
     p1 = await gv.getProposalLength();
     await gv.createProposalwithSolution(
       'Add new member',
@@ -292,15 +278,10 @@ contract('Proposal, solution and voting', function([
     await gv.submitVote(p1.toNumber(), [1], { from: ab });
     await gv.submitVote(p1.toNumber(), [1], { from: member });
     await gv.closeProposal(p1.toNumber());
-    //proposal closed 
+    //proposal closed
     await gbt.transfer(pl.address, e18.mul(20));
     //proposal to remove member from AB
-    actionHash = encode(
-      'updateRole(address,uint,bool)',
-      ab,
-      1,
-      false
-    );
+    actionHash = encode('updateRole(address,uint,bool)', ab, 1, false);
     p1 = await gv.getProposalLength();
     await gv.createProposalwithSolution(
       'Add new member',
@@ -312,7 +293,7 @@ contract('Proposal, solution and voting', function([
     );
     await gv.submitVote(p1.toNumber(), [1], { from: ab });
     await gv.closeProposal(p1.toNumber());
-    //proposal closed 
+    //proposal closed
     p = await gv.getProposalLength();
     p = p.toNumber();
     await gv.createProposal(
@@ -333,5 +314,4 @@ contract('Proposal, solution and voting', function([
     assert.equal(ps[4].toNumber(), 8);
     assert.equal(ps[5].toNumber(), 1);
   });
-
 });

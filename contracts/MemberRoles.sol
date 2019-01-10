@@ -54,9 +54,9 @@ contract MemberRoles is IMemberRoles, Governed {
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
     function changeMasterAddress(address _masterAddress) public { //solhint-disable-line
-        if(masterAddress == address(0))
+        if (masterAddress == address(0)) {
             masterAddress = _masterAddress;
-        else{
+        } else {
             require(msg.sender == masterAddress);
             masterAddress = _masterAddress;
         }
@@ -135,7 +135,7 @@ contract MemberRoles is IMemberRoles, Governed {
         memberArray = new address[](memberRoleData[_memberRoleId].memberCounter);
         for (i = 0; i < length; i++) {
             address member = memberRoleData[_memberRoleId].memberAddress[i];
-            if (memberRoleData[_memberRoleId].memberActive[member] && !checkMemberInArray(member, memberArray)) { //solhint-disable-line
+            if (memberRoleData[_memberRoleId].memberActive[member] && ! _checkMemberInArray(member, memberArray)) { //solhint-disable-line
                 memberArray[j] = member;
                 j++;
             }
@@ -207,6 +207,7 @@ contract MemberRoles is IMemberRoles, Governed {
         }
     }
 
+    /// @dev Internal call of update role
     function _updateRole(address _memberAddress,
         uint _roleId,
         bool _active) internal {
@@ -236,10 +237,11 @@ contract MemberRoles is IMemberRoles, Governed {
         memberRoleData.push(MemberRoleDetails(0, new address[](0), _authorized));
     }
 
-    function checkMemberInArray(address _memberAddress, address[] memberArray) internal view returns(bool memberExists){
+    /// @dev Internal function to check existance of member in array ( to reduce complexity in parent call)
+    function _checkMemberInArray(address _memberAddress, address[] memberArray) internal view returns(bool memberExists) {
         uint i;
-        for(i = 0; i<memberArray.length; i++){
-            if(memberArray[i] == _memberAddress){
+        for (i = 0; i < memberArray.length; i++) {
+            if (memberArray[i] == _memberAddress) {
                 memberExists = true;
                 break;
             }

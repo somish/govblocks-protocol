@@ -24,7 +24,7 @@ import "./Governance.sol";
 import "./MemberRoles.sol";
 
 
-contract Master is Ownable,Governed {
+contract Master is Ownable, Governed {
 
     uint[] public versionDates;
     bytes2[] public allContractNames;
@@ -38,7 +38,14 @@ contract Master is Ownable,Governed {
 
     Governed internal govern;
     
-    function initMaster(address _ownerAddress, bool _punishVoters, address _token, address _lockableToken, address _eventCaller, address[] _implementations) external {
+    function initMaster(
+        address _ownerAddress,
+        bool _punishVoters,
+        address _token,
+        address _lockableToken,
+        address _eventCaller,
+        address[] _implementations
+    ) external {
         _addContractNames();
         masterAddress = address(this);
         require(allContractNames.length == _implementations.length);
@@ -85,10 +92,9 @@ contract Master is Ownable,Governed {
     function upgradeContractImplementation(bytes2 _contractsName, address _contractAddress) 
         external 
     {
-        if(_contractsName == 'MS') {
+        if (_contractsName == "MS") {
             _changeMasterAddress(_contractAddress);
-        }
-        else {
+        } else {
             _replaceImplementation(_contractsName, _contractAddress);
         }
         versionDates.push(now);  //solhint-disable-line

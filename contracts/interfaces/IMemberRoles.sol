@@ -33,7 +33,7 @@ contract IMemberRoles {
     /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
     /// @param _roleId roleId to update its Authorized Address
     /// @param _authorized New authorized address against role id
-    function changeAuthorized(uint _roleId, address _authorized) external;
+    function changeAuthorized(uint _roleId, address _authorized) external; //solhint-disable-line
 
     /// @dev Return number of member roles
     function totalRoles() public view returns(uint256);
