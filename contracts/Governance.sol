@@ -435,10 +435,10 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public {
-        tokenInstance = LockableToken(master.dAppLocker());
-        memberRole = MemberRoles(master.getLatestAddress("MR"));
-        proposalCategory = IProposalCategory(master.getLatestAddress("PC"));
-        eventCaller = EventCaller(master.eventCaller());
+        tokenInstance = LockableToken(ms.dAppLocker());
+        memberRole = MemberRoles(ms.getLatestAddress("MR"));
+        proposalCategory = IProposalCategory(ms.getLatestAddress("PC"));
+        eventCaller = EventCaller(ms.eventCaller());
     }
 
     /// @dev Checks If the proposal voting time is up and it's ready to close 
@@ -519,7 +519,7 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev transfers its assets to latest addresses
     function transferAssets() public {
-        address newPool = master.getLatestAddress("GV");
+        address newPool = ms.getLatestAddress("GV");
         if (address(this) != newPool) {
             uint tokenBal = tokenInstance.balanceOf(address(this));
             uint ethBal = address(this).balance;
@@ -577,7 +577,7 @@ contract Governance is IGovernance, Upgradeable {
         eventCaller.callProposalCreated(
             _proposalId,
             _categoryId,
-            address(master),
+            address(ms),
             _proposalDescHash
         );
     }
@@ -714,9 +714,9 @@ contract Governance is IGovernance, Upgradeable {
                 _updateProposalStatus(_proposalId, uint(ProposalStatus.Accepted));
                 /*solhint-disable*/
                 if (contractName == "MS")
-                    actionAddress = address(master);
+                    actionAddress = address(ms);
                 else if(contractName !="EX")
-                    actionAddress = master.getLatestAddress(contractName);
+                    actionAddress = ms.getLatestAddress(contractName);
                 /*solhint-enable*/
                 if (actionAddress.call(allProposalSolutions[_proposalId][max].action)) {
                     eventCaller.callActionSuccess(_proposalId);

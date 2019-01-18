@@ -90,7 +90,7 @@ contract Master is Ownable, Governed {
 
     /// @dev upgrades a single contract
     function upgradeContractImplementation(bytes2 _contractsName, address _contractAddress) 
-        external 
+        external onlyAuthorizedToGovern
     {
         if (_contractsName == "MS") {
             _changeMasterAddress(_contractAddress);
