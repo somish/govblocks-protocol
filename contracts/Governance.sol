@@ -71,6 +71,7 @@ contract Governance is IGovernance, Upgradeable {
     mapping(address => uint[]) internal allVotesByMember;
     mapping(uint => bool) public proposalPaused;
     mapping(uint => bool) public rewardClaimed; //can read from event
+    mapping (address => uint) public lastRewardClaimed;
 
     ProposalStruct[] internal allProposal;
     ProposalVote[] internal allVotes;
@@ -325,20 +326,18 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev user can calim the tokens rewarded them till now
     /// Index 0 of _ownerProposals, _voterProposals is not parsed. 
     /// proposal arrays of 1 length are treated as empty.
-    function claimReward(address _claimer, uint[] _voterProposals) external noReentrancy {
-        uint pendingDAppReward;
+    function claimReward(address _claimer, uint _maxRecords) external noReentrancy returns(uint pendingDAppReward) {
         
-        pendingDAppReward = _claimReward(_claimer, _voterProposals);
+        pendingDAppReward = _claimReward(_claimer, _maxRecords);
 
         if (pendingDAppReward != 0) {
             tokenInstance.transfer(_claimer, pendingDAppReward);
+            emit RewardClaimed(
+                _claimer,
+                pendingDAppReward
+            );
         }
 
-        emit RewardClaimed(
-            _claimer,
-            _voterProposals, 
-            pendingDAppReward
-        );
     }
 
     /// @dev Get proposal details
@@ -494,12 +493,33 @@ contract Governance is IGovernance, Upgradeable {
         public view returns(uint pendingDAppReward)
     {
         uint i;
-        uint[] votesByMember = allVotesByMember[_memberAddress];
+        uint totalVotes = allVotesByMember[_memberAddress].length;
         uint proposalId;
-        for (i = 0; i < votesByMember.length; i++) {
-            if (!rewardClaimed[votesByMember[i]]) {
-                proposalId = allVotes[votesByMember[i]].proposalId;
-                pendingDAppReward = SafeMath.add(pendingDAppReward, calculatePendingVoteReward(votesByMember[i], proposalId));
+        uint voteId;
+        uint finalVerdict;
+        uint proposalVoteValue;
+        for (i = lastRewardClaimed[_memberAddress]; i < totalVotes; i++) {
+            voteId = allVotesByMember[_memberAddress][i];
+            proposalId = allVotes[voteId].proposalId;
+            finalVerdict = allProposalData[proposalId].finalVerdict;
+            if (punishVoters) {
+                if (allVotes[voteId].solutionChosen != finalVerdict) {
+                    continue;
+                }
+                proposalVoteValue = allProposalData[proposalId].majVoteValue;
+            } else {
+                proposalVoteValue = allProposalData[proposalId].totalVoteValue;
+            }
+            if (finalVerdict > 0) {
+                if (!rewardClaimed[voteId]) {
+                    pendingDAppReward += SafeMath.div(
+                                    SafeMath.mul(
+                                        allVotes[voteId].voteValue,
+                                        allProposalData[proposalId].commonIncentive
+                                    ),
+                                    proposalVoteValue
+                                );
+                }
             }
         }
     }
@@ -824,48 +844,54 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     /// @dev Internal call from claimReward
-    function _claimReward(address _memberAddress, uint[] _proposals) 
+    function _claimReward(address _memberAddress, uint _maxRecords) 
         internal returns(uint pendingDAppReward) 
     {
-        uint calcReward;
-        uint finalVerdict;
+        uint proposalId;
         uint voteId;
-        
-        for (uint i = 0; i < _proposals.length; i++) {
-
-            voteId = addressProposalVote[_memberAddress][_proposals[i]];
-            require(
-                !rewardClaimed[voteId],
-                "Reward already claimed"
-            );
-            rewardClaimed[voteId] = true;
-
-            finalVerdict = allProposalData[_proposals[i]].finalVerdict;
-            require(
-                allProposalData[_proposals[i]].propStatus > uint(ProposalStatus.VotingStarted),
-                "Reward can be claimed only after the proposal is closed"
-            );
-
+        uint finalVerdict;
+        uint totalVotes = allVotesByMember[_memberAddress].length;
+        uint lastClaimed = totalVotes;
+        uint j;
+        uint i;
+        uint proposalVoteValue;
+        uint proposalStatus = allProposalData[proposalId].propStatus;
+        for (i = lastRewardClaimed[_memberAddress]; i < totalVotes && j < _maxRecords; i++) {
+            voteId = allVotesByMember[_memberAddress][i];
+            proposalId = allVotes[voteId].proposalId;
+            finalVerdict = allProposalData[proposalId].finalVerdict;
             if (punishVoters) {
-                if ((finalVerdict > 0 && allVotes[voteId].solutionChosen == finalVerdict)) {
-                    calcReward = SafeMath.div(
+                if (allVotes[voteId].solutionChosen != finalVerdict) {
+                    continue;
+                }
+                proposalVoteValue = allProposalData[proposalId].majVoteValue;
+            } else {
+                proposalVoteValue = allProposalData[proposalId].totalVoteValue;
+            }
+            if (finalVerdict > 0) {
+                if (!rewardClaimed[voteId]) {
+                    pendingDAppReward += SafeMath.div(
                                     SafeMath.mul(
                                         allVotes[voteId].voteValue,
-                                        allProposalData[_proposals[i]].commonIncentive
+                                        allProposalData[proposalId].commonIncentive
                                     ),
-                                    allProposalData[_proposals[i]].majVoteValue
+                                    proposalVoteValue
                                 );
+                    rewardClaimed[voteId] = true;
                 }
-            } else if (finalVerdict > 0) {
-                calcReward = SafeMath.div(
-                                SafeMath.mul(
-                                    allVotes[voteId].voteValue,
-                                    allProposalData[_proposals[i]].commonIncentive
-                                ),
-                                allProposalData[_proposals[i]].totalVoteValue
-                            );
+            } else {
+                if (proposalStatus <= uint(ProposalStatus.VotingStarted) && 
+                    lastClaimed == totalVotes
+                ) {
+                    lastClaimed = i;
+                }
             }
-            pendingDAppReward = SafeMath.add(pendingDAppReward, calcReward);
+        }
+
+        if (lastClaimed == totalVotes) {
+            lastRewardClaimed[_memberAddress] = i;
+        } else {
+            lastRewardClaimed[_memberAddress] = lastClaimed;
         }
     }
 

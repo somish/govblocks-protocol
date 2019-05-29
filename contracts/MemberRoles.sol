@@ -170,6 +170,7 @@ contract MemberRoles is IMemberRoles, Governed {
         }
         if (dAppToken.totalBalanceOf(_memberAddress) > 0) {
             tempAllMemberAddress[j] = uint(Role.TokenHolder);
+            j++;
         }
 
         assignedRoles = new uint[](j);
