@@ -15,11 +15,14 @@
 pragma solidity 0.4.24;
 import "./interfaces/IProposalCategory.sol";
 import "./imports/govern/Governed.sol";
+import "./MemberRoles.sol";
 
 
 contract ProposalCategory is IProposalCategory, Governed {
 
     bool internal constructorCheck;
+    MemberRoles internal mr;
+    IMaster internal ms;
 
     struct CategoryStruct {
         uint memberRoleToVote;
@@ -107,6 +110,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         public
         onlyAuthorizedToGovern //solhint-disable
     { 
+        require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
         allCategory[_categoryId].memberRoleToVote = _memberRoleToVote;
         allCategory[_categoryId].majorityVotePerc = _majorityVotePerc;
         allCategory[_categoryId].closingTime = _closingTime;
@@ -152,6 +156,8 @@ contract ProposalCategory is IProposalCategory, Governed {
             proposalCategoryInitiate();
             constructorCheck = true;
         }
+        ms = IMaster(masterAddress);
+        mr = MemberRoles(ms.getLatestAddress('MR'));
     }
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
@@ -162,6 +168,20 @@ contract ProposalCategory is IProposalCategory, Governed {
             require(msg.sender == masterAddress);
             masterAddress = _masterAddress;
         }
+    }
+
+    function _verifyMemberRoles(uint _memberRoleToVote, uint[] memory _allowedToCreateProposal) 
+    internal view returns(uint) { 
+        uint totalRoles = mr.totalRoles();
+        if (_memberRoleToVote >= totalRoles) {
+            return 1;
+        }
+        for (uint i = 0; i < _allowedToCreateProposal.length; i++) {
+            if (_allowedToCreateProposal[i] >= totalRoles) {
+                return 1;
+            }
+        }
+        return 0;
     }
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
@@ -216,6 +236,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     ) 
         internal
     {
+        require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
         allCategory.push(
             CategoryStruct(
                 _memberRoleToVote,
