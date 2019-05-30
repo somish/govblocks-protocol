@@ -13,11 +13,11 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity ^0.5.1;
 import "./interfaces/IMemberRoles.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./imports/lockable-token/LockableToken.sol";
-import "./imports/govern/Governed.sol";
+import "./external/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./external/lockable-token/LockableToken.sol";
+import "./external/govern/Governed.sol";
 
 
 contract MemberRoles is IMemberRoles, Governed {
@@ -90,7 +90,7 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @param _authorized Authorized member against every role id
     function addRole( //solhint-disable-line
         bytes32 _roleName,
-        string _roleDescription,
+        string memory _roleDescription,
         address _authorized
     )
     public
@@ -120,7 +120,7 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @dev Change Member Address who holds the authority to Add/Delete any member from specific role.
     /// @param _roleId roleId to update its Authorized Address
     /// @param _newAuthorized New authorized address against role id
-    function changeAuthorized(uint _roleId, address _newAuthorized) external checkRoleAuthority(_roleId) { //solhint-disable-line
+    function changeAuthorized(uint _roleId, address _newAuthorized) public checkRoleAuthority(_roleId) { //solhint-disable-line
         memberRoleData[_roleId].authorized = _newAuthorized;
     }
 
@@ -128,7 +128,7 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @param _memberRoleId Member role id
     /// @return roleId Role id
     /// @return allMemberAddress Member addresses of specified role id
-    function members(uint _memberRoleId) public view returns(uint, address[] memberArray) { //solhint-disable-line
+    function members(uint _memberRoleId) public view returns(uint, address[] memory memberArray) { //solhint-disable-line
         uint length = memberRoleData[_memberRoleId].memberAddress.length;
         uint i;
         uint j;
@@ -157,7 +157,7 @@ contract MemberRoles is IMemberRoles, Governed {
     }
 
     /// @dev Get All role ids array that has been assigned to a member so far.
-    function roles(address _memberAddress) public view returns(uint[] assignedRoles) { //solhint-disable-line
+    function roles(address _memberAddress) public view returns(uint[] memory assignedRoles) { //solhint-disable-line
         uint length = memberRoleData.length;
         uint j = 0;
         uint i;
@@ -201,7 +201,7 @@ contract MemberRoles is IMemberRoles, Governed {
 
     /// @dev Return total number of members assigned against each role id.
     /// @return totalMembers Total members in particular role id
-    function getMemberLengthForAllRoles() public view returns(uint[] totalMembers) { //solhint-disable-line
+    function getMemberLengthForAllRoles() public view returns(uint[] memory totalMembers) { //solhint-disable-line
         totalMembers = new uint[](memberRoleData.length);
         for (uint i = 0; i < memberRoleData.length; i++) {
             totalMembers[i] = numberOfMembers(i);
@@ -231,7 +231,7 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @param _authorized Authorized member against every role id
     function _addRole(
         bytes32 _roleName,
-        string _roleDescription,
+        string memory _roleDescription,
         address _authorized
     ) internal {
         emit MemberRole(memberRoleData.length, _roleName, _roleDescription);
@@ -239,7 +239,7 @@ contract MemberRoles is IMemberRoles, Governed {
     }
 
     /// @dev Internal function to check existance of member in array ( to reduce complexity in parent call)
-    function _checkMemberInArray(address _memberAddress, address[] memberArray) internal view returns(bool memberExists) {
+    function _checkMemberInArray(address _memberAddress, address[] storage memberArray) internal view returns(bool memberExists) {
         uint i;
         for (i = 0; i < memberArray.length; i++) {
             if (memberArray[i] == _memberAddress) {

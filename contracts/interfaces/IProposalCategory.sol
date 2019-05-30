@@ -1,18 +1,16 @@
 /* Copyright (C) 2017 GovBlocks.io
-
   This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
   This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
-pragma solidity 0.4.24;
+
+pragma solidity 0.5.7;
 
 
 contract IProposalCategory {
@@ -35,19 +33,46 @@ contract IProposalCategory {
     /// @param _contractName name of contract to be called after proposal is accepted
     /// @param _incentives rewards to distributed after proposal is accepted
     function addCategory(
-        string _name, 
+        string calldata _name, 
         uint _memberRoleToVote,
         uint _majorityVotePerc, 
         uint _quorumPerc, 
-        uint[] _allowedToCreateProposal,
+        uint[] calldata _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string calldata _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
+        uint[] calldata _incentives
     ) 
-        external {
-        }
+        external;
+
+    /// @dev gets category details
+    function category(uint _categoryId)
+        external
+        view
+        returns(
+            uint categoryId,
+            uint memberRoleToVote,
+            uint majorityVotePerc,
+            uint quorumPerc,
+            uint[] memory allowedToCreateProposal,
+            uint closingTime,
+            uint minStake
+        );
+    
+    ///@dev gets category action details
+    function categoryAction(uint _categoryId)
+        external
+        view
+        returns(
+            uint categoryId,
+            address contractAddress,
+            bytes2 contractName,
+            uint defaultIncentive
+        );
+    
+    /// @dev Gets Total number of categories added till now
+    function totalCategories() external view returns(uint numberOfCategories);
 
     /// @dev Updates category details
     /// @param _categoryId Category id that needs to be updated
@@ -63,47 +88,17 @@ contract IProposalCategory {
     /// @param _incentives rewards to distributed after proposal is accepted
     function updateCategory(
         uint _categoryId, 
-        string _name, 
+        string memory _name, 
         uint _memberRoleToVote, 
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
+        uint[] memory _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
-    ) public
-    {
-    }
-
-    /// @dev gets category details
-    function category(uint _categoryId) //solhint-disable-line
-        external view 
-        returns(
-            uint categoryId,
-            uint memberRoleToVote,
-            uint majorityVotePerc,
-            uint quorumPerc,
-            uint[] allowedToCreateProposal,
-            uint closingTime,
-            uint minStake
-        ) {
-        }
-
-    ///@dev gets category action details
-    function categoryAction(uint _categoryId) //solhint-disable-line
-        external view
-        returns(
-            uint categoryId,
-            address contractAddress,
-            bytes2 contractName,
-            uint defaultIncentive
-        ) {
-        }
-    
-    /// @dev Gets Total number of categories added till now
-    function totalCategories() external view returns(uint numberOfCategories) { //solhint-disable-line
-    }
+        uint[] memory _incentives
+    )
+        public;
 
 }

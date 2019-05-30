@@ -13,13 +13,13 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity ^0.5.1;
 
 import "./Upgradeable.sol";
 import "./GovBlocksMaster.sol";
-import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./imports/proxy/OwnedUpgradeabilityProxy.sol";
-import "./imports/govern/Governed.sol";
+import "./external/openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./external/proxy/OwnedUpgradeabilityProxy.sol";
+import "./external/govern/Governed.sol";
 import "./Governance.sol";
 import "./MemberRoles.sol";
 
@@ -42,7 +42,7 @@ contract Master is Ownable, Governed {
         bool _punishVoters,
         address _token,
         address _lockableToken,
-        address[] _implementations
+        address[] calldata _implementations
     ) external {
         _addContractNames();
         masterAddress = address(this);
@@ -69,7 +69,7 @@ contract Master is Ownable, Governed {
 
     /// @dev Creates a new version of contract addresses
     /// @param _contractAddresses Array of contract implementations
-    function addNewVersion(address[] _contractAddresses) external onlyAuthorizedToGovern {
+    function addNewVersion(address[] calldata _contractAddresses) external onlyAuthorizedToGovern {
         for (uint i = 0; i < allContractNames.length; i++) {
             _replaceImplementation(allContractNames[i], _contractAddresses[i]);
         }
@@ -129,7 +129,7 @@ contract Master is Ownable, Governed {
     }
 
     /// @dev Gets latest version name and address
-    function getVersionData() public view returns(uint, bytes2[], address[]) {
+    function getVersionData() public view returns(uint, bytes2[] memory, address[] memory) {
         address[] memory contractAddresses = new address[](allContractNames.length);
 
         for (uint i = 0; i < allContractNames.length; i++)

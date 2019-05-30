@@ -13,12 +13,12 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity ^0.5.1;
 import "./Upgradeable.sol";
 import "./Master.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
-import "./imports/lockable-token/LockableToken.sol";
+import "./external/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./external/openzeppelin-solidity/contracts/math/Math.sol";
+import "./external/lockable-token/LockableToken.sol";
 import "./MemberRoles.sol";
 import "./interfaces/IGovernance.sol";
 import "./interfaces/IProposalCategory.sol";
@@ -79,14 +79,14 @@ contract Governance is IGovernance, Upgradeable {
     bool internal punishVoters;
     uint internal minVoteWeight;
     uint public tokenHoldingTime;
-    uint public allowedToCatgorize;
+    // uint public allowedToCatgorize;
     bool internal locked;
 
     MemberRoles internal memberRole;
     IProposalCategory internal proposalCategory;
     LockableToken internal tokenInstance;
 
-    function () public payable {} //solhint-disable-line
+    function () external payable {} //solhint-disable-line
 
     modifier noReentrancy() {
         require(!locked, "Reentrant call.");
@@ -132,9 +132,9 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     function createProposal(
-        string _proposalTitle,
-        string _proposalSD, 
-        string _proposalDescHash, 
+        string calldata _proposalTitle,
+        string calldata _proposalSD, 
+        string calldata _proposalDescHash, 
         uint _categoryId
     ) 
         external isAllowed(_categoryId)
@@ -149,9 +149,9 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
     function updateProposal(
         uint _proposalId, 
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash
+        string calldata _proposalTitle, 
+        string calldata _proposalSD, 
+        string calldata _proposalDescHash
     ) 
         external onlyProposalOwner(_proposalId)
     {
@@ -199,8 +199,8 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _action encoded hash of the action to call, if solution is choosen
     function addSolution(
         uint _proposalId,
-        string _solutionHash, 
-        bytes _action
+        string calldata _solutionHash, 
+        bytes calldata _action
     ) 
         external isStakeValidated(_proposalId)
     {
@@ -231,8 +231,8 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _action encoded hash of the action to call, if solution is choosen
     function submitProposalWithSolution(
         uint _proposalId, 
-        string _solutionHash, 
-        bytes _action
+        string calldata _solutionHash, 
+        bytes calldata _action
     ) 
         external
         onlyProposalOwner(_proposalId) isStakeValidated(_proposalId)
@@ -248,12 +248,12 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
     /// @param _action encoded hash of the action to call, if solution is choosen
     function createProposalwithSolution(
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash,
+        string calldata _proposalTitle, 
+        string calldata _proposalSD, 
+        string calldata _proposalDescHash,
         uint _categoryId, 
-        string _solutionHash, 
-        bytes _action
+        string calldata _solutionHash, 
+        bytes calldata _action
     ) 
         external isAllowed(_categoryId)
     {
@@ -369,7 +369,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     /// @dev Get encoded action hash of solution
-    function getSolutionAction(uint _proposalId, uint _solution) external view returns(uint, bytes) {
+    function getSolutionAction(uint _proposalId, uint _solution) external view returns(uint, bytes memory) {
         return (
             _solution,
             allProposalSolutions[_proposalId][_solution].action
@@ -565,9 +565,9 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev Internal call for creating proposal
     function _createProposal(
-        string _proposalTitle,
-        string _proposalSD,
-        string _proposalDescHash,
+        string memory _proposalTitle,
+        string memory _proposalSD,
+        string memory _proposalDescHash,
         uint _categoryId
     )
         internal
@@ -628,7 +628,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     /// @dev Internal call for addig a solution to proposal
-    function _addSolution(uint _proposalId, bytes _action, string _solutionHash)
+    function _addSolution(uint _proposalId, bytes memory _action, string memory _solutionHash)
         internal
     {
         require(!alreadyAdded(_proposalId, msg.sender), "User already added a solution for this proposal");
@@ -640,8 +640,8 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
     function _proposalSubmission(
         uint _proposalId,
-        string _solutionHash,
-        bytes _action
+        string memory _solutionHash,
+        bytes memory _action
     )
         internal
     {
@@ -766,7 +766,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
     function alreadyAdded(uint _proposalId, address _memberAddress) internal view returns(bool) {
-        SolutionStruct[] solutions = allProposalSolutions[_proposalId];
+        SolutionStruct[] memory solutions = allProposalSolutions[_proposalId];
         for (uint i = 1; i < solutions.length; i++) {
             if (solutions[i].owner == _memberAddress)
                 return true;

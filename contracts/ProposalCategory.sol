@@ -12,9 +12,9 @@
 
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
-pragma solidity 0.4.24;
+pragma solidity ^0.5.1;
 import "./interfaces/IProposalCategory.sol";
-import "./imports/govern/Governed.sol";
+import "./external/govern/Governed.sol";
 import "./MemberRoles.sol";
 
 
@@ -54,16 +54,16 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _contractName name of contract to be called after proposal is accepted
     /// @param _incentives rewards to distributed after proposal is accepted
     function addCategory(
-        string _name, 
+        string calldata _name, 
         uint _memberRoleToVote,
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
+        uint[] calldata _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string calldata _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
+        uint[] calldata _incentives
     ) 
         external
         onlyAuthorizedToGovern 
@@ -96,16 +96,16 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _incentives rewards to distributed after proposal is accepted
     function updateCategory(
         uint _categoryId, 
-        string _name, 
+        string memory _name, 
         uint _memberRoleToVote, 
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
+        uint[] memory _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
+        uint[] memory _incentives
     )
         public
         onlyAuthorizedToGovern //solhint-disable
@@ -124,7 +124,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     /// @dev gets category details
-    function category(uint _categoryId) external view returns(uint, uint, uint, uint, uint[], uint, uint) {
+    function category(uint _categoryId) external view returns(uint, uint, uint, uint, uint[] memory, uint, uint) {
         return(
             _categoryId,
             allCategory[_categoryId].memberRoleToVote,
@@ -223,16 +223,16 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _contractName name of contract to be called after proposal is accepted
     /// @param _incentives rewards to distributed after proposal is accepted
     function _addCategory(
-        string _name, 
+        string memory _name, 
         uint _memberRoleToVote,
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
+        uint[] memory _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
+        uint[] memory _incentives
     ) 
         internal
     {
@@ -253,8 +253,8 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     function addInitialCategories(
-        string _name,
-        string _actionHash,
+        string memory _name,
+        string memory _actionHash,
         bytes2 _contractName
     ) 
         internal 

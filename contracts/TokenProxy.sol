@@ -1,7 +1,7 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.1;
 
 import "./GBTStandardToken.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./external/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 contract TokenProxy is ERC1132 {
@@ -32,11 +32,11 @@ contract TokenProxy is ERC1132 {
         return originalToken.balanceOf(_of);
     }
 
-    function name() public view returns(string) {
+    function name() public view returns(string memory) {
         return originalToken.name();
     }
 
-    function symbol() public view returns(string) {
+    function symbol() public view returns(string memory) {
         return originalToken.symbol();
     }
 

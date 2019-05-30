@@ -13,10 +13,10 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity ^0.5.1;
 
-import "./imports/lockable-token/LockableToken.sol";
-import "./imports/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
+import "./external/lockable-token/LockableToken.sol";
+import "./external/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 
 
 contract GBTStandardToken is MintableToken, LockableToken {
