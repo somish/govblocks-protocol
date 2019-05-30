@@ -19,7 +19,6 @@ import "./Master.sol";
 import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
 import "./imports/lockable-token/LockableToken.sol";
-import "./EventCaller.sol";
 import "./MemberRoles.sol";
 import "./interfaces/IGovernance.sol";
 import "./interfaces/IProposalCategory.sol";
@@ -86,7 +85,6 @@ contract Governance is IGovernance, Upgradeable {
     MemberRoles internal memberRole;
     IProposalCategory internal proposalCategory;
     LockableToken internal tokenInstance;
-    EventCaller internal eventCaller;
 
     function () public payable {} //solhint-disable-line
 
@@ -437,7 +435,6 @@ contract Governance is IGovernance, Upgradeable {
         tokenInstance = LockableToken(ms.dAppLocker());
         memberRole = MemberRoles(ms.getLatestAddress("MR"));
         proposalCategory = IProposalCategory(ms.getLatestAddress("PC"));
-        eventCaller = EventCaller(ms.eventCaller());
     }
 
     /// @dev Checks If the proposal voting time is up and it's ready to close 
@@ -594,12 +591,6 @@ contract Governance is IGovernance, Upgradeable {
             _proposalSD,
             _proposalDescHash
         );
-        eventCaller.callProposalCreated(
-            _proposalId,
-            _categoryId,
-            address(ms),
-            _proposalDescHash
-        );
     }
 
     /// @dev Internal call for categorizing proposal
@@ -633,7 +624,7 @@ contract Governance is IGovernance, Upgradeable {
         _updateProposalStatus(_proposalId, uint(ProposalStatus.VotingStarted));
         uint closingTime;
         (, , , , , closingTime, ) = proposalCategory.category(allProposalData[_proposalId].category);
-        eventCaller.callCloseProposalOnTimeAtAddress(_proposalId, address(this), SafeMath.add(closingTime, now));
+        emit CloseProposalOnTime(_proposalId, SafeMath.add(closingTime, now));
     }
 
     /// @dev Internal call for addig a solution to proposal
@@ -686,7 +677,7 @@ contract Governance is IGovernance, Upgradeable {
             mrSequence != uint(MemberRoles.Role.TokenHolder) &&
             mrSequence != uint(MemberRoles.Role.UnAssigned)
         ) {
-            eventCaller.callVoteCast(_proposalId);
+            emit VoteCast(_proposalId);
         }
     }
 
@@ -739,9 +730,9 @@ contract Governance is IGovernance, Upgradeable {
                     actionAddress = ms.getLatestAddress(contractName);
                 /*solhint-enable*/
                 if (actionAddress.call(allProposalSolutions[_proposalId][max].action)) {
-                    eventCaller.callActionSuccess(_proposalId);
+                    emit ActionSuccess(_proposalId);
                 }
-                eventCaller.callProposalAccepted(_proposalId);
+                emit ProposalAccepted(_proposalId);
             } else {
                 _updateProposalStatus(_proposalId, uint(ProposalStatus.Rejected));
             }

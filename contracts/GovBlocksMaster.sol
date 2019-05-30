@@ -19,18 +19,12 @@ import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract GovBlocksMaster is Ownable {
-    address public eventCaller;
     address[] public implementations;
 
     event OnBoarded (
         bytes32 indexed dAppName,
         address masterAddress
     );
-
-    /// @dev Initializes GovBlocks master
-    constructor(address _eventCaller) public {
-        eventCaller = _eventCaller;
-    }
 
     /// @dev Adds GovBlocks dApp
     /// @param _gbDAppName dApp name
@@ -42,17 +36,12 @@ contract GovBlocksMaster is Ownable {
         bool _punishVoters
     ) external {
         Master ms = new Master();
-        ms.initMaster(msg.sender, _punishVoters, _dappTokenAddress, _tokenProxy, eventCaller, implementations);
+        ms.initMaster(msg.sender, _punishVoters, _dappTokenAddress, _tokenProxy, implementations);
         emit OnBoarded(_gbDAppName, address(ms));
     }  
 
     function setImplementations(address[] _implementations) external onlyOwner {
         implementations = _implementations;
-    }
-
-    /// @dev Sets global event caller address
-    function setEventCallerAddress(address _eventCaller) external onlyOwner {
-        eventCaller = _eventCaller;
     }
 
 }

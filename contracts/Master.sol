@@ -34,7 +34,6 @@ contract Master is Ownable, Governed {
 
     address public dAppLocker;
     address public dAppToken;
-    address public eventCaller;
 
     Governed internal govern;
     
@@ -43,7 +42,6 @@ contract Master is Ownable, Governed {
         bool _punishVoters,
         address _token,
         address _lockableToken,
-        address _eventCaller,
         address[] _implementations
     ) external {
         _addContractNames();
@@ -53,7 +51,6 @@ contract Master is Ownable, Governed {
         dAppToken = _token;
         dAppLocker = _lockableToken;
         owner = _ownerAddress;
-        eventCaller = _eventCaller;
         versionDates.push(now); //solhint-disable-line
 
         for (uint i = 0; i < allContractNames.length; i++) {
