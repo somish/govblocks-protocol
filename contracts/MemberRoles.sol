@@ -239,7 +239,7 @@ contract MemberRoles is IMemberRoles, Governed {
     }
 
     /// @dev Internal function to check existance of member in array ( to reduce complexity in parent call)
-    function _checkMemberInArray(address _memberAddress, address[] storage memberArray) internal view returns(bool memberExists) {
+    function _checkMemberInArray(address _memberAddress, address[] memory memberArray) internal view returns(bool memberExists) {
         uint i;
         for (i = 0; i < memberArray.length; i++) {
             if (memberArray[i] == _memberAddress) {

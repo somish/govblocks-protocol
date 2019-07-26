@@ -71,7 +71,9 @@ contract OwnedUpgradeabilityProxy is UpgradeabilityProxy {
    */
   function upgradeToAndCall(address _implementation, bytes memory _data) payable public onlyProxyOwner {
     _upgradeTo(_implementation);
-    require(address(this).call.value(msg.value)(_data));
+    bool check;
+    (check,)= address(this).call.value(msg.value)(_data);
+    require(check);
   }
 
   /**
