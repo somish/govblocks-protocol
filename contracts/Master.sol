@@ -52,7 +52,6 @@ contract Master is Ownable, Governed {
         dAppLocker = _lockableToken;
         owner = _ownerAddress;
         versionDates.push(now); //solhint-disable-line
-
         for (uint i = 0; i < allContractNames.length; i++) {
             _generateProxy(allContractNames[i], _implementations[i]);
         }

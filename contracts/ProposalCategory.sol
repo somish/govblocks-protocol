@@ -68,6 +68,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         external
         onlyAuthorizedToGovern 
     {
+        require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
         _addCategory(
             _name, 
             _memberRoleToVote,
@@ -152,12 +153,12 @@ contract ProposalCategory is IProposalCategory, Governed {
 
     ///@dev just to follow the interface
     function updateDependencyAddresses() public { //solhint-disable-line
+        ms = IMaster(masterAddress);
+        mr = MemberRoles(ms.getLatestAddress('MR'));
         if (!constructorCheck) {
             proposalCategoryInitiate();
             constructorCheck = true;
         }
-        ms = IMaster(masterAddress);
-        mr = MemberRoles(ms.getLatestAddress('MR'));
     }
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
@@ -236,7 +237,6 @@ contract ProposalCategory is IProposalCategory, Governed {
     ) 
         internal
     {
-        require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
         allCategory.push(
             CategoryStruct(
                 _memberRoleToVote,

@@ -31,13 +31,13 @@ contract MemberRoles is IMemberRoles, Governed {
     LockableToken public dAppToken;
 
     struct MemberRoleDetails {
-        uint memberCounter;
         mapping(address => bool) memberActive;
         address[] memberAddress;
         address authorized;
     }
 
     MemberRoleDetails[] internal memberRoleData;
+    mapping ( uint => mapping (address => uint)) internal memberRoleIndex;
     bool internal constructorCheck;
 
     modifier checkRoleAuthority(uint _memberRoleId) {
@@ -62,7 +62,7 @@ contract MemberRoles is IMemberRoles, Governed {
         }
     }
 
-    function memberRolesInitiate(address _dAppToken, address _firstAB) public {
+    function memberRolesInitiate(address _dAppToken, address _firstAB) external {
         require(!constructorCheck);
         dAppToken = LockableToken(_dAppToken);
         addInitialMemberRoles(_firstAB);
@@ -129,26 +129,28 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @return roleId Role id
     /// @return allMemberAddress Member addresses of specified role id
     function members(uint _memberRoleId) public view returns(uint, address[] memberArray) { //solhint-disable-line
-        uint length = memberRoleData[_memberRoleId].memberAddress.length;
-        uint i;
-        uint j;
-        memberArray = new address[](memberRoleData[_memberRoleId].memberCounter);
-        for (i = 0; i < length; i++) {
-            address member = memberRoleData[_memberRoleId].memberAddress[i];
-            if (memberRoleData[_memberRoleId].memberActive[member] && ! _checkMemberInArray(member, memberArray)) { //solhint-disable-line
-                memberArray[j] = member;
-                j++;
-            }
-        }
+        // uint length = memberRoleData[_memberRoleId].memberAddress.length;
+        // uint i;
+        // uint j;
+        // memberArray = new address[](memberRoleData[_memberRoleId].memberCounter);
+        // for (i = 0; i < length; i++) {
+        //     address member = memberRoleData[_memberRoleId].memberAddress[i];
+        //     if (memberRoleData[_memberRoleId].memberActive[member] && ! _checkMemberInArray(member, memberArray)) { //solhint-disable-line
+        //         memberArray[j] = member;
+        //         j++;
+        //     }
+        // }
         
-        return (_memberRoleId, memberArray);
+        return (_memberRoleId, memberRoleData[_memberRoleId].memberAddress);
+        // return (_memberRoleId, memberArray);
     }
 
     /// @dev Gets all members' length
     /// @param _memberRoleId Member role id
     /// @return memberRoleData[_memberRoleId].memberCounter Member length
     function numberOfMembers(uint _memberRoleId) public view returns(uint) { //solhint-disable-line
-        return memberRoleData[_memberRoleId].memberCounter;
+        return memberRoleData[_memberRoleId].memberAddress.length - 1;
+        // return memberRoleData[_memberRoleId].memberCounter;
     }
 
     /// @dev Return member address who holds the right to add/remove any member from specific role.
@@ -163,7 +165,7 @@ contract MemberRoles is IMemberRoles, Governed {
         uint i;
         uint[] memory tempAllMemberAddress = new uint[](length);
         for (i = 1; i < length; i++) {
-            if (memberRoleData[i].memberActive[_memberAddress]) {
+            if (memberRoleIndex[i][_memberAddress] > 0) {
                 tempAllMemberAddress[j] = i;
                 j++;
             }
@@ -193,7 +195,8 @@ contract MemberRoles is IMemberRoles, Governed {
             else
                 return false;
         } else
-            if (memberRoleData[_roleId].memberActive[_memberAddress]) //solhint-disable-line
+            if (memberRoleIndex[_roleId][_memberAddress] > 0)
+            // if (memberRoleData[_roleId].memberActive[_memberAddress]) //solhint-disable-line
                 return true;
             else
                 return false;
@@ -213,15 +216,20 @@ contract MemberRoles is IMemberRoles, Governed {
         uint _roleId,
         bool _active) internal {
         require(_roleId != uint(Role.TokenHolder), "Membership to Token holder is detected automatically");
+        uint memberIndex = memberRoleIndex[_roleId][_memberAddress];
         if (_active) {
-            require(!memberRoleData[_roleId].memberActive[_memberAddress]);
-            memberRoleData[_roleId].memberCounter = SafeMath.add(memberRoleData[_roleId].memberCounter, 1);
-            memberRoleData[_roleId].memberActive[_memberAddress] = true;
+            require(memberIndex == 0, "Member already exist");
+            memberRoleIndex[_roleId][_memberAddress] = memberRoleData[_roleId].memberAddress.length;
             memberRoleData[_roleId].memberAddress.push(_memberAddress);
         } else {
-            require(memberRoleData[_roleId].memberActive[_memberAddress]);
-            memberRoleData[_roleId].memberCounter = SafeMath.sub(memberRoleData[_roleId].memberCounter, 1);
-            delete memberRoleData[_roleId].memberActive[_memberAddress];
+            require(memberIndex > 0, "Member Doesn't exist");
+            delete memberRoleIndex[_roleId][_memberAddress];
+            if(memberRoleData[_roleId].memberAddress.length >2) {
+                memberRoleData[_roleId].memberAddress[memberIndex] =
+                    memberRoleData[_roleId].memberAddress[memberRoleData[_roleId].memberAddress.length - 1];
+                memberRoleIndex[_roleId][memberRoleData[_roleId].memberAddress[memberIndex]] = memberIndex;
+            }
+            memberRoleData[_roleId].memberAddress.length --;
         }
     }
 
@@ -235,7 +243,7 @@ contract MemberRoles is IMemberRoles, Governed {
         address _authorized
     ) internal {
         emit MemberRole(memberRoleData.length, _roleName, _roleDescription);
-        memberRoleData.push(MemberRoleDetails(0, new address[](0), _authorized));
+        memberRoleData.push(MemberRoleDetails(new address[](1), _authorized));
     }
 
     /// @dev Internal function to check existance of member in array ( to reduce complexity in parent call)

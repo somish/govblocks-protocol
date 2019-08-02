@@ -419,7 +419,7 @@ contract Governance is IGovernance, Upgradeable {
         return (allProposal.length);
     }
 
-    function initiateGovernance(bool _punishVoters) public {
+    function initiateGovernance(bool _punishVoters) external {
         require(!constructorCheck);
         allowedToCatgorize = uint(MemberRoles.Role.AdvisoryBoard);
         allVotes.push(ProposalVote(address(0), 0, 0, 1));
