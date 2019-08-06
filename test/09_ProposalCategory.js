@@ -12,6 +12,20 @@ const sampleAddress = '0x0000000000000000000000000000000000000001';
 const nullAddress = '0x0000000000000000000000000000000000000000';
 let dAppToken;
 contract('Proposal Category', function() {
+
+  async function createProposal(actionHash, categoryId) {
+    let p1 = await gv.getProposalLength();
+    await gv.createProposalwithSolution(
+        'Category',
+        'Category',
+        'Category',
+        categoryId,
+        'Category',
+        actionHash
+      );
+    await gv.closeProposal(p1.toNumber());
+  }
+
   it('Should fetch addresses from master', async function() {
     let punishVoters = false
     await initializeContracts(punishVoters);
@@ -56,29 +70,7 @@ contract('Proposal Category', function() {
         'EX',
         [0, 0]
       );
-      let p1 = await gv.getProposalLength();
-      await gv.createProposalwithSolution(
-        'Add new member',
-        'Add new member',
-        'Addnewmember',
-        4,
-        'Add new member',
-        actionHash
-      );
-      await gv.closeProposal(p1.toNumber());
-    //proposal closed
-      // await pc.addCategory(
-      //   'Yo',
-      //   1,
-      //   1,
-      //   0,
-      //   [1],
-      //   1,
-      //   '',
-      //   nullAddress,
-      //   'EX',
-      //   [0, 0]
-      // );
+      await createProposal(actionHash, 3);
     const c2 = await pc.totalCategories();
     assert.isAbove(c2.toNumber(), c1.toNumber(), 'category not added');
   });
@@ -89,46 +81,69 @@ contract('Proposal Category', function() {
     c1 = c1.toNumber() - 1;
     const cat1 = await pc.category(c1);
     //proposal to update category
+    let actionHash = encode(
+      'updateCategory(uint,string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
+      c1,
+      'YoYo',
+      2,
+      1,
+      20,
+      [1],
+      1,
+      '',
+      nullAddress,
+      'EX',
+      [0, 0]
+    );
+    await createProposal(actionHash, 4);
+    let cat2 = await pc.category(c1);
+    assert.notEqual(cat1[1].toNumber(), cat2[1].toNumber(), 'category not updated');
+  });
+
+  it('Should not add a proposal category if invalid roles are passed', async function() {
+    this.timeout(100000);
+    let c1 = await pc.totalCategories();
+    //proposal to add category
       let actionHash = encode(
-        'updateCategory(uint,string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
-        c1,
-        'YoYo',
-        3,
+        'addCategory(string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
+        'Yo',
         1,
-        20,
-        [1],
+        1,
+        0,
+        [5,6], //Total existing roles 3
         1,
         '',
         nullAddress,
         'EX',
         [0, 0]
       );
-      let p1 = await gv.getProposalLength();
-      await gv.createProposalwithSolution(
-        'Add new member',
-        'Add new member',
-        'Addnewmember',
-        4,
-        'Add new member',
-        actionHash
-      );
-      await gv.closeProposal(p1.toNumber());
-    //proposal closed
-    // will throw once owner's permissions are revoked
-    // await pc.updateCategory(
-    //   c1,
-    //   'YoYo',
-    //   3,
-    //   1,
-    //   20,
-    //   [1],
-    //   1,
-    //   '',
-    //   nullAddress,
-    //   'EX',
-    //   [0, 0]
-    // );
+      await createProposal(actionHash, 3);
+    const c2 = await pc.totalCategories();
+    assert.equal(c2.toNumber(), c1.toNumber(), 'category added incorrectly');
+  });
+
+  it('Should not update a proposal category if invalid roles are passed', async function() {
+    this.timeout(100000);
+    let c1 = await pc.totalCategories();
+    c1 = c1.toNumber() - 1;
+    const cat1 = await pc.category(c1);
+    //proposal to update category
+    let actionHash = encode(
+      'updateCategory(uint,string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
+      c1,
+      'YoYo',
+      7, //Total existing roles 3
+      1,
+      20,
+      [1],
+      1,
+      '',
+      nullAddress,
+      'EX',
+      [0, 0]
+    );
+    await createProposal(actionHash, 4);
     let cat2 = await pc.category(c1);
-    assert.notEqual(cat1[1], cat2[1], 'category not updated');
+    assert.equal(cat1[1].toNumber(), cat2[1].toNumber(), 'category not updated');
   });
 });

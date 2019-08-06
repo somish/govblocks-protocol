@@ -47,6 +47,11 @@ contract('Master', function([owner, notOwner]) {
       false,
       'Internal check failing'
     );
+    assert.equal(
+      await ms.isInternal(owner),
+      true,
+      'Internal check failing'
+    );
     await catchRevert(ms.initMaster(owner, false, sampleAddress, sampleAddress, [owner]));
   });
 

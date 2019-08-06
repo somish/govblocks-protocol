@@ -19,6 +19,20 @@ let p2;
 let mrLength1;
 
 contract('MemberRoles', function([owner, member, other]) {
+
+  async function createProposal(actionHash, categoryId) {
+    let p1 = await gv.getProposalLength();
+    await gv.createProposalwithSolution(
+        'Member Role',
+        'Member Role',
+        'Member Role',
+        categoryId,
+        'Member Role',
+        actionHash
+      );
+    await gv.closeProposal(p1.toNumber());
+  }
+
   it('should be initialized', async function() {
     let punishVoters = false
     await initializeContracts(punishVoters);
@@ -65,20 +79,10 @@ contract('MemberRoles', function([owner, member, other]) {
       'New member role',
       owner
     );
-    p1 = await gv.getProposalLength();
     mrLength = await mr.totalRoles();
     let amount = 50000000000000000000;
     await gbt.lock('GOV', amount, 5468545613353456);
-    await gv.createProposalwithSolution(
-      'Add new member',
-      'Add new member',
-      'Addnewmember',
-      1,
-      'Add new member',
-      actionHash
-    );
-    p2 = await gv.getProposalLength();
-    await gv.closeProposal(p1.toNumber());
+    await createProposal(actionHash, 1);
     mrLength1 = await mr.totalRoles();
     assert.isAbove(mrLength1.toNumber(), mrLength.toNumber(), "Role not added");
   });
@@ -116,6 +120,18 @@ contract('MemberRoles', function([owner, member, other]) {
   it('Should follow the upgradable interface', async function() {
     await catchRevert(mr.changeMasterAddress(owner)); // just for interface, they do nothing
     await mr.updateDependencyAddresses(); // just for interface, they do nothing
+  });
+
+  it('Should not add member to Token Holder role', async function() {
+    let actionHash = encode(
+      'updateRole(address,uint,bool)',
+      other,
+      2,
+      true
+    );
+    await createProposal(actionHash,2);
+    isTokenHolder = await mr.checkRole(other,2);
+    assert.equal(isTokenHolder,false,"Incorrectly added to token holder role");
   });
 
   it('Should not list invalid member as valid', async function() {
