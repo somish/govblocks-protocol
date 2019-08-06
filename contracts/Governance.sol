@@ -61,6 +61,7 @@ contract Governance is IGovernance, Upgradeable {
         uint solutionChosen;
         uint proposalId;
         uint voteValue;
+        uint dateAdd;
     }
 
     mapping(uint => ProposalData) internal allProposalData;
@@ -422,9 +423,9 @@ contract Governance is IGovernance, Upgradeable {
     function initiateGovernance(bool _punishVoters) external {
         require(!constructorCheck);
         allowedToCatgorize = uint(MemberRoles.Role.AdvisoryBoard);
-        allVotes.push(ProposalVote(address(0), 0, 0, 1));
+        allVotes.push(ProposalVote(address(0), 0, 0, 1, 0));
         allProposal.push(ProposalStruct(address(0), now));
-        tokenHoldingTime = 604800;
+        tokenHoldingTime = 7 days;
         punishVoters = _punishVoters;
         minVoteWeight = 1;
         constructorCheck = true;
@@ -669,7 +670,7 @@ contract Governance is IGovernance, Upgradeable {
         proposalVote[_proposalId].push(totalVotes);
         allVotesByMember[msg.sender].push(totalVotes);
         addressProposalVote[msg.sender][_proposalId] = totalVotes;
-        allVotes.push(ProposalVote(msg.sender, _solution, _proposalId, calculateVoteValue(msg.sender)));
+        allVotes.push(ProposalVote(msg.sender, _solution, _proposalId, calculateVoteValue(msg.sender), now));
 
         emit Vote(msg.sender, _proposalId, totalVotes, now, _solution);
 

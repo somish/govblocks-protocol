@@ -35,9 +35,9 @@ contract GovBlocksMaster is Ownable {
         address _tokenProxy,
         bool _punishVoters
     ) public {
-        // Master ms = new Master();
-        // ms.initMaster(msg.sender, _punishVoters, _dappTokenAddress, _tokenProxy, implementations);
-        // emit OnBoarded(_gbDAppName, address(ms));
+        Master ms = new Master();
+        ms.initMaster(msg.sender, _punishVoters, _dappTokenAddress, _tokenProxy, implementations);
+        emit OnBoarded(_gbDAppName, address(ms));
     }  
 
     function setImplementations(address[] _implementations) external onlyOwner {
