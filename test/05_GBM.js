@@ -1,5 +1,4 @@
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
-const EventCaller = artifacts.require('EventCaller');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const getAddress = require('../helpers/getAddress.js').getAddress;
 let ec;

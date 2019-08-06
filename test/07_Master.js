@@ -10,7 +10,6 @@ const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const Master = artifacts.require('Master');
 const Governance = artifacts.require('Governance');
 const ProposalCategory = artifacts.require('ProposalCategory');
-const EventCaller = artifacts.require('EventCaller');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 let gbm;
 let temp;
