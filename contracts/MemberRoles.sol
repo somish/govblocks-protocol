@@ -246,15 +246,4 @@ contract MemberRoles is IMemberRoles, Governed {
         memberRoleData.push(MemberRoleDetails(new address[](1), _authorized));
     }
 
-    /// @dev Internal function to check existance of member in array ( to reduce complexity in parent call)
-    function _checkMemberInArray(address _memberAddress, address[] memberArray) internal view returns(bool memberExists) {
-        uint i;
-        for (i = 0; i < memberArray.length; i++) {
-            if (memberArray[i] == _memberAddress) {
-                memberExists = true;
-                break;
-            }
-        }
-    }
-
 }
