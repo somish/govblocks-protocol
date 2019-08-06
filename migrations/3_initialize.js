@@ -4,11 +4,10 @@ const Master = artifacts.require('Master');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const Governance = artifacts.require('Governance');
 const ProposalCategory = artifacts.require('ProposalCategory');
-const EventCaller = artifacts.require('EventCaller');
-const setMasterAddress = require('../helpers/masterAddress.js').setMasterAddress;
+const setMasterAddress = require('../helpers/masterAddress.js')
+  .setMasterAddress;
 
 let gbt;
-let ec;
 let gbm;
 let gd;
 let mr;
@@ -23,14 +22,10 @@ module.exports = deployer => {
     .then(() => GBTStandardToken.deployed())
     .then(function(instance) {
       gbt = instance;
-      return EventCaller.deployed();
+      return GovBlocksMaster.deployed();
     })
     .then(function(instance) {
-      ec = instance;
-      return GovBlocksMaster.deployed(ec.address);
-    })
-    .then(function(instance) {
-      gbm = instance
+      gbm = instance;
       return MemberRoles.deployed();
     })
     .then(function(instance) {
@@ -43,26 +38,36 @@ module.exports = deployer => {
     })
     .then(function(instance) {
       gv = instance;
-      const addr = [
-        mr.address,
-        pc.address,
-        gv.address
-      ];
+      const addr = [mr.address, pc.address, gv.address];
       return gbm.setImplementations(addr);
     })
     .then(function() {
       punishVoters = false;
-      var result = gbm.addGovBlocksDapp('0x41', gbt.address, gbt.address, punishVoters);
+      var result = gbm.addGovBlocksDapp(
+        '0x41',
+        gbt.address,
+        gbt.address,
+        punishVoters
+      );
       return result;
     })
     .then(function(result) {
+      ms = Master.at(result.logs[0].args.masterAddress);
+      const addr = [mr.address, pc.address, gv.address];
+      ms.initMaster(web3.eth.accounts[0], addr, punishVoters);
       setMasterAddress(result.logs[0].args.masterAddress, punishVoters);
       punishVoters = true;
-      var result1 = gbm.addGovBlocksDapp('0x42', gbt.address, gbt.address, punishVoters);
+      var result1 = gbm.addGovBlocksDapp(
+        '0x42',
+        gbt.address,
+        gbt.address,
+        punishVoters
+      );
       return result1;
     })
     .then(function(result) {
-      setMasterAddress(result.logs[0].args.masterAddress, punishVoters);
+      ms = Master.at(result.logs[0].args.masterAddress);
+      setMasterAddress(ms.address, punishVoters);
       console.log(
         'GovBlocks Initialization completed, GBM Address: ',
         gbm.address
