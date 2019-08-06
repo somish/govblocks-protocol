@@ -14,26 +14,5 @@ contract('GovBlocksMaster', function([owner, notOwner]) {
   it('Should fetch addresses for testing', async function() {
     address = await getAddress('GBM', false);
     gbm = await GovBlocksMaster.at(address);
-    address = await getAddress('EC', false);
-    ec = await EventCaller.at(address);
-    await ec.callCloseProposalOnTime(1, 1); // for coverage
-  });
-
-  it('should be initialized', async function() {
-    this.timeout(100000);
-    assert.equal(await gbm.owner(), owner, 'owner was not set properly');
-  });
-
-  it('should set eventCaller address', async function() {
-    await catchRevert(
-      gbm.setEventCallerAddress(sampleAddress, { from: notOwner })
-    );
-    await catchRevert(gbm.setImplementations([], { from: notOwner }));
-    await gbm.setEventCallerAddress(sampleAddress);
-    assert.equal(
-      await gbm.eventCaller(),
-      sampleAddress,
-      'eventCaller was not set properly'
-    );
   });
 });

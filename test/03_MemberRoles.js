@@ -97,7 +97,7 @@ contract('MemberRoles', function([owner, member, other]) {
 
   it('Should fetch all address by role id', async function() {
     const g3 = await mr.members(1);
-    assert.equal(g3[1][0], owner);
+    assert.equal(g3[1][1], owner);
   });
 
   it('Should fetch total number of members by role id', async function() {
@@ -128,7 +128,8 @@ contract('MemberRoles', function([owner, member, other]) {
     );
     await mr.updateRole(member, 3, true);
     let members = await mr.members(1);
-    assert.equal(members[1].length, 1);
+    //0x000....0000 will stored in 0th postion of members array
+    assert.equal(members[1].length - 1, 1);
     assert.equal(
       await mr.checkRole(member, 3),
       true,

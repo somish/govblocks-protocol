@@ -15,8 +15,6 @@ const sampleAddress = 0x0000000000000000000000000000000000000001;
 const nullAddress = 0x0000000000000000000000000000000000000000;
 
 let gbt;
-let sv;
-let pl;
 let gv;
 let ms;
 let mr;
@@ -25,7 +23,7 @@ let dAppToken;
 let propId;
 let pid;
 let ownerProposals;
-let voterProposals;
+let maxRecords = 10;
 let incentive = Math.pow(10, 17);
 
 const BigNumber = web3.BigNumber;
@@ -48,7 +46,6 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     address = await getAddress('PC', punishVoters);
     pc = await ProposalCategory.at(address);
     address = await getAddress('GV', punishVoters);
-    pl = await Governance.at(address);
     tp = await TokenProxy.new(gbt.address, 18);
     address = await getAddress('MS', punishVoters);
     ms = await Master.at(address);
@@ -120,7 +117,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.closeProposal(p1.toNumber());
     //proposal closed
     await catchRevert(gv.categorizeProposal(pid, 7, incentive));
-    await dAppToken.transfer(pl.address, e18.mul(20));
+    await dAppToken.transfer(gv.address, e18.mul(20));
   });
 
   it('Should not allow to categorize if tokens are not locked', async function() {
@@ -162,36 +159,9 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.categorizeProposal(pid, 2, 0);
     let proposalData = await gv.proposal(pid);
     assert.equal(proposalData[1].toNumber(), 2, 'Not categorized');
-    //proposal to add member to AB
-    let actionHash = encode('updateRole(address,uint,bool)', notOwner, 1, true);
-    let p1 = await gv.getProposalLength();
-    await gv.createProposalwithSolution(
-      'Add new member',
-      'Add new member',
-      'Addnewmember',
-      2,
-      'Add new member',
-      actionHash
-    );
-    await gv.closeProposal(p1.toNumber());
-    //proposal closed
     await gv.categorizeProposal(pid, 7, Math.pow(10, 15));
     proposalData = await gv.proposal(pid);
     assert.equal(proposalData[1].toNumber(), 7, 'Not categorized');
-    //proposal to add member to AB
-    actionHash = encode('updateRole(address,uint,bool)', notOwner, 1, false);
-    p1 = await gv.getProposalLength();
-    await gv.createProposalwithSolution(
-      'Add new member',
-      'Add new member',
-      'Addnewmember',
-      2,
-      'Add new member',
-      actionHash
-    );
-    await gv.submitVote(p1.toNumber(), [1], { from: notOwner });
-    await gv.closeProposal(p1.toNumber());
-    //proposal closed
   });
 
   it('Should not allow unauthorized people to open proposal for voting and submit solutions', async () => {
@@ -275,20 +245,17 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should close proposal when voting is completed', async () => {
-    await catchRevert(pl.claimReward(owner, [1]));
     await gv.closeProposal(pid);
     await catchRevert(gv.closeProposal(pid));
   });
 
   it('Should claim reward after proposal passed', async () => {
-    voterProposals = await getProposalIds(owner, gv);
     const balance = await dAppToken.balanceOf(owner);
-    await pl.claimReward(owner, voterProposals);
+    await gv.claimReward(owner, maxRecords);
     assert.isAbove(
       (await dAppToken.balanceOf(owner)).toNumber(),
       balance.toNumber()
     );
-    await catchRevert(pl.claimReward(owner, voterProposals));
   });
 
   it('Should check reward distribution when punish voters is true', async () => {
@@ -377,16 +344,14 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.closeProposal(propId);
     await gv.getSolutionAction(propId, 1);
     await gv.getPendingReward(owner);
-    voterProposals = await getProposalIds(owner, gv);
     var balance = await dAppToken.balanceOf(owner);
-    await gv.claimReward(owner, voterProposals);
+    await gv.claimReward(owner, maxRecords);
     assert.isAbove(
       (await dAppToken.balanceOf(owner)).toNumber(),
       balance.toNumber()
     );
-    voterProposals = await getProposalIds(voter, gv);
     balance = await dAppToken.balanceOf(voter);
-    await gv.claimReward(voter, voterProposals, { from: voter });
+    await gv.claimReward(voter, maxRecords, { from: voter });
     assert.equal(
       (await dAppToken.balanceOf(voter)).toNumber(),
       balance.toNumber()
@@ -471,13 +436,11 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.submitVote(p1.toNumber(), [1], { from: notOwner });
     await gv.closeProposal(p1.toNumber());
     //proposal closed
-    voterProposals = await getProposalIds(owner, gv);
     var balance = (await dAppToken.balanceOf(owner)).toNumber();
-    await pl.claimReward(owner, voterProposals);
+    await gv.claimReward(owner, maxRecords);
     assert.isAbove((await dAppToken.balanceOf(owner)).toNumber(), balance);
-    voterProposals = await getProposalIds(voter, gv);
     balance = (await dAppToken.balanceOf(voter)).toNumber();
-    await pl.claimReward(voter, voterProposals, { from: voter });
+    await gv.claimReward(voter, maxRecords, { from: voter });
     assert.isAbove((await dAppToken.balanceOf(owner)).toNumber(), balance);
   });
 
@@ -492,11 +455,10 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     );
     await gv.submitVote(propId, [0]);
     await gv.closeProposal(propId);
-    voterProposals = await getProposalIds(owner, gv);
-    // await dAppToken.transfer(pl.address, e18.mul(10));
+    // await dAppToken.transfer(gv.address, e18.mul(10));
     var balance = (await dAppToken.balanceOf(owner)).toNumber();
-    // console.log(await gv.claimVoteReward(owner,voterProposals));
-    await pl.claimReward(owner, voterProposals);
+    // console.log(await gv.claimVoteReward(owner,maxRecords));
+    await gv.claimReward(owner, maxRecords);
     assert.equal((await dAppToken.balanceOf(owner)).toNumber(), balance);
     let statusOfProposals = await gv.getStatusOfProposals();
   });

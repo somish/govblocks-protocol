@@ -27,8 +27,6 @@ contract('Master', function([owner, notOwner]) {
     gbt = await GBTStandardToken.at(address);
     address = await getAddress('MS', false);
     ms = await Master.at(address);
-    address = await getAddress('EC', false);
-    ec = await EventCaller.at(address);
     address = await getAddress('GV', false);
     gv = await Governance.at(address);
     address = await getAddress('PC', false);
@@ -50,7 +48,7 @@ contract('Master', function([owner, notOwner]) {
       false,
       'Internal check failing'
     );
-    await catchRevert(ms.initMaster(owner, false, sampleAddress, sampleAddress, sampleAddress, [owner]));
+    await catchRevert(ms.initMaster(owner, false, sampleAddress, sampleAddress, [owner]));
   });
 
   it('Should set dAppTokenProxy', async function() {
@@ -220,12 +218,12 @@ contract('Master', function([owner, notOwner]) {
       );
       await gv.closeProposal(p1.toNumber());
     //proposal closed 
-    assert.equal(await gv.master(), newMaster.address);
+    assert.equal(await gv.ms(), newMaster.address);
     await catchRevert(gv.changeMasterAddress(newMaster.address));
   });
 
   it('Should not get initiazlized with incorrect params', async function() {
     const m = await Master.new();
-    await catchRevert(m.initMaster(owner, false, sampleAddress, sampleAddress, sampleAddress, [owner]));
+    await catchRevert(m.initMaster(owner, false, sampleAddress, sampleAddress, [owner]));
   });
 });
