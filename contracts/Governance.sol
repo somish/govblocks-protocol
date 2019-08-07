@@ -795,39 +795,39 @@ contract Governance is IGovernance, Upgradeable {
         lockedTokens = tokenInstance.tokensLockedAtTime(_of, "GOV", _time);
     }
 
-    /// @dev calculate amount of reward to be distributed for given vote vote id 
-    function calculatePendingVoteReward(uint _voteId, uint _proposalId)
-        internal
-        view
-        returns (uint pendingDAppReward)
-    {
-        uint solutionChosen;
-        uint finalVerdict;
-        uint voteValue;
-        uint totalReward;
-        uint calcReward;
-        uint finalVoteValue;
-        uint totalVoteValue;
-        solutionChosen = allVotes[_voteId].solutionChosen;
-        voteValue = allVotes[_voteId].voteValue;
-        // (, solutionChosen, , voteValue) = governanceDat.getVoteData(_voteId);
-        finalVerdict = allProposalData[_proposalId].finalVerdict;
-        totalReward = allProposalData[_proposalId].commonIncentive;
-        totalVoteValue = allProposalData[_proposalId].totalVoteValue;
-        finalVoteValue = allProposalData[_proposalId].majVoteValue;
-        // (, , finalVerdict, totalReward, ) = 
-        //     governanceDat.getProposalVotingDetails(_proposalId);
-        // (totalVoteValue, finalVoteValue) = governanceDat.getProposalVoteValue(_proposalId);
-        if (punishVoters) {
-            if ((finalVerdict > 0 && solutionChosen == finalVerdict)) {
-                calcReward = SafeMath.div(SafeMath.mul(voteValue, totalReward), finalVoteValue);
-            }
-        } else if (finalVerdict > 0) {
-            calcReward = SafeMath.div(SafeMath.mul(voteValue, totalReward), totalVoteValue);
-        }
+    // /// @dev calculate amount of reward applicable for given vote vote id 
+    // function calculatePendingVoteReward(uint _voteId, uint _proposalId)
+    //     internal
+    //     view
+    //     returns (uint pendingDAppReward)
+    // {
+    //     uint solutionChosen;
+    //     uint finalVerdict;
+    //     uint voteValue;
+    //     uint totalReward;
+    //     uint calcReward;
+    //     uint finalVoteValue;
+    //     uint totalVoteValue;
+    //     solutionChosen = allVotes[_voteId].solutionChosen;
+    //     voteValue = allVotes[_voteId].voteValue;
+    //     // (, solutionChosen, , voteValue) = governanceDat.getVoteData(_voteId);
+    //     finalVerdict = allProposalData[_proposalId].finalVerdict;
+    //     totalReward = allProposalData[_proposalId].commonIncentive;
+    //     totalVoteValue = allProposalData[_proposalId].totalVoteValue;
+    //     finalVoteValue = allProposalData[_proposalId].majVoteValue;
+    //     // (, , finalVerdict, totalReward, ) = 
+    //     //     governanceDat.getProposalVotingDetails(_proposalId);
+    //     // (totalVoteValue, finalVoteValue) = governanceDat.getProposalVoteValue(_proposalId);
+    //     if (punishVoters) {
+    //         if ((finalVerdict > 0 && solutionChosen == finalVerdict)) {
+    //             calcReward = SafeMath.div(SafeMath.mul(voteValue, totalReward), finalVoteValue);
+    //         }
+    //     } else if (finalVerdict > 0) {
+    //         calcReward = SafeMath.div(SafeMath.mul(voteValue, totalReward), totalVoteValue);
+    //     }
 
-        pendingDAppReward = calcReward;
-    }
+    //     pendingDAppReward = calcReward;
+    // }
 
     /// @dev Update proposal status
     function _updateProposalStatus(uint _proposalId, uint _status) internal {
