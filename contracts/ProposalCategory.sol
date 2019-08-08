@@ -279,5 +279,4 @@ contract ProposalCategory is IProposalCategory, Governed {
             );
     }
 
-
 }
