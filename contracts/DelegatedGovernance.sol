@@ -32,7 +32,7 @@ contract DelegatedGovernance is Governance {
 
     DelegateVote[] public allDelegation;
 
-    uint internal maxFollowers;
+    uint public maxFollowers;
 
     modifier checkPendingRewards {
         require(getPendingReward(msg.sender) == 0, "Claim pending rewards");
@@ -133,6 +133,12 @@ contract DelegatedGovernance is Governance {
         punishVoters = _punishVoters;
         minVoteWeight = 1;
         constructorCheck = true;
+    }
+
+    function UpdateGovernanceParameters(bytes8 _code, uint _value) public {
+        if(_code == "MAXFOL") {
+            maxFollowers = _value;
+        }
     }
 
     /// @dev Get number of token incentives to be claimed by a member
