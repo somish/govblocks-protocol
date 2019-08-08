@@ -1,5 +1,5 @@
 const MemberRoles = artifacts.require('MemberRoles');
-const Governance = artifacts.require('Governance');
+const Governance = artifacts.require('DelegatedGovernance');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 const getAddress = require('../helpers/getAddress.js').getAddress;

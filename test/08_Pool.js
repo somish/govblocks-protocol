@@ -1,5 +1,5 @@
 const GBTStandardToken = artifacts.require('GBTStandardToken');
-const Governance = artifacts.require('Governance');
+const Governance = artifacts.require('DelegatedGovernance');
 const Master = artifacts.require('Master');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const encode = require('../helpers/encoder.js').encode;

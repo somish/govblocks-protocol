@@ -1,4 +1,4 @@
-const Governance = artifacts.require('Governance');
+const Governance = artifacts.require('DelegatedGovernance');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const increaseTime = require('../helpers/increaseTime.js').increaseTime;
 const encode = require('../helpers/encoder.js').encode;
@@ -159,7 +159,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.categorizeProposal(pid, 2, 0);
     let proposalData = await gv.proposal(pid);
     assert.equal(proposalData[1].toNumber(), 2, 'Not categorized');
-    await gv.categorizeProposal(pid, 7, Math.pow(10, 15));
+    await gv.categorizeProposal(pid, 7, Math.pow(10, 17));
     proposalData = await gv.proposal(pid);
     assert.equal(proposalData[1].toNumber(), 7, 'Not categorized');
   });

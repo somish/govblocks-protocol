@@ -8,7 +8,7 @@ const MemberRoles = artifacts.require('MemberRoles');
 const OwnedUpgradeabilityProxy = artifacts.require('OwnedUpgradeabilityProxy');
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const Master = artifacts.require('Master');
-const Governance = artifacts.require('Governance');
+const Governance = artifacts.require('DelegatedGovernance');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
 let gbm;

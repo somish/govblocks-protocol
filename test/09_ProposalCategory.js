@@ -1,6 +1,6 @@
 const ProposalCategory = artifacts.require('ProposalCategory');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
-const Governance = artifacts.require('Governance');
+const Governance = artifacts.require('DelegatedGovernance');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 let pc;
 let gv;
@@ -48,7 +48,7 @@ contract('Proposal Category', function() {
     const g5 = await pc.categoryAction(1);
     assert.equal(g5[2].toString(), '0x4d52');
     const g6 = await pc.totalCategories();
-    assert.equal(g6.toNumber(), 15);
+    assert.equal(g6.toNumber(), 17);
   });
 
   it('Should add a proposal category', async function() {
