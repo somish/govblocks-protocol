@@ -24,7 +24,7 @@ import "./interfaces/IGovernance.sol";
 import "./interfaces/IProposalCategory.sol";
 
 
-contract Governance is IGovernance, Upgradeable {
+contract Governance is IGovernance,Upgradeable {
 
     enum ProposalStatus { 
         Draft,
