@@ -1,6 +1,5 @@
 const Governance = artifacts.require('DelegatedGovernance');
-// const MemberRoles = artifacts.require('MemberRolesMock');
-const MemberRoles = artifacts.require('MemberRolesMock');
+const MemberRoles = artifacts.require('MemberRoles');
 const catchRevert = require('../helpers/exceptions.js').catchRevert;
 const encode = require('../helpers/encoder.js').encode;
 const getProposalIds = require('../helpers/reward.js').getProposalIds;
@@ -91,10 +90,11 @@ contract('Proposal, solution and voting', function([
 
   it('15.24 Initialising Members', async function() {
     let actionHash;
-    var mockMr = await MemberRoles.new();    
-    actionHash = encode("upgradeContractImplementation(bytes2,address)","0x4d52",mockMr.address)
-    await gvProposalWithIncentive(10, actionHash, mr, gv, 1, 0);
-    await mr.addRole("0x41","",web3.eth.accounts[0]);
+    actionHash = encode("changeAuthorized(uint,address)",1,web3.eth.accounts[0])
+    await gvProposalWithIncentive(14, actionHash, mr, gv, 1, 0);
+    actionHash = encode("addRole(bytes32,string,address)","0x41","",web3.eth.accounts[0]);
+    await gvProposalWithIncentive(1, actionHash, mr, gv, 1, 0);
+    // await mr.addRole("0x41","",web3.eth.accounts[0]);
     for(let i = 1;i<5;i++) {
       // actionHash = encode('updateRole(address,uint,bool)',web3.eth.accounts[i],1,true);
       await mr.updateRole(web3.eth.accounts[i],1,true);
