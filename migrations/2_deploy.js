@@ -2,7 +2,7 @@ const MemberRoles = artifacts.require('MemberRoles');
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const Master = artifacts.require('Master');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
-const Governance = artifacts.require('Governance');
+const Governance = artifacts.require('DelegatedGovernance');
 const ProposalCategory = artifacts.require('ProposalCategory');
 
 module.exports = function(deployer) {

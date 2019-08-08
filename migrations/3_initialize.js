@@ -2,7 +2,7 @@ const MemberRoles = artifacts.require('MemberRoles');
 const GovBlocksMaster = artifacts.require('GovBlocksMaster');
 const Master = artifacts.require('Master');
 const GBTStandardToken = artifacts.require('GBTStandardToken');
-const Governance = artifacts.require('Governance');
+const Governance = artifacts.require('DelegatedGovernance');
 const ProposalCategory = artifacts.require('ProposalCategory');
 const setMasterAddress = require('../helpers/masterAddress.js')
   .setMasterAddress;
@@ -43,30 +43,38 @@ module.exports = deployer => {
     })
     .then(function() {
       punishVoters = false;
-      var result = gbm.addGovBlocksDapp(
-        '0x41',
-        gbt.address,
-        gbt.address,
-        punishVoters
-      );
-      return result;
+      // var result =gbm.addGovBlocksDapp(
+      //   '0x41',
+      //   gbt.address,
+      //   gbt.address,
+      //   punishVoters
+      // );
+      return Master.deployed();
     })
     .then(function(result) {
-      ms = Master.at(result.logs[0].args.masterAddress);
+      ms = Master.at(result.address);
+      console.log(result.address);
       const addr = [mr.address, pc.address, gv.address];
-      ms.initMaster(web3.eth.accounts[0], addr, punishVoters);
-      setMasterAddress(result.logs[0].args.masterAddress, punishVoters);
+      var result1 =ms.initMaster(web3.eth.accounts[0], punishVoters, gbt.address, gbt.address, addr);
+      setMasterAddress(ms.address, punishVoters);
       punishVoters = true;
-      var result1 = gbm.addGovBlocksDapp(
-        '0x42',
-        gbt.address,
-        gbt.address,
-        punishVoters
-      );
       return result1;
     })
     .then(function(result) {
-      ms = Master.at(result.logs[0].args.masterAddress);
+      // var result1 = gbm.addGovBlocksDapp(
+      //   '0x42',
+      //   gbt.address,
+      //   gbt.address,
+      //   punishVoters
+      // );
+      return Master.new();
+    })
+    .then(function(result) {
+      ms = Master.at(result.address);
+      console.log(result.address);
+      // ms = Master.at(result.logs[0].args.masterAddress);
+      var addr1 = [mr.address, pc.address, gv.address];
+      ms.initMaster(web3.eth.accounts[0], punishVoters, gbt.address, gbt.address, addr1);
       setMasterAddress(ms.address, punishVoters);
       console.log(
         'GovBlocks Initialization completed, GBM Address: ',
