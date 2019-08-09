@@ -135,59 +135,65 @@ contract DelegatedGovernance is Governance {
         constructorCheck = true;
     }
 
-    function UpdateGovernanceParameters(bytes8 _code, uint _value) public {
+    function updateUintParameters(bytes8 _code, uint _value) public {
         if(_code == "MAXFOL") {
             maxFollowers = _value;
         }
     }
 
-    /// @dev Get number of token incentives to be claimed by a member
-    /// @param _memberAddress address  of member to calculate pending reward 
-    function getPendingReward(address _memberAddress)
-        public view returns(uint pendingDAppReward)
-    {
-
-        uint delegationId = followerDelegation[_memberAddress];
-        address leader;
-        uint lastUpd;
-        if (delegationId > 0 && allDelegation[delegationId].leader != address(0)) {
-            leader = allDelegation[delegationId].leader;
-            lastUpd = allDelegation[delegationId].lastUpd;
-        } else
-            leader = _memberAddress;
-
-        uint i;
-        uint totalVotes = allVotesByMember[leader].length;
-        uint proposalId;
-        uint voteId;
-        uint finalVerdict;
-        uint proposalVoteValue;
-        for (i = lastRewardClaimed[leader]; i < totalVotes; i++) {
-            voteId = allVotesByMember[leader][i];
-            proposalId = allVotes[voteId].proposalId;
-            finalVerdict = allProposalData[proposalId].finalVerdict;
-            if (punishVoters) {
-                if (allVotes[voteId].solutionChosen != finalVerdict) {
-                    continue;
-                }
-                proposalVoteValue = allProposalData[proposalId].majVoteValue;
-            } else {
-                proposalVoteValue = allProposalData[proposalId].totalVoteValue;
-            }
-            if (finalVerdict > 0 && (allVotes[allVotesByMember[leader][i]].dateAdd > (
-                lastUpd + tokenHoldingTime) || leader == _memberAddress)) {
-                if (!rewardClaimed[voteId]) {
-                    pendingDAppReward += SafeMath.div(
-                                    SafeMath.mul(
-                                        allVotes[voteId].voteValue,
-                                        allProposalData[proposalId].commonIncentive
-                                    ),
-                                    proposalVoteValue
-                                );
-                }
-            }
+    function getUintParameters(bytes8 _code) public view returns(bytes8, uint) {
+        if(_code == "MAXFOL") {
+            return (_code, maxFollowers);
         }
     }
+
+    /// @dev Get number of token incentives to be claimed by a member
+    /// @param _memberAddress address  of member to calculate pending reward 
+    // function getPendingReward(address _memberAddress)
+    //     public view returns(uint pendingDAppReward)
+    // {
+
+    //     uint delegationId = followerDelegation[_memberAddress];
+    //     address leader;
+    //     uint lastUpd;
+    //     if (delegationId > 0 && allDelegation[delegationId].leader != address(0)) {
+    //         leader = allDelegation[delegationId].leader;
+    //         lastUpd = allDelegation[delegationId].lastUpd;
+    //     } else
+    //         leader = _memberAddress;
+
+    //     uint i;
+    //     uint totalVotes = allVotesByMember[leader].length;
+    //     uint proposalId;
+    //     uint voteId;
+    //     uint finalVerdict;
+    //     uint proposalVoteValue;
+    //     for (i = lastRewardClaimed[leader]; i < totalVotes; i++) {
+    //         voteId = allVotesByMember[leader][i];
+    //         proposalId = allVotes[voteId].proposalId;
+    //         finalVerdict = allProposalData[proposalId].finalVerdict;
+    //         if (punishVoters) {
+    //             if (allVotes[voteId].solutionChosen != finalVerdict) {
+    //                 continue;
+    //             }
+    //             proposalVoteValue = allProposalData[proposalId].majVoteValue;
+    //         } else {
+    //             proposalVoteValue = allProposalData[proposalId].totalVoteValue;
+    //         }
+    //         if (finalVerdict > 0 && (allVotes[allVotesByMember[leader][i]].dateAdd > (
+    //             lastUpd + tokenHoldingTime) || leader == _memberAddress)) {
+    //             if (!rewardClaimed[voteId]) {
+    //                 pendingDAppReward += SafeMath.div(
+    //                                 SafeMath.mul(
+    //                                     allVotes[voteId].voteValue,
+    //                                     allProposalData[proposalId].commonIncentive
+    //                                 ),
+    //                                 proposalVoteValue
+    //                             );
+    //             }
+    //         }
+    //     }
+    // }
 
     /// @dev Internal call for addig a vote to solution
     function _submitVote(uint _proposalId, uint _solution) internal {
@@ -210,6 +216,8 @@ contract DelegatedGovernance is Governance {
 
         emit Vote(msg.sender, _proposalId, totalVotes, now, _solution);
 
+         _countFollowerVotes(_proposalId,_solution, mrSequence);
+
         if (proposalVote[_proposalId].length == memberRole.numberOfMembers(mrSequence) &&
             mrSequence != uint(MemberRoles.Role.TokenHolder) &&
             mrSequence != uint(MemberRoles.Role.UnAssigned)
@@ -218,76 +226,114 @@ contract DelegatedGovernance is Governance {
         }
     }
 
+    function _countFollowerVotes(uint _proposalId, uint _solution, uint mrSequence) internal {
+        address _follower;
+        uint totalVotes;
+        uint delegationId;
+        for (uint i = 0; i < leaderDelegation[msg.sender].length; i++) {
+            delegationId = leaderDelegation[msg.sender][i];
+            if (allDelegation[delegationId].leader == msg.sender && 
+            _checkLastUpd(allDelegation[delegationId].lastUpd)) {
+                _follower = allDelegation[delegationId].follower;
+                if (memberRole.checkRole(_follower, mrSequence)) {
+                    totalVotes = allVotes.length;
+                    proposalVote[_proposalId].push(totalVotes);
+                    allVotesByMember[_follower].push(totalVotes);
+                    addressProposalVote[_follower][_proposalId] = totalVotes;
+                    allVotes.push(ProposalVote(_follower, _solution, _proposalId, calculateVoteValue(_follower), now));
+                    emit Vote(msg.sender, _proposalId, totalVotes, now, _solution);
+                }
+            }
+        }
+    }
+
+    // function calculateVoteValue(address _of) 
+    //     internal view returns(uint voteValue) 
+    // {
+    //     for(uint i = 0;i < leaderDelegation[msg.sender].length; i++) {
+
+    //     }
+    //     voteValue = _getLockedBalance(_of, tokenHoldingTime);
+
+    //     voteValue = 
+    //         Math.max(
+    //             SafeMath.div(
+    //                 voteValue, uint256(10) ** tokenInstance.decimals()
+    //             ),
+    //             minVoteWeight
+    //         );
+    // }
+
     function _checkLastUpd(uint _lastUpd) internal view returns(bool) {
         return (now - _lastUpd) > tokenHoldingTime;
     }
 
     /// @dev Internal call from claimReward
-    function _claimReward(address _memberAddress, uint _maxRecords) 
-        internal returns(uint pendingDAppReward) 
-    {
+    // function _claimReward(address _memberAddress, uint _maxRecords) 
+    //     internal returns(uint pendingDAppReward) 
+    // {
 
-        uint delegationId = followerDelegation[_memberAddress];
-        uint lastUpd;
-        address leader;
-        if (delegationId > 0 && allDelegation[delegationId].leader != address(0)) {
-            leader = allDelegation[delegationId].leader;
-            lastUpd = allDelegation[delegationId].lastUpd;
-        } else {
-            leader = _memberAddress;
-        }
+    //     uint delegationId = followerDelegation[_memberAddress];
+    //     uint lastUpd;
+    //     address leader;
+    //     if (delegationId > 0 && allDelegation[delegationId].leader != address(0)) {
+    //         leader = allDelegation[delegationId].leader;
+    //         lastUpd = allDelegation[delegationId].lastUpd;
+    //     } else {
+    //         leader = _memberAddress;
+    //     }
 
-        uint proposalId;
-        uint voteId;
-        uint finalVerdict;
-        uint totalVotes = allVotesByMember[leader].length;
-        uint lastClaimed = totalVotes;
-        // uint j;
-        uint i;
-        uint proposalVoteValue;
-        // uint proposalStatus = allProposalData[proposalId].propStatus;
-        // for (i = lastRewardClaimed[leader]; i < totalVotes && j < _maxRecords; i++) {
-        for (i = lastRewardClaimed[leader]; i < totalVotes && _maxRecords > 0; i++) {
-            voteId = allVotesByMember[leader][i];
-            proposalId = allVotes[voteId].proposalId;
-            finalVerdict = allProposalData[proposalId].finalVerdict;
-            if(allVotes[voteId].dateAdd > (lastUpd + tokenHoldingTime) || _memberAddress == leader) {
-                if (punishVoters) {
-                    if (allVotes[voteId].solutionChosen != finalVerdict) {
-                        continue;
-                    }
-                    proposalVoteValue = allProposalData[proposalId].majVoteValue;
-                } else {
-                    proposalVoteValue = allProposalData[proposalId].totalVoteValue;
-                }
-                if (finalVerdict > 0) {
-                    if (!rewardClaimed[voteId]) {
-                        pendingDAppReward += SafeMath.div(
-                                        SafeMath.mul(
-                                            allVotes[voteId].voteValue,
-                                            allProposalData[proposalId].commonIncentive
-                                        ),
-                                        proposalVoteValue
-                                    );
-                        rewardClaimed[voteId] = true;
-                        // j++;
-                        _maxRecords--;
-                    }
-                } else {
-                    if (allProposalData[proposalId].propStatus <= uint(ProposalStatus.VotingStarted) && 
-                        lastClaimed == totalVotes
-                    ) {
-                        lastClaimed = i;
-                    }
-                }
-            }
-        }
+    //     uint proposalId;
+    //     uint voteId;
+    //     uint finalVerdict;
+    //     uint totalVotes = allVotesByMember[leader].length;
+    //     uint lastClaimed = totalVotes;
+    //     // uint j;
+    //     uint i;
+    //     uint proposalVoteValue;
+    //     // uint proposalStatus = allProposalData[proposalId].propStatus;
+    //     // for (i = lastRewardClaimed[leader]; i < totalVotes && j < _maxRecords; i++) {
+    //     for (i = lastRewardClaimed[leader]; i < totalVotes && _maxRecords > 0; i++) {
+    //         voteId = allVotesByMember[leader][i];
+    //         proposalId = allVotes[voteId].proposalId;
+    //         finalVerdict = allProposalData[proposalId].finalVerdict;
+    //         if(allVotes[voteId].dateAdd > (lastUpd + tokenHoldingTime) || _memberAddress == leader) {
+    //             if (punishVoters) {
+    //                 if (allVotes[voteId].solutionChosen != finalVerdict) {
+    //                     continue;
+    //                 }
+    //                 proposalVoteValue = allProposalData[proposalId].majVoteValue;
+    //             } else {
+    //                 proposalVoteValue = allProposalData[proposalId].totalVoteValue;
+    //             }
+    //             if (finalVerdict > 0) {
+    //                 if (!rewardClaimed[voteId]) {
+    //                     pendingDAppReward += SafeMath.div(
+    //                                     SafeMath.mul(
+    //                                         allVotes[voteId].voteValue,
+    //                                         allProposalData[proposalId].commonIncentive
+    //                                     ),
+    //                                     proposalVoteValue
+    //                                 );
+    //                     rewardClaimed[voteId] = true;
+    //                     // j++;
+    //                     _maxRecords--;
+    //                 }
+    //             } else {
+    //                 if (allProposalData[proposalId].propStatus <= uint(ProposalStatus.VotingStarted) && 
+    //                     lastClaimed == totalVotes
+    //                 ) {
+    //                     lastClaimed = i;
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        if (lastClaimed == totalVotes) {
-            lastRewardClaimed[_memberAddress] = i;
-        } else {
-            lastRewardClaimed[_memberAddress] = lastClaimed;
-        }
-    }
+    //     if (lastClaimed == totalVotes) {
+    //         lastRewardClaimed[_memberAddress] = i;
+    //     } else {
+    //         lastRewardClaimed[_memberAddress] = lastClaimed;
+    //     }
+    // }
 
 }
