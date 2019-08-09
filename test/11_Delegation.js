@@ -248,7 +248,7 @@ contract('Proposal, solution and voting', function([
     await gv.createProposal('Proposal2', 'Proposal2', 'Proposal2', 0); //Pid 3
     await gv.categorizeProposal(pId, 15, 0);
     let actionHash = encode(
-      'UpdateGovernanceParameters(bytes8,uint)',
+      'updateUintParameters(bytes8,uint)',
       'MAXFOL',
       2
     );
