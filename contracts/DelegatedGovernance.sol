@@ -38,6 +38,10 @@ contract DelegatedGovernance is Governance {
         require(getPendingReward(msg.sender) == 0, "Claim pending rewards");
         _;
     }
+    
+    function remove_changeTokenHoldingTime(uint _time) public {
+        tokenHoldingTime = _time;
+    }
 
     /**
      * @dev get followers of an address
@@ -241,7 +245,7 @@ contract DelegatedGovernance is Governance {
                     allVotesByMember[_follower].push(totalVotes);
                     addressProposalVote[_follower][_proposalId] = totalVotes;
                     allVotes.push(ProposalVote(_follower, _solution, _proposalId, calculateVoteValue(_follower), now));
-                    emit Vote(msg.sender, _proposalId, totalVotes, now, _solution);
+                    emit Vote(_follower, _proposalId, totalVotes, now, _solution);
                 }
             }
         }
