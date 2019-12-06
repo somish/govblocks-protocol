@@ -14,10 +14,9 @@ const approveAmount = 10;
 const nullAddress = 0x0000000000000000000000000000000000000000;
 
 contract('GBTStandardToken', function([owner, receiver, spender]) {
-  before(function() {
-    getAddress('GBT',false).then(function(address) {
-      gbts = GBTStandardToken.at(address);
-    });
+  before(async function() {
+    var address = await getAddress('GBT', false);
+    gbts = GBTStandardToken.at(address);
   });
 
   it('has the right balance for the contract owner', async () => {

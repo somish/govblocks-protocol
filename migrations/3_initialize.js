@@ -54,7 +54,7 @@ module.exports = deployer => {
     .then(function(result) {
       ms = Master.at(result.logs[0].args.masterAddress);
       const addr = [mr.address, pc.address, gv.address];
-      ms.initMaster(web3.eth.accounts[0], addr, punishVoters);
+      // ms.initMaster(web3.eth.accounts[0], addr, punishVoters);
       setMasterAddress(result.logs[0].args.masterAddress, punishVoters);
       punishVoters = true;
       var result1 = gbm.addGovBlocksDapp(
