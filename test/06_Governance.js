@@ -31,7 +31,7 @@ require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const e18 = new BigNumber(1e18);
+// const e18 = new BigNumber(1e18);
 
 contract('Governance', ([owner, notOwner, voter, noStake]) => {
   it('Should fetch addresses from master', async function() {
@@ -56,7 +56,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
 
   it('Should create an uncategorized proposal', async function() {
     pid = await gv.getProposalLength();
-    await dAppToken.transfer(notOwner, e18.mul(10));
+    await dAppToken.transfer(notOwner, 1e18*10);
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0, {
       from: notOwner
@@ -89,7 +89,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     //   'PL',
     //   [stake, incentive]
     // );
-    await dAppToken.lock('GOV', e18.mul(10), 54685456133563456);
+    await dAppToken.lock('GOV', 1e18*10, 54685456133563456);
     //proposal to update category
     let actionHash = encode(
       'updateCategory(uint,string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
@@ -117,7 +117,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.closeProposal(p1.toNumber());
     //proposal closed
     await catchRevert(gv.categorizeProposal(pid, 7, incentive));
-    await dAppToken.transfer(gv.address, e18.mul(20));
+    await dAppToken.transfer(gv.address, 1e18*20);
   });
 
   it('Should not allow to categorize if tokens are not locked', async function() {
@@ -130,7 +130,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await catchRevert(
       gv.categorizeProposal(pid, 7, incentive, { from: notOwner })
     );
-    await dAppToken.lock('GOV', e18.mul(10), 54685456133563456, {
+    await dAppToken.lock('GOV', 1e18*10, 54685456133563456, {
       from: notOwner
     });
   });
@@ -263,7 +263,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await initializeContracts(punishVoters);
     let gvAddress = await getAddress('GV', punishVoters);
     gv = await Governance.at(gvAddress);
-    await dAppToken.transfer(gvAddress, e18.mul(10));
+    await dAppToken.transfer(gvAddress, 1e18*10);
     var stake = Math.pow(10, 17);
     var incentive = Math.pow(10, 17);
     //proposal to update category
@@ -320,7 +320,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.closeProposal(p1.toNumber());
     //proposal closed
     await gv.createProposal('Add new member', 'Add new member', 'hash', 0);
-    await dAppToken.transfer(voter, e18.mul(10));
+    await dAppToken.transfer(voter, 1e18*10);
     propId = (await gv.getProposalLength()).toNumber() - 1;
     await gv.categorizeProposal(propId, 7, incentive);
     await gv.addSolution(
@@ -337,7 +337,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
     await gv.submitVote(propId, [1]);
     await gv.submitVote(propId, [1], { from: notOwner });
     await catchRevert(gv.submitVote(propId, [2], { from: voter }));
-    await dAppToken.lock('GOV', e18.mul(10), 54685456133563456, {
+    await dAppToken.lock('GOV', 1e18*10, 54685456133563456, {
       from: voter
     });
     await gv.submitVote(propId, [2], { from: voter });
@@ -622,7 +622,7 @@ contract('Governance', ([owner, notOwner, voter, noStake]) => {
   });
 
   it('Should allow more token holders to vote', async function() {
-    dAppToken.transfer(notOwner, e18.mul(1));
+    dAppToken.transfer(notOwner, 1e18);
     await gv.submitVote(propId, [0], { from: notOwner });
     await catchRevert(gv.submitVote(propId, [1]));
   });

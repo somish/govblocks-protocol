@@ -26,7 +26,7 @@ require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const e18 = new BigNumber(1e18);
+// const e18 = new BigNumber(1e18);
 
 contract('Proposal, solution and voting', function([
   ab1,
@@ -81,7 +81,7 @@ contract('Proposal, solution and voting', function([
     gbt = await GBTStandardToken.at(address);
     address = await getAddress('GV', false);
     gv = await Governance.at(address);
-    await gbt.transfer(address, e18.mul(100));
+    await gbt.transfer(address, 1e18*100);
     address = await getAddress('MR', false);
     mr = await MemberRoles.at(address);
     address = await getAddress('PC', false);

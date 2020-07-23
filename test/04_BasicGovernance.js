@@ -23,8 +23,7 @@ const BigNumber = web3.BigNumber;
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
-
-const e18 = new BigNumber(1e18);
+// const e18 = new BigNumber(1e18);
 
 contract('Proposal, solution and voting', function([
   owner,
@@ -279,7 +278,7 @@ contract('Proposal, solution and voting', function([
     await gv.submitVote(p1.toNumber(), [1], { from: member });
     await gv.closeProposal(p1.toNumber());
     //proposal closed
-    await gbt.transfer(pl.address, e18.mul(20));
+    await gbt.transfer(pl.address, 20*1e18);
     //proposal to remove member from AB
     actionHash = encode('updateRole(address,uint,bool)', ab, 1, false);
     p1 = await gv.getProposalLength();

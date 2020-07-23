@@ -43,38 +43,30 @@ module.exports = deployer => {
     })
     .then(function() {
       punishVoters = false;
-      // var result =gbm.addGovBlocksDapp(
-      //   '0x41',
-      //   gbt.address,
-      //   gbt.address,
-      //   punishVoters
-      // );
-      return Master.deployed();
+      var result = gbm.addGovBlocksDapp(
+        '0x41',
+        gbt.address,
+        gbt.address,
+        punishVoters
+      );
+      return result;
     })
     .then(function(result) {
-      ms = Master.at(result.address);
-      console.log(result.address);
+      ms = Master.at(result.logs[0].args.masterAddress);
       const addr = [mr.address, pc.address, gv.address];
-      var result1 =ms.initMaster(web3.eth.accounts[0], punishVoters, gbt.address, gbt.address, addr);
-      setMasterAddress(ms.address, punishVoters);
+      // ms.initMaster(web3.eth.accounts[0], addr, punishVoters);
+      setMasterAddress(result.logs[0].args.masterAddress, punishVoters);
       punishVoters = true;
+      var result1 = gbm.addGovBlocksDapp(
+        '0x42',
+        gbt.address,
+        gbt.address,
+        punishVoters
+      );
       return result1;
     })
     .then(function(result) {
-      // var result1 = gbm.addGovBlocksDapp(
-      //   '0x42',
-      //   gbt.address,
-      //   gbt.address,
-      //   punishVoters
-      // );
-      return Master.new();
-    })
-    .then(function(result) {
-      ms = Master.at(result.address);
-      console.log(result.address);
-      // ms = Master.at(result.logs[0].args.masterAddress);
-      var addr1 = [mr.address, pc.address, gv.address];
-      ms.initMaster(web3.eth.accounts[0], punishVoters, gbt.address, gbt.address, addr1);
+      ms = Master.at(result.logs[0].args.masterAddress);
       setMasterAddress(ms.address, punishVoters);
       console.log(
         'GovBlocks Initialization completed, GBM Address: ',
