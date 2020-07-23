@@ -16,9 +16,9 @@
 pragma solidity 0.4.24;
 import "./Upgradeable.sol";
 import "./Master.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
-import "./imports/lockable-token/LockableToken.sol";
+import "./external/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./external/openzeppelin-solidity/contracts/math/Math.sol";
+import "./external/lockable-token/LockableToken.sol";
 import "./MemberRoles.sol";
 import "./interfaces/IGovernance.sol";
 import "./interfaces/IProposalCategory.sol";
@@ -35,6 +35,14 @@ contract Governance is IGovernance,Upgradeable {
         Majority_Not_Reached_But_Accepted,
         Denied,
         Majority_Not_Reached_But_Rejected
+    }
+
+    enum ActionStatus {
+        Pending,
+        Accepted,
+        Rejected,
+        Executed,
+        NoAction
     }
 
     struct ProposalStruct {
@@ -82,6 +90,15 @@ contract Governance is IGovernance,Upgradeable {
     uint public tokenHoldingTime;
     uint public allowedToCatgorize;
     bool internal locked;
+    uint public actionWaitingTime;
+
+    mapping(uint => mapping(address => bool)) isActionRejected;
+    mapping(uint => uint) public proposalActionStatus;
+    mapping(uint => uint) internal proposalExecutionTime;
+    mapping(uint => uint) public actionRejectedCount;
+
+    uint internal actionRejectAuthRole;
+    uint internal votesToRejectAction;
 
     MemberRoles internal memberRole;
     IProposalCategory internal proposalCategory;
@@ -205,11 +222,6 @@ contract Governance is IGovernance,Upgradeable {
     ) 
         external isStakeValidated(_proposalId)
     {
-        require(
-            allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.AwaitingSolution),
-            "Not in solutioning phase"
-        );
-
         _addSolution(_proposalId, _action, _solutionHash);
     }
 
@@ -420,16 +432,77 @@ contract Governance is IGovernance,Upgradeable {
         return (allProposal.length);
     }
 
-    function initiateGovernance(bool _punishVoters) external {
+    function initiateGovernance(bool _punishVoters, uint _actionWaitingTime) public {
         require(!constructorCheck);
         allowedToCatgorize = uint(MemberRoles.Role.AdvisoryBoard);
         allVotes.push(ProposalVote(address(0), 0, 0, 1, 0));
         allProposal.push(ProposalStruct(address(0), now));
-        tokenHoldingTime = 7 days;
+        actionWaitingTime = _actionWaitingTime;
         punishVoters = _punishVoters;
+        tokenHoldingTime = 7 days;
         minVoteWeight = 1;
         constructorCheck = true;
     }
+
+        /**
+     * @dev Triggers action of accepted proposal after waiting time is finished
+     */
+    function triggerAction(uint _proposalId) external {
+        uint category = allProposalData[_proposalId].category;
+        require(proposalActionStatus[_proposalId] == uint(ActionStatus.Accepted) && proposalExecutionTime[_proposalId] <= now, "Cannot trigger");
+        proposalActionStatus[_proposalId] = uint(ActionStatus.Executed);
+        
+        bytes2 contractName;
+        bytes memory _functionHash;
+        address actionAddress;
+
+        (, actionAddress, contractName, , _functionHash) = proposalCategory.categoryActionDetails(category);
+        /*solhint-disable*/
+        if (contractName == "MS")
+            actionAddress = address(ms);
+        else if(contractName !="EX")
+            actionAddress = ms.getLatestAddress(contractName);
+        /*solhint-enable*/
+        if (actionAddress.call(abi.encodePacked(_functionHash, allProposalSolutions[_proposalId][allProposalData[_proposalId].finalVerdict].action))) {
+            emit ActionSuccess(_proposalId);
+        } else {
+            proposalActionStatus[_proposalId] = uint(ActionStatus.Accepted);
+            emit ActionFailed(_proposalId);
+        }
+    }
+
+    /**
+     * @dev Provides option to Advisory board member to reject proposal action execution within actionWaitingTime, if found suspicious
+     */
+    function rejectAction(uint _proposalId) external {
+        require(memberRole.checkRole(msg.sender, actionRejectAuthRole) && proposalExecutionTime[_proposalId] > now);
+        require(proposalActionStatus[_proposalId] == uint(ActionStatus.Accepted));
+        require(!isActionRejected[_proposalId][msg.sender]);
+        isActionRejected[_proposalId][msg.sender] = true;
+        actionRejectedCount[_proposalId]++;
+        if (actionRejectedCount[_proposalId] == votesToRejectAction) {
+            proposalActionStatus[_proposalId] = uint(ActionStatus.Rejected);
+        }
+    }
+
+    function updateUintParameters(bytes8 _code, uint _value) public {
+        if(_code == "REJAUTH") {
+            actionRejectAuthRole = _value;
+        } else if (_code == "REJCOUNT") {
+            votesToRejectAction = _value;
+        } else {
+            revert("Invalid code");
+        }
+    }
+
+    function getUintParameters(bytes8 _code) public view returns(bytes8, uint) {
+        if(_code == "REJAUTH") {
+            return (_code, actionRejectAuthRole);
+        } else if(_code == "REJCOUNT") {
+            return (_code, votesToRejectAction);
+        }
+    }
+
 
     /// @dev updates all dependency addresses to latest ones from Master
     function updateDependencyAddresses() public {
@@ -632,7 +705,17 @@ contract Governance is IGovernance,Upgradeable {
     function _addSolution(uint _proposalId, bytes _action, string _solutionHash)
         internal
     {
+        require(
+            allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.AwaitingSolution),
+            "Not in solutioning phase"
+        );
+
         require(!alreadyAdded(_proposalId, msg.sender), "User already added a solution for this proposal");
+        
+        if (proposalCategory.categoryActionHashes(allProposalData[_proposalId].category).length == 0) {
+            require(keccak256(_action) == keccak256(""));
+            proposalActionStatus[_proposalId] = uint(ActionStatus.NoAction);
+        }
         // governanceDat.setSolutionAdded(_proposalId, msg.sender, _action, _solutionHash);
         allProposalSolutions[_proposalId].push(SolutionStruct(msg.sender, _action));
         emit Solution(_proposalId, msg.sender, allProposalSolutions[_proposalId].length - 1, _solutionHash, now);
@@ -716,24 +799,18 @@ contract Governance is IGovernance,Upgradeable {
         internal
     {
         uint _majorityVote;
-        bytes2 contractName;
-        address actionAddress;
         allProposalData[_proposalId].finalVerdict = max;
         (, , _majorityVote, , , , ) = proposalCategory.category(category);
-        (, actionAddress, contractName, ) = proposalCategory.categoryAction(category);
+        // (, actionAddress, contractName, ) = proposalCategory.categoryAction(category);
         if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
             if (max > 0) {
                 _updateProposalStatus(_proposalId, uint(ProposalStatus.Accepted));
-                /*solhint-disable*/
-                if (contractName == "MS")
-                    actionAddress = address(ms);
-                else if(contractName !="EX")
-                    actionAddress = ms.getLatestAddress(contractName);
-                /*solhint-enable*/
-                if (actionAddress.call(allProposalSolutions[_proposalId][max].action)) {
-                    emit ActionSuccess(_proposalId);
-                }
+                
                 emit ProposalAccepted(_proposalId);
+                if (proposalActionStatus[_proposalId] != uint(ActionStatus.NoAction)) {
+                    proposalActionStatus[_proposalId] = uint(ActionStatus.Accepted);
+                    proposalExecutionTime[_proposalId] = SafeMath.add(actionWaitingTime, now);
+                }
             } else {
                 _updateProposalStatus(_proposalId, uint(ProposalStatus.Rejected));
             }
@@ -767,7 +844,7 @@ contract Governance is IGovernance,Upgradeable {
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
     function alreadyAdded(uint _proposalId, address _memberAddress) internal view returns(bool) {
-        SolutionStruct[] solutions = allProposalSolutions[_proposalId];
+        SolutionStruct[] memory solutions = allProposalSolutions[_proposalId];
         for (uint i = 1; i < solutions.length; i++) {
             if (solutions[i].owner == _memberAddress)
                 return true;

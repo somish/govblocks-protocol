@@ -126,28 +126,25 @@ contract DelegatedGovernance is Governance {
         }
     }
 
-    function initiateGovernance(bool _punishVoters) external {
-        require(!constructorCheck);
-        allowedToCatgorize = uint(MemberRoles.Role.AdvisoryBoard);
-        allProposal.push(ProposalStruct(address(0), now));
-        allVotes.push(ProposalVote(address(0), 0, 0, 1, 0));
+    function initiateGovernance(bool _punishVoters, uint _actionWaitingTime) public {
+        super.initiateGovernance(_punishVoters, _actionWaitingTime);
         allDelegation.push(DelegateVote(address(0), address(0), now));
-        tokenHoldingTime = 7 days;
         maxFollowers = 40;
-        punishVoters = _punishVoters;
-        minVoteWeight = 1;
-        constructorCheck = true;
     }
 
     function updateUintParameters(bytes8 _code, uint _value) public {
         if(_code == "MAXFOL") {
             maxFollowers = _value;
+        } else {
+            super.updateUintParameters(_code, _value);
         }
     }
 
     function getUintParameters(bytes8 _code) public view returns(bytes8, uint) {
         if(_code == "MAXFOL") {
             return (_code, maxFollowers);
+        } else {
+            return super.getUintParameters(_code);
         }
     }
 

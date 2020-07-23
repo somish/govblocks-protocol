@@ -15,9 +15,9 @@
 
 pragma solidity 0.4.24;
 import "./interfaces/IMemberRoles.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./imports/lockable-token/LockableToken.sol";
-import "./imports/govern/Governed.sol";
+import "./external/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./external/lockable-token/LockableToken.sol";
+import "./external/govern/Governed.sol";
 
 
 contract MemberRoles is IMemberRoles, Governed {

@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import "./GBTStandardToken.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./external/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 contract TokenProxy is ERC1132 {

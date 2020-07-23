@@ -66,6 +66,11 @@ contract IGovernance {
         uint256 proposalId
     );
 
+    /// @dev ActionFailed event is called whenever an onchain action is failed/reverted.
+    event ActionFailed (
+        uint256 proposalId
+    );
+
     /// @dev Creates a new proposal
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective

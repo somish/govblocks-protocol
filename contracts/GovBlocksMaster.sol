@@ -15,7 +15,7 @@
 
 pragma solidity 0.4.24;
 import "./Master.sol";
-import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./external/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract GovBlocksMaster is Ownable {
@@ -33,10 +33,11 @@ contract GovBlocksMaster is Ownable {
         bytes32 _gbDAppName, 
         address _dappTokenAddress, 
         address _tokenProxy,
-        bool _punishVoters
+        bool _punishVoters,
+        uint _actionWaitingTime
     ) public {
         Master ms = new Master();
-        ms.initMaster(msg.sender, _punishVoters, _dappTokenAddress, _tokenProxy, implementations);
+        ms.initMaster(msg.sender, _punishVoters, _actionWaitingTime, _dappTokenAddress, _tokenProxy, implementations);
         emit OnBoarded(_gbDAppName, address(ms));
     }  
 

@@ -15,8 +15,8 @@
 
 pragma solidity 0.4.24;
 
-import "./imports/lockable-token/LockableToken.sol";
-import "./imports/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
+import "./external/lockable-token/LockableToken.sol";
+import "./external/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 
 
 contract GBTStandardToken is MintableToken, LockableToken {

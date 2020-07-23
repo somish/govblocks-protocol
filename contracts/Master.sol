@@ -17,9 +17,9 @@ pragma solidity 0.4.24;
 
 import "./Upgradeable.sol";
 import "./GovBlocksMaster.sol";
-import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./imports/proxy/OwnedUpgradeabilityProxy.sol";
-import "./imports/govern/Governed.sol";
+import "./external/openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./external/proxy/OwnedUpgradeabilityProxy.sol";
+import "./external/govern/Governed.sol";
 import "./Governance.sol";
 import "./MemberRoles.sol";
 
@@ -40,6 +40,7 @@ contract Master is Ownable, Governed {
     function initMaster(
         address _ownerAddress,
         bool _punishVoters,
+        uint _actionWaitingTime,
         address _token,
         address _lockableToken,
         address[] _implementations
@@ -63,7 +64,7 @@ contract Master is Ownable, Governed {
         mr.memberRolesInitiate(dAppToken, _ownerAddress);
 
         Governance gv = Governance(contractAddress["GV"]);
-        gv.initiateGovernance(_punishVoters);
+        gv.initiateGovernance(_punishVoters, _actionWaitingTime);
     }
 
     /// @dev Creates a new version of contract addresses

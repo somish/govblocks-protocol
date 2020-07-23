@@ -23,6 +23,8 @@ contract IProposalCategory {
         string actionHash
     );
 
+    mapping (uint => bytes) public categoryActionHashes;
+
     /// @dev Adds new category
     /// @param _name Category name
     /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
@@ -105,5 +107,16 @@ contract IProposalCategory {
     /// @dev Gets Total number of categories added till now
     function totalCategories() external view returns(uint numberOfCategories) { //solhint-disable-line
     }
+
+    /**
+     * @dev Gets the category acion details of a category id 
+     * @param _categoryId is the category id in concern
+     * @return the category id
+     * @return the contract address
+     * @return the contract name
+     * @return the default incentive
+     * @return action function hash
+     */
+    function categoryActionDetails(uint _categoryId) external view returns(uint, address, bytes2, uint, bytes) {}
 
 }

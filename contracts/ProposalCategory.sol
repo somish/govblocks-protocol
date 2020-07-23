@@ -14,7 +14,7 @@
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 pragma solidity 0.4.24;
 import "./interfaces/IProposalCategory.sol";
-import "./imports/govern/Governed.sol";
+import "./external/govern/Governed.sol";
 import "./MemberRoles.sol";
 
 
@@ -41,34 +41,47 @@ contract ProposalCategory is IProposalCategory, Governed {
     
     CategoryStruct[] internal allCategory;
     mapping (uint => CategoryAction) internal categoryActionData;
+    mapping (uint => bytes) public categoryActionHashes;
     
-    /// @dev Adds new category
-    /// @param _name Category name
-    /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
-    /// @param _majorityVotePerc Majority Vote threshold for Each voting layer
-    /// @param _quorumPerc minimum threshold percentage required in voting to calculate result
-    /// @param _allowedToCreateProposal Member roles allowed to create the proposal
-    /// @param _closingTime Vote closing time for Each voting layer
-    /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
-    /// @param _contractAddress address of contract to call after proposal is accepted
-    /// @param _contractName name of contract to be called after proposal is accepted
-    /// @param _incentives rewards to distributed after proposal is accepted
-    function addCategory(
-        string _name, 
+    bool public categoryActionHashUpdated;
+    
+    /**
+    * @dev Adds new category
+    * @param _name Category name
+    * @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
+    * @param _majorityVotePerc Majority Vote threshold for Each voting layer
+    * @param _quorumPerc minimum threshold percentage required in voting to calculate result
+    * @param _allowedToCreateProposal Member roles allowed to create the proposal
+    * @param _closingTime Vote closing time for Each voting layer
+    * @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
+    * @param _contractAddress address of contract to call after proposal is accepted
+    * @param _contractName name of contract to be called after proposal is accepted
+    * @param _incentives rewards to distributed after proposal is accepted
+    * @param _functionHash function signature to be executed
+    */
+    function newCategory(
+        string memory _name, 
         uint _memberRoleToVote,
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
+        uint[] memory _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
+        uint[] memory _incentives,
+        string memory _functionHash
     ) 
-        external
+        public
         onlyAuthorizedToGovern 
     {
+
+        require(_quorumPerc <= 100 && _majorityVotePerc <= 100, "Invalid percentage");
+
+        require((_contractName == "EX" && _contractAddress == address(0)) || bytes(_functionHash).length > 0);
+
         require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
+
         _addCategory(
             _name, 
             _memberRoleToVote,
@@ -81,37 +94,56 @@ contract ProposalCategory is IProposalCategory, Governed {
             _contractName,
             _incentives
         );
+
+
+        if (bytes(_functionHash).length > 0 && abi.encodeWithSignature(_functionHash).length == 4) {
+            categoryActionHashes[allCategory.length - 1] = abi.encodeWithSignature(_functionHash);
+        }
     }
 
-    /// @dev Updates category details
-    /// @param _categoryId Category id that needs to be updated
-    /// @param _name Category name
-    /// @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
-    /// @param _allowedToCreateProposal Member roles allowed to create the proposal
-    /// @param _majorityVotePerc Majority Vote threshold for Each voting layer
-    /// @param _quorumPerc minimum threshold percentage required in voting to calculate result
-    /// @param _closingTime Vote closing time for Each voting layer
-    /// @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
-    /// @param _contractAddress address of contract to call after proposal is accepted
-    /// @param _contractName name of contract to be called after proposal is accepted
-    /// @param _incentives rewards to distributed after proposal is accepted
-    function updateCategory(
+    /**
+    * @dev Updates category details
+    * @param _categoryId Category id that needs to be updated
+    * @param _name Category name
+    * @param _memberRoleToVote Voting Layer sequence in which the voting has to be performed.
+    * @param _allowedToCreateProposal Member roles allowed to create the proposal
+    * @param _majorityVotePerc Majority Vote threshold for Each voting layer
+    * @param _quorumPerc minimum threshold percentage required in voting to calculate result
+    * @param _closingTime Vote closing time for Each voting layer
+    * @param _actionHash hash of details containing the action that has to be performed after proposal is accepted
+    * @param _contractAddress address of contract to call after proposal is accepted
+    * @param _contractName name of contract to be called after proposal is accepted
+    * @param _incentives rewards to distributed after proposal is accepted
+    * @param _functionHash function signature to be executed
+    */
+    function editCategory(
         uint _categoryId, 
-        string _name, 
+        string memory _name, 
         uint _memberRoleToVote, 
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
+        uint[] memory _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
+        uint[] memory _incentives,
+        string memory _functionHash
     )
         public
-        onlyAuthorizedToGovern //solhint-disable
-    { 
-        require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
+        onlyAuthorizedToGovern
+    {
+        require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 1, "Invalid Role");
+
+        require(_quorumPerc <= 100 && _majorityVotePerc <= 100, "Invalid percentage");
+
+        require((_contractName == "EX" && _contractAddress == address(0)) || bytes(_functionHash).length > 0);
+
+        delete categoryActionHashes[_categoryId];
+
+        if (bytes(_functionHash).length > 0 && abi.encodeWithSignature(_functionHash).length == 4) {
+            categoryActionHashes[_categoryId] = abi.encodeWithSignature(_functionHash);
+        }
         allCategory[_categoryId].memberRoleToVote = _memberRoleToVote;
         allCategory[_categoryId].majorityVotePerc = _majorityVotePerc;
         allCategory[_categoryId].closingTime = _closingTime;
@@ -121,8 +153,8 @@ contract ProposalCategory is IProposalCategory, Governed {
         categoryActionData[_categoryId].defaultIncentive = _incentives[1];
         categoryActionData[_categoryId].contractName = _contractName;
         categoryActionData[_categoryId].contractAddress = _contractAddress;
-        emit Category(_categoryId, _name, _actionHash);
-    }
+        emit Category(_categoryId, _name, _actionHash);    }
+
 
     /// @dev gets category details
     function category(uint _categoryId) external view returns(uint, uint, uint, uint, uint[], uint, uint) {
@@ -143,6 +175,25 @@ contract ProposalCategory is IProposalCategory, Governed {
             categoryActionData[_categoryId].contractAddress,
             categoryActionData[_categoryId].contractName,
             categoryActionData[_categoryId].defaultIncentive
+        );
+    }
+
+    /**
+     * @dev Gets the category acion details of a category id 
+     * @param _categoryId is the category id in concern
+     * @return the category id
+     * @return the contract address
+     * @return the contract name
+     * @return the default incentive
+     * @return action function hash
+     */
+    function categoryActionDetails(uint _categoryId) external view returns(uint, address, bytes2, uint, bytes) {
+        return(
+            _categoryId,
+            categoryActionData[_categoryId].contractAddress,
+            categoryActionData[_categoryId].contractName,
+            categoryActionData[_categoryId].defaultIncentive,
+            categoryActionHashes[_categoryId]
         );
     }
 
@@ -187,6 +238,23 @@ contract ProposalCategory is IProposalCategory, Governed {
 
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
     function proposalCategoryInitiate() internal { //solhint-disable-line
+        require(!categoryActionHashUpdated, "Category action hashes already updated");
+        categoryActionHashUpdated = true;
+        categoryActionHashes[1] = abi.encodeWithSignature("addRole(bytes32,string,address)");
+        categoryActionHashes[2] = abi.encodeWithSignature("updateRole(address,uint256,bool)");
+        categoryActionHashes[3] = abi.encodeWithSignature("newCategory(string,uint256,uint256,uint256,uint256[],uint256,string,address,bytes2,uint256[],string)");//solhint-disable-line
+        categoryActionHashes[4] = abi.encodeWithSignature("editCategory(uint256,string,uint256,uint256,uint256,uint256[],uint256,string,address,bytes2,uint256[],string)");//solhint-disable-line
+        categoryActionHashes[5] = abi.encodeWithSignature("upgradeContractImplementation(bytes2,address)");
+        categoryActionHashes[6] = abi.encodeWithSignature("startEmergencyPause()");
+        categoryActionHashes[7] = abi.encodeWithSignature("addEmergencyPause(bool,bytes4)");
+        categoryActionHashes[8] = abi.encodeWithSignature("burnCAToken(uint256,uint256,address)");
+        categoryActionHashes[9] = abi.encodeWithSignature("setUserClaimVotePausedOn(address)");
+        categoryActionHashes[12] = abi.encodeWithSignature("transferEther(uint256,address)");
+        categoryActionHashes[13] = abi.encodeWithSignature("addInvestmentAssetCurrency(bytes4,address,bool,uint64,uint64,uint8)");//solhint-disable-line
+        categoryActionHashes[14] = abi.encodeWithSignature("changeInvestmentAssetHoldingPerc(bytes4,uint64,uint64)");
+        categoryActionHashes[15] = abi.encodeWithSignature("changeInvestmentAssetStatus(bytes4,bool)");
+        categoryActionHashes[16] = abi.encodeWithSignature("swapABMember(address,address)");
+        
         addInitialCategories("Uncategorized", "", "EX");
         addInitialCategories("Add new member role", "QmQFnBep7AyMYU3LJDuHSpTYatnw65XjHzzirrghtZoR8U", "MR");
         addInitialCategories("Update member role", "QmXMzSViLBJ22P9oj51Zz7isKTRnXWPHZcQ5hzGvvWD3UV", "MR");
