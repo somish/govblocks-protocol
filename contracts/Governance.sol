@@ -280,7 +280,7 @@ contract Governance is IGovernance, Upgradeable {
 
         require(allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.VotingStarted), "Not allowed");
 
-        require(_solution <= allProposalSolutions[_proposalId].length, "Solution doesn't exist");
+        require(_solution < allProposalSolutions[_proposalId].length, "Solution doesn't exist");
 
         _submitVote(_proposalId, _solution);
     }
