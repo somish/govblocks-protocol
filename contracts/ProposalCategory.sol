@@ -58,16 +58,16 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _contractName name of contract to be called after proposal is accepted
     /// @param _incentives rewards to distributed after proposal is accepted
     function addCategory(
-        string calldata _name, 
+        string memory _name, 
         uint _memberRoleToVote,
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] calldata _allowedToCreateProposal,
+        uint[] memory _allowedToCreateProposal,
         uint _closingTime,
-        string calldata _actionHash,
+        string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] calldata _incentives
+        uint[] memory _incentives
     ) 
         external
         override
