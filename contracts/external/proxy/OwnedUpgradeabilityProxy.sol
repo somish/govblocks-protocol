@@ -1,4 +1,6 @@
-pragma solidity 0.4.24;
+// SPDX-License-Identifier: GNU
+
+pragma solidity 0.8.0;
 
 import './UpgradeabilityProxy.sol';
 
@@ -20,7 +22,7 @@ contract OwnedUpgradeabilityProxy is UpgradeabilityProxy {
   /**
   * @dev the constructor sets the original owner of the contract to the sender account.
   */
-  constructor(address _implementation) public {
+  constructor(address _implementation) {
     _setUpgradeabilityOwner(msg.sender);
     _upgradeTo(_implementation);
   }
@@ -35,7 +37,7 @@ contract OwnedUpgradeabilityProxy is UpgradeabilityProxy {
 
   /**
    * @dev Tells the address of the owner
-   * @return the address of the owner
+   * @return owner the address of the owner
    */
   function proxyOwner() public view returns (address owner) {
     bytes32 position = proxyOwnerPosition;
@@ -60,18 +62,6 @@ contract OwnedUpgradeabilityProxy is UpgradeabilityProxy {
    */
   function upgradeTo(address _implementation) public onlyProxyOwner {
     _upgradeTo(_implementation);
-  }
-
-  /**
-   * @dev Allows the proxy owner to upgrade the current version of the proxy and call the new implementation
-   * to initialize whatever is needed through a low level call.
-   * @param _implementation representing the address of the new implementation to be set.
-   * @param _data represents the msg.data to bet sent in the low level call. This parameter may include the function
-   * signature of the implementation to be called with the needed payload
-   */
-  function upgradeToAndCall(address _implementation, bytes _data) payable public onlyProxyOwner {
-    _upgradeTo(_implementation);
-    require(address(this).call.value(msg.value)(_data));
   }
 
   /**

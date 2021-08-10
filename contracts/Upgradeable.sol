@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GNU
+
 /* Copyright (C) 2017 GovBlocks.io
 
     This program is free software: you can redistribute it and/or modify
@@ -13,16 +15,16 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity 0.8.0;
 
 import "./Master.sol";
 
 
-contract Upgradeable {
+abstract contract Upgradeable {
 
     Master public ms;
 
-    function updateDependencyAddresses() public; //To be implemented by every contract depending on its needs
+    function updateDependencyAddresses() public virtual; //To be implemented by every contract depending on its needs
 
     function changeMasterAddress(address _masterAddress) public {
         if (address(ms) == address(0))

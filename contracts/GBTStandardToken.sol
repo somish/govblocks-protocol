@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GNU
+
 /* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
@@ -13,24 +15,23 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity 0.8.0;
 
-import "./imports/lockable-token/LockableToken.sol";
-import "./imports/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
+import "./external/lockable-token/LockableToken.sol";
+import "./external/openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 
 
 contract GBTStandardToken is MintableToken, LockableToken {
     uint public tokenPrice;
 
     /// @dev constructor
-    constructor() public LockableToken(10 ** 20, "GovBlocks Standard Token", "GBT", 18) {
-        owner = msg.sender;
+    constructor() LockableToken(10 ** 20, "GovBlocks Standard Token", "GBT", 18) {
         tokenPrice = 10 ** 15;
     }
 
     /// @dev payable function to buy tokens. send ETH to get GBT
     function buyToken() public payable returns(uint actualAmount) {
-        actualAmount = SafeMath.div(SafeMath.mul(msg.value, uint256(10) ** decimals), tokenPrice);
+        actualAmount = (msg.value*uint256(10) ** decimals)/tokenPrice;
         _mint(msg.sender, actualAmount);
         emit Mint(msg.sender, actualAmount);
     } 

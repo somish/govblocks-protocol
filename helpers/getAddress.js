@@ -26,4 +26,4 @@ async function initializeContracts(punishVoters) {
   const mri = await MemberRoles.at(mr);
 }
 
-module.exports = { getAddress, initializeContracts};
+module.exports = { getAddress, initializeContracts };

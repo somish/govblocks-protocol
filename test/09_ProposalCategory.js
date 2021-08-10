@@ -12,22 +12,21 @@ const sampleAddress = '0x0000000000000000000000000000000000000001';
 const nullAddress = '0x0000000000000000000000000000000000000000';
 let dAppToken;
 contract('Proposal Category', function() {
-
   async function createProposal(actionHash, categoryId) {
     let p1 = await gv.getProposalLength();
     await gv.createProposalwithSolution(
-        'Category',
-        'Category',
-        'Category',
-        categoryId,
-        'Category',
-        actionHash
-      );
+      'Category',
+      'Category',
+      'Category',
+      categoryId,
+      'Category',
+      actionHash
+    );
     await gv.closeProposal(p1.toNumber());
   }
 
   it('Should fetch addresses from master', async function() {
-    let punishVoters = false
+    let punishVoters = false;
     await initializeContracts(punishVoters);
     address = await getAddress('PC', false);
     pc = await ProposalCategory.at(address);
@@ -44,7 +43,7 @@ contract('Proposal Category', function() {
     assert.equal(g2[1].toNumber(), 1);
     const g3 = await pc.updateDependencyAddresses();
     address = await getAddress('MS', false);
-    const g4 = await catchRevert(pc.changeMasterAddress(address)); 
+    const g4 = await catchRevert(pc.changeMasterAddress(address));
     const g5 = await pc.categoryAction(1);
     assert.equal(g5[2].toString(), '0x4d52');
     const g6 = await pc.totalCategories();
@@ -55,22 +54,22 @@ contract('Proposal Category', function() {
     this.timeout(100000);
     let c1 = await pc.totalCategories();
     // will throw once owner's permissions are revoked
-    await dAppToken.lock('GOV', Math.pow(10,18), 54685456133563456);
+    await dAppToken.lock('GOV', Math.pow(10, 18), 54685456133563456);
     //proposal to add category
-      let actionHash = encode(
-        'addCategory(string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
-        'Yo',
-        1,
-        1,
-        0,
-        [1],
-        1,
-        '',
-        nullAddress,
-        'EX',
-        [0, 0]
-      );
-      await createProposal(actionHash, 3);
+    let actionHash = encode(
+      'addCategory(string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
+      'Yo',
+      1,
+      1,
+      0,
+      [1],
+      1,
+      '',
+      nullAddress,
+      'EX',
+      [0, 0]
+    );
+    await createProposal(actionHash, 3);
     const c2 = await pc.totalCategories();
     assert.isAbove(c2.toNumber(), c1.toNumber(), 'category not added');
   });
@@ -97,27 +96,31 @@ contract('Proposal Category', function() {
     );
     await createProposal(actionHash, 4);
     let cat2 = await pc.category(c1);
-    assert.notEqual(cat1[1].toNumber(), cat2[1].toNumber(), 'category not updated');
+    assert.notEqual(
+      cat1[1].toNumber(),
+      cat2[1].toNumber(),
+      'category not updated'
+    );
   });
 
   it('Should not add a proposal category if invalid roles are passed', async function() {
     this.timeout(100000);
     let c1 = await pc.totalCategories();
     //proposal to add category
-      let actionHash = encode(
-        'addCategory(string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
-        'Yo',
-        1,
-        1,
-        0,
-        [5,6], //Total existing roles 3
-        1,
-        '',
-        nullAddress,
-        'EX',
-        [0, 0]
-      );
-      await createProposal(actionHash, 3);
+    let actionHash = encode(
+      'addCategory(string,uint,uint,uint,uint[],uint,string,address,bytes2,uint[])',
+      'Yo',
+      1,
+      1,
+      0,
+      [5, 6], //Total existing roles 3
+      1,
+      '',
+      nullAddress,
+      'EX',
+      [0, 0]
+    );
+    await createProposal(actionHash, 3);
     const c2 = await pc.totalCategories();
     assert.equal(c2.toNumber(), c1.toNumber(), 'category added incorrectly');
   });
@@ -144,6 +147,10 @@ contract('Proposal Category', function() {
     );
     await createProposal(actionHash, 4);
     let cat2 = await pc.category(c1);
-    assert.equal(cat1[1].toNumber(), cat2[1].toNumber(), 'category not updated');
+    assert.equal(
+      cat1[1].toNumber(),
+      cat2[1].toNumber(),
+      'category not updated'
+    );
   });
 });

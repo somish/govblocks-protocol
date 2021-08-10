@@ -28,7 +28,7 @@ contract('TokenProxy', function([owner, receiver, spender]) {
 
   it('should proxy correct data', async function() {
     this.timeout(100000);
-    tp = await TokenProxy.new(gbts.address,e18);
+    tp = await TokenProxy.new(gbts.address, e18);
     let tpd = await tp.totalSupply();
     let gbtd = await gbts.totalSupply();
     assert.equal(
@@ -192,7 +192,7 @@ contract('TokenProxy', function([owner, receiver, spender]) {
   });
 
   it('should not allow 0 address', async () => {
-    await catchRevert(TokenProxy.new(nullAddress,e18));
+    await catchRevert(TokenProxy.new(nullAddress, e18));
     await catchRevert(tp.transferWithLock(nullAddress, lockReason3, 1, 1));
   });
 });

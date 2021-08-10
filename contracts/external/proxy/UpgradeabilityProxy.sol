@@ -1,4 +1,6 @@
-pragma solidity 0.4.24;
+// SPDX-License-Identifier: GNU
+
+pragma solidity 0.8.0;
 
 import './Proxy.sol';
 
@@ -19,13 +21,13 @@ contract UpgradeabilityProxy is Proxy {
   /**
    * @dev Constructor function
    */
-  constructor() public {}
+  constructor() {}
 
   /**
    * @dev Tells the address of the current implementation
-   * @return address of the current implementation
+   * @return impl address of the current implementation
    */
-  function implementation() public view returns (address impl) {
+  function implementation() public override view returns (address impl) {
     bytes32 position = implementationPosition;
     assembly {
       impl := sload(position)

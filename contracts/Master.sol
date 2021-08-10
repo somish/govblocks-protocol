@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GNU
+
 /* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
@@ -13,13 +15,13 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity 0.8.0;
 
 import "./Upgradeable.sol";
 import "./GovBlocksMaster.sol";
-import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./imports/proxy/OwnedUpgradeabilityProxy.sol";
-import "./imports/govern/Governed.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./external/proxy/OwnedUpgradeabilityProxy.sol";
+import "./external/govern/Governed.sol";
 import "./Governance.sol";
 import "./MemberRoles.sol";
 
@@ -42,7 +44,7 @@ contract Master is Ownable, Governed {
         bool _punishVoters,
         address _token,
         address _lockableToken,
-        address[] _implementations
+        address[] calldata _implementations
     ) external {
         _addContractNames();
         masterAddress = address(this);
@@ -50,8 +52,8 @@ contract Master is Ownable, Governed {
         contractsActive[address(this)] = true;
         dAppToken = _token;
         dAppLocker = _lockableToken;
-        owner = _ownerAddress;
-        versionDates.push(now); //solhint-disable-line
+        transferOwnership(_ownerAddress);
+        versionDates.push(block.timestamp); //solhint-disable-line
         for (uint i = 0; i < allContractNames.length; i++) {
             _generateProxy(allContractNames[i], _implementations[i]);
         }
@@ -62,18 +64,18 @@ contract Master is Ownable, Governed {
         MemberRoles mr = MemberRoles(contractAddress["MR"]);
         mr.memberRolesInitiate(dAppToken, _ownerAddress);
 
-        Governance gv = Governance(contractAddress["GV"]);
+        Governance gv = Governance(payable(contractAddress["GV"]));
         gv.initiateGovernance(_punishVoters);
     }
 
     /// @dev Creates a new version of contract addresses
     /// @param _contractAddresses Array of contract implementations
-    function addNewVersion(address[] _contractAddresses) external onlyAuthorizedToGovern {
+    function addNewVersion(address[]  calldata _contractAddresses) external onlyAuthorizedToGovern {
         for (uint i = 0; i < allContractNames.length; i++) {
             _replaceImplementation(allContractNames[i], _contractAddresses[i]);
         }
 
-        versionDates.push(now); //solhint-disable-line
+        versionDates.push(block.timestamp); //solhint-disable-line
     }
 
     /// @dev adds a new contract type to master
@@ -93,7 +95,7 @@ contract Master is Ownable, Governed {
         } else {
             _replaceImplementation(_contractsName, _contractAddress);
         }
-        versionDates.push(now);  //solhint-disable-line
+        versionDates.push(block.timestamp);  //solhint-disable-line
     }
 
     /// @dev upgrades a single contract
@@ -123,12 +125,12 @@ contract Master is Ownable, Governed {
     /// @param _address  address to be checked for internal
     /// @return check returns true if the condition meets
     function isInternal(address _address) public view returns(bool check) {
-        if (contractsActive[_address] || owner == _address)
+        if (contractsActive[_address] || owner() == _address)
             check = true;
     }
 
     /// @dev Gets latest version name and address
-    function getVersionData() public view returns(uint, bytes2[], address[]) {
+    function getVersionData() public view returns(uint, bytes2[] memory, address[] memory) {
         address[] memory contractAddresses = new address[](allContractNames.length);
 
         for (uint i = 0; i < allContractNames.length; i++)
@@ -168,7 +170,7 @@ contract Master is Ownable, Governed {
 
     function _replaceImplementation(bytes2 _contractsName, address _contractAddress) internal {
         OwnedUpgradeabilityProxy tempInstance 
-                = OwnedUpgradeabilityProxy(contractAddress[_contractsName]);
+                = OwnedUpgradeabilityProxy(payable(contractAddress[_contractsName]));
         tempInstance.upgradeTo(_contractAddress);
     }
 

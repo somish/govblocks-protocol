@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GNU
+
 /* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
@@ -13,11 +15,11 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity 0.8.0;
 
 
-contract IMaster {
-    function getLatestAddress(bytes2 _module) public view returns(address);
+interface IMaster {
+    function getLatestAddress(bytes2 _module) external view returns(address);
 }
 
 

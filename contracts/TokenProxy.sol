@@ -1,11 +1,12 @@
-pragma solidity 0.4.24;
+// SPDX-License-Identifier: GNU
+
+pragma solidity 0.8.0;
+
 
 import "./GBTStandardToken.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 contract TokenProxy is ERC1132 {
-    using SafeMath for uint256;
     /**
      * @dev Error messages for require statements
      */
@@ -16,7 +17,7 @@ contract TokenProxy is ERC1132 {
     GBTStandardToken public originalToken;
     uint8 internal tokenDecimals;
 
-    constructor(address _originalToken, uint8 _decimals) public {
+    constructor(address _originalToken, uint8 _decimals) {
 
         require(_originalToken != address(0));
         
@@ -32,11 +33,11 @@ contract TokenProxy is ERC1132 {
         return originalToken.balanceOf(_of);
     }
 
-    function name() public view returns(string) {
+    function name() public view returns(string memory) {
         return originalToken.name();
     }
 
-    function symbol() public view returns(string) {
+    function symbol() public view returns(string memory) {
         return originalToken.symbol();
     }
 
@@ -53,9 +54,10 @@ contract TokenProxy is ERC1132 {
      */
     function lock(bytes32 _reason, uint256 _amount, uint256 _time)
         public
+        override
         returns (bool)
     {
-        uint256 validUntil = block.timestamp.add(_time); //solhint-disable-line
+        uint256 validUntil = block.timestamp + _time; //solhint-disable-line
 
         // If tokens are already locked, then functions extendLock or
         // increaseLockAmount should be used to make any changes
@@ -85,7 +87,7 @@ contract TokenProxy is ERC1132 {
         public
         returns (bool)
     {
-        uint256 validUntil = block.timestamp.add(_time); //solhint-disable-line
+        uint256 validUntil = block.timestamp + _time; //solhint-disable-line
 
         require(tokensLocked(_to, _reason) == 0, ALREADY_LOCKED);
         require(_amount != 0, AMOUNT_ZERO);
@@ -111,6 +113,7 @@ contract TokenProxy is ERC1132 {
      */
     function tokensLocked(address _of, bytes32 _reason)
         public
+        override
         view
         returns (uint256 amount)
     {
@@ -128,6 +131,7 @@ contract TokenProxy is ERC1132 {
      */
     function tokensLockedAtTime(address _of, bytes32 _reason, uint256 _time)
         public
+        override
         view
         returns (uint256 amount)
     {
@@ -141,13 +145,14 @@ contract TokenProxy is ERC1132 {
      */
     function totalBalanceOf(address _of)
         public
+        override
         view
         returns (uint256 amount)
     {
         amount = balanceOf(_of);
 
         for (uint256 i = 0; i < lockReason[_of].length; i++) {
-            amount = amount.add(tokensLocked(_of, lockReason[_of][i]));
+            amount = amount + tokensLocked(_of, lockReason[_of][i]);
         }   
     }    
     
@@ -158,11 +163,12 @@ contract TokenProxy is ERC1132 {
      */
     function extendLock(bytes32 _reason, uint256 _time)
         public
+        override
         returns (bool)
     {
         require(tokensLocked(msg.sender, _reason) > 0, NOT_LOCKED);
 
-        locked[msg.sender][_reason].validity = locked[msg.sender][_reason].validity.add(_time);
+        locked[msg.sender][_reason].validity = locked[msg.sender][_reason].validity + _time;
 
         emit Locked(msg.sender, _reason, locked[msg.sender][_reason].amount, locked[msg.sender][_reason].validity);
         return true;
@@ -175,12 +181,13 @@ contract TokenProxy is ERC1132 {
      */
     function increaseLockAmount(bytes32 _reason, uint256 _amount)
         public
+        override
         returns (bool)
     {
         require(tokensLocked(msg.sender, _reason) > 0, NOT_LOCKED);
         originalToken.transferFrom(msg.sender, address(this), _amount);
 
-        locked[msg.sender][_reason].amount = locked[msg.sender][_reason].amount.add(_amount);
+        locked[msg.sender][_reason].amount = locked[msg.sender][_reason].amount + _amount;
 
         emit Locked(msg.sender, _reason, locked[msg.sender][_reason].amount, locked[msg.sender][_reason].validity);
         return true;
@@ -193,10 +200,11 @@ contract TokenProxy is ERC1132 {
      */
     function tokensUnlockable(address _of, bytes32 _reason)
         public
+        override
         view
         returns (uint256 amount)
     {
-        if (locked[_of][_reason].validity <= now && !locked[_of][_reason].claimed) //solhint-disable-line
+        if (locked[_of][_reason].validity <= block.timestamp && !locked[_of][_reason].claimed) //solhint-disable-line
             amount = locked[_of][_reason].amount;
     }
 
@@ -206,6 +214,7 @@ contract TokenProxy is ERC1132 {
      */
     function unlock(address _of)
         public
+        override
         returns (uint256 unlockableTokens)
     {
         uint256 lockedTokens;
@@ -213,7 +222,7 @@ contract TokenProxy is ERC1132 {
         for (uint256 i = 0; i < lockReason[_of].length; i++) {
             lockedTokens = tokensUnlockable(_of, lockReason[_of][i]);
             if (lockedTokens > 0) {
-                unlockableTokens = unlockableTokens.add(lockedTokens);
+                unlockableTokens = unlockableTokens + lockedTokens;
                 locked[_of][lockReason[_of][i]].claimed = true;
                 emit Unlocked(_of, lockReason[_of][i], lockedTokens);
             }
@@ -229,11 +238,12 @@ contract TokenProxy is ERC1132 {
      */
     function getUnlockableTokens(address _of)
         public
+        override
         view
         returns (uint256 unlockableTokens)
     {
         for (uint256 i = 0; i < lockReason[_of].length; i++) {
-            unlockableTokens = unlockableTokens.add(tokensUnlockable(_of, lockReason[_of][i]));
+            unlockableTokens = unlockableTokens + tokensUnlockable(_of, lockReason[_of][i]);
         }  
     }
 }

@@ -1,7 +1,9 @@
-pragma solidity ^0.4.24;
+// SPDX-License-Identifier: GNU
+
+pragma solidity 0.8.0;
 
 import "./StandardToken.sol";
-import "../../ownership/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 /**
@@ -22,7 +24,7 @@ contract MintableToken is StandardToken, Ownable {
   }
 
   modifier hasMintPermission() {
-    require(msg.sender == owner);
+    require(msg.sender == owner());
     _;
   }
 

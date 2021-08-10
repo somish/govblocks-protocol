@@ -8,7 +8,7 @@ async function getProposalIds(member, gov) {
   for (let i = 1; i < totalProposals; i++) {
     let data = await gov.proposal(i);
     if (data[2].toNumber() > 2) {
-      voteId = (await gov.addressProposalVote(member,i));
+      voteId = await gov.addressProposalVote(member, i);
       if (voteId > 0 && !(await gov.rewardClaimed(voteId)))
         voterProposals.push(i);
     }

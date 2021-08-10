@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GNU
+
 /* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
@@ -13,9 +15,10 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity 0.8.0;
+
 import "./Master.sol";
-import "./imports/openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract GovBlocksMaster is Ownable {
@@ -40,7 +43,7 @@ contract GovBlocksMaster is Ownable {
         emit OnBoarded(_gbDAppName, address(ms));
     }  
 
-    function setImplementations(address[] _implementations) external onlyOwner {
+    function setImplementations(address[] calldata _implementations) external onlyOwner {
         implementations = _implementations;
     }
 

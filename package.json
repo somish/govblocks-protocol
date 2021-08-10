@@ -27,7 +27,7 @@
     "prettier": "^1.14.2",
     "solhint": "^1.2.1",
     "solidity-coverage": "^0.5.5",
-    "truffle": "^4.1.13",
+    "truffle": "^5.4.3",
     "truffle-hdwallet-provider": "^0.0.5"
   },
   "repository": {
@@ -41,5 +41,8 @@
   "bugs": {
     "url": "https://github.com/somish/govblocks-protocol/issues"
   },
-  "homepage": "https://www.govblocks.io"
+  "homepage": "https://www.govblocks.io",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.2.0"
+  }
 }

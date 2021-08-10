@@ -25,21 +25,17 @@ contract('Pool', function([owner, taker]) {
     await pl.send(10000000000000);
     let b1 = await web3.eth.getBalance(pl.address);
     //proposal to add member to AB
-      let actionHash = encode(
-        'transferEther(address,uint256)',
-        owner,
-        1000
-      );
-      let p1 = await pl.getProposalLength();
-      await pl.createProposalwithSolution(
-        'transfer',
-        'transfer',
-        'transfer',
-        6,
-        'transfer',
-        actionHash
-      );
-      await pl.closeProposal(p1.toNumber());
+    let actionHash = encode('transferEther(address,uint256)', owner, 1000);
+    let p1 = await pl.getProposalLength();
+    await pl.createProposalwithSolution(
+      'transfer',
+      'transfer',
+      'transfer',
+      6,
+      'transfer',
+      actionHash
+    );
+    await pl.closeProposal(p1.toNumber());
     //proposal closed
     // await pl.transferEther(owner, 10);
     let b2 = await web3.eth.getBalance(pl.address);
@@ -54,22 +50,22 @@ contract('Pool', function([owner, taker]) {
     await pl.updateDependencyAddresses();
     let b1 = await gbts.balanceOf(pl.address);
     //proposal to add member to AB
-      let actionHash = encode(
-        'transferToken(address,address,uint256)',
-        tokenAddress,
-        owner,
-        1000
-      );
-      let p1 = await pl.getProposalLength();
-      await pl.createProposalwithSolution(
-        'transfer',
-        'transfer',
-        'transfer',
-        7,
-        'transfer',
-        actionHash
-      );
-      await pl.closeProposal(p1.toNumber());
+    let actionHash = encode(
+      'transferToken(address,address,uint256)',
+      tokenAddress,
+      owner,
+      1000
+    );
+    let p1 = await pl.getProposalLength();
+    await pl.createProposalwithSolution(
+      'transfer',
+      'transfer',
+      'transfer',
+      7,
+      'transfer',
+      actionHash
+    );
+    await pl.closeProposal(p1.toNumber());
     //proposal closed
     // await pl.transferToken(tokenAddress, owner, 1000);
     let b2 = await gbts.balanceOf(pl.address);

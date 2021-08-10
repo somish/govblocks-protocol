@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GNU
+
 /* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
@@ -12,9 +14,11 @@
 
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
-pragma solidity 0.4.24;
+
+pragma solidity 0.8.0;
+
 import "./interfaces/IProposalCategory.sol";
-import "./imports/govern/Governed.sol";
+import "./external/govern/Governed.sol";
 import "./MemberRoles.sol";
 
 
@@ -54,18 +58,19 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _contractName name of contract to be called after proposal is accepted
     /// @param _incentives rewards to distributed after proposal is accepted
     function addCategory(
-        string _name, 
+        string calldata _name, 
         uint _memberRoleToVote,
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
+        uint[] calldata _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string calldata _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
+        uint[] calldata _incentives
     ) 
         external
+        override
         onlyAuthorizedToGovern 
     {
         require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
@@ -97,18 +102,19 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _incentives rewards to distributed after proposal is accepted
     function updateCategory(
         uint _categoryId, 
-        string _name, 
+        string memory _name, 
         uint _memberRoleToVote, 
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
+        uint[] memory _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
+        uint[] memory _incentives
     )
         public
+        override
         onlyAuthorizedToGovern //solhint-disable
     { 
         require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
@@ -125,7 +131,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     /// @dev gets category details
-    function category(uint _categoryId) external view returns(uint, uint, uint, uint, uint[], uint, uint) {
+    function category(uint _categoryId) external override view returns(uint, uint, uint, uint, uint[] memory, uint, uint) {
         return(
             _categoryId,
             allCategory[_categoryId].memberRoleToVote,
@@ -137,7 +143,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         );
     }
 
-    function categoryAction(uint _categoryId) external view returns(uint, address, bytes2, uint) {
+    function categoryAction(uint _categoryId) external override view returns(uint, address, bytes2, uint) {
         return(
             _categoryId,
             categoryActionData[_categoryId].contractAddress,
@@ -147,7 +153,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     /// @dev Gets Total number of categories added till now
-    function totalCategories() external view returns(uint) {
+    function totalCategories() external override view returns(uint) {
         return allCategory.length;
     }
 
@@ -224,16 +230,16 @@ contract ProposalCategory is IProposalCategory, Governed {
     /// @param _contractName name of contract to be called after proposal is accepted
     /// @param _incentives rewards to distributed after proposal is accepted
     function _addCategory(
-        string _name, 
+        string memory _name, 
         uint _memberRoleToVote,
         uint _majorityVotePerc, 
         uint _quorumPerc,
-        uint[] _allowedToCreateProposal,
+        uint[] memory _allowedToCreateProposal,
         uint _closingTime,
-        string _actionHash,
+        string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] _incentives
+        uint[] memory _incentives
     ) 
         internal
     {
@@ -253,8 +259,8 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     function addInitialCategories(
-        string _name,
-        string _actionHash,
+        string memory _name,
+        string memory _actionHash,
         bytes2 _contractName
     ) 
         internal 

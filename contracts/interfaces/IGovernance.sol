@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GNU
+
 /* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
@@ -13,10 +15,10 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity 0.8.0;
 
 
-contract IGovernance {
+interface IGovernance {
 
     event Proposal(
         address indexed proposalOwner,
@@ -70,11 +72,12 @@ contract IGovernance {
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     function createProposal(
-        string _proposalTitle,
-        string _proposalSD,
-        string _proposalDescHash,
+        string calldata _proposalTitle,
+        string calldata _proposalSD,
+        string calldata _proposalDescHash,
         uint _categoryId
     ) 
+        
         external;
 
     /// @dev Edits the details of an existing proposal and creates new version
@@ -82,10 +85,11 @@ contract IGovernance {
     /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
     function updateProposal(
         uint _proposalId, 
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash
+        string calldata _proposalTitle, 
+        string calldata _proposalSD, 
+        string calldata _proposalDescHash
     ) 
+        
         external;
 
     /// @dev Categorizes proposal to proceed further. Categories shows the proposal objective.
@@ -93,56 +97,58 @@ contract IGovernance {
         uint _proposalId, 
         uint _categoryId,
         uint _incentives
-    ) 
+    )
+        
         external;
 
     /// @dev Initiates add solution 
     /// @param _solutionHash Solution hash having required data against adding solution
     function addSolution(
         uint _proposalId,
-        string _solutionHash, 
-        bytes _action
-    ) 
-        external {} 
+        string calldata _solutionHash, 
+        bytes calldata _action
+    )
+        external; 
 
     /// @dev Opens proposal for voting
-    function openProposalForVoting(uint _proposalId) external {}
+    function openProposalForVoting(uint _proposalId) external;
 
     /// @dev Submit proposal with solution
     /// @param _proposalId Proposal id
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
     function submitProposalWithSolution(
         uint _proposalId, 
-        string _solutionHash, 
-        bytes _action
+        string calldata _solutionHash, 
+        bytes calldata _action
     ) 
-        external {}
+        external;
 
     /// @dev Creates a new proposal with solution and votes for the solution
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
     function createProposalwithSolution(
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash,
+        string calldata _proposalTitle, 
+        string calldata _proposalSD, 
+        string calldata _proposalDescHash,
         uint _categoryId, 
-        string _solutionHash, 
-        bytes _action
+        string calldata _solutionHash, 
+        bytes calldata _action
     ) 
-        external {}
+        external;
 
     /// @dev Casts vote
     /// @param _proposalId Proposal id
     /// @param _solutionChosen solution chosen while voting. _solutionChosen[0] is the chosen solution
-    function submitVote(uint _proposalId, uint _solutionChosen) external {}
+    function submitVote(uint _proposalId, uint _solutionChosen) external;
 
-    function closeProposal(uint _proposalId) external {}
+    function closeProposal(uint _proposalId) external;
 
-    function claimReward(address _memberAddress, uint _maxRecords) external returns(uint pendingDAppReward) {} 
+    function claimReward(address _memberAddress, uint _maxRecords) external returns(uint pendingDAppReward); 
 
     function proposal(uint _proposalId)
         external
+        
         view
         returns(
             uint proposalId,
@@ -150,14 +156,14 @@ contract IGovernance {
             uint status,
             uint finalVerdict,
             uint totalReward
-        ) {}
+        );
 
-    function canCloseProposal(uint _proposalId) public view returns(uint closeValue) {}
+    function canCloseProposal(uint _proposalId) external  view returns(uint closeValue);
 
-    function pauseProposal(uint _proposalId) public {}
+    function pauseProposal(uint _proposalId) external;
     
-    function resumeProposal(uint _proposalId) public {}
+    function resumeProposal(uint _proposalId) external;
     
-    function allowedToCatgorize() public view returns(uint roleId) {}
+    function allowedToCatgorize() external view returns(uint roleId);
 
 }

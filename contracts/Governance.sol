@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GNU
+
 /* Copyright (C) 2017 GovBlocks.io
 
   This program is free software: you can redistribute it and/or modify
@@ -13,12 +15,12 @@
   You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/ */
 
-pragma solidity 0.4.24;
+pragma solidity 0.8.0;
+
 import "./Upgradeable.sol";
 import "./Master.sol";
-import "./imports/openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./imports/openzeppelin-solidity/contracts/math/Math.sol";
-import "./imports/lockable-token/LockableToken.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "./external/lockable-token/LockableToken.sol";
 import "./MemberRoles.sol";
 import "./interfaces/IGovernance.sol";
 import "./interfaces/IProposalCategory.sol";
@@ -80,14 +82,14 @@ contract Governance is IGovernance, Upgradeable {
     bool internal punishVoters;
     uint internal minVoteWeight;
     uint public tokenHoldingTime;
-    uint public allowedToCatgorize;
+    uint public override allowedToCatgorize;
     bool internal locked;
 
     MemberRoles internal memberRole;
     IProposalCategory internal proposalCategory;
     LockableToken internal tokenInstance;
 
-    function () public payable {} //solhint-disable-line
+    receive() external payable{}
 
     modifier noReentrancy() {
         require(!locked, "Reentrant call.");
@@ -133,12 +135,12 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _proposalDescHash Proposal description hash through IPFS having Short and long description of proposal
     /// @param _categoryId This id tells under which the proposal is categorized i.e. Proposal's Objective
     function createProposal(
-        string _proposalTitle,
-        string _proposalSD, 
-        string _proposalDescHash, 
+        string calldata _proposalTitle,
+        string calldata _proposalSD, 
+        string calldata _proposalDescHash, 
         uint _categoryId
     ) 
-        external isAllowed(_categoryId)
+        external override isAllowed(_categoryId)
     {
         _createProposal(_proposalTitle, _proposalSD, _proposalDescHash, _categoryId);
     }
@@ -150,11 +152,11 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _proposalDescHash Proposal description hash having long and short description of proposal.
     function updateProposal(
         uint _proposalId, 
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash
+        string calldata _proposalTitle, 
+        string calldata _proposalSD, 
+        string calldata _proposalDescHash
     ) 
-        external onlyProposalOwner(_proposalId)
+        external override onlyProposalOwner(_proposalId)
     {
         require(
             allProposalSolutions[_proposalId].length < 2,
@@ -166,7 +168,7 @@ contract Governance is IGovernance, Upgradeable {
         emit Proposal(
             allProposal[_proposalId].owner,
             _proposalId,
-            now,
+            block.timestamp,
             _proposalTitle, 
             _proposalSD, 
             _proposalDescHash
@@ -182,7 +184,7 @@ contract Governance is IGovernance, Upgradeable {
         uint _categoryId,
         uint _incentive
     )
-        external
+        external override
         voteNotStarted(_proposalId) isAllowedToCategorize
     {
 
@@ -200,10 +202,10 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _action encoded hash of the action to call, if solution is choosen
     function addSolution(
         uint _proposalId,
-        string _solutionHash, 
-        bytes _action
+        string calldata _solutionHash, 
+        bytes calldata _action
     ) 
-        external isStakeValidated(_proposalId)
+        external override isStakeValidated(_proposalId)
     {
         require(
             allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.AwaitingSolution),
@@ -216,7 +218,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev Opens proposal for voting
     /// @param _proposalId Proposal id
     function openProposalForVoting(uint _proposalId)
-        external onlyProposalOwner(_proposalId) voteNotStarted(_proposalId) isStakeValidated(_proposalId)
+        external override onlyProposalOwner(_proposalId) voteNotStarted(_proposalId) isStakeValidated(_proposalId)
     {
         require(
             allProposalSolutions[_proposalId].length > 1,
@@ -232,10 +234,10 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _action encoded hash of the action to call, if solution is choosen
     function submitProposalWithSolution(
         uint _proposalId, 
-        string _solutionHash, 
-        bytes _action
+        string calldata _solutionHash, 
+        bytes calldata _action
     ) 
-        external
+        external override
         onlyProposalOwner(_proposalId) isStakeValidated(_proposalId)
     {
         _proposalSubmission(_proposalId, _solutionHash, _action);
@@ -249,14 +251,14 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _solutionHash Solution hash contains  parameters, values and description needed according to proposal
     /// @param _action encoded hash of the action to call, if solution is choosen
     function createProposalwithSolution(
-        string _proposalTitle, 
-        string _proposalSD, 
-        string _proposalDescHash,
+        string calldata _proposalTitle, 
+        string calldata _proposalSD, 
+        string calldata _proposalDescHash,
         uint _categoryId, 
-        string _solutionHash, 
-        bytes _action
+        string calldata _solutionHash, 
+        bytes calldata _action
     ) 
-        external isAllowed(_categoryId)
+        external override isAllowed(_categoryId)
     {
 
         uint proposalId = allProposal.length;
@@ -275,7 +277,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev Submits a vote to solution of a proposal
     /// @param _proposalId Proposal id
     /// @param _solution Solution id
-    function submitVote(uint _proposalId, uint _solution) external isStakeValidated(_proposalId) {
+    function submitVote(uint _proposalId, uint _solution) external override isStakeValidated(_proposalId) {
         require(addressProposalVote[msg.sender][_proposalId] == 0, "Already voted");
 
         require(allProposalData[_proposalId].propStatus == uint(Governance.ProposalStatus.VotingStarted), "Not allowed");
@@ -286,7 +288,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     /// @dev Close proposal for voting, calculate the result and perform defined action
-    function closeProposal(uint _proposalId) external {
+    function closeProposal(uint _proposalId) external override {
         uint category = allProposalData[_proposalId].category;
         uint max;
         uint totalVoteValue;
@@ -300,12 +302,9 @@ contract Governance is IGovernance, Upgradeable {
         for (i = 0; i < proposalVote[_proposalId].length; i++) {
             solutionId = allVotes[proposalVote[_proposalId][i]].solutionChosen;
             voteValue = allVotes[proposalVote[_proposalId][i]].voteValue;
-            totalVoteValue = SafeMath.add(totalVoteValue, voteValue);
-            finalVoteValues[solutionId] = SafeMath.add(finalVoteValues[solutionId], voteValue);
-            totalTokens = SafeMath.add(
-                            totalTokens,
-                            tokenInstance.totalBalanceOf(allVotes[proposalVote[_proposalId][i]].voter)
-                        );
+            totalVoteValue = totalVoteValue + voteValue;
+            finalVoteValues[solutionId] = finalVoteValues[solutionId] + voteValue;
+            totalTokens = totalTokens + tokenInstance.totalBalanceOf(allVotes[proposalVote[_proposalId][i]].voter);
             if (finalVoteValues[max] < finalVoteValues[solutionId]) {
                 max = solutionId;
             }
@@ -325,7 +324,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @dev user can calim the tokens rewarded them till now
     /// Index 0 of _ownerProposals, _voterProposals is not parsed. 
     /// proposal arrays of 1 length are treated as empty.
-    function claimReward(address _claimer, uint _maxRecords) external noReentrancy returns(uint pendingDAppReward) {
+    function claimReward(address _claimer, uint _maxRecords) external override noReentrancy returns(uint pendingDAppReward) {
         
         pendingDAppReward = _claimReward(_claimer, _maxRecords);
 
@@ -341,7 +340,7 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev Get proposal details
     function proposal(uint _proposalId)
-        external
+        external override
         view
         returns(
             uint _id,
@@ -370,7 +369,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     /// @dev Get encoded action hash of solution
-    function getSolutionAction(uint _proposalId, uint _solution) external view returns(uint, bytes) {
+    function getSolutionAction(uint _proposalId, uint _solution) external view returns(uint, bytes memory) {
         return (
             _solution,
             allProposalSolutions[_proposalId][_solution].action
@@ -402,15 +401,15 @@ contract Governance is IGovernance, Upgradeable {
         for (uint i = 0; i < _proposalLength; i++) {
             proposalStatus = allProposalData[i].propStatus;
             if (proposalStatus == uint(ProposalStatus.Draft)) {
-                _draftProposals = SafeMath.add(_draftProposals, 1);
+                _draftProposals = _draftProposals + 1;
             } else if (proposalStatus == uint(ProposalStatus.AwaitingSolution)) {
-                _awaitingSolution = SafeMath.add(_awaitingSolution, 1);
+                _awaitingSolution = _awaitingSolution + 1;
             } else if (proposalStatus == uint(ProposalStatus.VotingStarted)) {
-                _pendingProposals = SafeMath.add(_pendingProposals, 1);
+                _pendingProposals = _pendingProposals + 1;
             } else if (proposalStatus == uint(ProposalStatus.Accepted) || proposalStatus == uint(ProposalStatus.Majority_Not_Reached_But_Accepted)) {
-                _acceptedProposals = SafeMath.add(_acceptedProposals, 1);
+                _acceptedProposals = _acceptedProposals + 1;
             } else {
-                _rejectedProposals = SafeMath.add(_rejectedProposals, 1);
+                _rejectedProposals = _rejectedProposals + 1;
             }
         }
     }
@@ -424,7 +423,7 @@ contract Governance is IGovernance, Upgradeable {
         require(!constructorCheck);
         allowedToCatgorize = uint(MemberRoles.Role.AdvisoryBoard);
         allVotes.push(ProposalVote(address(0), 0, 0, 1, 0));
-        allProposal.push(ProposalStruct(address(0), now));
+        allProposal.push(ProposalStruct(address(0), block.timestamp));
         tokenHoldingTime = 7 days;
         punishVoters = _punishVoters;
         minVoteWeight = 1;
@@ -432,7 +431,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     /// @dev updates all dependency addresses to latest ones from Master
-    function updateDependencyAddresses() public {
+    function updateDependencyAddresses() public override{
         tokenInstance = LockableToken(ms.dAppLocker());
         memberRole = MemberRoles(ms.getLatestAddress("MR"));
         proposalCategory = IProposalCategory(ms.getLatestAddress("PC"));
@@ -443,6 +442,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _proposalId Proposal id to which closing value is being checked
     function canCloseProposal(uint _proposalId) 
         public 
+        override
         view 
         returns(uint closeValue)
     {
@@ -459,12 +459,12 @@ contract Governance is IGovernance, Upgradeable {
             _roleId != uint(MemberRoles.Role.TokenHolder) &&
             _roleId != uint(MemberRoles.Role.UnAssigned)
         ) {
-            if (SafeMath.add(dateUpdate, _closingTime) <= now || 
+            if (dateUpdate + _closingTime <= block.timestamp || 
                 proposalVote[_proposalId].length == memberRole.numberOfMembers(_roleId)
             )
                 closeValue = 1;
         } else if (pStatus == uint(ProposalStatus.VotingStarted)) {
-            if (SafeMath.add(dateUpdate, _closingTime) <= now)
+            if (dateUpdate + _closingTime <= block.timestamp)
                 closeValue = 1;
         } else if (pStatus > uint(ProposalStatus.VotingStarted)) {
             closeValue = 2;
@@ -474,15 +474,15 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     /// @dev pause a proposal
-    function pauseProposal(uint _proposalId) public onlySelf {
+    function pauseProposal(uint _proposalId) public override onlySelf {
         proposalPaused[_proposalId] = true;
-        allProposal[_proposalId].dateUpd = now;
+        allProposal[_proposalId].dateUpd = block.timestamp;
     }
 
     /// @dev resume a proposal
-    function resumeProposal(uint _proposalId) public onlySelf {
+    function resumeProposal(uint _proposalId) public override onlySelf {
         proposalPaused[_proposalId] = false;
-        allProposal[_proposalId].dateUpd = now;
+        allProposal[_proposalId].dateUpd = block.timestamp;
     }
 
     /// @dev Get number of token incentives to be claimed by a member
@@ -510,13 +510,9 @@ contract Governance is IGovernance, Upgradeable {
             }
             if (finalVerdict > 0) {
                 if (!rewardClaimed[voteId]) {
-                    pendingDAppReward += SafeMath.div(
-                                    SafeMath.mul(
-                                        allVotes[voteId].voteValue,
-                                        allProposalData[proposalId].commonIncentive
-                                    ),
-                                    proposalVoteValue
-                                );
+                    pendingDAppReward += (allVotes[voteId].voteValue *
+                                        allProposalData[proposalId].commonIncentive) / 
+                                        proposalVoteValue;
                 }
             }
         }
@@ -544,7 +540,7 @@ contract Governance is IGovernance, Upgradeable {
             if (tokenBal > 0)
                 tokenInstance.transfer(newPool, tokenBal);
             if (ethBal > 0)
-                newPool.transfer(ethBal);
+                payable(newPool).transfer(ethBal);
         }
     }
 
@@ -552,7 +548,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _amount Amount to be transferred back
     /// @param _receiverAddress address where ether has to be sent
     function transferEther(address _receiverAddress, uint256 _amount) public onlySelf {
-        _receiverAddress.transfer(_amount);
+        payable(_receiverAddress).transfer(_amount);
     }
 
     /// @dev Transfer token to someone    
@@ -566,9 +562,9 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev Internal call for creating proposal
     function _createProposal(
-        string _proposalTitle,
-        string _proposalSD,
-        string _proposalDescHash,
+        string memory _proposalTitle,
+        string memory _proposalSD,
+        string memory _proposalDescHash,
         uint _categoryId
     )
         internal
@@ -576,7 +572,7 @@ contract Governance is IGovernance, Upgradeable {
         uint _proposalId = allProposal.length;
 
         allProposalSolutions[allProposal.length].push(SolutionStruct(address(0), ""));
-        allProposal.push(ProposalStruct(msg.sender, now));
+        allProposal.push(ProposalStruct(msg.sender, block.timestamp));
 
         if (_categoryId > 0) {
             uint defaultIncentive;
@@ -587,7 +583,7 @@ contract Governance is IGovernance, Upgradeable {
         emit Proposal(
             msg.sender,
             _proposalId,
-            now,
+            block.timestamp,
             _proposalTitle,
             _proposalSD,
             _proposalDescHash
@@ -625,24 +621,24 @@ contract Governance is IGovernance, Upgradeable {
         _updateProposalStatus(_proposalId, uint(ProposalStatus.VotingStarted));
         uint closingTime;
         (, , , , , closingTime, ) = proposalCategory.category(allProposalData[_proposalId].category);
-        emit CloseProposalOnTime(_proposalId, SafeMath.add(closingTime, now));
+        emit CloseProposalOnTime(_proposalId, closingTime + block.timestamp);
     }
 
     /// @dev Internal call for addig a solution to proposal
-    function _addSolution(uint _proposalId, bytes _action, string _solutionHash)
+    function _addSolution(uint _proposalId, bytes memory _action, string memory _solutionHash)
         internal
     {
         require(!alreadyAdded(_proposalId, msg.sender), "User already added a solution for this proposal");
         // governanceDat.setSolutionAdded(_proposalId, msg.sender, _action, _solutionHash);
         allProposalSolutions[_proposalId].push(SolutionStruct(msg.sender, _action));
-        emit Solution(_proposalId, msg.sender, allProposalSolutions[_proposalId].length - 1, _solutionHash, now);
+        emit Solution(_proposalId, msg.sender, allProposalSolutions[_proposalId].length - 1, _solutionHash, block.timestamp);
     }
 
     /// @dev When creating or submitting proposal with solution, This function open the proposal for voting
     function _proposalSubmission(
         uint _proposalId,
-        string _solutionHash,
-        bytes _action
+        string memory _solutionHash,
+        bytes memory _action
     )
         internal
     {
@@ -670,9 +666,9 @@ contract Governance is IGovernance, Upgradeable {
         proposalVote[_proposalId].push(totalVotes);
         allVotesByMember[msg.sender].push(totalVotes);
         addressProposalVote[msg.sender][_proposalId] = totalVotes;
-        allVotes.push(ProposalVote(msg.sender, _solution, _proposalId, calculateVoteValue(msg.sender), now));
+        allVotes.push(ProposalVote(msg.sender, _solution, _proposalId, calculateVoteValue(msg.sender), block.timestamp));
 
-        emit Vote(msg.sender, _proposalId, totalVotes, now, _solution);
+        emit Vote(msg.sender, _proposalId, totalVotes, block.timestamp, _solution);
 
         if (proposalVote[_proposalId].length == memberRole.numberOfMembers(mrSequence) &&
             mrSequence != uint(MemberRoles.Role.TokenHolder) &&
@@ -689,23 +685,15 @@ contract Governance is IGovernance, Upgradeable {
         uint _mrSequenceId;
         (, _mrSequenceId, , categoryQuorumPerc, , , ) = proposalCategory.category(_category);
         if (_mrSequenceId == uint(MemberRoles.Role.TokenHolder)) {
-            thresHoldValue = SafeMath.div(
-                                SafeMath.mul(_totalTokens, 100),
-                                tokenInstance.totalSupply()
-                            );
+            thresHoldValue = (_totalTokens * 100) / tokenInstance.totalSupply();
             if (thresHoldValue > categoryQuorumPerc)
                 return true;
         } else if (_mrSequenceId == uint(MemberRoles.Role.UnAssigned)) {
             return true;
         } else {
-            thresHoldValue =
-                SafeMath.div(
-                    SafeMath.mul(
-                        proposalVote[_proposalId].length,
-                        100
-                    ),
-                    memberRole.numberOfMembers(_mrSequenceId)
-                );
+            thresHoldValue = (proposalVote[_proposalId].length *
+                        100) / 
+                    memberRole.numberOfMembers(_mrSequenceId);
             if (thresHoldValue > categoryQuorumPerc)
                 return true;
         }
@@ -721,7 +709,7 @@ contract Governance is IGovernance, Upgradeable {
         allProposalData[_proposalId].finalVerdict = max;
         (, , _majorityVote, , , , ) = proposalCategory.category(category);
         (, actionAddress, contractName, ) = proposalCategory.categoryAction(category);
-        if (SafeMath.div(SafeMath.mul(maxVoteValue, 100), totalVoteValue) >= _majorityVote) {
+        if ((maxVoteValue * 100) / totalVoteValue >= _majorityVote) {
             if (max > 0) {
                 _updateProposalStatus(_proposalId, uint(ProposalStatus.Accepted));
                 /*solhint-disable*/
@@ -730,7 +718,8 @@ contract Governance is IGovernance, Upgradeable {
                 else if(contractName !="EX")
                     actionAddress = ms.getLatestAddress(contractName);
                 /*solhint-enable*/
-                if (actionAddress.call(allProposalSolutions[_proposalId][max].action)) {
+                (bool success, ) = actionAddress.call(allProposalSolutions[_proposalId][max].action);
+                if (success) {
                     emit ActionSuccess(_proposalId);
                 }
                 emit ProposalAccepted(_proposalId);
@@ -756,9 +745,7 @@ contract Governance is IGovernance, Upgradeable {
 
         voteValue = 
             Math.max(
-                SafeMath.div(
-                    voteValue, uint256(10) ** tokenInstance.decimals()
-                ),
+                voteValue / uint256(10) ** tokenInstance.decimals(),
                 minVoteWeight
             );
     }
@@ -767,7 +754,7 @@ contract Governance is IGovernance, Upgradeable {
     /// @param _proposalId Proposal id
     /// @param _memberAddress Member address
     function alreadyAdded(uint _proposalId, address _memberAddress) internal view returns(bool) {
-        SolutionStruct[] solutions = allProposalSolutions[_proposalId];
+        SolutionStruct[] memory solutions = allProposalSolutions[_proposalId];
         for (uint i = 1; i < solutions.length; i++) {
             if (solutions[i].owner == _memberAddress)
                 return true;
@@ -791,7 +778,7 @@ contract Governance is IGovernance, Upgradeable {
     function _getLockedBalance(address _of, uint _time)
         internal view returns(uint lockedTokens)
     {
-        _time += now;
+        _time += block.timestamp;
         lockedTokens = tokenInstance.tokensLockedAtTime(_of, "GOV", _time);
     }
 
@@ -820,10 +807,10 @@ contract Governance is IGovernance, Upgradeable {
     //     // (totalVoteValue, finalVoteValue) = governanceDat.getProposalVoteValue(_proposalId);
     //     if (punishVoters) {
     //         if ((finalVerdict > 0 && solutionChosen == finalVerdict)) {
-    //             calcReward = SafeMath.div(SafeMath.mul(voteValue, totalReward), finalVoteValue);
+    //             calcReward = (voteValue * totalReward) / finalVoteValue;
     //         }
     //     } else if (finalVerdict > 0) {
-    //         calcReward = SafeMath.div(SafeMath.mul(voteValue, totalReward), totalVoteValue);
+    //         calcReward = (voteValue * totalReward) / totalVoteValue;
     //     }
 
     //     pendingDAppReward = calcReward;
@@ -831,7 +818,7 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev Update proposal status
     function _updateProposalStatus(uint _proposalId, uint _status) internal {
-        allProposal[_proposalId].dateUpd = now;
+        allProposal[_proposalId].dateUpd = block.timestamp;
         allProposalData[_proposalId].propStatus = _status;
     }
 
@@ -862,13 +849,11 @@ contract Governance is IGovernance, Upgradeable {
             }
             if (finalVerdict > 0) {
                 if (!rewardClaimed[voteId]) {
-                    pendingDAppReward += SafeMath.div(
-                                    SafeMath.mul(
-                                        allVotes[voteId].voteValue,
+                    pendingDAppReward += (
+                                        allVotes[voteId].voteValue *
                                         allProposalData[proposalId].commonIncentive
-                                    ),
-                                    proposalVoteValue
-                                );
+                                    ) /
+                                    proposalVoteValue;
                     rewardClaimed[voteId] = true;
                 }
             } else {
