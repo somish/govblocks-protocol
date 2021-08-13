@@ -52,10 +52,10 @@ module.exports = deployer => {
       return result;
     })
     .then(function(result) {
-      ms = Master.at(result.logs[0].args.masterAddress);
+      ms = Master.at(result.logs[2].args.masterAddress);
       const addr = [mr.address, pc.address, gv.address];
       // ms.initMaster(web3.eth.accounts[0], addr, punishVoters);
-      setMasterAddress(result.logs[0].args.masterAddress, punishVoters);
+      setMasterAddress(result.logs[2].args.masterAddress, punishVoters);
       punishVoters = true;
       var result1 = gbm.addGovBlocksDapp(
         '0x42',
@@ -66,7 +66,7 @@ module.exports = deployer => {
       return result1;
     })
     .then(function(result) {
-      ms = Master.at(result.logs[0].args.masterAddress);
+      ms = Master.at(result.logs[2].args.masterAddress);
       setMasterAddress(ms.address, punishVoters);
       console.log(
         'GovBlocks Initialization completed, GBM Address: ',
