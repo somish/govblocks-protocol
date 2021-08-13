@@ -21,11 +21,15 @@ import "./interfaces/IProposalCategory.sol";
 import "./external/govern/Governed.sol";
 import "./MemberRoles.sol";
 
+// FIXME need concept of quorum?
+// FIXME add action hash of the functions
+// FIXME need editCategory?
 
 contract ProposalCategory is IProposalCategory, Governed {
 
     bool internal constructorCheck;
     MemberRoles internal mr;
+    // FIXME no need
     IMaster internal ms;
 
     struct CategoryStruct {
@@ -45,6 +49,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     
     CategoryStruct[] internal allCategory;
     mapping (uint => CategoryAction) internal categoryActionData;
+    // FIXME add category action hash
     
     /// @dev Adds new category
     /// @param _name Category name
@@ -159,6 +164,7 @@ contract ProposalCategory is IProposalCategory, Governed {
 
     ///@dev just to follow the interface
     function updateDependencyAddresses() public { //solhint-disable-line
+        // FIXME take ms address from msg.sender
         ms = IMaster(masterAddress);
         mr = MemberRoles(ms.getLatestAddress('MR'));
         if (!constructorCheck) {

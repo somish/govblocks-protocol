@@ -297,8 +297,12 @@ contract Governance is IGovernance, Upgradeable {
         uint voteValue;
         uint totalTokens;
         require(canCloseProposal(_proposalId) == 1, "Cannot close");
-
+        // FIXME all logic from plotx, 279
         uint[] memory finalVoteValues = new uint[](allProposalSolutions[_proposalId].length);
+
+        // FIXME this loop needs to be avoided 
+        // FIXME vote value against proposal ID
+        // FIXME We can iterate through solution array
         for (i = 0; i < proposalVote[_proposalId].length; i++) {
             solutionId = allVotes[proposalVote[_proposalId][i]].solutionChosen;
             voteValue = allVotes[proposalVote[_proposalId][i]].voteValue;
@@ -660,14 +664,16 @@ contract Governance is IGovernance, Upgradeable {
         uint mrSequence;
         uint totalVotes = allVotes.length;
         (, mrSequence, , , , , ) = proposalCategory.category(allProposalData[_proposalId].category);
-
+        // FIXME add a closing time check. 832 on plotx
+        // FIXME Locking mechanism
         require(memberRole.checkRole(msg.sender, mrSequence));
 
         proposalVote[_proposalId].push(totalVotes);
         allVotesByMember[msg.sender].push(totalVotes);
         addressProposalVote[msg.sender][_proposalId] = totalVotes;
         allVotes.push(ProposalVote(msg.sender, _solution, _proposalId, calculateVoteValue(msg.sender), block.timestamp));
-
+        // FIXME we want to store voteValue against proposal and solution. 894 Plotx
+        // FIXME see about voters. 898
         emit Vote(msg.sender, _proposalId, totalVotes, block.timestamp, _solution);
 
         if (proposalVote[_proposalId].length == memberRole.numberOfMembers(mrSequence) &&
@@ -709,6 +715,7 @@ contract Governance is IGovernance, Upgradeable {
         allProposalData[_proposalId].finalVerdict = max;
         (, , _majorityVote, , , , ) = proposalCategory.category(category);
         (, actionAddress, contractName, ) = proposalCategory.categoryAction(category);
+        // FIXME check majority vote the correct way. 
         if ((maxVoteValue * 100) / totalVoteValue >= _majorityVote) {
             if (max > 0) {
                 _updateProposalStatus(_proposalId, uint(ProposalStatus.Accepted));
@@ -718,6 +725,8 @@ contract Governance is IGovernance, Upgradeable {
                 else if(contractName !="EX")
                     actionAddress = ms.getLatestAddress(contractName);
                 /*solhint-enable*/
+                // FIXME Change solution bytes to only have params, and 
+                // FIXME functions param in PC
                 (bool success, ) = actionAddress.call(allProposalSolutions[_proposalId][max].action);
                 if (success) {
                     emit ActionSuccess(_proposalId);
@@ -740,9 +749,9 @@ contract Governance is IGovernance, Upgradeable {
     function calculateVoteValue(address _of) 
         internal view returns(uint voteValue) 
     {
-
+        // FIXME Consider ab vote weightage incase quorum not reached
         voteValue = _getLockedBalance(_of, tokenHoldingTime);
-
+        // FIXME !!Add max vote value
         voteValue = 
             Math.max(
                 voteValue / uint256(10) ** tokenInstance.decimals(),
@@ -818,6 +827,7 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev Update proposal status
     function _updateProposalStatus(uint _proposalId, uint _status) internal {
+        // FIXME do we need trigger action? Time delay?
         allProposal[_proposalId].dateUpd = block.timestamp;
         allProposalData[_proposalId].propStatus = _status;
     }
@@ -835,6 +845,7 @@ contract Governance is IGovernance, Upgradeable {
         uint i;
         uint proposalVoteValue;
         uint proposalStatus = allProposalData[proposalId].propStatus;
+        // FIXME check if we can optimise
         for (i = lastRewardClaimed[_memberAddress]; i < totalVotes && j < _maxRecords; i++) {
             voteId = allVotesByMember[_memberAddress][i];
             proposalId = allVotes[voteId].proposalId;

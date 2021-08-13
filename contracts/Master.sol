@@ -39,6 +39,11 @@ contract Master is Ownable, Governed {
 
     Governed internal govern;
     
+    // FIXME do we need _lockableToken?
+    // FIXME do we need _vesting?
+    // FIXME do we need _configParams?
+    // FIXME Make market as upgradable proxy?
+    // FIXME do we need versionDates?
     function initMaster(
         address _ownerAddress,
         bool _punishVoters,
@@ -78,6 +83,7 @@ contract Master is Ownable, Governed {
         versionDates.push(block.timestamp); //solhint-disable-line
     }
 
+    // FIXME takes some checks from plotx
     /// @dev adds a new contract type to master
     function addNewContract(bytes2 _contractName, address _contractAddress) external onlyAuthorizedToGovern {
         allContractNames.push(_contractName);
@@ -86,6 +92,7 @@ contract Master is Ownable, Governed {
         _changeAllAddress();
     }
 
+    // FIXME make this function support array upgrade
     /// @dev upgrades a single contract
     function upgradeContractImplementation(bytes2 _contractsName, address _contractAddress) 
         external onlyAuthorizedToGovern
@@ -98,6 +105,7 @@ contract Master is Ownable, Governed {
         versionDates.push(block.timestamp);  //solhint-disable-line
     }
 
+    // FIXME do we need this function? 
     /// @dev upgrades a single contract
     function upgradeContractProxy(bytes2 _contractsName, address _contractAddress) 
         external onlyAuthorizedToGovern 
@@ -108,6 +116,7 @@ contract Master is Ownable, Governed {
         _changeAllAddress();
     }
 
+    // FIXME do we need this function? 
     /// @dev sets dAppTokenProxy address
     /// @param _locker address where tokens are locked
     function setDAppLocker(address _locker) external onlyAuthorizedToGovern {
