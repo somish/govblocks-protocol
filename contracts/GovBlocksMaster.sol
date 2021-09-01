@@ -25,7 +25,7 @@ contract GovBlocksMaster is Ownable {
     address[] public implementations;
 
     event OnBoarded (
-        bytes32 indexed dAppName,
+        string indexed dAppName,
         address masterAddress
     );
 
@@ -33,7 +33,7 @@ contract GovBlocksMaster is Ownable {
     /// @param _gbDAppName dApp name
     /// @param _dappTokenAddress dApp token address
     function addGovBlocksDapp(
-        bytes32 _gbDAppName, 
+        string memory _gbDAppName, 
         address _dappTokenAddress, 
         address _tokenProxy,
         bool _punishVoters

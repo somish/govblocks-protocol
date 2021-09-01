@@ -34,4 +34,9 @@ abstract contract Upgradeable {
             ms = Master(_masterAddress);
         }
     }
+
+    /**
+     * @dev change master address
+     */
+    function setMasterAddress() public virtual;
 }

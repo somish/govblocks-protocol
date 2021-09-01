@@ -39,11 +39,11 @@ contract Master is Ownable, Governed {
 
     Governed internal govern;
     
-    // FIXME do we need _lockableToken?
-    // FIXME do we need _vesting?
-    // FIXME do we need _configParams?
+    // FIXME do we need _lockableToken? 
+    // FIXME do we need _vesting? - no need
+    // FIXME do we need _configParams? - no need
     // FIXME Make market as upgradable proxy?
-    // FIXME do we need versionDates?
+    // FIXME do we need versionDates? - no need
     function initMaster(
         address _ownerAddress,
         bool _punishVoters,
@@ -67,45 +67,61 @@ contract Master is Ownable, Governed {
         _changeAllAddress();
 
         MemberRoles mr = MemberRoles(contractAddress["MR"]);
-        mr.memberRolesInitiate(dAppToken, _ownerAddress);
+        // mr.memberRolesInitiate(dAppToken, _ownerAddress);
+        mr.memberRolesInitiate(dAppLocker, _ownerAddress);
 
         Governance gv = Governance(payable(contractAddress["GV"]));
         gv.initiateGovernance(_punishVoters);
     }
 
-    /// @dev Creates a new version of contract addresses
-    /// @param _contractAddresses Array of contract implementations
-    function addNewVersion(address[]  calldata _contractAddresses) external onlyAuthorizedToGovern {
-        for (uint i = 0; i < allContractNames.length; i++) {
-            _replaceImplementation(allContractNames[i], _contractAddresses[i]);
-        }
-
-        versionDates.push(block.timestamp); //solhint-disable-line
-    }
-
-    // FIXME takes some checks from plotx
-    /// @dev adds a new contract type to master
-    function addNewContract(bytes2 _contractName, address _contractAddress) external onlyAuthorizedToGovern {
+     /**
+     * @dev adds a new contract type to master
+     */
+    function addNewContract(bytes2 _contractName, address _contractAddress)
+        external
+        // onlyAuthorizedToGovern - temp
+    {
+        require(_contractName != "MS", "Name cannot be master");
+        require(_contractName != "EX", "Name cannot be External");
+        require(_contractAddress != address(0), "Zero address");
+        require(
+            contractAddress[_contractName] == address(0),
+            "Contract code already available"
+        );
         allContractNames.push(_contractName);
         _generateProxy(_contractName, _contractAddress);
+       
         _changeMasterAddress(address(this));
         _changeAllAddress();
     }
 
-    // FIXME make this function support array upgrade
-    /// @dev upgrades a single contract
-    function upgradeContractImplementation(bytes2 _contractsName, address _contractAddress) 
-        external onlyAuthorizedToGovern
-    {
-        if (_contractsName == "MS") {
-            _changeMasterAddress(_contractAddress);
-        } else {
-            _replaceImplementation(_contractsName, _contractAddress);
+    /**
+     * @dev upgrades a multiple contract implementations
+     */
+    function upgradeMultipleImplementations(
+        bytes2[] calldata _contractNames,
+        address[] calldata _contractAddresses
+    ) external onlyAuthorizedToGovern {
+        require(
+            _contractNames.length == _contractAddresses.length,
+            "Array length should be equal."
+        );
+        for (uint256 i = 0; i < _contractNames.length; i++) {
+            require(
+                _contractAddresses[i] != address(0),
+                "null address is not allowed."
+            );
+
+            if (_contractNames[i] == "MS") {
+                _changeMasterAddress(_contractAddresses[i]);
+            } else {
+                _replaceImplementation(_contractNames[i], _contractAddresses[i]);
+            }
         }
         versionDates.push(block.timestamp);  //solhint-disable-line
     }
 
-    // FIXME do we need this function? 
+    // FIXME do we need this function? - need
     /// @dev upgrades a single contract
     function upgradeContractProxy(bytes2 _contractsName, address _contractAddress) 
         external onlyAuthorizedToGovern 
@@ -116,7 +132,7 @@ contract Master is Ownable, Governed {
         _changeAllAddress();
     }
 
-    // FIXME do we need this function? 
+    // FIXME do we need this function?  - need
     /// @dev sets dAppTokenProxy address
     /// @param _locker address where tokens are locked
     function setDAppLocker(address _locker) external onlyAuthorizedToGovern {

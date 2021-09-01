@@ -208,6 +208,7 @@ contract TokenProxy is ERC1132 {
             amount = locked[_of][_reason].amount;
     }
 
+    // FIXME do we need this? - need to confirm from nitika mam
     /**
      * @dev Unlocks the unlockable tokens of a specified address
      * @param _of Address of user, claiming back unlockable tokens

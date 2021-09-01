@@ -663,9 +663,22 @@ contract Governance is IGovernance, Upgradeable {
 
         uint mrSequence;
         uint totalVotes = allVotes.length;
-        (, mrSequence, , , , , ) = proposalCategory.category(allProposalData[_proposalId].category);
+        uint256 closingTime;
+        (, mrSequence, , , , closingTime, ) = proposalCategory.category(allProposalData[_proposalId].category);
+
+
+        // require(
+        //     allProposalData[_proposalId].dateUpd.add(closingTime) > now,
+        //     "Closed"
+        // );
+
+        require(
+            allProposal[_proposalId].dateUpd + closingTime > block.timestamp,
+            "Closed"
+        );
+
         // FIXME add a closing time check. 832 on plotx
-        // FIXME Locking mechanism
+        // FIXME Locking mechanism - confirm from nitika mam
         require(memberRole.checkRole(msg.sender, mrSequence));
 
         proposalVote[_proposalId].push(totalVotes);
@@ -673,7 +686,7 @@ contract Governance is IGovernance, Upgradeable {
         addressProposalVote[msg.sender][_proposalId] = totalVotes;
         allVotes.push(ProposalVote(msg.sender, _solution, _proposalId, calculateVoteValue(msg.sender), block.timestamp));
         // FIXME we want to store voteValue against proposal and solution. 894 Plotx
-        // FIXME see about voters. 898
+        // FIXME see about voters. 898 - confirm from nitika mam
         emit Vote(msg.sender, _proposalId, totalVotes, block.timestamp, _solution);
 
         if (proposalVote[_proposalId].length == memberRole.numberOfMembers(mrSequence) &&
@@ -715,7 +728,7 @@ contract Governance is IGovernance, Upgradeable {
         allProposalData[_proposalId].finalVerdict = max;
         (, , _majorityVote, , , , ) = proposalCategory.category(category);
         (, actionAddress, contractName, ) = proposalCategory.categoryAction(category);
-        // FIXME check majority vote the correct way. 
+        // FIXME check majority vote the correct way. - no need
         if ((maxVoteValue * 100) / totalVoteValue >= _majorityVote) {
             if (max > 0) {
                 _updateProposalStatus(_proposalId, uint(ProposalStatus.Accepted));
@@ -725,7 +738,7 @@ contract Governance is IGovernance, Upgradeable {
                 else if(contractName !="EX")
                     actionAddress = ms.getLatestAddress(contractName);
                 /*solhint-enable*/
-                // FIXME Change solution bytes to only have params, and 
+                // FIXME Change solution bytes to only have params, and - nexus bug fix
                 // FIXME functions param in PC
                 (bool success, ) = actionAddress.call(allProposalSolutions[_proposalId][max].action);
                 if (success) {
@@ -827,7 +840,7 @@ contract Governance is IGovernance, Upgradeable {
 
     /// @dev Update proposal status
     function _updateProposalStatus(uint _proposalId, uint _status) internal {
-        // FIXME do we need trigger action? Time delay?
+        // FIXME do we need trigger action? Time delay? - trigger action with configurable role to call it
         allProposal[_proposalId].dateUpd = block.timestamp;
         allProposalData[_proposalId].propStatus = _status;
     }
@@ -845,7 +858,7 @@ contract Governance is IGovernance, Upgradeable {
         uint i;
         uint proposalVoteValue;
         uint proposalStatus = allProposalData[proposalId].propStatus;
-        // FIXME check if we can optimise
+        // FIXME check if we can optimise - need to see
         for (i = lastRewardClaimed[_memberAddress]; i < totalVotes && j < _maxRecords; i++) {
             voteId = allVotesByMember[_memberAddress][i];
             proposalId = allVotes[voteId].proposalId;
@@ -881,6 +894,22 @@ contract Governance is IGovernance, Upgradeable {
         } else {
             lastRewardClaimed[_memberAddress] = lastClaimed;
         }
+    }
+
+
+
+    function setMasterAddress() public override {
+        // OwnedUpgradeabilityProxy proxy =  OwnedUpgradeabilityProxy(address(uint160(address(this))));
+        // require(msg.sender == proxy.proxyOwner(),"Sender is not proxy owner.");
+
+        // require(!constructorCheck);
+        // _initiateGovernance();
+        // ms = IMaster(msg.sender);
+        // tokenInstance = IToken(ms.dAppToken());
+        // memberRole = IMemberRoles(ms.getLatestAddress("MR"));
+        // proposalCategory = IProposalCategory(ms.getLatestAddress("PC"));
+        // tokenController = ITokenController(ms.getLatestAddress("TC"));
+        // marketRegistry = IMarketRegistry(address(uint160(ms.getLatestAddress("PL"))));
     }
 
 }

@@ -21,15 +21,15 @@ import "./interfaces/IProposalCategory.sol";
 import "./external/govern/Governed.sol";
 import "./MemberRoles.sol";
 
-// FIXME need concept of quorum?
+// FIXME need concept of quorum? - didn't understand
 // FIXME add action hash of the functions
-// FIXME need editCategory?
+// FIXME need editCategory? - merge update/editCategory from nexus
 
 contract ProposalCategory is IProposalCategory, Governed {
 
-    bool internal constructorCheck;
+    bool public constructorCheck;
     MemberRoles internal mr;
-    // FIXME no need
+    // FIXME no need - need
     IMaster internal ms;
 
     struct CategoryStruct {
@@ -49,7 +49,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     
     CategoryStruct[] internal allCategory;
     mapping (uint => CategoryAction) internal categoryActionData;
-    // FIXME add category action hash
+    // FIXME add category action hash - changes from nexus
     
     /// @dev Adds new category
     /// @param _name Category name
@@ -76,7 +76,7 @@ contract ProposalCategory is IProposalCategory, Governed {
     ) 
         external
         override
-        onlyAuthorizedToGovern 
+        // onlyAuthorizedToGovern  -temp
     {
         require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
         _addCategory(
@@ -164,7 +164,7 @@ contract ProposalCategory is IProposalCategory, Governed {
 
     ///@dev just to follow the interface
     function updateDependencyAddresses() public { //solhint-disable-line
-        // FIXME take ms address from msg.sender
+        // FIXME take ms address from msg.sender - anyone can call function
         ms = IMaster(masterAddress);
         mr = MemberRoles(ms.getLatestAddress('MR'));
         if (!constructorCheck) {
@@ -221,6 +221,7 @@ contract ProposalCategory is IProposalCategory, Governed {
         );
         addInitialCategories("Resume Proposal", "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1", "GV");
         addInitialCategories("Pause Proposal", "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk", "GV");
+        // addInitialCategories("Mint funds", "", "EX"); //temp
         addInitialCategories("Others, not specified", "", "EX");
     }
 

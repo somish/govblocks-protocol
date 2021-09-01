@@ -32,7 +32,7 @@ contract MemberRoles is IMemberRoles, Governed {
 
     LockableToken public dAppToken;
 
-    // FIXME do we need member count
+    // FIXME do we need member count - need 
     struct MemberRoleDetails {
         mapping(address => bool) memberActive;
         address[] memberAddress;
@@ -40,7 +40,7 @@ contract MemberRoles is IMemberRoles, Governed {
     }
 
     MemberRoleDetails[] internal memberRoleData;
-    // FIXME need memberRoleIndex?
+    // FIXME need memberRoleIndex? - need to see for optimization possibility
     mapping ( uint => mapping (address => uint)) internal memberRoleIndex;
     bool internal constructorCheck;
 
@@ -66,13 +66,13 @@ contract MemberRoles is IMemberRoles, Governed {
         }
     }
 
-    // FIXME do we need to make array of AB Roles
-    // FIXME do we need initiator concept?
+    // FIXME do we need to make array of AB Roles - no
+    // FIXME do we need initiator concept? - yes
     function memberRolesInitiate(address _dAppToken, address _firstAB) external {
-        require(!constructorCheck);
+        require(!constructorCheck,"here");
+        constructorCheck = true;
         dAppToken = LockableToken(_dAppToken);
         addInitialMemberRoles(_firstAB);
-        constructorCheck = true;
     }
 
     function addInitialMemberRoles(address _firstAB) internal {
@@ -101,7 +101,8 @@ contract MemberRoles is IMemberRoles, Governed {
     )
     public
     override
-    onlyAuthorizedToGovern {
+    // onlyAuthorizedToGovern  - temp
+    {
         _addRole(_roleName, _roleDescription, _authorized);
     }
 
@@ -137,6 +138,7 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @return roleId Role id
     /// @return memberArray allMemberAddress Member addresses of specified role id
     function members(uint _memberRoleId) public override view returns(uint, address[] memory memberArray) { //solhint-disable-line
+        require(_memberRoleId != uint(Role.TokenHolder),"TokenHolders are too dynamic to esimate2");
         // uint length = memberRoleData[_memberRoleId].memberAddress.length;
         // uint i;
         // uint j;
@@ -157,6 +159,7 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @param _memberRoleId Member role id
     /// @return memberRoleData[_memberRoleId].memberCounter Member length
     function numberOfMembers(uint _memberRoleId) public override view returns(uint) { //solhint-disable-line
+        // require(_memberRoleId != uint(Role.TokenHolder),"TokenHolders are too dynamic to esimate1");
         return memberRoleData[_memberRoleId].memberAddress.length - 1;
         // return memberRoleData[_memberRoleId].memberCounter;
     }
@@ -166,7 +169,7 @@ contract MemberRoles is IMemberRoles, Governed {
         return memberRoleData[_memberRoleId].authorized;
     }
 
-    // FIXME plotx has different logic here.
+    // FIXME plotx has different logic here. - need array of token holder as well. (need to see if can optimize)
     /// @dev Get All role ids array that has been assigned to a member so far.
     function roles(address _memberAddress) public override view returns(uint[] memory assignedRoles) { //solhint-disable-line
         uint length = memberRoleData.length;
@@ -191,7 +194,7 @@ contract MemberRoles is IMemberRoles, Governed {
         return assignedRoles;
     }
 
-    // FIXME do we need logic of updating and getting UNIT parameter?
+    // FIXME do we need logic of updating and getting UNIT parameter? - no need
 
     /// @dev Returns true if the given role id is assigned to a member.
     /// @param _memberAddress Address of member
@@ -233,7 +236,7 @@ contract MemberRoles is IMemberRoles, Governed {
             memberRoleIndex[_roleId][_memberAddress] = memberRoleData[_roleId].memberAddress.length;
             memberRoleData[_roleId].memberAddress.push(_memberAddress);
         } else {
-            // FIXME check this logic
+            // FIXME check this logic - need to see if can optimize
             require(memberIndex > 0, "Member Doesn't exist");
             delete memberRoleIndex[_roleId][_memberAddress];
             if(memberRoleData[_roleId].memberAddress.length >2) {
@@ -259,5 +262,5 @@ contract MemberRoles is IMemberRoles, Governed {
         _newMemberRoleDetails.memberAddress = new address[](1);
         _newMemberRoleDetails.authorized = _authorized;
     }
-    // FIXME do we need _addInitialMemberRoles
+    // FIXME do we need _addInitialMemberRoles - no need
 }
