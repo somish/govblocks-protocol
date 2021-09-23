@@ -74,7 +74,14 @@ contract Governance is IGovernance, Upgradeable {
         uint256 voters;
     }
 
+    struct DelegateVote {
+        address follower;
+        address leader;
+        uint lastUpd;
+    }
+
     ProposalVote[] internal allVotes;
+    DelegateVote[] public allDelegation;
 
     mapping(uint => ProposalData) internal allProposalData;
     mapping(uint => bytes[]) internal allProposalSolutions;
@@ -84,6 +91,11 @@ contract Governance is IGovernance, Upgradeable {
     mapping(uint => bool) public proposalPaused; // need to check if need
     mapping(uint256 => mapping(address => bool)) public rewardClaimed;
     mapping (address => uint) public lastRewardClaimed;
+
+    mapping (address => uint) public followerDelegation;
+    mapping (address => uint) internal followerCount;
+    mapping (address => uint[]) internal leaderDelegation;
+    mapping (address => bool) public isOpenForDelegation;
 
     ProposalStruct[] internal allProposal; //need to check
     ProposalVote[] internal allVotes;
@@ -99,6 +111,8 @@ contract Governance is IGovernance, Upgradeable {
     uint256 internal totalProposals; // check
     uint256 internal maxDraftTime; // check
     bool internal locked;
+
+    uint internal maxFollowers;
 
 
     mapping(uint256 => uint256) public proposalActionStatus;
@@ -162,6 +176,21 @@ contract Governance is IGovernance, Upgradeable {
         _;
     }
 
+    modifier onlyInternal {
+        require(ms.isInternal(msg.sender));
+        _;
+    }
+
+    modifier isMemberAndcheckPause {
+        require(ms.isPause() == false && ms.isMember(msg.sender) == true);
+        _;
+    }
+
+    modifier checkPendingRewards {
+        require(getPendingReward(msg.sender) == 0, "Claim pending rewards");
+        _;
+    }
+
     /**
      * @dev Event emitted whenever a proposal is categorized
      */
@@ -170,6 +199,99 @@ contract Governance is IGovernance, Upgradeable {
         address indexed categorizedBy,
         uint256 categoryId
     );
+
+    /**
+     * @dev to remove delegation of an address.
+     * @param _add address to undelegate.
+     */
+    function removeDelegation(address _add) external onlyInternal {
+        _unDelegate(_add);
+    }
+
+    /**
+     * @dev Used to set delegation acceptance status of individual user
+     * @param _status delegation acceptance status
+     */
+    function setDelegationStatus(bool _status) external isMemberAndcheckPause checkPendingRewards {
+        isOpenForDelegation[msg.sender] = _status;
+    }
+
+    /**
+     * @dev to delegate vote to an address.
+     * @param _add is the address to delegate vote to.
+     */
+    function delegateVote(address _add) external isMemberAndcheckPause checkPendingRewards {
+        //Ensure that NXMaster has initialized.
+        require(ms.masterInitialized());
+
+        //Check if given address is not a follower
+        require(allDelegation[followerDelegation[_add]].leader == address(0));
+
+        if (followerDelegation[msg.sender] > 0) {
+            require(SafeMath.add(allDelegation[followerDelegation[msg.sender]].lastUpd, tokenHoldingTime) < now);
+        }
+
+        require(!alreadyDelegated(msg.sender), "Already a leader");
+        require(!memberRole.checkRole(msg.sender, uint(MemberRoles.Role.Owner)));
+        require(!memberRole.checkRole(msg.sender, uint(MemberRoles.Role.AdvisoryBoard)));
+
+
+        require(followerCount[_add] < maxFollowers);
+        
+        if (allVotesByMember[msg.sender].length > 0) {
+            uint memberLastVoteId = SafeMath.sub(allVotesByMember[msg.sender].length, 1);
+            require(SafeMath.add(allVotes[allVotesByMember[msg.sender][memberLastVoteId]].dateAdd, tokenHoldingTime)
+            < now);
+        }
+
+        // require(getPendingReward(msg.sender) == 0);
+
+        require(ms.isMember(_add));
+
+        require(isOpenForDelegation[_add]);
+
+        allDelegation.push(DelegateVote(msg.sender, _add, now));
+        followerDelegation[msg.sender] = allDelegation.length - 1;
+        leaderDelegation[_add].push(allDelegation.length - 1);
+        followerCount[_add]++;
+        lastRewardClaimed[msg.sender] = allVotesByMember[_add].length;
+    }
+
+    /**
+     * @dev Undelegates the sender
+     */
+    function unDelegate() external isMemberAndcheckPause checkPendingRewards {
+        _unDelegate(msg.sender);
+    }
+
+    /**
+     * @dev to know if an address is already delegated
+     * @param _add in concern
+     * @return bool value if the address is delegated or not
+     */
+    function alreadyDelegated(address _add) public view returns(bool delegated) {
+        for (uint i=0; i < leaderDelegation[_add].length; i++) {
+            if (allDelegation[leaderDelegation[_add][i]].leader == _add) {
+                return true;
+            }
+        }
+    }
+
+    /**
+     * @dev to undelegate a follower
+     * @param _follower is address of follower to undelegate
+     */
+    function _unDelegate(address _follower) internal {
+        uint followerId = followerDelegation[_follower];
+        if (followerId > 0) {
+
+            followerCount[allDelegation[followerId].leader]--;
+            allDelegation[followerId].leader = address(0);
+            allDelegation[followerId].lastUpd = now;
+
+            lastRewardClaimed[msg.sender] = allVotesByMember[msg.sender].length;
+        }
+    }
 
     /// @dev Creates a new proposal
     /// @param _proposalTitle Title of the proposal
@@ -474,6 +596,9 @@ contract Governance is IGovernance, Upgradeable {
         punishVoters = _punishVoters;
         minVoteWeight = 1;
         constructorCheck = true;
+
+        allDelegation.push(DelegateVote(address(0), address(0), now));
+        maxFollowers = 40;
     }
 
     /// @dev updates all dependency addresses to latest ones from Master
