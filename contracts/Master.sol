@@ -79,7 +79,7 @@ contract Master is Ownable, Governed {
      */
     function addNewContract(bytes2 _contractName, address _contractAddress)
         external
-        // onlyAuthorizedToGovern - temp
+        onlyAuthorizedToGovern
     {
         require(_contractName != "MS", "Name cannot be master");
         require(_contractName != "EX", "Name cannot be External");

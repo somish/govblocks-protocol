@@ -24,6 +24,8 @@ import "./external/govern/Governed.sol";
 
 contract MemberRoles is IMemberRoles, Governed {
 
+    using SafeMath for uint256;
+
     enum Role {
         UnAssigned,
         AdvisoryBoard,
@@ -34,19 +36,21 @@ contract MemberRoles is IMemberRoles, Governed {
 
     // FIXME do we need member count - need 
     struct MemberRoleDetails {
-        mapping(address => bool) memberActive;
+        uint256 memberCounter;
+        mapping(address => uint256) memberIndex;
         address[] memberAddress;
         address authorized;
     }
 
     MemberRoleDetails[] internal memberRoleData;
-    // FIXME need memberRoleIndex? - need to see for optimization possibility
-    mapping ( uint => mapping (address => uint)) internal memberRoleIndex;
+    // FIXME need memberRoleIndex? - need to see for optimization possibility - moved to MemberRoleDetails - prem
+    // mapping ( uint => mapping (address => uint)) internal memberRoleIndex;
     bool internal constructorCheck;
+    address internal initiator;
 
     modifier checkRoleAuthority(uint _memberRoleId) {
         if (memberRoleData[_memberRoleId].authorized != address(0))
-            require(msg.sender == memberRoleData[_memberRoleId].authorized);
+            require(msg.sender == memberRoleData[_memberRoleId].authorized, "Not Authorized");
         else
             require(isAuthorizedToGovern(msg.sender), "Not Authorized");
         _;
@@ -57,25 +61,50 @@ contract MemberRoles is IMemberRoles, Governed {
     }
 
     /// @dev just to adhere to GovBlockss' Upgradeable interface
-    function changeMasterAddress(address _masterAddress) public { //solhint-disable-line
-        if (masterAddress == address(0)) {
-            masterAddress = _masterAddress;
-        } else {
-            require(msg.sender == masterAddress);
-            masterAddress = _masterAddress;
-        }
+    // function changeMasterAddress(address _masterAddress) public { //solhint-disable-line
+    //     if (masterAddress == address(0)) {
+    //         masterAddress = _masterAddress;
+    //     } else {
+    //         require(msg.sender == masterAddress);
+    //         masterAddress = _masterAddress;
+    //     }
+    // }
+
+    function changeMasterAddress() public {
+        OwnedUpgradeabilityProxy proxy = OwnedUpgradeabilityProxy(
+            address(uint160(address(this)))
+        );
+        require(msg.sender == proxy.proxyOwner(), "Sender is not proxy owner.");
+
+        require(masterAddress == address(0), "Master address already set");
+        masterAddress = msg.sender;
+        IMaster masterInstance = IMaster(masterAddress);
+        // tokenController = ITokenController(
+        //     masterInstance.getLatestAddress("TC")
+        // ); check it -prem
+    }
+
+    /**
+     * @dev Set the authorized address to add the initial roles and members
+     * @param _initiator is address of the initiator
+     */
+    function setInititorAddress(address _initiator) external {
+        OwnedUpgradeabilityProxy proxy = OwnedUpgradeabilityProxy(
+            address(uint160(address(this)))
+        );
+        require(msg.sender == proxy.proxyOwner(), "Sender is not proxy owner.");
+        require(initiator == address(0), "Already Set");
+        initiator = _initiator;
     }
 
     // FIXME do we need to make array of AB Roles - no
     // FIXME do we need initiator concept? - yes
     function memberRolesInitiate(address _dAppToken, address _firstAB) external {
-        require(!constructorCheck,"here");
+        require(msg.sender == initiator);
+        require(!constructorCheck, "Already constructed");
         constructorCheck = true;
         dAppToken = LockableToken(_dAppToken);
-        addInitialMemberRoles(_firstAB);
-    }
-
-    function addInitialMemberRoles(address _firstAB) internal {
+        // addInitialMemberRoles(_firstAB);
         _addRole("Unassigned", "Unassigned", address(0));
         _addRole(
             "Advisory Board",
@@ -90,6 +119,11 @@ contract MemberRoles is IMemberRoles, Governed {
         _updateRole(_firstAB, 1, true);
     }
 
+    // moved to memberRolesInitiate
+    // function _addInitialMemberRoles(address _firstAB) internal {
+        
+    // }
+
     /// @dev Adds new member role
     /// @param _roleName New role name
     /// @param _roleDescription New description hash
@@ -101,7 +135,7 @@ contract MemberRoles is IMemberRoles, Governed {
     )
     public
     override
-    // onlyAuthorizedToGovern  - temp
+    onlyAuthorizedToGovern
     {
         _addRole(_roleName, _roleDescription, _authorized);
     }
@@ -160,7 +194,7 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @return memberRoleData[_memberRoleId].memberCounter Member length
     function numberOfMembers(uint _memberRoleId) public override view returns(uint) { //solhint-disable-line
         // require(_memberRoleId != uint(Role.TokenHolder),"TokenHolders are too dynamic to esimate1");
-        return memberRoleData[_memberRoleId].memberAddress.length - 1;
+        return memberRoleData[_memberRoleId].memberCounter;
         // return memberRoleData[_memberRoleId].memberCounter;
     }
 
@@ -173,28 +207,25 @@ contract MemberRoles is IMemberRoles, Governed {
     /// @dev Get All role ids array that has been assigned to a member so far.
     function roles(address _memberAddress) public override view returns(uint[] memory assignedRoles) { //solhint-disable-line
         uint length = memberRoleData.length;
-        uint j = 0;
+        uint256 counter = 0;
         uint i;
-        uint[] memory tempAllMemberAddress = new uint[](length);
+        assignedRoles = new uint[](length);
         for (i = 1; i < length; i++) {
             if (memberRoleIndex[i][_memberAddress] > 0) {
-                tempAllMemberAddress[j] = i;
-                j++;
+                assignedRoles[counter] = i;
+                counter++;
             }
         }
         if (dAppToken.totalBalanceOf(_memberAddress) > 0) {
-            tempAllMemberAddress[j] = uint(Role.TokenHolder);
-            j++;
+            assignedRoles[counter] = uint(Role.TokenHolder);
+            counter++;
         }
-
-        assignedRoles = new uint256[](j);
-        for (i = 0; i < j; i++) {
-            assignedRoles[i] = tempAllMemberAddress[i];
-        }
+        // reducing array size to ommit all zeroes
+        assembly { mstore(tempAllMemberAddress, counter) }
         return assignedRoles;
     }
 
-    // FIXME do we need logic of updating and getting UNIT parameter? - no need
+    // FIXME do we need logic of updating and getting UNIT parameter? - no need no parms for get or set
 
     /// @dev Returns true if the given role id is assigned to a member.
     /// @param _memberAddress Address of member
@@ -206,17 +237,15 @@ contract MemberRoles is IMemberRoles, Governed {
         else if (_roleId == uint(Role.TokenHolder)) {
             if (dAppToken.totalBalanceOf(_memberAddress) > 0)
                 return true;
-            else
-                return false;
         } else
-            if (memberRoleIndex[_roleId][_memberAddress] > 0)
+            if (memberRoleData[_roleId].memberIndex[_memberAddress] > 0)
             // if (memberRoleData[_roleId].memberActive[_memberAddress]) //solhint-disable-line
                 return true;
-            else
-                return false;
+        return false;
+            
     }
 
-    /// @dev Return total number of members assigned against each role id.
+    /// @dev Return total number of members assigned against each role id except token holder.
     /// @return totalMembers Total members in particular role id
     function getMemberLengthForAllRoles() public view returns(uint[] memory totalMembers) { //solhint-disable-line
         totalMembers = new uint[](memberRoleData.length);
@@ -224,7 +253,7 @@ contract MemberRoles is IMemberRoles, Governed {
             totalMembers[i] = numberOfMembers(i);
         }
     }
-
+// ------pending to fix ---- //
     /// @dev Internal call of update role
     function _updateRole(address _memberAddress,
         uint _roleId,

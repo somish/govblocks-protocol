@@ -49,7 +49,13 @@ contract ProposalCategory is IProposalCategory, Governed {
     
     CategoryStruct[] internal allCategory;
     mapping (uint => CategoryAction) internal categoryActionData;
+    mapping(uint256 => bytes) public categoryActionHashes;
+
+    bool public initiated;
+
     // FIXME add category action hash - changes from nexus
+
+    // Look if need proposalCategoryInitiate() - prem
     
     /// @dev Adds new category
     /// @param _name Category name
@@ -72,13 +78,26 @@ contract ProposalCategory is IProposalCategory, Governed {
         string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] memory _incentives
+        uint[] memory _incentives,
+        string memory _functionHash
     ) 
         external
         override
-        // onlyAuthorizedToGovern  -temp
+        onlyAuthorizedToGovern
     {
-        require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
+        require(
+            _quorumPerc <= 100 && _majorityVotePerc <= 100,
+            "Invalid percentage"
+        );
+
+        // check if need to add check for valid mr
+
+        require(
+            (_contractName == "EX" && _contractAddress == address(0)) ||
+                bytes(_functionHash).length > 0,
+            "Wrong parameters passed"
+        );
+        
         _addCategory(
             _name, 
             _memberRoleToVote,
@@ -91,6 +110,15 @@ contract ProposalCategory is IProposalCategory, Governed {
             _contractName,
             _incentives
         );
+
+        bytes memory _encodedHash = abi.encodeWithSignature(_functionHash);
+        if (
+            bytes(_functionHash).length > 0 &&
+            _encodedHash.length == 4
+        ) {
+            
+            categoryActionHashes[allCategory.length - 1] = _encodedHash;
+        }
     }
 
     /// @dev Updates category details
@@ -116,13 +144,35 @@ contract ProposalCategory is IProposalCategory, Governed {
         string memory _actionHash,
         address _contractAddress,
         bytes2 _contractName,
-        uint[] memory _incentives
+        uint[] memory _incentives,
+        string memory _functionHash
     )
         public
         override
         onlyAuthorizedToGovern //solhint-disable
     { 
         require(_verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal) == 0, "Invalid Role");
+
+        require(
+            _quorumPerc <= 100 && _majorityVotePerc <= 100,
+            "Invalid percentage"
+        );
+
+        require(
+            (_contractName == "EX" && _contractAddress == address(0)) ||
+                bytes(_functionHash).length > 0,
+            "Wrong parameters passed"
+        );
+
+        delete categoryActionHashes[_categoryId];
+        if (
+            bytes(_functionHash).length > 0 &&
+            abi.encodeWithSignature(_functionHash).length == 4
+        ) {
+            categoryActionHashes[_categoryId] = abi.encodeWithSignature(
+                _functionHash
+            );
+        }
         allCategory[_categoryId].memberRoleToVote = _memberRoleToVote;
         allCategory[_categoryId].majorityVotePerc = _majorityVotePerc;
         allCategory[_categoryId].closingTime = _closingTime;
@@ -148,12 +198,42 @@ contract ProposalCategory is IProposalCategory, Governed {
         );
     }
 
-    function categoryAction(uint _categoryId) external override view returns(uint, address, bytes2, uint) {
-        return(
+    // check if need it or merge it with below
+    // function categoryAction(uint _categoryId) external override view returns(uint, address, bytes2, uint) {
+    //     return(
+    //         _categoryId,
+    //         categoryActionData[_categoryId].contractAddress,
+    //         categoryActionData[_categoryId].contractName,
+    //         categoryActionData[_categoryId].defaultIncentive
+    //     );
+    // }
+
+    /**
+     * @dev Gets the category action details of a category id
+     * @param _categoryId is the category id in concern
+     * @return the category id
+     * @return the contract address
+     * @return the contract name
+     * @return the default incentive
+     * @return action function hash
+     */
+    function categoryActionDetails(uint256 _categoryId)
+        external
+        view
+        returns (
+            uint256,
+            address,
+            bytes2,
+            uint256,
+            bytes memory
+        )
+    {
+        return (
             _categoryId,
             categoryActionData[_categoryId].contractAddress,
             categoryActionData[_categoryId].contractName,
-            categoryActionData[_categoryId].defaultIncentive
+            categoryActionData[_categoryId].defaultIncentive,
+            categoryActionHashes[_categoryId]
         );
     }
 
@@ -168,8 +248,8 @@ contract ProposalCategory is IProposalCategory, Governed {
         ms = IMaster(masterAddress);
         mr = MemberRoles(ms.getLatestAddress('MR'));
         if (!constructorCheck) {
-            proposalCategoryInitiate();
             constructorCheck = true;
+            proposalCategoryInitiate();
         }
     }
 
@@ -184,45 +264,45 @@ contract ProposalCategory is IProposalCategory, Governed {
     }
 
     function _verifyMemberRoles(uint _memberRoleToVote, uint[] memory _allowedToCreateProposal) 
-    internal view returns(uint) { 
+    internal view returns(bool) { 
         uint totalRoles = mr.totalRoles();
         if (_memberRoleToVote >= totalRoles) {
-            return 1;
+            return false;
         }
         for (uint i = 0; i < _allowedToCreateProposal.length; i++) {
             if (_allowedToCreateProposal[i] >= totalRoles) {
-                return 1;
+                return false;
             }
         }
-        return 0;
+        return true;
     }
 
+    //FixME correct func argument - prem
     /// @dev Initiates Default settings for Proposal Category contract (Adding default categories)
     function proposalCategoryInitiate() internal { //solhint-disable-line
-        addInitialCategories("Uncategorized", "", "EX");
-        addInitialCategories("Add new member role", "QmQFnBep7AyMYU3LJDuHSpTYatnw65XjHzzirrghtZoR8U", "MR");
-        addInitialCategories("Update member role", "QmXMzSViLBJ22P9oj51Zz7isKTRnXWPHZcQ5hzGvvWD3UV", "MR");
-        addInitialCategories("Add new category", "QmYzBtW5mRMwHwKQUmRnwdXgq733WNzN5fo2yNPpkVG9Ng", "PC");
-        addInitialCategories("Edit category", "QmcVNykyhjni7GFk8x1GrL3idzc6vxz4vNJLHPS9vJ79Qc", "PC");
-        addInitialCategories("Change dApp Token Proxy", "QmPR9K6BevCXRVBxWGjF9RV7Pmtxr7D4gE3qsZu5bzi8GK", "MS");
-        addInitialCategories("Transfer Ether", "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa", "GV");
-        addInitialCategories("Transfer Token", "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB", "GV");
-        addInitialCategories("Add new version", "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w", "MS");
-        addInitialCategories("Add new contract", "QmWP3P58YcmveHeXqgsBCRmDewTYV1QqeQqBmRkDujrDLR", "MS");
-        addInitialCategories(
-            "Upgrade a contract Implementation",
-            "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
-            "MS"
-        );
-        addInitialCategories(
-            "Upgrade a contract proxy",
-            "QmUNGEn7E2csB3YxohDxBKNqvzwa1WfvrSH4TCCFD9DZsg",
-            "MS"
-        );
-        addInitialCategories("Resume Proposal", "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1", "GV");
-        addInitialCategories("Pause Proposal", "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk", "GV");
-        // addInitialCategories("Mint funds", "", "EX"); //temp
-        addInitialCategories("Others, not specified", "", "EX");
+        // _addInitialCategories("Uncategorized", "", "EX", 0, 0);
+        // _addInitialCategories("Add new member role", "QmQFnBep7AyMYU3LJDuHSpTYatnw65XjHzzirrghtZoR8U", "MR");
+        // _addInitialCategories("Update member role", "QmXMzSViLBJ22P9oj51Zz7isKTRnXWPHZcQ5hzGvvWD3UV", "MR");
+        // _addInitialCategories("Add new category", "QmYzBtW5mRMwHwKQUmRnwdXgq733WNzN5fo2yNPpkVG9Ng", "PC");
+        // _addInitialCategories("Edit category", "QmcVNykyhjni7GFk8x1GrL3idzc6vxz4vNJLHPS9vJ79Qc", "PC");
+        // _addInitialCategories("Change dApp Token Proxy", "QmPR9K6BevCXRVBxWGjF9RV7Pmtxr7D4gE3qsZu5bzi8GK", "MS");
+        // _addInitialCategories("Transfer Ether", "QmRUmxw4xmqTN6L2bSZEJfmRcU1yvVWoiMqehKtqCMAaTa", "GV");
+        // _addInitialCategories("Transfer Token", "QmbvmcW3zcAnng3FWgP5bHL4ba9kMMwV9G8Y8SASqrvHHB", "GV");
+        // _addInitialCategories("Add new version", "QmeMBNn9fs5xYVFVsN8HgupMTfgXdyz4vkLPXakWd2BY3w", "MS");
+        // _addInitialCategories("Add new contract", "QmWP3P58YcmveHeXqgsBCRmDewTYV1QqeQqBmRkDujrDLR", "MS");
+        // _addInitialCategories(
+        //     "Upgrade a contract Implementation",
+        //     "Qme4hGas6RuDYk9LKE2XkK9E46LNeCBUzY12DdT5uQstvh",
+        //     "MS"
+        // );
+        // _addInitialCategories(
+        //     "Upgrade a contract proxy",
+        //     "QmUNGEn7E2csB3YxohDxBKNqvzwa1WfvrSH4TCCFD9DZsg",
+        //     "MS"
+        // );
+        // _addInitialCategories("Resume Proposal", "QmQPWVjmv2Gt2Dzt1rxmFkHCptFSdtX4VC5g7VVNUByLv1", "GV");
+        // _addInitialCategories("Pause Proposal", "QmWWoiRZCmi61LQKpGyGuKjasFVpq8JzbLPvDhU8TBS9tk", "GV");
+        // _addInitialCategories("Others, not specified", "", "EX");
     }
 
     /// @dev Adds new category
@@ -250,6 +330,10 @@ contract ProposalCategory is IProposalCategory, Governed {
     ) 
         internal
     {
+        require(
+            _verifyMemberRoles(_memberRoleToVote, _allowedToCreateProposal),
+            "Invalid Role"
+        );
         allCategory.push(
             CategoryStruct(
                 _memberRoleToVote,
@@ -265,30 +349,39 @@ contract ProposalCategory is IProposalCategory, Governed {
         emit Category(categoryId, _name, _actionHash);
     }
 
-    function addInitialCategories(
+    function _addInitialCategories(
         string memory _name,
+        string memory _solutionHash,
+        bytes2 _contractName,
         string memory _actionHash,
-        bytes2 _contractName
+        uint256 _majorityVotePerc,
+        uint256 _memberRoleToVote
     ) 
         internal 
     {
         uint[] memory allowedToCreateProposal = new uint[](2);
-        uint[] memory stake_incentive = new uint[](2);        
+        uint[] memory stakeIncentive = new uint[](2);    
+        uint256 closingTime = 3 days;    
         allowedToCreateProposal[0] = 1;
         allowedToCreateProposal[1] = 2;
-        stake_incentive[0] = 0;
-        stake_incentive[1] = 0;
+        stakeIncentive[0] = 0;
+        stakeIncentive[1] = 0;
+        if (bytes(_actionHash).length > 0) {
+            categoryActionHashes[allCategory.length] = abi.encodeWithSignature(
+                _actionHash
+            );
+        }
         _addCategory(
                 _name,
-                1,
-                50,
+                _memberRoleToVote,
+                _majorityVotePerc,
                 25,
                 allowedToCreateProposal,
-                72000,
-                _actionHash,
+                closingTime,
+                _solutionHash,
                 address(0),
                 _contractName,
-                stake_incentive
+                stakeIncentive
             );
     }
 

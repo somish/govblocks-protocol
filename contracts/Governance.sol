@@ -39,24 +39,26 @@ contract Governance is IGovernance, Upgradeable {
         Majority_Not_Reached_But_Rejected
     }
 
-    struct ProposalStruct {
-        address owner;
-        uint dateUpd;
-    }
+    // struct ProposalStruct {
+    //     address owner;
+    //     uint dateUpd;
+    // }
 
     struct ProposalData {
         uint propStatus;
         uint finalVerdict;
         uint category;
         uint totalVoteValue;
-        uint majVoteValue;
+        uint majVoteValue; // need to check
         uint commonIncentive;
+        uint dateUpd;
+        address owner;
     }
 
-    struct SolutionStruct {
-        address owner;
-        bytes action;
-    }
+    // struct SolutionStruct {
+    //     address owner;
+    //     bytes action;
+    // }
 
     struct ProposalVote {
         address voter;
@@ -66,24 +68,55 @@ contract Governance is IGovernance, Upgradeable {
         uint dateAdd;
     }
 
+    struct VoteTally {
+        mapping(uint256 => uint256) voteValue;
+        mapping(uint=>uint) abVoteValue;
+        uint256 voters;
+    }
+
+    ProposalVote[] internal allVotes;
+
     mapping(uint => ProposalData) internal allProposalData;
-    mapping(uint => SolutionStruct[]) internal allProposalSolutions;
-    mapping(address => mapping(uint => uint)) public addressProposalVote;
-    mapping(uint => uint[]) internal proposalVote;
+    mapping(uint => bytes[]) internal allProposalSolutions;
+    mapping(address => mapping(uint => uint)) public memberProposalVote;
+    mapping(uint256 => VoteTally) public proposalVoteTally;
     mapping(address => uint[]) internal allVotesByMember;
-    mapping(uint => bool) public proposalPaused;
-    mapping(uint => bool) public rewardClaimed; //can read from event
+    mapping(uint => bool) public proposalPaused; // need to check if need
+    mapping(uint256 => mapping(address => bool)) public rewardClaimed;
     mapping (address => uint) public lastRewardClaimed;
 
-    ProposalStruct[] internal allProposal;
+    ProposalStruct[] internal allProposal; //need to check
     ProposalVote[] internal allVotes;
 
     bool internal constructorCheck;
-    bool internal punishVoters;
-    uint internal minVoteWeight;
+    uint256 internal maxVoteWeigthPer;
+    uint public override roleIdAllowedToCatgorize;
+    uint256 internal actionRejectAuthRole;
+    uint internal minVoteWeight; // need to check
+    bool internal punishVoters; // need to check
     uint public tokenHoldingTime;
-    uint public override allowedToCatgorize;
+    uint256 internal votePercRejectAction;
+    uint256 internal totalProposals; // check
+    uint256 internal maxDraftTime; // check
     bool internal locked;
+
+
+    mapping(uint256 => uint256) public proposalActionStatus;
+    mapping(uint256 => uint256) internal proposalExecutionTime;
+    mapping(uint256 => mapping(address => bool)) public isActionRejected;
+    mapping(uint256 => uint256) internal actionRejectedCount;
+    uint256 internal actionWaitingTime;
+    enum ActionStatus {Pending, Accepted, Rejected, Executed, NoAction}
+
+    /**
+     * @dev Called whenever an action execution is failed.
+     */
+    event ActionFailed(uint256 proposalId);
+    /**
+     * @dev Called whenever an AB member rejects the action execution.
+     */
+    event ActionRejected(uint256 indexed proposalId, address rejectedBy);
+
 
     MemberRoles internal memberRole;
     IProposalCategory internal proposalCategory;
@@ -120,7 +153,7 @@ contract Governance is IGovernance, Upgradeable {
     }
 
     modifier isAllowedToCategorize() {
-        require(memberRole.checkRole(msg.sender, allowedToCatgorize), "Not authorized");
+        require(allowedToCategorize());
         _;
     }
 
@@ -128,6 +161,15 @@ contract Governance is IGovernance, Upgradeable {
         require(validateStake(allProposalData[_proposalId].category), "Lock more tokens");
         _;
     }
+
+    /**
+     * @dev Event emitted whenever a proposal is categorized
+     */
+    event ProposalCategorized(
+        uint256 indexed proposalId,
+        address indexed categorizedBy,
+        uint256 categoryId
+    );
 
     /// @dev Creates a new proposal
     /// @param _proposalTitle Title of the proposal
@@ -754,6 +796,35 @@ contract Governance is IGovernance, Upgradeable {
             } else {
                 _updateProposalStatus(_proposalId, uint(ProposalStatus.Majority_Not_Reached_But_Rejected));
             }
+        }
+    }
+
+    /**
+     * @dev Internal function to trigger action of accepted proposal
+     */
+    function _triggerAction(uint256 _proposalId, uint256 _categoryId) internal {
+        proposalActionStatus[_proposalId] = uint256(ActionStatus.Executed);
+        bytes2 contractName;
+        address actionAddress;
+        bytes memory _functionHash;
+        (, actionAddress, contractName, , _functionHash) = proposalCategory
+            .categoryActionDetails(_categoryId);
+        if (contractName == "MS") {
+            actionAddress = address(ms);
+        } else if (contractName != "EX") {
+            actionAddress = ms.getLatestAddress(contractName);
+        }
+        (bool actionStatus, ) = actionAddress.call(
+            abi.encodePacked(
+                _functionHash,
+                allProposalSolutions[_proposalId][1]
+            )
+        );
+        if (actionStatus) {
+            emit ActionSuccess(_proposalId);
+        } else {
+            proposalActionStatus[_proposalId] = uint256(ActionStatus.Accepted);
+            emit ActionFailed(_proposalId);
         }
     }
 
